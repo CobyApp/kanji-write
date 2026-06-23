@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Data pipeline: raw downloaded datasets (fetched by script, not versioned)
+data-pipeline/sources/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Xcode / SwiftPM
+app/.build/
+app/DerivedData/
+*.xcuserstate
+xcuserdata/
