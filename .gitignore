@@ -20,3 +20,10 @@ app/.build/
 app/DerivedData/
 *.xcuserstate
 xcuserdata/
+
+# Tuist / Xcode generated (manifests are committed; generated projects are not)
+app/*.xcodeproj
+app/*.xcworkspace
+app/Derived/
+app/Tuist/.build/
+app/.build/
