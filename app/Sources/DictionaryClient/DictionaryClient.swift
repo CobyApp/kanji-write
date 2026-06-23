@@ -1,1 +1,26 @@
-public enum DictionaryClientModule {}
+import ComposableArchitecture
+import SharedModels
+
+/// Errors surfaced by the dictionary data layer.
+public enum DictionaryError: Error, Equatable {
+    case databaseUnavailable
+    case query(String)
+}
+
+/// Read-only access to the bundled kanji dictionary. The single seam between
+/// UI/features and the data layer; `liveValue` (added later) is GRDB-backed.
+@DependencyClient
+public struct DictionaryClient: Sendable {
+    public var allKanji: @Sendable () async throws -> [Kanji]
+}
+
+extension DictionaryClient: TestDependencyKey {
+    public static let testValue = DictionaryClient()
+}
+
+extension DependencyValues {
+    public var dictionaryClient: DictionaryClient {
+        get { self[DictionaryClient.self] }
+        set { self[DictionaryClient.self] = newValue }
+    }
+}
