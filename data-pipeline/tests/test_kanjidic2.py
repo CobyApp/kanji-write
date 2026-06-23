@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 
 from kanjipipe.ingest.kanjidic2 import parse_kanjidic2
@@ -28,6 +29,8 @@ def test_maps_reading_axes():
     assert ("eum", "산") in pairs
     # korean_r (romanized) and nanori are ignored
     assert all(r.lang_axis != "korean_r" for r in yama.readings)
+    # nanori (outside rmgroup) must not become a reading
+    assert all(r.value != "やの" for r in yama.readings)
 
 
 def test_extracts_only_english_meanings_as_glosses():
@@ -39,7 +42,45 @@ def test_extracts_only_english_meanings_as_glosses():
     assert all(g.text != "montagne" for g in yama.glosses)
 
 
-def test_missing_grade_and_freq_become_none():
+def test_missing_freq_becomes_none():
     flute = next(k for k in parse_kanjidic2(FIXTURE) if k.literal == "龠")
     assert flute.grade == 9
     assert flute.freq_rank is None
+
+
+def _write(tmp_path, body):
+    p = tmp_path / "k.xml"
+    p.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n<kanjidic2>\n' + body + '\n</kanjidic2>',
+        encoding="utf-8")
+    return p
+
+
+def test_raises_when_misc_missing(tmp_path):
+    xml = _write(tmp_path, '<character><literal>X</literal>'
+                 '<codepoint><cp_value cp_type="ucs">5c71</cp_value></codepoint></character>')
+    with pytest.raises(ValueError, match="misc"):
+        parse_kanjidic2(xml)
+
+
+def test_raises_when_stroke_count_missing(tmp_path):
+    xml = _write(tmp_path, '<character><literal>X</literal>'
+                 '<codepoint><cp_value cp_type="ucs">5c71</cp_value></codepoint>'
+                 '<misc><grade>1</grade></misc></character>')
+    with pytest.raises(ValueError, match="stroke_count"):
+        parse_kanjidic2(xml)
+
+
+def test_skips_readings_and_meanings_without_text(tmp_path):
+    xml = _write(tmp_path, '<character><literal>X</literal>'
+                 '<codepoint><cp_value cp_type="ucs">5c71</cp_value></codepoint>'
+                 '<misc><grade>1</grade><stroke_count>3</stroke_count></misc>'
+                 '<reading_meaning><rmgroup>'
+                 '<reading r_type="ja_on"/>'
+                 '<reading r_type="ja_kun">やま</reading>'
+                 '<meaning/>'
+                 '<meaning>mountain</meaning>'
+                 '</rmgroup></reading_meaning></character>')
+    k = parse_kanjidic2(xml)[0]
+    assert [(r.lang_axis, r.value) for r in k.readings] == [("kun", "やま")]
+    assert [g.text for g in k.glosses] == ["mountain"]
