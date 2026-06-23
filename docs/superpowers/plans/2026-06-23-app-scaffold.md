@@ -60,17 +60,6 @@ Create `app/Tuist/Package.swift`:
 // swift-tools-version: 6.0
 import PackageDescription
 
-#if TUIST
-import struct ProjectDescription.PackageSettings
-
-let packageSettings = PackageSettings(
-    productTypes: [
-        "ComposableArchitecture": .framework,
-        "GRDB": .framework,
-    ]
-)
-#endif
-
 let package = Package(
     name: "KanjiWrite",
     dependencies: [
@@ -81,6 +70,16 @@ let package = Package(
 ```
 
 > If `tuist install` reports these versions are unavailable for the toolchain, bump each `from:` to the latest tag printed by the resolver and re-run. Do not lower the floor.
+>
+> **Toolchain note (Xcode 26.5 / Tuist 4.155.3):** do NOT add a
+> `PackageSettings(productTypes: ["ComposableArchitecture": .framework, ...])`
+> override. Forcing TCA (and its Swift-only transitive deps `Clocks`,
+> `CombineSchedulers`) to `.framework` produces a broken generated module map
+> (`header 'Clocks-Swift.h' not found`) and the build fails. Letting Tuist use
+> its default product type for the SPM packages builds green. Our own module
+> targets remain `.framework` (set in `Project.swift`); this only concerns the
+> external packages. Also commit the generated `app/Tuist/Package.resolved`
+> lockfile to pin resolved versions (TCA 1.26.0, GRDB 7.11.1, …).
 
 - [ ] **Step 2: Define the target graph + shared scheme**
 
