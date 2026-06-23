@@ -56,6 +56,13 @@ def _write(tmp_path, body):
     return p
 
 
+def test_raises_when_ucs_codepoint_missing(tmp_path):
+    xml = _write(tmp_path, '<character><literal>X</literal>'
+                 '<misc><grade>1</grade><stroke_count>3</stroke_count></misc></character>')
+    with pytest.raises(ValueError, match="UCS codepoint"):
+        parse_kanjidic2(xml)
+
+
 def test_raises_when_misc_missing(tmp_path):
     xml = _write(tmp_path, '<character><literal>X</literal>'
                  '<codepoint><cp_value cp_type="ucs">5c71</cp_value></codepoint></character>')

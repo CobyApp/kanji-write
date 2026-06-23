@@ -19,8 +19,9 @@ def test_build_produces_sqlite_with_only_joyo(tmp_path):
     assert report["missing_en"] == 0
 
     import sqlite3
-    conn = sqlite3.connect(out)
-    literals = {r[0] for r in conn.execute("SELECT literal FROM kanji")}
-    assert literals == {"山", "学"}
-    jlpt = dict(conn.execute("SELECT literal, jlpt_level FROM kanji"))
-    assert jlpt == {"山": "N5", "学": "N5"}
+    with sqlite3.connect(out) as conn:
+        literals = {r[0] for r in conn.execute("SELECT literal FROM kanji")}
+        assert literals == {"山", "学"}
+        jlpt = dict(conn.execute("SELECT literal, jlpt_level FROM kanji"))
+        assert jlpt == {"山": "N5", "学": "N5"}
+    conn.close()
