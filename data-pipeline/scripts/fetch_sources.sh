@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 mkdir -p sources
 
 echo "Fetching KANJIDIC2..."
-curl -fsSL "http://www.edrdg.org/kanjidic/kanjidic2.xml.gz" -o sources/kanjidic2.xml.gz
+curl -fsSL "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz" -o sources/kanjidic2.xml.gz
 gunzip -f sources/kanjidic2.xml.gz   # -> sources/kanjidic2.xml
 
 # NOTE: sources/jlpt.json (modern N5-N1 mapping) is provided manually — see

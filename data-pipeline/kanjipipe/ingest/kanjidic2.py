@@ -22,6 +22,8 @@ def parse_kanjidic2(path: str | Path) -> list[Kanji]:
         for cp in ch.iterfind("codepoint/cp_value"):
             if cp.get("cp_type") == "ucs":
                 codepoint = int(cp.text, 16)
+        if codepoint is None:
+            raise ValueError(f"character {literal!r} has no UCS codepoint")
 
         radical = None
         for rv in ch.iterfind("radical/rad_value"):
