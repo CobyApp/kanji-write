@@ -39,6 +39,24 @@ def test_assert_core_gates_fails_when_english_missing():
         assert_core_gates(conn)
 
 
+def test_assert_core_gates_fails_when_reading_missing():
+    conn = init_db(":memory:")
+    no_reading = _good()
+    no_reading.readings = []
+    load_kanji(conn, [no_reading])
+    with pytest.raises(ValueError, match="missing readings"):
+        assert_core_gates(conn)
+
+
+def test_assert_core_gates_fails_when_grade_missing():
+    conn = init_db(":memory:")
+    no_grade = _good()
+    no_grade.grade = None
+    load_kanji(conn, [no_grade])
+    with pytest.raises(ValueError, match="missing grade"):
+        assert_core_gates(conn)
+
+
 def test_assert_core_gates_fails_on_empty_db():
     conn = init_db(":memory:")
     with pytest.raises(ValueError, match="no kanji loaded"):
