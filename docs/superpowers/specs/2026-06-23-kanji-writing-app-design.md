@@ -155,9 +155,28 @@ one.
 
 ## 10. Tech stack
 
-- App: SwiftUI, PencilKit, GRDB.swift (read-only dictionary DB), SwiftData
-  (writable user store), iOS String Catalog (i18n).
-- Pipeline: Python (lxml for XML sources, sqlite3), Claude API for gap-fill.
+App (targets the **latest stable iOS/iPadOS** — no backward-compat constraint;
+free to use the newest APIs):
+
+- **SwiftUI** — UI layer.
+- **TCA (The Composable Architecture, pointfree)** — app architecture / state
+  management. Features are modeled as composable `Reducer`s with explicit
+  `State`/`Action`; side effects (DB reads, ink persistence, timers) run through
+  TCA `Effect`s and injected dependencies (`@Dependency`), which keeps reducers
+  pure and unit-testable with `TestStore`. The study-plan, study-card, writing,
+  and progress flows each become a feature reducer.
+- **Tuist** — project generation & modularization. The app is split into Swift
+  packages/modules (e.g. `Features`, `DictionaryClient`, `UserStore`,
+  `WritingCanvas`, `DesignSystem`) wired by a `Project.swift` manifest, so the
+  Xcode project is generated and not hand-maintained.
+- **PencilKit** — pressure/tilt writing canvas.
+- **GRDB.swift** — read-only access to the bundled `kanji.sqlite` dictionary DB
+  (wrapped behind a `DictionaryClient` TCA dependency).
+- **SwiftData** — writable user store (plans, progress, saved `PKDrawing`),
+  wrapped behind a `UserStore` TCA dependency.
+- **iOS String Catalog** — i18n (ko/ja/zh-Hans/en).
+
+Pipeline: Python (lxml for XML sources, sqlite3), Claude API for gap-fill.
 
 ## 11. Build order
 
