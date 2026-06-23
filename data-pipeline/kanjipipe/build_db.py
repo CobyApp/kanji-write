@@ -11,7 +11,11 @@ from kanjipipe.loader import load_kanji
 from kanjipipe.validate import assert_core_gates
 
 
-def build(kanjidic2_path, jlpt_path, out_path: str) -> dict[str, int]:
+def build(
+    kanjidic2_path: str | Path,
+    jlpt_path: str | Path,
+    out_path: str,
+) -> dict[str, int]:
     kanji = parse_kanjidic2(kanjidic2_path)
     kanji = filter_joyo(kanji)
     merge_jlpt(kanji, jlpt_path)
@@ -19,9 +23,11 @@ def build(kanjidic2_path, jlpt_path, out_path: str) -> dict[str, int]:
     if os.path.exists(out_path):
         os.remove(out_path)  # rebuild from scratch; DB is a generated artifact
     conn = init_db(out_path)
-    load_kanji(conn, kanji)
-    report = assert_core_gates(conn)
-    conn.close()
+    try:
+        load_kanji(conn, kanji)
+        report = assert_core_gates(conn)  # raises if a gate fails
+    finally:
+        conn.close()  # always release the handle, even on gate failure
     return report
 
 
