@@ -26,4 +26,3 @@ app/*.xcodeproj
 app/*.xcworkspace
 app/Derived/
 app/Tuist/.build/
-app/.build/
