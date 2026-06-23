@@ -9,6 +9,11 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+*.egg-info/
+.pytest_cache/
+
+# Data pipeline build output (generated artifact)
+data-pipeline/out/
 
 # Xcode / SwiftPM
 app/.build/
