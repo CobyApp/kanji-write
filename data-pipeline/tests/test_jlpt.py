@@ -22,3 +22,12 @@ def test_unmapped_kanji_stays_none():
     kanji = [_kanji("情")]  # not in the fixture
     merge_jlpt(kanji, FIXTURE)
     assert kanji[0].jlpt_level is None
+
+
+def test_unmapped_overwrites_any_preexisting_level_to_none():
+    # The single-source merge is authoritative: a literal absent from the
+    # mapping is cleared to None, even if some prior step set a level.
+    stale = _kanji("情")
+    stale.jlpt_level = "N1"
+    merge_jlpt([stale], FIXTURE)
+    assert stale.jlpt_level is None
