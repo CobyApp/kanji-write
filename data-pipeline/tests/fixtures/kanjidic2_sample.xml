@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kanjidic2>
+<header><file_version>4</file_version><database_version>2025-1</database_version></header>
+<character>
+  <literal>山</literal>
+  <codepoint><cp_value cp_type="ucs">5c71</cp_value></codepoint>
+  <radical><rad_value rad_type="classical">46</rad_value></radical>
+  <misc>
+    <grade>1</grade>
+    <stroke_count>3</stroke_count>
+    <freq>360</freq>
+    <jlpt>4</jlpt>
+  </misc>
+  <reading_meaning>
+    <rmgroup>
+      <reading r_type="pinyin">shan1</reading>
+      <reading r_type="korean_r">san</reading>
+      <reading r_type="korean_h">산</reading>
+      <reading r_type="ja_on">サン</reading>
+      <reading r_type="ja_kun">やま</reading>
+      <meaning>mountain</meaning>
+      <meaning m_lang="fr">montagne</meaning>
+    </rmgroup>
+    <nanori>やの</nanori>
+  </reading_meaning>
+</character>
+<character>
+  <literal>学</literal>
+  <codepoint><cp_value cp_type="ucs">5b66</cp_value></codepoint>
+  <radical><rad_value rad_type="classical">39</rad_value></radical>
+  <misc>
+    <grade>1</grade>
+    <stroke_count>8</stroke_count>
+    <freq>63</freq>
+    <jlpt>4</jlpt>
+  </misc>
+  <reading_meaning>
+    <rmgroup>
+      <reading r_type="pinyin">xue2</reading>
+      <reading r_type="korean_h">학</reading>
+      <reading r_type="ja_on">ガク</reading>
+      <reading r_type="ja_kun">まな.ぶ</reading>
+      <meaning>study</meaning>
+      <meaning>learning</meaning>
+    </rmgroup>
+  </reading_meaning>
+</character>
+<character>
+  <literal>龠</literal>
+  <codepoint><cp_value cp_type="ucs">9fa0</cp_value></codepoint>
+  <radical><rad_value rad_type="classical">214</rad_value></radical>
+  <misc>
+    <grade>9</grade>
+    <stroke_count>17</stroke_count>
+  </misc>
+  <reading_meaning>
+    <rmgroup>
+      <reading r_type="ja_on">ヤク</reading>
+      <meaning>flute</meaning>
+    </rmgroup>
+  </reading_meaning>
+</character>
+</kanjidic2>
