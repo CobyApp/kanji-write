@@ -20,6 +20,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.dictionaryclient",
             deploymentTargets: iOS,
             sources: ["Sources/DictionaryClient/**"],
+            resources: ["Sources/DictionaryClient/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .external(name: "ComposableArchitecture"),
