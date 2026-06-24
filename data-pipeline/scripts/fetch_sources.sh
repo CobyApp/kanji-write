@@ -11,4 +11,8 @@ gunzip -f sources/kanjidic2.xml.gz   # -> sources/kanjidic2.xml
 
 # NOTE: sources/jlpt.json (modern N5-N1 mapping) is provided manually — see
 # docs. KANJIDIC2's own <jlpt> is the obsolete 4-level scale and is not used.
+echo "Fetching KanjiVG..."
+curl -fsSL "https://github.com/KanjiVG/kanjivg/releases/download/r20240807/kanjivg-20240807.xml.gz" -o sources/kanjivg.xml.gz
+gunzip -f sources/kanjivg.xml.gz   # -> sources/kanjivg.xml
+
 echo "Done. Place the N5-N1 mapping at sources/jlpt.json before building."
