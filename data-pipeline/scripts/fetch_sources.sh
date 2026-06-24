@@ -9,10 +9,22 @@ echo "Fetching KANJIDIC2..."
 curl -fsSL "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz" -o sources/kanjidic2.xml.gz
 gunzip -f sources/kanjidic2.xml.gz   # -> sources/kanjidic2.xml
 
-# NOTE: sources/jlpt.json (modern N5-N1 mapping) is provided manually — see
-# docs. KANJIDIC2's own <jlpt> is the obsolete 4-level scale and is not used.
 echo "Fetching KanjiVG..."
 curl -fsSL "https://github.com/KanjiVG/kanjivg/releases/download/r20240807/kanjivg-20240807.xml.gz" -o sources/kanjivg.xml.gz
 gunzip -f sources/kanjivg.xml.gz   # -> sources/kanjivg.xml
 
-echo "Done. Place the N5-N1 mapping at sources/jlpt.json before building."
+# Modern JLPT N5-N1 mapping. The JLPT does not publish an official kanji list,
+# so we derive {literal: "N5".."N1"} from the community davidluzgouveia/kanji-data
+# `jlpt_new` field (5=N5 ... 1=N1). KANJIDIC2's own <jlpt> is the obsolete
+# pre-2010 4-level scale and is intentionally not used.
+echo "Fetching JLPT N5-N1 mapping..."
+curl -fsSL "https://raw.githubusercontent.com/davidluzgouveia/kanji-data/master/kanji.json" -o sources/kanji-data.json
+python3 - <<'PY'
+import json
+data = json.load(open("sources/kanji-data.json", encoding="utf-8"))
+mapping = {ch: f"N{e['jlpt_new']}" for ch, e in data.items() if e.get("jlpt_new")}
+json.dump(mapping, open("sources/jlpt.json", "w", encoding="utf-8"), ensure_ascii=False)
+print(f"  jlpt.json: {len(mapping)} entries")
+PY
+
+echo "Done. Now build with: python -m kanjipipe.build_db --out out/kanji.sqlite"
