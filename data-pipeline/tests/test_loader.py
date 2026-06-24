@@ -1,6 +1,6 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji
+from kanjipipe.loader import load_kanji, load_stroke_order
 from kanjipipe.models import Gloss, Kanji, Reading
 
 
@@ -39,9 +39,6 @@ def test_foreign_keys_link_children_to_parent():
         "SELECT COUNT(*) FROM reading r JOIN kanji k ON r.kanji_id = k.id "
         "WHERE k.literal = '山'").fetchone()[0]
     assert linked == 4
-
-
-from kanjipipe.loader import load_stroke_order
 
 
 def test_load_stroke_order_links_by_codepoint_in_order():

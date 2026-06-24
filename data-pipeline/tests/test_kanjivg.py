@@ -25,3 +25,15 @@ def test_kanji_without_paths_yields_empty_list(tmp_path):
         '<kanjivg><kanji id="kvg:kanji_05c71"><g></g></kanji></kanjivg>',
         encoding="utf-8")
     assert parse_kanjivg(p) == {0x5C71: []}
+
+
+def test_variant_entry_does_not_overwrite_base_form(tmp_path):
+    p = tmp_path / "k.xml"
+    p.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<kanjivg>'
+        '<kanji id="kvg:kanji_05c71"><g><path d="base"/></g></kanji>'
+        '<kanji id="kvg:kanji_05c71-Kaisho"><g><path d="variant"/></g></kanji>'
+        '</kanjivg>',
+        encoding="utf-8")
+    assert parse_kanjivg(p) == {0x5C71: ["base"]}

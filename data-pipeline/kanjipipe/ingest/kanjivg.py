@@ -28,6 +28,11 @@ def parse_kanjivg(path: str | Path) -> dict[int, list[str]]:
         codepoint = _codepoint_from_id(kanji.get("id"))
         if codepoint is None:
             continue
+        # The base form (e.g. id "kvg:kanji_05ce0") appears before its variants
+        # (e.g. "...-Kaisho", "...-var"), which share the same codepoint. Keep
+        # the first (base) entry so variants don't silently overwrite it.
+        if codepoint in result:
+            continue
         paths: list[str] = []
         for el in kanji.iter():
             if _localname(el) == "path":
