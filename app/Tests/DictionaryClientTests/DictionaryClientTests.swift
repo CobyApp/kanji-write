@@ -7,7 +7,8 @@ final class DictionaryClientTests: XCTestCase {
         let client = DictionaryClient.liveValue
         let kanji = try await client.allKanji()
 
-        XCTAssertEqual(kanji.map(\.literal), ["山", "学"])
+        // The bundled DB is the full jōyō set (2,136 kanji).
+        XCTAssertEqual(kanji.count, 2136)
 
         let yama = try XCTUnwrap(kanji.first { $0.literal == "山" })
         XCTAssertEqual(yama.strokeCount, 3)
@@ -21,7 +22,10 @@ final class DictionaryClientTests: XCTestCase {
         let all = try await client.allKanji()
         let yama = try XCTUnwrap(all.first { $0.literal == "山" })
 
+        // Real KanjiVG geometry varies, so assert structure, not exact paths:
+        // 山 has 3 strokes and every stroke is a non-empty SVG path starting at M.
         let strokes = try await client.strokeOrder(yama.id)
-        XCTAssertEqual(strokes, ["M21,30 L21,70", "M50,20 L50,80", "M79,30 L79,70"])
+        XCTAssertEqual(strokes.count, 3)
+        XCTAssertTrue(strokes.allSatisfy { $0.hasPrefix("M") })
     }
 }
