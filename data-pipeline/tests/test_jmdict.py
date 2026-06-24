@@ -27,3 +27,19 @@ def test_gloss_count_capped_at_three(tmp_path):
         '</entry></JMdict>',
         encoding="utf-8")
     assert parse_jmdict(p)[0].en_glosses == ["a", "b", "c"]
+
+
+def test_resolves_internal_dtd_entities(tmp_path):
+    p = tmp_path / "j.xml"
+    p.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<!DOCTYPE JMdict [ <!ENTITY n "noun"> ]>\n'
+        '<JMdict><entry>'
+        '<k_ele><keb>名詞</keb><ke_pri>news1</ke_pri></k_ele>'
+        '<r_ele><reb>めいし</reb></r_ele>'
+        '<sense><pos>&n;</pos><gloss>noun</gloss></sense>'
+        '</entry></JMdict>',
+        encoding="utf-8")
+    words = parse_jmdict(p)
+    assert [w.surface for w in words] == ["名詞"]
+    assert words[0].en_glosses == ["noun"]

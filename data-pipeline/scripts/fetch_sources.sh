@@ -28,6 +28,7 @@ print(f"  jlpt.json: {len(mapping)} entries")
 PY
 
 echo "Fetching JMdict (English)..."
+# EDRDG's FTP server does not offer HTTPS; http is the only protocol available here.
 curl -fsSL "http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz" -o sources/jmdict.xml.gz
 gunzip -f sources/jmdict.xml.gz   # -> sources/jmdict.xml
 
