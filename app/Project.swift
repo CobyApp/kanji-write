@@ -49,6 +49,7 @@ let project = Project(
             sources: ["Sources/AppFeature/**"],
             dependencies: [
                 .target(name: "KanjiListFeature"),
+                .target(name: "WritingCanvas"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
