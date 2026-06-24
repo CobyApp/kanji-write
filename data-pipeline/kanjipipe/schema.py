@@ -27,4 +27,14 @@ CREATE TABLE gloss (
 
 CREATE INDEX idx_reading_kanji ON reading(kanji_id);
 CREATE INDEX idx_gloss_kanji   ON gloss(kanji_id);
+
+CREATE TABLE stroke_order (
+    id        INTEGER PRIMARY KEY,
+    kanji_id  INTEGER NOT NULL REFERENCES kanji(id),
+    ordinal   INTEGER NOT NULL,
+    path_d    TEXT    NOT NULL,
+    UNIQUE(kanji_id, ordinal)
+);
+
+CREATE INDEX idx_stroke_order_kanji ON stroke_order(kanji_id);
 """
