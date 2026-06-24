@@ -37,4 +37,27 @@ CREATE TABLE stroke_order (
 );
 
 CREATE INDEX idx_stroke_order_kanji ON stroke_order(kanji_id);
+
+CREATE TABLE word (
+    id           INTEGER PRIMARY KEY,
+    surface      TEXT NOT NULL,
+    reading_kana TEXT NOT NULL,
+    is_common    INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE TABLE word_kanji (
+    word_id  INTEGER NOT NULL REFERENCES word(id),
+    kanji_id INTEGER NOT NULL REFERENCES kanji(id),
+    UNIQUE(word_id, kanji_id)
+);
+
+CREATE TABLE word_gloss (
+    id      INTEGER PRIMARY KEY,
+    word_id INTEGER NOT NULL REFERENCES word(id),
+    lang    TEXT NOT NULL,
+    text    TEXT NOT NULL
+);
+
+CREATE INDEX idx_word_kanji_kanji ON word_kanji(kanji_id);
+CREATE INDEX idx_word_gloss_word ON word_gloss(word_id);
 """

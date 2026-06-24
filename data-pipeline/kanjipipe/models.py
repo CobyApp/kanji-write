@@ -25,3 +25,11 @@ class Kanji:
     jlpt_level: str | None = None  # 'N5'..'N1'
     readings: list[Reading] = field(default_factory=list)
     glosses: list[Gloss] = field(default_factory=list)
+
+
+@dataclass
+class Word:
+    surface: str
+    reading_kana: str
+    is_common: bool = True
+    en_glosses: list[str] = field(default_factory=list)
