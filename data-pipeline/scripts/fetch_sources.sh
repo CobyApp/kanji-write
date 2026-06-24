@@ -32,4 +32,10 @@ echo "Fetching JMdict (English)..."
 curl -fsSL "http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz" -o sources/jmdict.xml.gz
 gunzip -f sources/jmdict.xml.gz   # -> sources/jmdict.xml
 
+echo "Fetching Tatoeba sentences + links..."
+curl -fsSL "https://downloads.tatoeba.org/exports/sentences.tar.bz2" -o sources/sentences.tar.bz2
+curl -fsSL "https://downloads.tatoeba.org/exports/links.tar.bz2" -o sources/links.tar.bz2
+tar -xjf sources/sentences.tar.bz2 -C sources   # -> sources/sentences.csv
+tar -xjf sources/links.tar.bz2 -C sources       # -> sources/links.csv
+
 echo "Done. Now build with: python -m kanjipipe.build_db --out out/kanji.sqlite"
