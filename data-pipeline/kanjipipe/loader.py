@@ -26,3 +26,18 @@ def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
                 (kanji_id, g.lang, g.text),
             )
     conn.commit()
+
+
+def load_stroke_order(
+    conn: sqlite3.Connection,
+    strokes_by_codepoint: dict[int, list[str]],
+) -> None:
+    rows = conn.execute("SELECT id, codepoint FROM kanji").fetchall()
+    for kanji_id, codepoint in rows:
+        for ordinal, path_d in enumerate(strokes_by_codepoint.get(codepoint, []), start=1):
+            conn.execute(
+                "INSERT INTO stroke_order (kanji_id, ordinal, path_d) "
+                "VALUES (?, ?, ?)",
+                (kanji_id, ordinal, path_d),
+            )
+    conn.commit()
