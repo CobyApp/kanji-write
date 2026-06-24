@@ -1,0 +1,48 @@
+import ComposableArchitecture
+import PencilKit
+import SwiftUI
+
+/// Renders the KanjiVG stroke guide (109x109 viewBox) scaled to the square.
+private struct GuideStrokesView: View {
+    let paths: [String]
+
+    var body: some View {
+        GeometryReader { geo in
+            let scale = min(geo.size.width, geo.size.height) / 109.0
+            ForEach(Array(paths.enumerated()), id: \.offset) { _, d in
+                SVGPath.path(from: SVGPath.parse(d))
+                    .applying(CGAffineTransform(scaleX: scale, y: scale))
+                    .stroke(Color.secondary.opacity(0.3), lineWidth: 3)
+            }
+        }
+    }
+}
+
+public struct KanjiWritingView: View {
+    @Bindable public var store: StoreOf<KanjiWritingFeature>
+    @State private var drawing = PKDrawing()
+
+    public init(store: StoreOf<KanjiWritingFeature>) {
+        self.store = store
+    }
+
+    public var body: some View {
+        ZStack {
+            if store.showGuide {
+                GuideStrokesView(paths: store.strokePaths)
+            }
+            PencilCanvasView(drawing: $drawing)
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .background(Color(.secondarySystemBackground))
+        .padding()
+        .navigationTitle(store.kanji.literal)
+        .toolbar {
+            Button(store.showGuide ? "ガイド非表示" : "ガイド表示") {
+                store.send(.toggleGuide)
+            }
+            Button("消す") { drawing = PKDrawing() }
+        }
+        .task { store.send(.onAppear) }
+    }
+}
