@@ -76,6 +76,28 @@ let project = Project(
             dependencies: [.target(name: "WritingCanvas")]
         ),
         .target(
+            name: "StudyPlan",
+            destinations: [.iPad],
+            product: .staticFramework,
+            bundleId: "com.cobyapp.kanjiwrite.studyplan",
+            deploymentTargets: iOS,
+            sources: ["Sources/StudyPlan/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+                .target(name: "DictionaryClient"),
+                .external(name: "ComposableArchitecture"),
+            ]
+        ),
+        .target(
+            name: "StudyPlanTests",
+            destinations: [.iPad],
+            product: .unitTests,
+            bundleId: "com.cobyapp.kanjiwrite.studyplantests",
+            deploymentTargets: iOS,
+            sources: ["Tests/StudyPlanTests/**"],
+            dependencies: [.target(name: "StudyPlan")]
+        ),
+        .target(
             name: "KanjiApp",
             destinations: [.iPad],
             product: .app,
@@ -118,6 +140,7 @@ let project = Project(
                 "KanjiListFeatureTests",
                 "DictionaryClientTests",
                 "WritingCanvasTests",
+                "StudyPlanTests",
             ])
         )
     ]
