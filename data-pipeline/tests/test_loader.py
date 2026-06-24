@@ -97,3 +97,34 @@ def test_load_words_word_without_joyo_kanji_has_no_links():
     load_words(conn, [Word(surface="校", reading_kana="こう", en_glosses=["school"])])
     assert conn.execute("SELECT COUNT(*) FROM word").fetchone()[0] == 1
     assert conn.execute("SELECT COUNT(*) FROM word_kanji").fetchone()[0] == 0
+
+
+from kanjipipe.loader import load_sentences
+from kanjipipe.models import Sentence
+
+
+def test_load_sentences_caps_per_kanji_and_prefers_short():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山
+
+    load_sentences(conn, [
+        Sentence(ja_text="山。", translations={"en": "Mountain."}),          # shortest
+        Sentence(ja_text="山が高い。", translations={"en": "The mountain is high."}),
+        Sentence(ja_text="あの山はとても高いです。", translations={"en": "long"}),
+    ], per_kanji_cap=1)
+
+    rows = conn.execute(
+        "SELECT s.text_ja FROM sentence s "
+        "JOIN sentence_kanji sk ON sk.sentence_id = s.id "
+        "JOIN kanji k ON sk.kanji_id = k.id WHERE k.literal = '山'").fetchall()
+    assert rows == [("山。",)]                                   # only the shortest, cap honored
+    assert conn.execute("SELECT COUNT(*) FROM sentence").fetchone()[0] == 1
+    tr = conn.execute("SELECT lang, text FROM sentence_translation").fetchone()
+    assert tr == ("en", "Mountain.")
+
+
+def test_load_sentences_skips_sentence_without_joyo_kanji():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_sentences(conn, [Sentence(ja_text="これはペンです。", translations={"en": "This is a pen."})])
+    assert conn.execute("SELECT COUNT(*) FROM sentence").fetchone()[0] == 0
