@@ -22,6 +22,9 @@ def coverage_report(conn: sqlite3.Connection) -> dict[str, int]:
         "kanji_without_words": scalar(
             "SELECT COUNT(*) FROM kanji k WHERE NOT EXISTS "
             "(SELECT 1 FROM word_kanji wk WHERE wk.kanji_id = k.id)"),
+        "kanji_without_sentences": scalar(
+            "SELECT COUNT(*) FROM kanji k WHERE NOT EXISTS "
+            "(SELECT 1 FROM sentence_kanji sk WHERE sk.kanji_id = k.id)"),
     }
 
 
