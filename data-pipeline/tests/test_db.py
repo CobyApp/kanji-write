@@ -9,7 +9,7 @@ def test_init_db_creates_core_tables():
     conn = init_db(":memory:")
     tables = {row[0] for row in conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table'")}
-    assert {"kanji", "reading", "gloss"} <= tables
+    assert {"kanji", "reading", "gloss", "stroke_order"} <= tables
 
 
 def test_init_db_enables_foreign_keys():

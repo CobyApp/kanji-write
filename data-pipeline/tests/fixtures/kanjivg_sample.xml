@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kanjivg xmlns:kvg="http://kanjivg.tagaini.net">
+  <kanji id="kvg:kanji_05c71">
+    <g kvg:element="山">
+      <path id="kvg:05c71-s1" d="M21,30 L21,70"/>
+      <path id="kvg:05c71-s2" d="M50,20 L50,80"/>
+      <path id="kvg:05c71-s3" d="M79,30 L79,70"/>
+    </g>
+  </kanji>
+  <kanji id="kvg:kanji_05b66">
+    <g kvg:element="学">
+      <path id="kvg:05b66-s1" d="M1 1"/>
+      <path id="kvg:05b66-s2" d="M2 2"/>
+      <path id="kvg:05b66-s3" d="M3 3"/>
+      <path id="kvg:05b66-s4" d="M4 4"/>
+      <path id="kvg:05b66-s5" d="M5 5"/>
+      <path id="kvg:05b66-s6" d="M6 6"/>
+      <path id="kvg:05b66-s7" d="M7 7"/>
+      <path id="kvg:05b66-s8" d="M8 8"/>
+    </g>
+  </kanji>
+</kanjivg>
