@@ -28,8 +28,13 @@ public struct KanjiWritingFeature {
             case .onAppear:
                 let id = state.kanji.id
                 return .run { send in
-                    let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
-                    await send(.strokesLoaded(paths))
+                    do {
+                        await send(.strokesLoaded(try await dictionaryClient.strokeOrder(id)))
+                    } catch {
+                        // Guide is non-critical: on load failure show no guide;
+                        // the writing canvas remains fully usable.
+                        await send(.strokesLoaded([]))
+                    }
                 }
             case let .strokesLoaded(paths):
                 state.strokePaths = paths

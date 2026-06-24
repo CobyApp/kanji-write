@@ -86,6 +86,7 @@ public enum SVGPath {
                 commands.append(.close); current = subpathStart; lastControl = nil
             default:
                 // Unsupported command: skip its operands up to the next command letter.
+                lastControl = nil
                 while i < chars.count, !chars[i].isLetter { i += 1 }
             }
         }

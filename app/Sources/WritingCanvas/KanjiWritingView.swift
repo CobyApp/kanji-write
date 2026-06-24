@@ -4,11 +4,13 @@ import SwiftUI
 
 /// Renders the KanjiVG stroke guide (109x109 viewBox) scaled to the square.
 private struct GuideStrokesView: View {
+    /// KanjiVG strokes are authored in a fixed 109x109 coordinate space.
+    private static let viewBoxSize: CGFloat = 109.0
     let paths: [String]
 
     var body: some View {
         GeometryReader { geo in
-            let scale = min(geo.size.width, geo.size.height) / 109.0
+            let scale = min(geo.size.width, geo.size.height) / Self.viewBoxSize
             ForEach(Array(paths.enumerated()), id: \.offset) { _, d in
                 SVGPath.path(from: SVGPath.parse(d))
                     .applying(CGAffineTransform(scaleX: scale, y: scale))

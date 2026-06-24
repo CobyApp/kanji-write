@@ -39,6 +39,14 @@ final class SVGPathTests: XCTestCase {
             [.move(.zero), .line(CGPoint(x: 3, y: 3))])
     }
 
+    func testSmoothCubicWithoutPriorCubicUsesCurrentPoint() {
+        // No preceding C/S, so control1 falls back to the current point (5,5).
+        XCTAssertEqual(
+            SVGPath.parse("M5,5 S10,10 15,15"),
+            [.move(CGPoint(x: 5, y: 5)),
+             .cubic(CGPoint(x: 5, y: 5), CGPoint(x: 10, y: 10), CGPoint(x: 15, y: 15))])
+    }
+
     func testPathFromCommandsIsNonEmpty() {
         let path = SVGPath.path(from: SVGPath.parse("M21,30 L21,70"))
         XCTAssertFalse(path.isEmpty)
