@@ -4,7 +4,6 @@ import SharedModels
 /// Errors surfaced by the dictionary data layer.
 public enum DictionaryError: Error, Equatable {
     case databaseUnavailable
-    case query(String)
 }
 
 /// Read-only access to the bundled kanji dictionary. The single seam between

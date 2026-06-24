@@ -9,7 +9,7 @@ public struct AppFeature {
         public init() {}
     }
 
-    public enum Action {
+    public enum Action: Equatable {
         case kanjiList(KanjiListFeature.Action)
     }
 
