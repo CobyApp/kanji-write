@@ -8,7 +8,7 @@ let project = Project(
         .target(
             name: "SharedModels",
             destinations: [.iPad],
-            product: .framework,
+            product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.sharedmodels",
             deploymentTargets: iOS,
             sources: ["Sources/SharedModels/**"]
@@ -16,7 +16,7 @@ let project = Project(
         .target(
             name: "DictionaryClient",
             destinations: [.iPad],
-            product: .framework,
+            product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.dictionaryclient",
             deploymentTargets: iOS,
             sources: ["Sources/DictionaryClient/**"],
@@ -30,7 +30,7 @@ let project = Project(
         .target(
             name: "KanjiListFeature",
             destinations: [.iPad],
-            product: .framework,
+            product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.kanjilistfeature",
             deploymentTargets: iOS,
             sources: ["Sources/KanjiListFeature/**"],
@@ -43,7 +43,7 @@ let project = Project(
         .target(
             name: "AppFeature",
             destinations: [.iPad],
-            product: .framework,
+            product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.appfeature",
             deploymentTargets: iOS,
             sources: ["Sources/AppFeature/**"],
