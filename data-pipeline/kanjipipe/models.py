@@ -33,3 +33,9 @@ class Word:
     reading_kana: str
     is_common: bool = True
     en_glosses: list[str] = field(default_factory=list)
+
+
+@dataclass
+class Sentence:
+    ja_text: str
+    translations: dict[str, str] = field(default_factory=dict)
