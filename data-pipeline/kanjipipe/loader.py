@@ -1,7 +1,7 @@
 # kanjipipe/loader.py
 import sqlite3
 
-from kanjipipe.models import Kanji, Word
+from kanjipipe.models import Kanji, Sentence, Word
 
 
 def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
@@ -68,4 +68,44 @@ def load_words(conn: sqlite3.Connection, words: list["Word"]) -> None:
                     (word_id, kanji_id),
                 )
                 linked.add(kanji_id)
+    conn.commit()
+
+
+def load_sentences(
+    conn: sqlite3.Connection,
+    sentences: list["Sentence"],
+    per_kanji_cap: int = 3,
+) -> None:
+    kanji_id_by_literal = {
+        literal: kanji_id
+        for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")
+    }
+    counts: dict[int, int] = {}
+    for sentence in sorted(sentences, key=lambda s: len(s.ja_text)):
+        needed: list[int] = []
+        seen: set[int] = set()
+        for char in sentence.ja_text:
+            kanji_id = kanji_id_by_literal.get(char)
+            if kanji_id is None or kanji_id in seen:
+                continue
+            seen.add(kanji_id)
+            if counts.get(kanji_id, 0) < per_kanji_cap:
+                needed.append(kanji_id)
+        if not needed:
+            continue
+        cur = conn.execute(
+            "INSERT INTO sentence (text_ja) VALUES (?)", (sentence.ja_text,))
+        sentence_id = cur.lastrowid
+        for lang, text in sentence.translations.items():
+            conn.execute(
+                "INSERT INTO sentence_translation (sentence_id, lang, text) "
+                "VALUES (?, ?, ?)",
+                (sentence_id, lang, text),
+            )
+        for kanji_id in needed:
+            conn.execute(
+                "INSERT INTO sentence_kanji (sentence_id, kanji_id) VALUES (?, ?)",
+                (sentence_id, kanji_id),
+            )
+            counts[kanji_id] = counts.get(kanji_id, 0) + 1
     conn.commit()
