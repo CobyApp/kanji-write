@@ -60,4 +60,25 @@ CREATE TABLE word_gloss (
 
 CREATE INDEX idx_word_kanji_kanji ON word_kanji(kanji_id);
 CREATE INDEX idx_word_gloss_word ON word_gloss(word_id);
+
+CREATE TABLE sentence (
+    id      INTEGER PRIMARY KEY,
+    text_ja TEXT NOT NULL
+);
+
+CREATE TABLE sentence_translation (
+    id          INTEGER PRIMARY KEY,
+    sentence_id INTEGER NOT NULL REFERENCES sentence(id),
+    lang        TEXT NOT NULL,
+    text        TEXT NOT NULL
+);
+
+CREATE TABLE sentence_kanji (
+    sentence_id INTEGER NOT NULL REFERENCES sentence(id),
+    kanji_id    INTEGER NOT NULL REFERENCES kanji(id),
+    UNIQUE(sentence_id, kanji_id)
+);
+
+CREATE INDEX idx_sentence_translation_sentence ON sentence_translation(sentence_id);
+CREATE INDEX idx_sentence_kanji_kanji ON sentence_kanji(kanji_id);
 """
