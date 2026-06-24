@@ -45,6 +45,15 @@ extension DictionaryClient: DependencyKey {
                     )
                 }
             }
+        },
+        strokeOrder: { kanjiID in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db in
+                try String.fetchAll(db, sql: """
+                    SELECT path_d FROM stroke_order
+                    WHERE kanji_id = ? ORDER BY ordinal
+                    """, arguments: [kanjiID])
+            }
         }
     )
 
