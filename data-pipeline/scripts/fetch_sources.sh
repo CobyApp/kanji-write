@@ -27,4 +27,8 @@ json.dump(mapping, open("sources/jlpt.json", "w", encoding="utf-8"), ensure_asci
 print(f"  jlpt.json: {len(mapping)} entries")
 PY
 
+echo "Fetching JMdict (English)..."
+curl -fsSL "http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz" -o sources/jmdict.xml.gz
+gunzip -f sources/jmdict.xml.gz   # -> sources/jmdict.xml
+
 echo "Done. Now build with: python -m kanjipipe.build_db --out out/kanji.sqlite"
