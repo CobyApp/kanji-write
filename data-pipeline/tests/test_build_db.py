@@ -12,6 +12,7 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
         kanjidic2_path=FIX / "kanjidic2_sample.xml",
         jlpt_path=FIX / "jlpt_sample.json",
         kanjivg_path=FIX / "kanjivg_sample.xml",
+        jmdict_path=FIX / "jmdict_sample.xml",
         out_path=str(out),
     )
     assert out.exists()
@@ -32,4 +33,11 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
             "SELECT COUNT(*) FROM stroke_order so JOIN kanji k ON so.kanji_id = k.id "
             "WHERE k.literal = '学'").fetchone()[0]
         assert gaku_count == 8
+        # 山 has the word 山 linked
+        yama_words = conn.execute(
+            "SELECT w.surface FROM word w "
+            "JOIN word_kanji wk ON wk.word_id = w.id "
+            "JOIN kanji k ON wk.kanji_id = k.id "
+            "WHERE k.literal = '山' ORDER BY w.surface").fetchall()
+        assert ("山",) in yama_words
     conn.close()
