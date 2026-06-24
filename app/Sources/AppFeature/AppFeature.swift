@@ -11,6 +11,7 @@ public struct AppFeature {
         public init() {}
     }
 
+    // StackActionOf<KanjiWritingFeature> is not Equatable, so Action intentionally omits Equatable.
     public enum Action {
         case kanjiList(KanjiListFeature.Action)
         case path(StackActionOf<KanjiWritingFeature>)
