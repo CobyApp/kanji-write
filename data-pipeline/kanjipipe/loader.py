@@ -1,7 +1,7 @@
 # kanjipipe/loader.py
 import sqlite3
 
-from kanjipipe.models import Kanji
+from kanjipipe.models import Kanji, Word
 
 
 def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
@@ -40,4 +40,32 @@ def load_stroke_order(
                 "VALUES (?, ?, ?)",
                 (kanji_id, ordinal, path_d),
             )
+    conn.commit()
+
+
+def load_words(conn: sqlite3.Connection, words: list["Word"]) -> None:
+    kanji_id_by_literal = {
+        literal: kanji_id
+        for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")
+    }
+    for word in words:
+        cur = conn.execute(
+            "INSERT INTO word (surface, reading_kana, is_common) VALUES (?, ?, ?)",
+            (word.surface, word.reading_kana, 1 if word.is_common else 0),
+        )
+        word_id = cur.lastrowid
+        for gloss in word.en_glosses:
+            conn.execute(
+                "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'en', ?)",
+                (word_id, gloss),
+            )
+        linked: set[int] = set()
+        for char in word.surface:
+            kanji_id = kanji_id_by_literal.get(char)
+            if kanji_id is not None and kanji_id not in linked:
+                conn.execute(
+                    "INSERT INTO word_kanji (word_id, kanji_id) VALUES (?, ?)",
+                    (word_id, kanji_id),
+                )
+                linked.add(kanji_id)
     conn.commit()
