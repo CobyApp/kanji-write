@@ -1,7 +1,7 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_stroke_order
-from kanjipipe.models import Gloss, Kanji, Reading
+from kanjipipe.loader import load_kanji, load_stroke_order, load_words
+from kanjipipe.models import Gloss, Kanji, Reading, Word
 
 
 def _yama():
@@ -60,10 +60,6 @@ def test_load_stroke_order_skips_kanji_absent_from_map():
     load_stroke_order(conn, {})  # no strokes provided
     count = conn.execute("SELECT COUNT(*) FROM stroke_order").fetchone()[0]
     assert count == 0
-
-
-from kanjipipe.loader import load_words
-from kanjipipe.models import Word
 
 
 def _gaku():

@@ -9,37 +9,50 @@ _XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 _MAX_GLOSSES = 3
 
 
+def _preferred_keb(k_eles) -> str | None:
+    """First kanji form that is not marked irregular/outdated (ke_inf); else the
+    first form. EDRDG usually lists the preferred form first, but some entries
+    front an irregular form — skip those when a clean one exists."""
+    if not k_eles:
+        return None
+    for k_ele in k_eles:
+        keb = k_ele.findtext("keb")
+        if keb and k_ele.find("ke_inf") is None:
+            return keb
+    return k_eles[0].findtext("keb") or None
+
+
+def _entry_to_word(entry) -> Word | None:
+    surface = _preferred_keb(entry.findall("k_ele"))
+    if surface is None:
+        return None  # kana-only entry — no kanji to attach to
+    is_common = (entry.find("k_ele/ke_pri") is not None
+                 or entry.find("r_ele/re_pri") is not None)
+    if not is_common:
+        return None
+    reb = entry.find("r_ele/reb")
+    if reb is None or not reb.text:
+        return None
+    glosses: list[str] = []
+    for gloss in entry.iterfind("sense/gloss"):
+        lang = gloss.get(_XML_LANG)
+        if (lang is None or lang == "eng") and gloss.text:
+            glosses.append(gloss.text)
+            if len(glosses) >= _MAX_GLOSSES:
+                break
+    return Word(surface=surface, reading_kana=reb.text, is_common=True, en_glosses=glosses)
+
+
 def parse_jmdict(path: str | Path) -> list[Word]:
-    # JMdict ships an internal DTD with entity definitions (e.g. &n;); lxml
-    # resolves internal entities by default. no_network avoids fetching anything.
-    parser = etree.XMLParser(resolve_entities=True, no_network=True)
-    root = etree.parse(str(path), parser).getroot()
-
+    # Stream entry-by-entry: JMdict_e is ~60MB, so a whole-DOM parse is costly.
+    # resolve_entities=True expands JMdict's internal DTD entities (e.g. &n;).
     words: list[Word] = []
-    for entry in root.iterfind("entry"):
-        kebs = entry.findall("k_ele/keb")
-        if not kebs or not kebs[0].text:
-            continue  # kana-only entry — no kanji to attach to
-        is_common = (entry.find("k_ele/ke_pri") is not None
-                     or entry.find("r_ele/re_pri") is not None)
-        if not is_common:
-            continue
-        reb = entry.find("r_ele/reb")
-        if reb is None or not reb.text:
-            continue
-
-        glosses: list[str] = []
-        for gloss in entry.iterfind("sense/gloss"):
-            lang = gloss.get(_XML_LANG)
-            if (lang is None or lang == "eng") and gloss.text:
-                glosses.append(gloss.text)
-                if len(glosses) >= _MAX_GLOSSES:
-                    break
-
-        words.append(Word(
-            surface=kebs[0].text,
-            reading_kana=reb.text,
-            is_common=True,
-            en_glosses=glosses,
-        ))
+    for _event, entry in etree.iterparse(
+        str(path), events=("end",), tag="entry",
+        resolve_entities=True, no_network=True,
+    ):
+        word = _entry_to_word(entry)
+        if word is not None:
+            words.append(word)
+        entry.clear()  # release the processed subtree to keep memory flat
     return words
