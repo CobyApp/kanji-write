@@ -93,3 +93,17 @@ def test_assert_core_gates_does_not_fail_on_missing_words():
     load_stroke_order(conn, {0x5C71: ["d1"]})
     # gate passes even though 山 has no words (vocabulary is supplementary)
     assert assert_core_gates(conn)["kanji_without_words"] == 1
+
+
+def test_coverage_report_counts_kanji_without_sentences():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])                 # 山
+    load_stroke_order(conn, {0x5C71: ["d1"]})
+    assert coverage_report(conn)["kanji_without_sentences"] == 1
+
+
+def test_gates_do_not_fail_on_missing_sentences():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])
+    load_stroke_order(conn, {0x5C71: ["d1"]})
+    assert assert_core_gates(conn)["kanji_without_sentences"] == 1
