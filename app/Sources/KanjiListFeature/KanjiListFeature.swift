@@ -16,6 +16,7 @@ public struct KanjiListFeature {
         case onAppear
         case kanjiLoaded([Kanji])
         case loadFailed(String)
+        case kanjiTapped(Kanji)
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
@@ -42,6 +43,8 @@ public struct KanjiListFeature {
             case let .loadFailed(message):
                 state.isLoading = false
                 state.loadError = message
+                return .none
+            case .kanjiTapped:
                 return .none
             }
         }

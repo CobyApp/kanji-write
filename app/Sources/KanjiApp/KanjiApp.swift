@@ -1,6 +1,5 @@
 import AppFeature
 import ComposableArchitecture
-import KanjiListFeature
 import SwiftUI
 
 @main
@@ -11,9 +10,7 @@ struct KanjiApp: App {
 
     var body: some Scene {
         WindowGroup {
-            KanjiListView(
-                store: KanjiApp.store.scope(state: \.kanjiList, action: \.kanjiList)
-            )
+            AppView(store: KanjiApp.store)
         }
     }
 }

@@ -10,18 +10,20 @@ public struct KanjiListView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            Group {
-                if store.isLoading {
-                    ProgressView()
-                } else if let error = store.loadError {
-                    ContentUnavailableView(
-                        "読み込み失敗",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text(error)
-                    )
-                } else {
-                    List(store.kanji) { kanji in
+        Group {
+            if store.isLoading {
+                ProgressView()
+            } else if let error = store.loadError {
+                ContentUnavailableView(
+                    "読み込み失敗",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(error)
+                )
+            } else {
+                List(store.kanji) { kanji in
+                    Button {
+                        store.send(.kanjiTapped(kanji))
+                    } label: {
                         HStack(spacing: 16) {
                             Text(kanji.literal)
                                 .font(.largeTitle)
@@ -32,10 +34,11 @@ public struct KanjiListView: View {
                             }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            .navigationTitle("漢字")
-            .task { store.send(.onAppear) }
         }
+        .navigationTitle("漢字")
+        .task { store.send(.onAppear) }
     }
 }
