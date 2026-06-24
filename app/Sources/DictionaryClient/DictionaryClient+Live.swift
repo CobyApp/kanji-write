@@ -18,6 +18,8 @@ extension DictionaryClient: DependencyKey {
                     let grade: Int? = row["grade"]
                     let jlpt: String? = row["jlpt_level"]
 
+                    // NOTE: N+1 by design for the 2-row scaffold DB; replace with a single
+                    // grouped query (or JOIN) when loading the full kanji set.
                     let readingRows = try Row.fetchAll(db, sql: """
                         SELECT lang_axis, value FROM reading
                         WHERE kanji_id = ? AND lang_axis IN ('on', 'kun')
@@ -47,7 +49,7 @@ extension DictionaryClient: DependencyKey {
     )
 
     /// Opens the placeholder dictionary DB bundled with this module, read-only.
-    static func openBundledDatabase() throws -> DatabaseQueue {
+    private static func openBundledDatabase() throws -> DatabaseQueue {
         guard let url = Bundle.module.url(forResource: "kanji", withExtension: "sqlite") else {
             throw DictionaryError.databaseUnavailable
         }
