@@ -29,6 +29,7 @@ public struct StudyPlanFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                guard state.kanji.isEmpty else { return .none }
                 state.isLoading = true
                 return .run { send in
                     async let plan = userStore.loadPlan()

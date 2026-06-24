@@ -18,7 +18,10 @@ public struct StudyPlan: Codable, Equatable {
     }
 
     public var totalCount: Int { dayAssignments.reduce(0) { $0 + $1.count } }
-    public var completedCount: Int { completedKanjiIDs.count }
+    public var completedCount: Int {
+        let planned = Set(dayAssignments.joined())
+        return completedKanjiIDs.intersection(planned).count
+    }
     public var progress: Double {
         totalCount == 0 ? 0 : Double(completedCount) / Double(totalCount)
     }
