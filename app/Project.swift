@@ -50,6 +50,7 @@ let project = Project(
             dependencies: [
                 .target(name: "KanjiListFeature"),
                 .target(name: "WritingCanvas"),
+                .target(name: "StudyPlan"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
