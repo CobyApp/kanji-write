@@ -39,3 +39,27 @@ def test_foreign_keys_link_children_to_parent():
         "SELECT COUNT(*) FROM reading r JOIN kanji k ON r.kanji_id = k.id "
         "WHERE k.literal = '山'").fetchone()[0]
     assert linked == 4
+
+
+from kanjipipe.loader import load_stroke_order
+
+
+def test_load_stroke_order_links_by_codepoint_in_order():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山, codepoint 0x5C71
+
+    load_stroke_order(conn, {0x5C71: ["d1", "d2", "d3"]})
+
+    rows = conn.execute(
+        "SELECT ordinal, path_d FROM stroke_order so "
+        "JOIN kanji k ON so.kanji_id = k.id WHERE k.literal = '山' "
+        "ORDER BY ordinal").fetchall()
+    assert rows == [(1, "d1"), (2, "d2"), (3, "d3")]
+
+
+def test_load_stroke_order_skips_kanji_absent_from_map():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_stroke_order(conn, {})  # no strokes provided
+    count = conn.execute("SELECT COUNT(*) FROM stroke_order").fetchone()[0]
+    assert count == 0
