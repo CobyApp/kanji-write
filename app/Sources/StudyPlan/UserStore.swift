@@ -22,7 +22,7 @@ extension UserStore {
                     at: url.deletingLastPathComponent(),
                     withIntermediateDirectories: true)
                 if let data = try? JSONEncoder().encode(plan) {
-                    try? data.write(to: url)
+                    try? data.write(to: url, options: .atomic)
                 }
             }
         )

@@ -29,4 +29,11 @@ final class StudyPlanModelTests: XCTestCase {
         XCTAssertEqual(p.completedCount, 3)
         XCTAssertEqual(p.progress, 0.6, accuracy: 0.0001)
     }
+
+    func testCompletedCountIgnoresIDsNotInPlan() {
+        let p = StudyPlan(axisLabel: "学年", durationDays: 1,
+                          dayAssignments: [[1, 2]], completedKanjiIDs: [1, 2, 999])
+        XCTAssertEqual(p.completedCount, 2)
+        XCTAssertEqual(p.progress, 1.0, accuracy: 0.0001)
+    }
 }

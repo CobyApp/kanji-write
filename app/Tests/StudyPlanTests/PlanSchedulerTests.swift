@@ -24,4 +24,10 @@ final class PlanSchedulerTests: XCTestCase {
     func testEmptyInputYieldsNoBuckets() {
         XCTAssertEqual(PlanScheduler.distribute(kanjiIDs: [], days: 3), [])
     }
+
+    func testZeroDaysClampsToSingleBucket() {
+        XCTAssertEqual(
+            PlanScheduler.distribute(kanjiIDs: [1, 2, 3], days: 0),
+            [[1, 2, 3]])
+    }
 }
