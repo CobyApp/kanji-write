@@ -22,6 +22,7 @@ def test_coverage_report_counts_gaps():
     assert report["missing_reading"] == 0
     assert report["missing_en"] == 0
     assert report["missing_grade"] == 0
+    assert report["missing_stroke_order"] == 1  # _good() has no strokes seeded
 
 
 def test_assert_core_gates_passes_on_complete_data():
