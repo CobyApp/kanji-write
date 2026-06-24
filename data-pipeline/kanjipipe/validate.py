@@ -16,6 +16,9 @@ def coverage_report(conn: sqlite3.Connection) -> dict[str, int]:
             "(SELECT 1 FROM gloss g WHERE g.kanji_id = k.id AND g.lang = 'en')"),
         "missing_grade": scalar(
             "SELECT COUNT(*) FROM kanji WHERE grade IS NULL"),
+        "missing_stroke_order": scalar(
+            "SELECT COUNT(*) FROM kanji k WHERE NOT EXISTS "
+            "(SELECT 1 FROM stroke_order s WHERE s.kanji_id = k.id)"),
     }
 
 
@@ -30,6 +33,9 @@ def assert_core_gates(conn: sqlite3.Connection) -> dict[str, int]:
         problems.append(f"{report['missing_en']} kanji missing EN meaning")
     if report["missing_grade"]:
         problems.append(f"{report['missing_grade']} kanji missing grade")
+    if report["missing_stroke_order"]:
+        problems.append(
+            f"{report['missing_stroke_order']} kanji missing stroke order")
     if problems:
         raise ValueError("coverage gate failed: " + "; ".join(problems))
     return report

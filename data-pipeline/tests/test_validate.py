@@ -2,7 +2,7 @@
 import pytest
 
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji
+from kanjipipe.loader import load_kanji, load_stroke_order
 from kanjipipe.models import Gloss, Kanji, Reading
 from kanjipipe.validate import assert_core_gates, coverage_report
 
@@ -27,6 +27,7 @@ def test_coverage_report_counts_gaps():
 def test_assert_core_gates_passes_on_complete_data():
     conn = init_db(":memory:")
     load_kanji(conn, [_good()])
+    load_stroke_order(conn, {0x5C71: ["d1"]})
     assert assert_core_gates(conn)["total"] == 1
 
 
@@ -61,3 +62,17 @@ def test_assert_core_gates_fails_on_empty_db():
     conn = init_db(":memory:")
     with pytest.raises(ValueError, match="no kanji loaded"):
         assert_core_gates(conn)
+
+
+def test_assert_core_gates_fails_when_stroke_order_missing():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])          # has reading + EN gloss + grade, but no strokes
+    with pytest.raises(ValueError, match="missing stroke order"):
+        assert_core_gates(conn)
+
+
+def test_assert_core_gates_passes_with_stroke_order():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])          # _good() is 山, codepoint 0x5C71
+    load_stroke_order(conn, {0x5C71: ["d1"]})
+    assert assert_core_gates(conn)["missing_stroke_order"] == 0
