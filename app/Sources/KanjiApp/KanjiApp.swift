@@ -4,13 +4,13 @@ import SwiftUI
 
 @main
 struct KanjiApp: App {
-    @MainActor static let store = Store(initialState: AppFeature.State()) {
-        AppFeature()
+    @MainActor static let store = Store(initialState: RootFeature.State()) {
+        RootFeature()
     }
 
     var body: some Scene {
         WindowGroup {
-            AppView(store: KanjiApp.store)
+            RootView(store: KanjiApp.store)
         }
     }
 }
