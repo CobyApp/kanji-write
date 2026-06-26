@@ -15,6 +15,7 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
         jmdict_path=FIX / "jmdict_sample.xml",
         sentences_path=FIX / "sentences_sample.csv",
         links_path=FIX / "links_sample.csv",
+        llm_glosses_path=FIX / "llm_glosses_sample.jsonl",
         out_path=str(out),
     )
     assert out.exists()
@@ -61,4 +62,9 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
             "ORDER BY r.type").fetchall()
         assert ("山", "学校", "related") in rel
         assert ("学校", "山", "antonym") in rel
+        # 山 native Korean gloss from the LLM JSONL, tagged source='llm'
+        ko = conn.execute(
+            "SELECT g.text, g.source FROM gloss g JOIN kanji k ON g.kanji_id = k.id "
+            "WHERE k.literal = '山' AND g.lang = 'ko'").fetchone()
+        assert ko == ("메 산", "llm")
     conn.close()
