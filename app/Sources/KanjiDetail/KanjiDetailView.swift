@@ -4,6 +4,7 @@ import SwiftUI
 
 public struct KanjiDetailView: View {
     @Bindable public var store: StoreOf<KanjiDetailFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     public init(store: StoreOf<KanjiDetailFeature>) {
         self.store = store
@@ -32,7 +33,7 @@ public struct KanjiDetailView: View {
             Text(store.kanji.literal)
                 .font(.system(size: 84))
             VStack(alignment: .leading, spacing: 8) {
-                Text(store.glosses["ko"] ?? "")
+                Text(localizedGloss(store.glosses, appLanguage) ?? "")
                     .font(.title)
                 HStack(spacing: 8) {
                     if let grade = store.kanji.grade { chip("学\(grade)") }
@@ -84,8 +85,8 @@ public struct KanjiDetailView: View {
             ForEach(store.sentences) { sentence in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sentence.textJa)
-                    if let ko = sentence.translations["ko"] {
-                        Text(ko).font(.callout).foregroundStyle(.secondary)
+                    if let translation = localizedTranslation(sentence.translations, appLanguage) {
+                        Text(translation).font(.callout).foregroundStyle(.secondary)
                     }
                 }
             }
