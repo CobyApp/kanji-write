@@ -4,13 +4,13 @@
   <ent_seq>1</ent_seq>
   <k_ele><keb>山</keb><ke_pri>news1</ke_pri></k_ele>
   <r_ele><reb>やま</reb><re_pri>news1</re_pri></r_ele>
-  <sense><gloss>mountain</gloss><gloss>hill</gloss></sense>
+  <sense><gloss>mountain</gloss><gloss>hill</gloss><xref>学校</xref></sense>
 </entry>
 <entry>
   <ent_seq>2</ent_seq>
   <k_ele><keb>学校</keb><ke_pri>ichi1</ke_pri></k_ele>
   <r_ele><reb>がっこう</reb><re_pri>ichi1</re_pri></r_ele>
-  <sense><gloss>school</gloss></sense>
+  <sense><gloss>school</gloss><ant>山・やま・1</ant></sense>
 </entry>
 <entry>
   <ent_seq>3</ent_seq>

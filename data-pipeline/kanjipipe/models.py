@@ -39,3 +39,10 @@ class Word:
 class Sentence:
     ja_text: str
     translations: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
+class Relation:
+    source_surface: str
+    target_surface: str
+    type: str

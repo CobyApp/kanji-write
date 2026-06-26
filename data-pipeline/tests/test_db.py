@@ -11,7 +11,8 @@ def test_init_db_creates_core_tables():
         "SELECT name FROM sqlite_master WHERE type='table'")}
     assert {"kanji", "reading", "gloss", "stroke_order",
             "word", "word_kanji", "word_gloss",
-            "sentence", "sentence_translation", "sentence_kanji"} <= tables
+            "sentence", "sentence_translation", "sentence_kanji",
+            "relation"} <= tables
 
 
 def test_init_db_enables_foreign_keys():
