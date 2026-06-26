@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import SharedModels
 import SwiftUI
+import WritingCanvas
 
 public struct KanjiDetailView: View {
     @Bindable public var store: StoreOf<KanjiDetailFeature>
@@ -15,6 +16,7 @@ public struct KanjiDetailView: View {
             VStack(alignment: .leading, spacing: 24) {
                 header
                 readings
+                if !store.strokePaths.isEmpty { strokeOrderSection }
                 if !store.words.isEmpty { wordsSection }
                 if !store.sentences.isEmpty { sentencesSection }
                 if !store.relations.isEmpty { relationsSection }
@@ -63,6 +65,13 @@ public struct KanjiDetailView: View {
                 Text("訓 " + store.kanji.kunReadings.joined(separator: "、"))
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+
+    private var strokeOrderSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("画順").font(.headline)
+            StrokeOrderPlayer(paths: store.strokePaths)
         }
     }
 
