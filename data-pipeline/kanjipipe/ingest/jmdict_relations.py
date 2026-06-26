@@ -3,27 +3,20 @@ from pathlib import Path
 
 from lxml import etree
 
+from kanjipipe.ingest._jmdict_util import preferred_keb
 from kanjipipe.models import Relation
-
-
-def _preferred_keb(entry) -> str | None:
-    k_eles = entry.findall("k_ele")
-    for k_ele in k_eles:
-        keb = k_ele.findtext("keb")
-        if keb and k_ele.find("ke_inf") is None:
-            return keb
-    return (k_eles[0].findtext("keb") if k_eles else None) or None
 
 
 def _target_surface(text: str | None) -> str | None:
     # JMdict xref/ant targets look like "語・よみ・senseNo"; keep the surface only.
+    # The separator is U+30FB KATAKANA MIDDLE DOT.
     if not text:
         return None
     return text.split("・", 1)[0] or None
 
 
 def _entry_relations(entry) -> list[Relation]:
-    source = _preferred_keb(entry)
+    source = preferred_keb(entry)
     if source is None:
         return []
     relations: list[Relation] = []
