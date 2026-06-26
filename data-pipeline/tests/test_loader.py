@@ -1,7 +1,7 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_sentences, load_stroke_order, load_words
-from kanjipipe.models import Gloss, Kanji, Reading, Sentence, Word
+from kanjipipe.loader import load_kanji, load_relations, load_sentences, load_stroke_order, load_words
+from kanjipipe.models import Gloss, Kanji, Reading, Relation, Sentence, Word
 
 
 def _yama():
@@ -124,3 +124,34 @@ def test_load_sentences_skips_sentence_without_joyo_kanji():
     load_kanji(conn, [_yama()])
     load_sentences(conn, [Sentence(ja_text="これはペンです。", translations={"en": "This is a pen."})])
     assert conn.execute("SELECT COUNT(*) FROM sentence").fetchone()[0] == 0
+
+
+def test_load_relations_links_stored_words_only():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_words(conn, [
+        Word(surface="山", reading_kana="やま", en_glosses=["mountain"]),
+        Word(surface="学校", reading_kana="がっこう", en_glosses=["school"]),
+    ])
+
+    load_relations(conn, [
+        Relation(source_surface="山", target_surface="学校", type="related"),
+        Relation(source_surface="山", target_surface="未登録語", type="antonym"),  # target not stored
+    ])
+
+    rows = conn.execute(
+        "SELECT a.surface, b.surface, r.type FROM relation r "
+        "JOIN word a ON r.word_id_a = a.id JOIN word b ON r.word_id_b = b.id"
+    ).fetchall()
+    assert rows == [("山", "学校", "related")]   # the unstored-target relation is skipped
+
+
+def test_load_relations_dedupes_via_unique():
+    conn = init_db(":memory:")
+    load_words(conn, [
+        Word(surface="山", reading_kana="やま", en_glosses=[]),
+        Word(surface="学校", reading_kana="がっこう", en_glosses=[]),
+    ])
+    rel = Relation(source_surface="山", target_surface="学校", type="related")
+    load_relations(conn, [rel, rel])  # duplicate
+    assert conn.execute("SELECT COUNT(*) FROM relation").fetchone()[0] == 1
