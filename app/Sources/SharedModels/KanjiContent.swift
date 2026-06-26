@@ -27,3 +27,15 @@ public struct ExampleSentence: Equatable, Identifiable, Sendable {
         self.translations = translations
     }
 }
+
+/// An antonym or related word surfaced for a kanji.
+public struct RelationEntry: Equatable, Identifiable, Sendable {
+    public var id: String { "\(type):\(surface)" }
+    public let surface: String
+    public let type: String   // "antonym" | "related"
+
+    public init(surface: String, type: String) {
+        self.surface = surface
+        self.type = type
+    }
+}

@@ -54,4 +54,15 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertTrue(sentences[0].textJa.contains("山"))
         XCTAssertFalse(sentences[0].translations.isEmpty)
     }
+
+    func testLiveReadsRelationsForKanji() async throws {
+        let client = DictionaryClient.liveValue
+        let allKanji = try await client.allKanji()
+        // 大 (big) is common and has antonyms (e.g. 小さい) in JMdict.
+        let dai = try XCTUnwrap(allKanji.first { $0.literal == "大" })
+        let relations = try await client.relations(dai.id, 20)
+        XCTAssertFalse(relations.isEmpty)
+        XCTAssertTrue(relations.allSatisfy { $0.type == "antonym" || $0.type == "related" })
+        XCTAssertTrue(relations.allSatisfy { !$0.surface.isEmpty })
+    }
 }

@@ -15,6 +15,7 @@ public struct DictionaryClient: Sendable {
     public var glosses: @Sendable (_ kanjiID: Int) async throws -> [String: String]
     public var words: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [WordEntry]
     public var sentences: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [ExampleSentence]
+    public var relations: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [RelationEntry]
 }
 
 extension DictionaryClient: TestDependencyKey {
