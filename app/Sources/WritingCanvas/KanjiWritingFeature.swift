@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import DictionaryClient
+import Foundation
 import SharedModels
 
 @Reducer
@@ -9,6 +10,7 @@ public struct KanjiWritingFeature {
         public let kanji: Kanji
         public var strokePaths: [String] = []
         public var showGuide = true
+        public var savedDrawingData: Data?
         public init(kanji: Kanji) { self.kanji = kanji }
     }
 
@@ -16,9 +18,12 @@ public struct KanjiWritingFeature {
         case onAppear
         case strokesLoaded([String])
         case toggleGuide
+        case drawingLoaded(Data?)
+        case saveDrawing(Data)
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
+    @Dependency(\.drawingStore) var drawingStore
 
     public init() {}
 
@@ -28,6 +33,7 @@ public struct KanjiWritingFeature {
             case .onAppear:
                 let id = state.kanji.id
                 return .run { send in
+                    async let drawingData = drawingStore.loadDrawing(id)
                     do {
                         await send(.strokesLoaded(try await dictionaryClient.strokeOrder(id)))
                     } catch {
@@ -35,6 +41,7 @@ public struct KanjiWritingFeature {
                         // the writing canvas remains fully usable.
                         await send(.strokesLoaded([]))
                     }
+                    await send(.drawingLoaded(await drawingData))
                 }
             case let .strokesLoaded(paths):
                 state.strokePaths = paths
@@ -42,6 +49,12 @@ public struct KanjiWritingFeature {
             case .toggleGuide:
                 state.showGuide.toggle()
                 return .none
+            case let .drawingLoaded(data):
+                state.savedDrawingData = data
+                return .none
+            case let .saveDrawing(data):
+                let id = state.kanji.id
+                return .run { _ in await drawingStore.saveDrawing(id, data) }
             }
         }
     }
