@@ -10,9 +10,11 @@ from kanjipipe.ingest.kanjidic2 import parse_kanjidic2
 from kanjipipe.ingest.jmdict import parse_jmdict
 from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
 from kanjipipe.ingest.kanjivg import parse_kanjivg
+from kanjipipe.ingest.llm_glosses import parse_llm_glosses
 from kanjipipe.ingest.tatoeba import parse_tatoeba
 from kanjipipe.loader import (
-    load_kanji, load_relations, load_sentences, load_stroke_order, load_words)
+    load_kanji, load_llm_glosses, load_relations, load_sentences,
+    load_stroke_order, load_words)
 from kanjipipe.validate import assert_core_gates
 
 
@@ -24,6 +26,7 @@ def build(
     sentences_path: str | Path,
     links_path: str | Path,
     out_path: str,
+    llm_glosses_path: str | Path | None = None,
 ) -> dict[str, int]:
     kanji = parse_kanjidic2(kanjidic2_path)
     kanji = filter_joyo(kanji)
@@ -38,6 +41,8 @@ def build(
     conn = init_db(out_path)
     try:
         load_kanji(conn, kanji)
+        if llm_glosses_path is not None and os.path.exists(llm_glosses_path):
+            load_llm_glosses(conn, parse_llm_glosses(llm_glosses_path))
         load_stroke_order(conn, strokes)
         load_words(conn, words)
         load_relations(conn, relations)
@@ -56,11 +61,13 @@ def main() -> None:
     parser.add_argument("--jmdict", default="sources/jmdict.xml")
     parser.add_argument("--sentences", default="sources/sentences.csv")
     parser.add_argument("--links", default="sources/links.csv")
+    parser.add_argument("--llm-glosses", default="sources/llm_glosses.jsonl")
     parser.add_argument("--out", default="out/kanji.sqlite")
     args = parser.parse_args()
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     report = build(args.kanjidic2, args.jlpt, args.kanjivg, args.jmdict,
-                   args.sentences, args.links, args.out)
+                   args.sentences, args.links, args.out,
+                   llm_glosses_path=args.llm_glosses)
     print(f"built {args.out}: {report}")
 
 
