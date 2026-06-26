@@ -1,7 +1,7 @@
 # kanjipipe/loader.py
 import sqlite3
 
-from kanjipipe.models import Kanji, Relation, Sentence, Word
+from kanjipipe.models import Kanji, LlmGloss, Relation, Sentence, Word
 
 
 def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
@@ -125,4 +125,23 @@ def load_relations(conn: sqlite3.Connection, relations: list["Relation"]) -> Non
             "VALUES (?, ?, ?)",
             (a, b, relation.type),
         )
+    conn.commit()
+
+
+def load_llm_glosses(conn: sqlite3.Connection, entries: list["LlmGloss"]) -> None:
+    kanji_id_by_literal = {
+        literal: kanji_id
+        for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")
+    }
+    for entry in entries:
+        kanji_id = kanji_id_by_literal.get(entry.literal)
+        if kanji_id is None:
+            continue
+        for lang, text in (("ko", entry.ko), ("ja", entry.ja), ("zh", entry.zh)):
+            if text:
+                conn.execute(
+                    "INSERT INTO gloss (kanji_id, lang, text, source) "
+                    "VALUES (?, ?, ?, 'llm')",
+                    (kanji_id, lang, text),
+                )
     conn.commit()
