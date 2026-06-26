@@ -4,6 +4,7 @@ import SwiftUI
 
 public struct KanjiListView: View {
     @Bindable public var store: StoreOf<KanjiListFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     public init(store: StoreOf<KanjiListFeature>) {
         self.store = store
@@ -39,6 +40,17 @@ public struct KanjiListView: View {
             }
         }
         .navigationTitle("漢字")
+        .toolbar {
+            Menu {
+                Picker("Language", selection: $appLanguage) {
+                    ForEach(AppLanguage.allCases, id: \.self) { language in
+                        Text(language.label).tag(language)
+                    }
+                }
+            } label: {
+                Image(systemName: "globe")
+            }
+        }
         .task { store.send(.onAppear) }
     }
 }
