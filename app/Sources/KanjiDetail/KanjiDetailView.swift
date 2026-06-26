@@ -35,7 +35,7 @@ public struct KanjiDetailView: View {
                 Text(store.glosses["ko"] ?? "")
                     .font(.title)
                 HStack(spacing: 8) {
-                    chip("\(store.kanji.grade.map { "学\($0)" } ?? "")")
+                    if let grade = store.kanji.grade { chip("学\(grade)") }
                     if let jlpt = store.kanji.jlptLevel { chip(jlpt) }
                 }
             }
@@ -49,15 +49,18 @@ public struct KanjiDetailView: View {
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(Color(.secondarySystemBackground))
             .clipShape(Capsule())
-            .opacity(text.isEmpty ? 0 : 1)
     }
 
     private var readings: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("読み").font(.headline)
-            Text("音 " + store.kanji.onReadings.joined(separator: "、"))
-            Text("訓 " + store.kanji.kunReadings.joined(separator: "、"))
-                .foregroundStyle(.secondary)
+            if !store.kanji.onReadings.isEmpty {
+                Text("音 " + store.kanji.onReadings.joined(separator: "、"))
+            }
+            if !store.kanji.kunReadings.isEmpty {
+                Text("訓 " + store.kanji.kunReadings.joined(separator: "、"))
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 

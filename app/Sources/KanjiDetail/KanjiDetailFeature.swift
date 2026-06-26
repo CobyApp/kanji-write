@@ -28,6 +28,7 @@ public struct KanjiDetailFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                guard state.glosses.isEmpty else { return .none }
                 state.isLoading = true
                 let id = state.kanji.id
                 return .run { send in

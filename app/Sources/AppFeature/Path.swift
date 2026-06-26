@@ -9,4 +9,6 @@ public enum Path {
     case writing(KanjiWritingFeature)
 }
 
+// Both member states (KanjiDetailFeature.State, KanjiWritingFeature.State) are
+// Equatable; update/revisit this if a new Path case adds a non-Equatable state.
 extension Path.State: Equatable {}

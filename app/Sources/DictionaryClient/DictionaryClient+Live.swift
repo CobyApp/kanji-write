@@ -60,7 +60,7 @@ extension DictionaryClient: DependencyKey {
             return try await queue.read { db in
                 var result: [String: String] = [:]
                 for row in try Row.fetchAll(
-                    db, sql: "SELECT lang, text FROM gloss WHERE kanji_id = ?",
+                    db, sql: "SELECT lang, GROUP_CONCAT(text, '; ') AS text FROM gloss WHERE kanji_id = ? GROUP BY lang",
                     arguments: [kanjiID]
                 ) {
                     let lang: String = row["lang"]
@@ -72,6 +72,8 @@ extension DictionaryClient: DependencyKey {
         words: { kanjiID, limit in
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [WordEntry] in
+                // NOTE: N+1 by design; limit is small (≤12 words / ≤3 sentences) on a
+                // local read-only DB. Replace with a JOIN + aggregation if limits grow.
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT w.id, w.surface, w.reading_kana FROM word w
                     JOIN word_kanji wk ON wk.word_id = w.id
@@ -93,6 +95,8 @@ extension DictionaryClient: DependencyKey {
         sentences: { kanjiID, limit in
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [ExampleSentence] in
+                // NOTE: N+1 by design; limit is small (≤12 words / ≤3 sentences) on a
+                // local read-only DB. Replace with a JOIN + aggregation if limits grow.
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT s.id, s.text_ja FROM sentence s
                     JOIN sentence_kanji sk ON sk.sentence_id = s.id
