@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import KanjiDetail
 import KanjiListFeature
 import SwiftUI
 import WritingCanvas
@@ -18,7 +19,12 @@ public struct AppView: View {
                 store: store.scope(state: \.kanjiList, action: \.kanjiList)
             )
         } destination: { store in
-            KanjiWritingView(store: store)
+            switch store.case {
+            case let .detail(store):
+                KanjiDetailView(store: store)
+            case let .writing(store):
+                KanjiWritingView(store: store)
+            }
         }
     }
 }

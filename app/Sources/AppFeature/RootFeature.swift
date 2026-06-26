@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import KanjiDetail
 import StudyPlan
 import WritingCanvas
 
@@ -9,18 +10,18 @@ public struct RootFeature {
         public var selectedTab: Tab = .browse
         public var browse = AppFeature.State()
         public var plan = StudyPlanFeature.State()
-        public var planPath = StackState<KanjiWritingFeature.State>()
+        public var planPath = StackState<Path.State>()
         public init() {}
 
         public enum Tab: Equatable { case browse, plan }
     }
 
-    // StackActionOf<KanjiWritingFeature> is not Equatable, so Action intentionally omits Equatable.
+    // StackActionOf<Path> is not Equatable, so Action intentionally omits Equatable.
     public enum Action {
         case tabSelected(State.Tab)
         case browse(AppFeature.Action)
         case plan(StudyPlanFeature.Action)
-        case planPath(StackActionOf<KanjiWritingFeature>)
+        case planPath(StackActionOf<Path>)
     }
 
     public init() {}
@@ -34,14 +35,17 @@ public struct RootFeature {
                 state.selectedTab = tab
                 return .none
             case let .plan(.kanjiTapped(kanji)):
-                state.planPath.append(KanjiWritingFeature.State(kanji: kanji))
+                state.planPath.append(.detail(KanjiDetailFeature.State(kanji: kanji)))
+                return .none
+            case let .planPath(.element(id: id, action: .detail(.writeTapped))):
+                if case let .detail(detail) = state.planPath[id: id] {
+                    state.planPath.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
+                }
                 return .none
             case .browse, .plan, .planPath:
                 return .none
             }
         }
-        .forEach(\.planPath, action: \.planPath) {
-            KanjiWritingFeature()
-        }
+        .forEach(\.planPath, action: \.planPath)
     }
 }

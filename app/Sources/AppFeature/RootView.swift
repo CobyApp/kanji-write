@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import KanjiDetail
 import StudyPlan
 import SwiftUI
 import WritingCanvas
@@ -24,7 +25,12 @@ public struct RootView: View {
             ) {
                 StudyPlanView(store: store.scope(state: \.plan, action: \.plan))
             } destination: { store in
-                KanjiWritingView(store: store)
+                switch store.case {
+                case let .detail(store):
+                    KanjiDetailView(store: store)
+                case let .writing(store):
+                    KanjiWritingView(store: store)
+                }
             }
             .tabItem { Label("プラン", systemImage: "calendar") }
             .tag(RootFeature.State.Tab.plan)
