@@ -138,8 +138,17 @@ extension DictionaryClient: DependencyKey {
         }
     )
 
-    /// Opens the placeholder dictionary DB bundled with this module, read-only.
+    /// The bundled dictionary DB, opened once and shared. A `DatabaseQueue` is
+    /// thread-safe and long-lived, so every endpoint reuses this single
+    /// read-only connection instead of reopening the file per call.
+    private static let bundledQueue: Result<DatabaseQueue, Error> =
+        Result { try makeBundledDatabase() }
+
     private static func openBundledDatabase() throws -> DatabaseQueue {
+        try bundledQueue.get()
+    }
+
+    private static func makeBundledDatabase() throws -> DatabaseQueue {
         guard let url = Bundle.module.url(forResource: "kanji", withExtension: "sqlite") else {
             throw DictionaryError.databaseUnavailable
         }
