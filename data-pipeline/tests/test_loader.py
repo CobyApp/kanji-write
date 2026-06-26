@@ -1,7 +1,7 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_relations, load_sentences, load_stroke_order, load_words
-from kanjipipe.models import Gloss, Kanji, Reading, Relation, Sentence, Word
+from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentences, load_stroke_order, load_words
+from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Relation, Sentence, Word
 
 
 def _yama():
@@ -155,10 +155,6 @@ def test_load_relations_dedupes_via_unique():
     rel = Relation(source_surface="山", target_surface="学校", type="related")
     load_relations(conn, [rel, rel])  # duplicate
     assert conn.execute("SELECT COUNT(*) FROM relation").fetchone()[0] == 1
-
-
-from kanjipipe.loader import load_llm_glosses
-from kanjipipe.models import LlmGloss
 
 
 def test_load_llm_glosses_inserts_native_glosses_with_source():
