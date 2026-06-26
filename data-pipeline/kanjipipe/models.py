@@ -46,3 +46,11 @@ class Relation:
     source_surface: str
     target_surface: str
     type: str
+
+
+@dataclass
+class LlmGloss:
+    literal: str
+    ko: str | None = None
+    ja: str | None = None
+    zh: str | None = None
