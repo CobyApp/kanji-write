@@ -10,13 +10,14 @@ public struct KanjiDetailFeature {
         public var glosses: [String: String] = [:]
         public var words: IdentifiedArrayOf<WordEntry> = []
         public var sentences: [ExampleSentence] = []
+        public var relations: [RelationEntry] = []
         public var isLoading = false
         public init(kanji: Kanji) { self.kanji = kanji }
     }
 
     public enum Action: Equatable {
         case onAppear
-        case loaded([String: String], [WordEntry], [ExampleSentence])
+        case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry])
         case writeTapped
     }
 
@@ -35,17 +36,20 @@ public struct KanjiDetailFeature {
                     async let glosses = dictionaryClient.glosses(id)
                     async let words = dictionaryClient.words(id, 12)
                     async let sentences = dictionaryClient.sentences(id, 3)
+                    async let relations = dictionaryClient.relations(id, 20)
                     await send(.loaded(
                         (try? await glosses) ?? [:],
                         (try? await words) ?? [],
-                        (try? await sentences) ?? []
+                        (try? await sentences) ?? [],
+                        (try? await relations) ?? []
                     ))
                 }
-            case let .loaded(glosses, words, sentences):
+            case let .loaded(glosses, words, sentences, relations):
                 state.isLoading = false
                 state.glosses = glosses
                 state.words = IdentifiedArray(uniqueElements: words)
                 state.sentences = sentences
+                state.relations = relations
                 return .none
             case .writeTapped:
                 return .none  // handled by the parent (navigation)

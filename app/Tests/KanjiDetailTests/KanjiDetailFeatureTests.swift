@@ -22,17 +22,22 @@ final class KanjiDetailFeatureTests: XCTestCase {
             $0.dictionaryClient.sentences = { _, _ in
                 [ExampleSentence(id: 20, textJa: "山が高い。", translations: ["ko": "산이 높다."])]
             }
+            $0.dictionaryClient.relations = { _, _ in
+                [RelationEntry(surface: "小", type: "antonym")]
+            }
         }
         await store.send(.onAppear) { $0.isLoading = true }
         await store.receive(
             .loaded(["ko": "메 산", "en": "mountain"],
                     [WordEntry(id: 10, surface: "火山", reading: "かざん", meaningEn: "volcano")],
-                    [ExampleSentence(id: 20, textJa: "山が高い。", translations: ["ko": "산이 높다."])])
+                    [ExampleSentence(id: 20, textJa: "山が高い。", translations: ["ko": "산이 높다."])],
+                    [RelationEntry(surface: "小", type: "antonym")])
         ) {
             $0.isLoading = false
             $0.glosses = ["ko": "메 산", "en": "mountain"]
             $0.words = [WordEntry(id: 10, surface: "火山", reading: "かざん", meaningEn: "volcano")]
             $0.sentences = [ExampleSentence(id: 20, textJa: "山が高い。", translations: ["ko": "산이 높다."])]
+            $0.relations = [RelationEntry(surface: "小", type: "antonym")]
         }
     }
 }
