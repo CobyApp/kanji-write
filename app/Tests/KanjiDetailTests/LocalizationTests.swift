@@ -24,6 +24,13 @@ final class LocalizationTests: XCTestCase {
         let tr = ["en": "It is high.", "ko": "높다."]
         XCTAssertEqual(localizedTranslation(tr, .ko), "높다.")
         XCTAssertEqual(localizedTranslation(tr, .zh), "It is high.")  // selected absent → en
+        XCTAssertEqual(localizedTranslation(["ja": "高い。"], .zh), "高い。")  // → ... → ja
         XCTAssertNil(localizedTranslation([:], .ja))
+    }
+
+    func testEmptyStringValuesAreSkipped() {
+        // A blank gloss in the selected language falls through to the next non-empty.
+        XCTAssertEqual(localizedGloss(["ko": "", "en": "mountain"], .ko), "mountain")
+        XCTAssertEqual(localizedTranslation(["zh": "", "ko": "높다."], .zh), "높다.")
     }
 }
