@@ -1,8 +1,9 @@
 # macOS
 .DS_Store
 
-# Data pipeline: raw downloaded datasets (fetched by script, not versioned)
-data-pipeline/sources/
+# Data pipeline: raw downloaded datasets (fetched by script, not versioned).
+# Ignore everything in sources/ EXCEPT the curated LLM gloss file (see bottom).
+data-pipeline/sources/*
 
 # Python
 __pycache__/
@@ -26,3 +27,6 @@ app/*.xcodeproj
 app/*.xcworkspace
 app/Derived/
 app/Tuist/.build/
+
+# LLM-generated native glosses are curated output (not re-downloadable, non-deterministic) — keep them
+!data-pipeline/sources/llm_glosses.jsonl
