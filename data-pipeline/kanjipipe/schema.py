@@ -91,4 +91,5 @@ CREATE TABLE relation (
 );
 
 CREATE INDEX idx_relation_a ON relation(word_id_a);
+CREATE INDEX idx_relation_b ON relation(word_id_b);
 """

@@ -3,27 +3,15 @@ from pathlib import Path
 
 from lxml import etree
 
+from kanjipipe.ingest._jmdict_util import preferred_keb
 from kanjipipe.models import Word
 
 _XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 _MAX_GLOSSES = 3
 
 
-def _preferred_keb(k_eles) -> str | None:
-    """First kanji form that is not marked irregular/outdated (ke_inf); else the
-    first form. EDRDG usually lists the preferred form first, but some entries
-    front an irregular form — skip those when a clean one exists."""
-    if not k_eles:
-        return None
-    for k_ele in k_eles:
-        keb = k_ele.findtext("keb")
-        if keb and k_ele.find("ke_inf") is None:
-            return keb
-    return k_eles[0].findtext("keb") or None
-
-
 def _entry_to_word(entry) -> Word | None:
-    surface = _preferred_keb(entry.findall("k_ele"))
+    surface = preferred_keb(entry)
     if surface is None:
         return None  # kana-only entry — no kanji to attach to
     is_common = (entry.find("k_ele/ke_pri") is not None
