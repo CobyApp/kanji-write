@@ -17,6 +17,7 @@ public struct KanjiDetailView: View {
                 readings
                 if !store.words.isEmpty { wordsSection }
                 if !store.sentences.isEmpty { sentencesSection }
+                if !store.relations.isEmpty { relationsSection }
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -89,6 +90,22 @@ public struct KanjiDetailView: View {
                         Text(translation).font(.callout).foregroundStyle(.secondary)
                     }
                 }
+            }
+        }
+    }
+
+    private var relationsSection: some View {
+        let antonyms = store.relations.filter { $0.type == "antonym" }.map(\.surface)
+        let related = store.relations.filter { $0.type == "related" }.map(\.surface)
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("関連").font(.headline)
+            if !antonyms.isEmpty {
+                Text("反意").font(.subheadline).foregroundStyle(.secondary)
+                Text(antonyms.joined(separator: "、"))
+            }
+            if !related.isEmpty {
+                Text("関連語").font(.subheadline).foregroundStyle(.secondary)
+                Text(related.joined(separator: "、"))
             }
         }
     }
