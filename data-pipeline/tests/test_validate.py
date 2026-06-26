@@ -2,8 +2,8 @@
 import pytest
 
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_stroke_order, load_words
-from kanjipipe.models import Gloss, Kanji, Reading, Word
+from kanjipipe.loader import load_kanji, load_llm_glosses, load_stroke_order, load_words
+from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Word
 from kanjipipe.validate import assert_core_gates, coverage_report
 
 
@@ -107,3 +107,18 @@ def test_gates_do_not_fail_on_missing_sentences():
     load_kanji(conn, [_good()])
     load_stroke_order(conn, {0x5C71: ["d1"]})
     assert assert_core_gates(conn)["kanji_without_sentences"] == 1
+
+
+def test_coverage_report_counts_kanji_without_native_gloss():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])                 # 山, English gloss only
+    load_stroke_order(conn, {0x5C71: ["d1"]})
+    assert coverage_report(conn)["kanji_without_native_gloss"] == 1
+
+
+def test_native_gloss_present_drops_the_count():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])
+    load_stroke_order(conn, {0x5C71: ["d1"]})
+    load_llm_glosses(conn, [LlmGloss(literal="山", ko="메 산")])
+    assert assert_core_gates(conn)["kanji_without_native_gloss"] == 0
