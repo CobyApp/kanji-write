@@ -1,7 +1,7 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_stroke_order, load_words
-from kanjipipe.models import Gloss, Kanji, Reading, Word
+from kanjipipe.loader import load_kanji, load_sentences, load_stroke_order, load_words
+from kanjipipe.models import Gloss, Kanji, Reading, Sentence, Word
 
 
 def _yama():
@@ -97,10 +97,6 @@ def test_load_words_word_without_joyo_kanji_has_no_links():
     load_words(conn, [Word(surface="校", reading_kana="こう", en_glosses=["school"])])
     assert conn.execute("SELECT COUNT(*) FROM word").fetchone()[0] == 1
     assert conn.execute("SELECT COUNT(*) FROM word_kanji").fetchone()[0] == 0
-
-
-from kanjipipe.loader import load_sentences
-from kanjipipe.models import Sentence
 
 
 def test_load_sentences_caps_per_kanji_and_prefers_short():
