@@ -54,4 +54,11 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
             "JOIN kanji k ON sk.kanji_id = k.id "
             "WHERE k.literal = '山' AND st.lang = 'en'").fetchone()
         assert en is not None
+        # 山 ↔ 学校 relation materialized from JMdict ant/xref
+        rel = conn.execute(
+            "SELECT a.surface, b.surface, r.type FROM relation r "
+            "JOIN word a ON r.word_id_a = a.id JOIN word b ON r.word_id_b = b.id "
+            "ORDER BY r.type").fetchall()
+        assert ("山", "学校", "related") in rel
+        assert ("学校", "山", "antonym") in rel
     conn.close()

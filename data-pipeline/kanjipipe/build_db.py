@@ -8,9 +8,11 @@ from kanjipipe.filters import filter_joyo
 from kanjipipe.ingest.jlpt import merge_jlpt
 from kanjipipe.ingest.kanjidic2 import parse_kanjidic2
 from kanjipipe.ingest.jmdict import parse_jmdict
+from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
 from kanjipipe.ingest.kanjivg import parse_kanjivg
 from kanjipipe.ingest.tatoeba import parse_tatoeba
-from kanjipipe.loader import load_kanji, load_sentences, load_stroke_order, load_words
+from kanjipipe.loader import (
+    load_kanji, load_relations, load_sentences, load_stroke_order, load_words)
 from kanjipipe.validate import assert_core_gates
 
 
@@ -28,6 +30,7 @@ def build(
     merge_jlpt(kanji, jlpt_path)
     strokes = parse_kanjivg(kanjivg_path)
     words = parse_jmdict(jmdict_path)
+    relations = parse_jmdict_relations(jmdict_path)
     sentences = parse_tatoeba(sentences_path, links_path)
 
     if os.path.exists(out_path):
@@ -37,6 +40,7 @@ def build(
         load_kanji(conn, kanji)
         load_stroke_order(conn, strokes)
         load_words(conn, words)
+        load_relations(conn, relations)
         load_sentences(conn, sentences)
         report = assert_core_gates(conn)  # raises if a gate fails
     finally:
