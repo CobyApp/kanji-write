@@ -155,3 +155,32 @@ def test_load_relations_dedupes_via_unique():
     rel = Relation(source_surface="山", target_surface="学校", type="related")
     load_relations(conn, [rel, rel])  # duplicate
     assert conn.execute("SELECT COUNT(*) FROM relation").fetchone()[0] == 1
+
+
+from kanjipipe.loader import load_llm_glosses
+from kanjipipe.models import LlmGloss
+
+
+def test_load_llm_glosses_inserts_native_glosses_with_source():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山, with an EN gloss (source NULL)
+
+    load_llm_glosses(conn, [
+        LlmGloss(literal="山", ko="메 산", ja="やま。", zh="山。"),
+        LlmGloss(literal="未", ko="아닐 미"),  # not a stored kanji → skipped
+    ])
+
+    rows = conn.execute(
+        "SELECT g.lang, g.text, g.source FROM gloss g "
+        "JOIN kanji k ON g.kanji_id = k.id "
+        "WHERE k.literal = '山' AND g.source = 'llm' ORDER BY g.lang").fetchall()
+    assert rows == [("ja", "やま。", "llm"), ("ko", "메 산", "llm"), ("zh", "山。", "llm")]
+
+    # the original English gloss is untouched (source NULL)
+    en = conn.execute(
+        "SELECT text, source FROM gloss g JOIN kanji k ON g.kanji_id = k.id "
+        "WHERE k.literal = '山' AND g.lang = 'en'").fetchone()
+    assert en == ("mountain", None)
+
+    # the unstored literal produced no rows
+    assert conn.execute("SELECT COUNT(*) FROM gloss WHERE lang='ko'").fetchone()[0] == 1

@@ -22,7 +22,8 @@ CREATE TABLE gloss (
     id       INTEGER PRIMARY KEY,
     kanji_id INTEGER NOT NULL REFERENCES kanji(id),
     lang     TEXT    NOT NULL,    -- 'ko' | 'ja' | 'zh' | 'en'
-    text     TEXT    NOT NULL
+    text     TEXT    NOT NULL,
+    source   TEXT                 -- NULL = KANJIDIC2 (English); 'llm' = generated native gloss
 );
 
 CREATE INDEX idx_reading_kanji ON reading(kanji_id);
