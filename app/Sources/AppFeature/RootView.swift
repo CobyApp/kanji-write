@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import KanjiDetail
+import Review
 import StudyPlan
 import SwiftUI
 import WritingCanvas
@@ -34,6 +35,12 @@ public struct RootView: View {
             }
             .tabItem { Label("プラン", systemImage: "calendar") }
             .tag(RootFeature.State.Tab.plan)
+
+            NavigationStack {
+                ReviewView(store: store.scope(state: \.review, action: \.review))
+            }
+            .tabItem { Label("復習", systemImage: "calendar.badge.clock") }
+            .tag(RootFeature.State.Tab.review)
         }
     }
 }
