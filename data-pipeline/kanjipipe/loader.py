@@ -1,7 +1,7 @@
 # kanjipipe/loader.py
 import sqlite3
 
-from kanjipipe.models import Kanji, Sentence, Word
+from kanjipipe.models import Kanji, Relation, Sentence, Word
 
 
 def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
@@ -108,4 +108,21 @@ def load_sentences(
                 (sentence_id, kanji_id),
             )
             counts[kanji_id] = counts.get(kanji_id, 0) + 1
+    conn.commit()
+
+
+def load_relations(conn: sqlite3.Connection, relations: list["Relation"]) -> None:
+    word_id_by_surface: dict[str, int] = {}
+    for word_id, surface in conn.execute("SELECT id, surface FROM word"):
+        word_id_by_surface.setdefault(surface, word_id)  # first id wins on duplicates
+    for relation in relations:
+        a = word_id_by_surface.get(relation.source_surface)
+        b = word_id_by_surface.get(relation.target_surface)
+        if a is None or b is None or a == b:
+            continue
+        conn.execute(
+            "INSERT OR IGNORE INTO relation (word_id_a, word_id_b, type) "
+            "VALUES (?, ?, ?)",
+            (a, b, relation.type),
+        )
     conn.commit()
