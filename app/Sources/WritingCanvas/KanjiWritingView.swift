@@ -44,7 +44,13 @@ public struct KanjiWritingView: View {
                 store.send(.toggleGuide)
             }
             Button("消す") { drawing = PKDrawing() }
+            Button("保存") { store.send(.saveDrawing(drawing.dataRepresentation())) }
         }
         .task { store.send(.onAppear) }
+        .onChange(of: store.savedDrawingData) { _, data in
+            if let data, let restored = try? PKDrawing(data: data) {
+                drawing = restored
+            }
+        }
     }
 }
