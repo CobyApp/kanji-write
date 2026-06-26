@@ -118,6 +118,23 @@ extension DictionaryClient: DependencyKey {
                         id: id, textJa: row["text_ja"], translations: translations)
                 }
             }
+        },
+        relations: { kanjiID, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [RelationEntry] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT DISTINCT r.type AS type, wb.surface AS surface
+                    FROM word_kanji wk
+                    JOIN relation r ON r.word_id_a = wk.word_id
+                    JOIN word wb ON wb.id = r.word_id_b
+                    WHERE wk.kanji_id = ?
+                    ORDER BY r.type, wb.surface
+                    LIMIT ?
+                    """, arguments: [kanjiID, limit])
+                return rows.map { row in
+                    RelationEntry(surface: row["surface"], type: row["type"])
+                }
+            }
         }
     )
 
