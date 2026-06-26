@@ -51,6 +51,7 @@ let project = Project(
                 .target(name: "KanjiListFeature"),
                 .target(name: "WritingCanvas"),
                 .target(name: "StudyPlan"),
+                .target(name: "KanjiDetail"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -121,6 +122,15 @@ let project = Project(
             dependencies: [.target(name: "KanjiDetail")]
         ),
         .target(
+            name: "AppFeatureTests",
+            destinations: [.iPad],
+            product: .unitTests,
+            bundleId: "com.cobyapp.kanjiwrite.appfeaturetests",
+            deploymentTargets: iOS,
+            sources: ["Tests/AppFeatureTests/**"],
+            dependencies: [.target(name: "AppFeature")]
+        ),
+        .target(
             name: "KanjiApp",
             destinations: [.iPad],
             product: .app,
@@ -165,6 +175,7 @@ let project = Project(
                 "WritingCanvasTests",
                 "StudyPlanTests",
                 "KanjiDetailTests",
+                "AppFeatureTests",
             ])
         )
     ]
