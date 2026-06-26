@@ -29,6 +29,7 @@ def test_assert_core_gates_passes_on_complete_data():
     conn = init_db(":memory:")
     load_kanji(conn, [_good()])
     load_stroke_order(conn, {0x5C71: ["d1"]})
+    load_llm_glosses(conn, [LlmGloss(literal="山", ko="메 산")])
     assert assert_core_gates(conn)["total"] == 1
 
 
@@ -76,7 +77,16 @@ def test_assert_core_gates_passes_with_stroke_order():
     conn = init_db(":memory:")
     load_kanji(conn, [_good()])          # _good() is 山, codepoint 0x5C71
     load_stroke_order(conn, {0x5C71: ["d1"]})
+    load_llm_glosses(conn, [LlmGloss(literal="山", ko="메 산")])
     assert assert_core_gates(conn)["missing_stroke_order"] == 0
+
+
+def test_assert_core_gates_fails_when_native_gloss_missing():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_good()])                  # EN gloss + reading + grade
+    load_stroke_order(conn, {0x5C71: ["d1"]})     # has strokes, but no ko gloss
+    with pytest.raises(ValueError, match="missing native"):
+        assert_core_gates(conn)
 
 
 def test_coverage_report_counts_kanji_without_words():
@@ -91,6 +101,7 @@ def test_assert_core_gates_does_not_fail_on_missing_words():
     conn = init_db(":memory:")
     load_kanji(conn, [_good()])
     load_stroke_order(conn, {0x5C71: ["d1"]})
+    load_llm_glosses(conn, [LlmGloss(literal="山", ko="메 산")])
     # gate passes even though 山 has no words (vocabulary is supplementary)
     assert assert_core_gates(conn)["kanji_without_words"] == 1
 
@@ -106,6 +117,7 @@ def test_gates_do_not_fail_on_missing_sentences():
     conn = init_db(":memory:")
     load_kanji(conn, [_good()])
     load_stroke_order(conn, {0x5C71: ["d1"]})
+    load_llm_glosses(conn, [LlmGloss(literal="山", ko="메 산")])
     assert assert_core_gates(conn)["kanji_without_sentences"] == 1
 
 

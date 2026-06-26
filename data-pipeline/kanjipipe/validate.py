@@ -46,6 +46,9 @@ def assert_core_gates(conn: sqlite3.Connection) -> dict[str, int]:
     if report["missing_stroke_order"]:
         problems.append(
             f"{report['missing_stroke_order']} kanji missing stroke order")
+    if report["kanji_without_native_gloss"]:
+        problems.append(
+            f"{report['kanji_without_native_gloss']} kanji missing native (ko) gloss")
     if problems:
         raise ValueError("coverage gate failed: " + "; ".join(problems))
     return report
