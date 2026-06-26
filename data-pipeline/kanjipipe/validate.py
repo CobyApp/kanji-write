@@ -25,6 +25,7 @@ def coverage_report(conn: sqlite3.Connection) -> dict[str, int]:
         "kanji_without_sentences": scalar(
             "SELECT COUNT(*) FROM kanji k WHERE NOT EXISTS "
             "(SELECT 1 FROM sentence_kanji sk WHERE sk.kanji_id = k.id)"),
+        # Proxy: presence of a Korean (ko) gloss stands in for "has a native gloss".
         "kanji_without_native_gloss": scalar(
             "SELECT COUNT(*) FROM kanji k WHERE NOT EXISTS "
             "(SELECT 1 FROM gloss g WHERE g.kanji_id = k.id AND g.lang = 'ko')"),

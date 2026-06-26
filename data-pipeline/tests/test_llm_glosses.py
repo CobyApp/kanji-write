@@ -23,3 +23,23 @@ def test_missing_field_becomes_none():
     assert mi.ko == "아닐 미"
     assert mi.ja is None      # absent in the fixture line
     assert mi.zh == "未。"
+
+
+def test_skips_malformed_and_literalless_lines(tmp_path):
+    p = tmp_path / "g.jsonl"
+    p.write_text(
+        '{"literal": "山", "ko": "메 산"}\n'
+        'this is not json\n'              # malformed → skipped
+        '{"ko": "no literal"}\n'          # no literal → skipped
+        '{"literal": "学", "ja": "まなぶ。"}\n',
+        encoding="utf-8")
+    entries = parse_llm_glosses(p)
+    assert [e.literal for e in entries] == ["山", "学"]
+
+
+def test_whitespace_only_fields_become_none(tmp_path):
+    p = tmp_path / "g.jsonl"
+    p.write_text('{"literal": "山", "ko": "  ", "ja": "やま。"}\n', encoding="utf-8")
+    entry = parse_llm_glosses(p)[0]
+    assert entry.ko is None        # whitespace-only → None
+    assert entry.ja == "やま。"
