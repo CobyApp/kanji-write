@@ -109,6 +109,7 @@ let project = Project(
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
+                .target(name: "WritingCanvas"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
