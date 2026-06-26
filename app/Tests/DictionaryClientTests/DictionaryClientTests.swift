@@ -28,4 +28,30 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertEqual(strokes.count, 3)
         XCTAssertTrue(strokes.allSatisfy { $0.hasPrefix("M") })
     }
+
+    func testLiveReadsGlossesForKanji() async throws {
+        let client = DictionaryClient.liveValue
+        let allKanji = try await client.allKanji()
+        let yama = try XCTUnwrap(allKanji.first { $0.literal == "山" })
+        let glosses = try await client.glosses(yama.id)
+        XCTAssertEqual(glosses["ko"], "메 산")
+        XCTAssertNotNil(glosses["en"])
+        XCTAssertNotNil(glosses["ja"])
+        XCTAssertNotNil(glosses["zh"])
+    }
+
+    func testLiveReadsWordsAndSentencesForKanji() async throws {
+        let client = DictionaryClient.liveValue
+        let allKanji = try await client.allKanji()
+        let yama = try XCTUnwrap(allKanji.first { $0.literal == "山" })
+
+        let words = try await client.words(yama.id, 12)
+        XCTAssertFalse(words.isEmpty)
+        XCTAssertTrue(words.allSatisfy { !$0.surface.isEmpty && !$0.reading.isEmpty })
+
+        let sentences = try await client.sentences(yama.id, 3)
+        XCTAssertFalse(sentences.isEmpty)
+        XCTAssertTrue(sentences[0].textJa.contains("山"))
+        XCTAssertFalse(sentences[0].translations.isEmpty)
+    }
 }

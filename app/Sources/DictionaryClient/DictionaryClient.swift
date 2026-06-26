@@ -12,6 +12,9 @@ public enum DictionaryError: Error, Equatable {
 public struct DictionaryClient: Sendable {
     public var allKanji: @Sendable () async throws -> [Kanji]
     public var strokeOrder: @Sendable (_ kanjiID: Int) async throws -> [String]
+    public var glosses: @Sendable (_ kanjiID: Int) async throws -> [String: String]
+    public var words: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [WordEntry]
+    public var sentences: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [ExampleSentence]
 }
 
 extension DictionaryClient: TestDependencyKey {
