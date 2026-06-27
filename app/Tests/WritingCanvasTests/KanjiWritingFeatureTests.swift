@@ -64,6 +64,20 @@ final class KanjiWritingFeatureTests: XCTestCase {
         }
     }
 
+    func testRecognizeSetsRecognitionFromRecognizer() async {
+        let result = RecognitionResult(matched: true, candidates: ["山"])
+        let store = TestStore(initialState: KanjiWritingFeature.State(kanji: .yama)) {
+            KanjiWritingFeature()
+        } withDependencies: {
+            $0.kanjiRecognizer.recognize = { _, _ in result }
+        }
+        let data = Data("png".utf8)
+        await store.send(.recognize(data))
+        await store.receive(.recognized(result)) {
+            $0.recognition = result
+        }
+    }
+
     func testSaveDrawingPersists() async {
         let saved = LockIsolated<(Int, Data)?>(nil)
         let store = TestStore(initialState: KanjiWritingFeature.State(kanji: .yama)) {
