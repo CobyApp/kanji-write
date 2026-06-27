@@ -1,5 +1,7 @@
 import ComposableArchitecture
 import DictionaryClient
+import Foundation
+import Review
 import SharedModels
 
 @Reducer
@@ -20,9 +22,12 @@ public struct KanjiDetailFeature {
         case onAppear
         case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String])
         case writeTapped
+        case addToReview
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
+    @Dependency(\.reviewStore) var reviewStore
+    @Dependency(\.date) var date
 
     public init() {}
 
@@ -57,6 +62,16 @@ public struct KanjiDetailFeature {
                 return .none
             case .writeTapped:
                 return .none  // handled by the parent (navigation)
+            case .addToReview:
+                let kanjiID = state.kanji.id
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
+                return .run { _ in
+                    var records = await reviewStore.loadRecords()
+                    guard !records.contains(where: { $0.kanjiID == kanjiID }) else { return }
+                    records.append(
+                        ReviewRecord(kanjiID: kanjiID, box: 0, lastReviewedDay: today))
+                    await reviewStore.saveRecords(records)
+                }
             }
         }
     }
