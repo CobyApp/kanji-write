@@ -44,4 +44,14 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localizedGloss(["ko": "", "en": "mountain"], .ko), "mountain")
         XCTAssertEqual(localizedTranslation(["zh": "", "ko": "높다."], .zh), "높다.")
     }
+
+    func testCatalogRoundTrip() {
+        XCTAssertEqual(localized("読み", "ko"), "읽기")
+    }
+}
+
+private func localized(_ key: String, _ lang: String) -> String? {
+    guard let url = Bundle.module.url(forResource: lang, withExtension: "lproj"),
+          let bundle = Bundle(url: url) else { return nil }
+    return bundle.localizedString(forKey: key, value: nil, table: nil)
 }
