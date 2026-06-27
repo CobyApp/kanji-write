@@ -1,6 +1,6 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentences, load_stroke_order, load_words
+from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentences, load_stroke_order, load_word_ko_glosses, load_words
 from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Relation, Sentence, Word
 
 
@@ -155,6 +155,27 @@ def test_load_relations_dedupes_via_unique():
     rel = Relation(source_surface="山", target_surface="学校", type="related")
     load_relations(conn, [rel, rel])  # duplicate
     assert conn.execute("SELECT COUNT(*) FROM relation").fetchone()[0] == 1
+
+
+def test_load_word_ko_glosses_inserts_ko_word_gloss():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山
+    load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
+    word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
+
+    load_word_ko_glosses(conn, [(word_id, "산")])
+
+    ko = conn.execute(
+        "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang = 'ko'",
+        (word_id,),
+    ).fetchone()
+    assert ko == ("ko", "산")
+    # the original English gloss is untouched
+    en = conn.execute(
+        "SELECT text FROM word_gloss WHERE word_id = ? AND lang = 'en'",
+        (word_id,),
+    ).fetchone()
+    assert en == ("mountain",)
 
 
 def test_load_llm_glosses_inserts_native_glosses_with_source():

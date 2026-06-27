@@ -128,6 +128,17 @@ def load_relations(conn: sqlite3.Connection, relations: list["Relation"]) -> Non
     conn.commit()
 
 
+def load_word_ko_glosses(
+    conn: sqlite3.Connection, entries: list[tuple[int, str]]
+) -> None:
+    for word_id, ko in entries:
+        conn.execute(
+            "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ko', ?)",
+            (word_id, ko),
+        )
+    conn.commit()
+
+
 def load_llm_glosses(conn: sqlite3.Connection, entries: list["LlmGloss"]) -> None:
     kanji_id_by_literal = {
         literal: kanji_id

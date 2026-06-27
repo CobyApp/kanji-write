@@ -16,6 +16,7 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
         sentences_path=FIX / "sentences_sample.csv",
         links_path=FIX / "links_sample.csv",
         llm_glosses_path=FIX / "llm_glosses_sample.jsonl",
+        word_ko_path=FIX / "word_glosses_ko_sample.jsonl",
         out_path=str(out),
     )
     assert out.exists()
@@ -67,4 +68,9 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
             "SELECT g.text, g.source FROM gloss g JOIN kanji k ON g.kanji_id = k.id "
             "WHERE k.literal = '山' AND g.lang = 'ko'").fetchone()
         assert ko == ("메 산", "llm")
+        # 山 word (jmdict id 1) gets its Korean word gloss from word_glosses_ko_sample.jsonl
+        word_ko = conn.execute(
+            "SELECT wg.text FROM word_gloss wg JOIN word w ON wg.word_id = w.id "
+            "WHERE w.surface = '山' AND wg.lang = 'ko'").fetchone()
+        assert word_ko == ("산",)
     conn.close()

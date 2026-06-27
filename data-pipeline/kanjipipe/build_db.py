@@ -12,9 +12,10 @@ from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
 from kanjipipe.ingest.kanjivg import parse_kanjivg
 from kanjipipe.ingest.llm_glosses import parse_llm_glosses
 from kanjipipe.ingest.tatoeba import parse_tatoeba
+from kanjipipe.ingest.word_glosses import parse_word_glosses
 from kanjipipe.loader import (
     load_kanji, load_llm_glosses, load_relations, load_sentences,
-    load_stroke_order, load_words)
+    load_stroke_order, load_word_ko_glosses, load_words)
 from kanjipipe.validate import assert_core_gates
 
 
@@ -27,6 +28,7 @@ def build(
     links_path: str | Path,
     out_path: str,
     llm_glosses_path: str | Path | None = None,
+    word_ko_path: str | Path | None = None,
 ) -> dict[str, int]:
     kanji = parse_kanjidic2(kanjidic2_path)
     kanji = filter_joyo(kanji)
@@ -46,6 +48,8 @@ def build(
         load_stroke_order(conn, strokes)
         load_words(conn, words)
         load_relations(conn, relations)
+        if word_ko_path is not None and os.path.exists(word_ko_path):
+            load_word_ko_glosses(conn, parse_word_glosses(word_ko_path))
         load_sentences(conn, sentences)
         report = assert_core_gates(conn)  # raises if a gate fails
     finally:
@@ -62,12 +66,14 @@ def main() -> None:
     parser.add_argument("--sentences", default="sources/sentences.csv")
     parser.add_argument("--links", default="sources/links.csv")
     parser.add_argument("--llm-glosses", default="sources/llm_glosses.jsonl")
+    parser.add_argument("--word-ko", default="sources/word_glosses_ko.jsonl")
     parser.add_argument("--out", default="out/kanji.sqlite")
     args = parser.parse_args()
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     report = build(args.kanjidic2, args.jlpt, args.kanjivg, args.jmdict,
                    args.sentences, args.links, args.out,
-                   llm_glosses_path=args.llm_glosses)
+                   llm_glosses_path=args.llm_glosses,
+                   word_ko_path=args.word_ko)
     print(f"built {args.out}: {report}")
 
 
