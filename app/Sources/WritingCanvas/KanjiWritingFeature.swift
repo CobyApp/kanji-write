@@ -11,7 +11,6 @@ public struct KanjiWritingFeature {
         public var strokePaths: [String] = []
         public var showGuide = true
         public var savedDrawingData: Data?
-        public var score: StrokeScore?
         public var recognition: RecognitionResult?
         public init(kanji: Kanji) { self.kanji = kanji }
     }
@@ -22,7 +21,6 @@ public struct KanjiWritingFeature {
         case toggleGuide
         case drawingLoaded(Data?)
         case saveDrawing(Data)
-        case score([StrokeEndpoints])
         case recognize(Data)
         case recognized(RecognitionResult)
     }
@@ -61,10 +59,6 @@ public struct KanjiWritingFeature {
             case let .saveDrawing(data):
                 let id = state.kanji.id
                 return .run { _ in await drawingStore.saveDrawing(id, data) }
-            case let .score(drawn):
-                let reference = normalize(state.strokePaths.compactMap(endpoints(ofSVGPath:)))
-                state.score = scoreStrokes(reference: reference, drawn: drawn)
-                return .none
             case let .recognize(data):
                 let target = state.kanji.literal
                 return .run { send in

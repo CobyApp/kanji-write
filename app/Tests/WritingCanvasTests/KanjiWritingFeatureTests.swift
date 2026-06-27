@@ -47,23 +47,6 @@ final class KanjiWritingFeatureTests: XCTestCase {
         await store.receive(.drawingLoaded(data)) { $0.savedDrawingData = data }
     }
 
-    func testScoreComputesAgainstReferenceStrokePaths() async {
-        var initial = KanjiWritingFeature.State(kanji: .yama)
-        // Reference endpoints normalize to corners: s1 (0,0)-(1,1), s2 (1,0)-(0,1).
-        initial.strokePaths = ["M10,10 L90,90", "M90,10 L10,90"]
-        let store = TestStore(initialState: initial) {
-            KanjiWritingFeature()
-        }
-        // Drawn endpoints (already normalized by the view) matching the reference.
-        let drawn = [
-            StrokeEndpoints(start: .zero, end: CGPoint(x: 1, y: 1)),
-            StrokeEndpoints(start: CGPoint(x: 1, y: 0), end: CGPoint(x: 0, y: 1)),
-        ]
-        await store.send(.score(drawn)) {
-            $0.score = StrokeScore(countMatch: true, matched: 2, total: 2, percent: 100)
-        }
-    }
-
     func testRecognizeSetsRecognitionFromRecognizer() async {
         let result = RecognitionResult(matched: true, candidates: ["山"])
         let store = TestStore(initialState: KanjiWritingFeature.State(kanji: .yama)) {
