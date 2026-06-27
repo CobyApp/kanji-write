@@ -12,6 +12,7 @@ public struct KanjiWritingFeature {
         public var showGuide = true
         public var savedDrawingData: Data?
         public var score: StrokeScore?
+        public var recognition: RecognitionResult?
         public init(kanji: Kanji) { self.kanji = kanji }
     }
 
@@ -22,10 +23,13 @@ public struct KanjiWritingFeature {
         case drawingLoaded(Data?)
         case saveDrawing(Data)
         case score([StrokeEndpoints])
+        case recognize(Data)
+        case recognized(RecognitionResult)
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.drawingStore) var drawingStore
+    @Dependency(\.kanjiRecognizer) var kanjiRecognizer
 
     public init() {}
 
@@ -60,6 +64,14 @@ public struct KanjiWritingFeature {
             case let .score(drawn):
                 let reference = normalize(state.strokePaths.compactMap(endpoints(ofSVGPath:)))
                 state.score = scoreStrokes(reference: reference, drawn: drawn)
+                return .none
+            case let .recognize(data):
+                let target = state.kanji.literal
+                return .run { send in
+                    await send(.recognized(kanjiRecognizer.recognize(imageData: data, target: target)))
+                }
+            case let .recognized(result):
+                state.recognition = result
                 return .none
             }
         }
