@@ -89,9 +89,16 @@ extension DictionaryClient: DependencyKey {
                     let meaningKo = try String.fetchOne(
                         db, sql: "SELECT text FROM word_gloss WHERE word_id = ? AND lang = 'ko' LIMIT 1",
                         arguments: [id])
+                    let meaningJa = try String.fetchOne(
+                        db, sql: "SELECT text FROM word_gloss WHERE word_id = ? AND lang = 'ja' LIMIT 1",
+                        arguments: [id])
+                    let meaningZh = try String.fetchOne(
+                        db, sql: "SELECT text FROM word_gloss WHERE word_id = ? AND lang = 'zh' LIMIT 1",
+                        arguments: [id])
                     return WordEntry(
                         id: id, surface: row["surface"],
-                        reading: row["reading_kana"], meaningEn: meaning, meaningKo: meaningKo)
+                        reading: row["reading_kana"], meaningEn: meaning, meaningKo: meaningKo,
+                        meaningJa: meaningJa, meaningZh: meaningZh)
                 }
             }
         },
