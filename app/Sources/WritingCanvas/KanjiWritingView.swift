@@ -42,11 +42,6 @@ public struct KanjiWritingView: View {
             }
             .aspectRatio(1, contentMode: .fit)
             .background(Color(.secondarySystemBackground))
-            if let score = store.score {
-                Text("画数 \(score.countMatch ? "✓" : "✗") ・ 形 \(score.percent)%")
-                    .font(.headline)
-                    .monospacedDigit()
-            }
             if let recognition = store.recognition {
                 VStack(spacing: 4) {
                     Text(recognition.matched ? "正解！" : "もう一度")
