@@ -11,6 +11,17 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(AppLanguage(rawValue: "zh"), .zh)
     }
 
+    func testAppLanguageLocaleIdentifier() {
+        XCTAssertEqual(AppLanguage.ko.localeIdentifier, "ko")
+        XCTAssertEqual(AppLanguage.ja.localeIdentifier, "ja")
+        XCTAssertEqual(AppLanguage.zh.localeIdentifier, "zh-Hans")
+        XCTAssertEqual(AppLanguage.en.localeIdentifier, "en")
+        XCTAssertEqual(
+            AppLanguage.allCases.map(\.localeIdentifier),
+            ["ko", "ja", "zh-Hans", "en"]
+        )
+    }
+
     func testLocalizedGlossPrefersSelectedThenFallsBack() {
         let glosses = ["ko": "메 산", "ja": "やま。", "zh": "山。", "en": "mountain"]
         XCTAssertEqual(localizedGloss(glosses, .zh), "山。")

@@ -13,4 +13,14 @@ public enum AppLanguage: String, CaseIterable, Sendable {
         case .en: "English"
         }
     }
+
+    /// BCP-47 locale identifier used to drive `Locale` for UI-string localization.
+    public var localeIdentifier: String {
+        switch self {
+        case .ko: "ko"
+        case .ja: "ja"
+        case .zh: "zh-Hans"
+        case .en: "en"
+        }
+    }
 }
