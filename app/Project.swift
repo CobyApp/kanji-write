@@ -53,6 +53,7 @@ let project = Project(
                 .target(name: "StudyPlan"),
                 .target(name: "KanjiDetail"),
                 .target(name: "Review"),
+                .target(name: "Reminders"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),

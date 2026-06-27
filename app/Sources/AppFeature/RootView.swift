@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import KanjiDetail
+import Reminders
 import Review
 import StudyPlan
 import SwiftUI
@@ -41,6 +42,12 @@ public struct RootView: View {
             }
             .tabItem { Label("復習", systemImage: "calendar.badge.clock") }
             .tag(RootFeature.State.Tab.review)
+
+            NavigationStack {
+                ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
+            }
+            .tabItem { Label("設定", systemImage: "gearshape") }
+            .tag(RootFeature.State.Tab.settings)
         }
     }
 }

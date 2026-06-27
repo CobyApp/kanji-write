@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import KanjiDetail
+import Reminders
 import Review
 import StudyPlan
 import WritingCanvas
@@ -13,9 +14,10 @@ public struct RootFeature {
         public var plan = StudyPlanFeature.State()
         public var planPath = StackState<Path.State>()
         public var review = ReviewFeature.State()
+        public var reminder = ReminderFeature.State()
         public init() {}
 
-        public enum Tab: Equatable { case browse, plan, review }
+        public enum Tab: Equatable { case browse, plan, review, settings }
     }
 
     // StackActionOf<Path> is not Equatable, so Action intentionally omits Equatable.
@@ -25,6 +27,7 @@ public struct RootFeature {
         case plan(StudyPlanFeature.Action)
         case planPath(StackActionOf<Path>)
         case review(ReviewFeature.Action)
+        case reminder(ReminderFeature.Action)
     }
 
     public init() {}
@@ -35,6 +38,7 @@ public struct RootFeature {
         Scope(state: \.review, action: \.review) {
             ReviewFeature()
         }
+        Scope(state: \.reminder, action: \.reminder) { ReminderFeature() }
         Reduce { state, action in
             switch action {
             case let .tabSelected(tab):
@@ -48,7 +52,7 @@ public struct RootFeature {
                     state.planPath.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 }
                 return .none
-            case .browse, .plan, .planPath, .review:
+            case .browse, .plan, .planPath, .review, .reminder:
                 return .none
             }
         }
