@@ -6,12 +6,14 @@ public struct WordEntry: Equatable, Identifiable, Sendable {
     public let surface: String
     public let reading: String
     public let meaningEn: String?
+    public let meaningKo: String?
 
-    public init(id: Int, surface: String, reading: String, meaningEn: String?) {
+    public init(id: Int, surface: String, reading: String, meaningEn: String?, meaningKo: String? = nil) {
         self.id = id
         self.surface = surface
         self.reading = reading
         self.meaningEn = meaningEn
+        self.meaningKo = meaningKo
     }
 }
 
