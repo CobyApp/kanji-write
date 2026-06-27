@@ -48,11 +48,9 @@ final class DictionaryClientTests: XCTestCase {
         let words = try await client.words(yama.id, 12)
         XCTAssertFalse(words.isEmpty)
         XCTAssertTrue(words.allSatisfy { !$0.surface.isEmpty && !$0.reading.isEmpty })
-        // The currently bundled DB has English word glosses but no Korean ones
-        // yet (the ko regen/re-bundle is a later step). Assert that state so this
-        // test flips meaningfully once Korean glosses land.
+        // The bundled DB now carries both English and Korean word glosses.
         XCTAssertTrue(words.contains { $0.meaningEn != nil })
-        XCTAssertTrue(words.allSatisfy { $0.meaningKo == nil })
+        XCTAssertTrue(words.contains { $0.meaningKo != nil })
 
         let sentences = try await client.sentences(yama.id, 3)
         XCTAssertFalse(sentences.isEmpty)
