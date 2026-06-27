@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import PencilKit
 import SwiftUI
+import UIKit
 
 /// Renders the KanjiVG stroke guide (109x109 viewBox) scaled to the square.
 private struct GuideStrokesView: View {
@@ -41,6 +42,23 @@ public struct KanjiWritingView: View {
             }
             .aspectRatio(1, contentMode: .fit)
             .background(Color(.secondarySystemBackground))
+            if let score = store.score {
+                Text("画数 \(score.countMatch ? "✓" : "✗") ・ 形 \(score.percent)%")
+                    .font(.headline)
+                    .monospacedDigit()
+            }
+            if let recognition = store.recognition {
+                VStack(spacing: 4) {
+                    Text(recognition.matched ? "正解！" : "もう一度")
+                        .font(.title2.bold())
+                        .foregroundStyle(recognition.matched ? Color.green : Color.red)
+                    if let candidate = recognition.candidates.first {
+                        Text("認識: \(candidate)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
         }
         .padding()
         .navigationTitle(store.kanji.literal)
@@ -49,6 +67,12 @@ public struct KanjiWritingView: View {
                 store.send(.toggleGuide)
             }
             Button("消す") { drawing = PKDrawing() }
+            Button("採点") {
+                if let data = rasterizedDrawingData() {
+                    store.send(.recognize(data))
+                }
+            }
+            .disabled(drawing.strokes.isEmpty)
             Button("保存") { store.send(.saveDrawing(drawing.dataRepresentation())) }
         }
         .task { store.send(.onAppear) }
@@ -57,5 +81,12 @@ public struct KanjiWritingView: View {
                 drawing = restored
             }
         }
+    }
+
+    /// Rasterizes the current drawing to PNG data for Vision recognition.
+    /// Uses a fixed square bounds so sparse ink still renders at a stable scale.
+    private func rasterizedDrawingData() -> Data? {
+        let bounds = CGRect(x: 0, y: 0, width: 256, height: 256)
+        return drawing.image(from: bounds, scale: 1).pngData()
     }
 }
