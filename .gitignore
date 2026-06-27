@@ -31,3 +31,4 @@ app/Tuist/.build/
 # LLM-generated native glosses are curated output (not re-downloadable, non-deterministic) — keep them
 !data-pipeline/sources/llm_glosses.jsonl
 !data-pipeline/sources/word_glosses_ko.jsonl
+!data-pipeline/sources/word_glosses_jazh.jsonl
