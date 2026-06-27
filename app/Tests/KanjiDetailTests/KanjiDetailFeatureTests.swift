@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 import SharedModels
 import XCTest
 
@@ -42,5 +43,37 @@ final class KanjiDetailFeatureTests: XCTestCase {
             $0.relations = [RelationEntry(surface: "小", type: "antonym")]
             $0.strokePaths = ["M10 10", "M20 20", "M30 30"]
         }
+    }
+
+    func testAddToReviewAddsNewRecord() async {
+        let saved = LockIsolated<[ReviewRecord]?>(nil)
+        let store = TestStore(initialState: KanjiDetailFeature.State(kanji: .yama)) {
+            KanjiDetailFeature()
+        } withDependencies: {
+            $0.reviewStore.loadRecords = { [] }
+            $0.reviewStore.saveRecords = { saved.setValue($0) }
+            $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
+        }
+        await store.send(.addToReview)
+        XCTAssertEqual(
+            saved.value,
+            [ReviewRecord(kanjiID: 1, box: 0, lastReviewedDay: 100)]
+        )
+    }
+
+    func testAddToReviewDoesNotDuplicateExistingRecord() async {
+        let existing = ReviewRecord(kanjiID: 1, box: 2, lastReviewedDay: 50)
+        let saved = LockIsolated<[ReviewRecord]?>(nil)
+        let store = TestStore(initialState: KanjiDetailFeature.State(kanji: .yama)) {
+            KanjiDetailFeature()
+        } withDependencies: {
+            $0.reviewStore.loadRecords = { [existing] }
+            $0.reviewStore.saveRecords = { saved.setValue($0) }
+            $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
+        }
+        await store.send(.addToReview)
+        // The existing record must not be duplicated; at most one record for this id.
+        let recordsForYama = (saved.value ?? [existing]).filter { $0.kanjiID == 1 }
+        XCTAssertEqual(recordsForYama, [existing])
     }
 }
