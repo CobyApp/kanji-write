@@ -1,6 +1,6 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentences, load_stroke_order, load_word_ko_glosses, load_words
+from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentences, load_stroke_order, load_word_jazh_glosses, load_word_ko_glosses, load_words
 from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Relation, Sentence, Word
 
 
@@ -176,6 +176,38 @@ def test_load_word_ko_glosses_inserts_ko_word_gloss():
         (word_id,),
     ).fetchone()
     assert en == ("mountain",)
+
+
+def test_load_word_jazh_glosses_inserts_ja_and_zh_word_glosses():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山
+    load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
+    word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
+
+    load_word_jazh_glosses(conn, [(word_id, "やま", "山")])
+
+    rows = conn.execute(
+        "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
+        "ORDER BY lang",
+        (word_id,),
+    ).fetchall()
+    assert rows == [("ja", "やま"), ("zh", "山")]
+
+
+def test_load_word_jazh_glosses_with_only_zh_inserts_only_zh():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山
+    load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
+    word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
+
+    load_word_jazh_glosses(conn, [(word_id, None, "山")])
+
+    rows = conn.execute(
+        "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
+        "ORDER BY lang",
+        (word_id,),
+    ).fetchall()
+    assert rows == [("zh", "山")]
 
 
 def test_load_llm_glosses_inserts_native_glosses_with_source():
