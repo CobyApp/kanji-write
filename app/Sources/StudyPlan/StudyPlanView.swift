@@ -40,11 +40,11 @@ public struct StudyPlanView: View {
     private func planContent(_ plan: StudyPlan) -> some View {
         VStack(spacing: 0) {
             ProgressView(value: plan.progress) {
-                Text("進捗 \(plan.completedCount) / \(plan.totalCount)")
+                Text("進捗") + Text(verbatim: " \(plan.completedCount) / \(plan.totalCount)")
             }
             .padding()
             List {
-                Section("今日の漢字 (Day \(plan.currentDayIndex + 1))") {
+                Section {
                     ForEach(plan.todaysKanjiIDs, id: \.self) { id in
                         if let kanji = store.kanji[id: id] {
                             HStack {
@@ -64,6 +64,8 @@ public struct StudyPlanView: View {
                             }
                         }
                     }
+                } header: {
+                    Text("今日の漢字") + Text(verbatim: " (Day \(plan.currentDayIndex + 1))")
                 }
             }
         }
