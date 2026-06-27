@@ -15,6 +15,7 @@ public struct KanjiDetailFeature {
         public var relations: [RelationEntry] = []
         public var strokePaths: [String] = []
         public var isLoading = false
+        public var addedToReview = false
         public init(kanji: Kanji) { self.kanji = kanji }
     }
 
@@ -23,6 +24,7 @@ public struct KanjiDetailFeature {
         case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String])
         case writeTapped
         case addToReview
+        case markedAddedToReview
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
@@ -65,13 +67,20 @@ public struct KanjiDetailFeature {
             case .addToReview:
                 let kanjiID = state.kanji.id
                 let today = Int(date.now.timeIntervalSince1970 / 86_400)
-                return .run { _ in
+                return .run { send in
                     var records = await reviewStore.loadRecords()
-                    guard !records.contains(where: { $0.kanjiID == kanjiID }) else { return }
+                    guard !records.contains(where: { $0.kanjiID == kanjiID }) else {
+                        await send(.markedAddedToReview)
+                        return
+                    }
                     records.append(
                         ReviewRecord(kanjiID: kanjiID, box: 0, lastReviewedDay: today))
                     await reviewStore.saveRecords(records)
+                    await send(.markedAddedToReview)
                 }
+            case .markedAddedToReview:
+                state.addedToReview = true
+                return .none
             }
         }
     }

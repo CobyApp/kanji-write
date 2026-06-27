@@ -48,7 +48,7 @@ public struct StudyPlanFeature {
             case let .createPlan(days):
                 let assignments = PlanScheduler.distribute(
                     kanjiIDs: state.kanji.map(\.id), days: days)
-                let today = state.today
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
                 let plan = StudyPlan(axisLabel: "学年", durationDays: days,
                                      dayAssignments: assignments, startDay: today)
                 state.plan = plan

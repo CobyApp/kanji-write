@@ -55,6 +55,7 @@ final class KanjiDetailFeatureTests: XCTestCase {
             $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
         }
         await store.send(.addToReview)
+        await store.receive(.markedAddedToReview) { $0.addedToReview = true }
         XCTAssertEqual(
             saved.value,
             [ReviewRecord(kanjiID: 1, box: 0, lastReviewedDay: 100)]
@@ -72,6 +73,7 @@ final class KanjiDetailFeatureTests: XCTestCase {
             $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
         }
         await store.send(.addToReview)
+        await store.receive(.markedAddedToReview) { $0.addedToReview = true }
         // The existing record must not be duplicated; at most one record for this id.
         let recordsForYama = (saved.value ?? [existing]).filter { $0.kanjiID == 1 }
         XCTAssertEqual(recordsForYama, [existing])
