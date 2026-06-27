@@ -3,3 +3,5 @@
 
 not even json
 {"ja": "id 없음", "zh": "无id"}
+{"id": "bad", "ja": "string id", "zh": "字符串id"}
+{"id": true, "ja": "bool id", "zh": "布尔id"}
