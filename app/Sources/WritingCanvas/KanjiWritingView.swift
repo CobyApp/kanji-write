@@ -29,14 +29,19 @@ public struct KanjiWritingView: View {
     }
 
     public var body: some View {
-        ZStack {
-            if store.showGuide {
-                GuideStrokesView(paths: store.strokePaths)
+        VStack(spacing: 8) {
+            Text("画数 \(strokeCountStatus(expected: store.strokePaths.count, drawn: drawing.strokes.count))")
+                .font(.headline)
+                .monospacedDigit()
+            ZStack {
+                if store.showGuide {
+                    GuideStrokesView(paths: store.strokePaths)
+                }
+                PencilCanvasView(drawing: $drawing)
             }
-            PencilCanvasView(drawing: $drawing)
+            .aspectRatio(1, contentMode: .fit)
+            .background(Color(.secondarySystemBackground))
         }
-        .aspectRatio(1, contentMode: .fit)
-        .background(Color(.secondarySystemBackground))
         .padding()
         .navigationTitle(store.kanji.literal)
         .toolbar {
