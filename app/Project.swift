@@ -146,6 +146,26 @@ let project = Project(
             dependencies: [.target(name: "Review")]
         ),
         .target(
+            name: "Reminders",
+            destinations: [.iPad],
+            product: .staticFramework,
+            bundleId: "com.cobyapp.kanjiwrite.reminders",
+            deploymentTargets: iOS,
+            sources: ["Sources/Reminders/**"],
+            dependencies: [
+                .external(name: "ComposableArchitecture"),
+            ]
+        ),
+        .target(
+            name: "RemindersTests",
+            destinations: [.iPad],
+            product: .unitTests,
+            bundleId: "com.cobyapp.kanjiwrite.reminderstests",
+            deploymentTargets: iOS,
+            sources: ["Tests/RemindersTests/**"],
+            dependencies: [.target(name: "Reminders")]
+        ),
+        .target(
             name: "AppFeatureTests",
             destinations: [.iPad],
             product: .unitTests,
@@ -201,6 +221,7 @@ let project = Project(
                 "KanjiDetailTests",
                 "AppFeatureTests",
                 "ReviewTests",
+                "RemindersTests",
             ])
         )
     ]
