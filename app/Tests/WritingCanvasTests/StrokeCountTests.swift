@@ -10,4 +10,12 @@ final class StrokeCountTests: XCTestCase {
     func testStatusOmitsCheckWhenCountsDiffer() {
         XCTAssertEqual(strokeCountStatus(expected: 3, drawn: 1), "1/3")
     }
+
+    func testStatusWithNoStrokesDrawn() {
+        XCTAssertEqual(strokeCountStatus(expected: 3, drawn: 0), "0/3")
+    }
+
+    func testStatusWithOverCountIsNotAMatch() {
+        XCTAssertEqual(strokeCountStatus(expected: 3, drawn: 4), "4/3")
+    }
 }

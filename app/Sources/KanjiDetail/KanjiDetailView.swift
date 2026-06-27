@@ -26,7 +26,10 @@ public struct KanjiDetailView: View {
         }
         .navigationTitle(store.kanji.literal)
         .toolbar {
-            Button("復習に追加") { store.send(.addToReview) }
+            Button(store.addedToReview ? "復習に追加済み" : "復習に追加") {
+                store.send(.addToReview)
+            }
+            .disabled(store.addedToReview)
             Button("書いて練習") { store.send(.writeTapped) }
         }
         .task { store.send(.onAppear) }
