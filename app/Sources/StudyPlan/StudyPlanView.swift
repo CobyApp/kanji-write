@@ -38,14 +38,17 @@ public struct StudyPlanView: View {
     }
 
     private func planContent(_ plan: StudyPlan) -> some View {
-        VStack(spacing: 0) {
+        let dayIndex = plan.scheduledDayIndex(today: store.today) ?? plan.currentDayIndex
+        let todaysIDs = plan.dayAssignments.indices.contains(dayIndex)
+            ? plan.dayAssignments[dayIndex] : []
+        return VStack(spacing: 0) {
             ProgressView(value: plan.progress) {
                 Text("進捗") + Text(verbatim: " \(plan.completedCount) / \(plan.totalCount)")
             }
             .padding()
             List {
                 Section {
-                    ForEach(plan.todaysKanjiIDs, id: \.self) { id in
+                    ForEach(todaysIDs, id: \.self) { id in
                         if let kanji = store.kanji[id: id] {
                             HStack {
                                 Button {
@@ -65,7 +68,7 @@ public struct StudyPlanView: View {
                         }
                     }
                 } header: {
-                    Text("今日の漢字") + Text(verbatim: " (Day \(plan.currentDayIndex + 1))")
+                    Text("今日の漢字") + Text(verbatim: " (Day \(dayIndex + 1))")
                 }
             }
         }
