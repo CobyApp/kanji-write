@@ -16,5 +16,6 @@ def test_parse_word_glosses_keeps_valid_and_skips_bad_lines():
 def test_parse_word_jazh_keeps_valid_and_skips_bad_lines():
     entries = parse_word_jazh(FIX / "word_glosses_jazh_sample.jsonl")
     # Line 1: ja stripped, zh present. Line 2: whitespace-only ja → None, zh
-    # present. Blank/malformed/missing-id lines are skipped.
+    # present. Blank/malformed/missing-id and non-integer-id (string, bool)
+    # lines are skipped.
     assert entries == [(1, "やま", "山"), (2, None, "学校")]

@@ -210,6 +210,22 @@ def test_load_word_jazh_glosses_with_only_zh_inserts_only_zh():
     assert rows == [("zh", "山")]
 
 
+def test_load_word_jazh_glosses_with_only_ja_inserts_only_ja():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山
+    load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
+    word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
+
+    load_word_jazh_glosses(conn, [(word_id, "やま", None)])
+
+    rows = conn.execute(
+        "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
+        "ORDER BY lang",
+        (word_id,),
+    ).fetchall()
+    assert rows == [("ja", "やま")]
+
+
 def test_load_llm_glosses_inserts_native_glosses_with_source():
     conn = init_db(":memory:")
     load_kanji(conn, [_yama()])  # 山, with an EN gloss (source NULL)

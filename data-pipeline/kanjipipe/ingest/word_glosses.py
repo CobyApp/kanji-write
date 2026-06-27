@@ -1,4 +1,5 @@
-"""Parse the LLM-generated Korean word-gloss JSONL ({"id", "ko"} per line)."""
+"""Parse LLM-generated word-gloss JSONL files: Korean ({"id", "ko"} per line)
+and Japanese/Chinese ({"id", "ja", "zh"} per line)."""
 import json
 from pathlib import Path
 
