@@ -2,12 +2,14 @@ import ComposableArchitecture
 import KanjiDetail
 import Reminders
 import Review
+import SharedModels
 import StudyPlan
 import SwiftUI
 import WritingCanvas
 
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     public init(store: StoreOf<RootFeature>) {
         self.store = store
@@ -49,5 +51,6 @@ public struct RootView: View {
             .tabItem { Label("設定", systemImage: "gearshape") }
             .tag(RootFeature.State.Tab.settings)
         }
+        .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
     }
 }

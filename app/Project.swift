@@ -4,6 +4,14 @@ private let iOS: DeploymentTargets = .iOS("26.0")
 
 let project = Project(
     name: "KanjiWrite",
+    options: .options(
+        // Japanese is the development/base language for the String Catalogs
+        // (sourceLanguage = "ja"); declaring it here makes each generated
+        // resource bundle's CFBundleDevelopmentRegion "ja" and registers the
+        // translated regions so Locale-based lookup resolves ko/zh-Hans/en.
+        defaultKnownRegions: ["ja", "ko", "zh-Hans", "en"],
+        developmentRegion: "ja"
+    ),
     targets: [
         .target(
             name: "SharedModels",
@@ -34,6 +42,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.kanjilistfeature",
             deploymentTargets: iOS,
             sources: ["Sources/KanjiListFeature/**"],
+            resources: ["Sources/KanjiListFeature/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
@@ -47,6 +56,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.appfeature",
             deploymentTargets: iOS,
             sources: ["Sources/AppFeature/**"],
+            resources: ["Sources/AppFeature/Resources/**"],
             dependencies: [
                 .target(name: "KanjiListFeature"),
                 .target(name: "WritingCanvas"),
@@ -64,6 +74,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.writingcanvas",
             deploymentTargets: iOS,
             sources: ["Sources/WritingCanvas/**"],
+            resources: ["Sources/WritingCanvas/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
@@ -86,6 +97,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.studyplan",
             deploymentTargets: iOS,
             sources: ["Sources/StudyPlan/**"],
+            resources: ["Sources/StudyPlan/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
@@ -108,6 +120,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.kanjidetail",
             deploymentTargets: iOS,
             sources: ["Sources/KanjiDetail/**"],
+            resources: ["Sources/KanjiDetail/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
@@ -131,6 +144,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.review",
             deploymentTargets: iOS,
             sources: ["Sources/Review/**"],
+            resources: ["Sources/Review/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
@@ -153,6 +167,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.reminders",
             deploymentTargets: iOS,
             sources: ["Sources/Reminders/**"],
+            resources: ["Sources/Reminders/Resources/**"],
             dependencies: [
                 .external(name: "ComposableArchitecture"),
             ]

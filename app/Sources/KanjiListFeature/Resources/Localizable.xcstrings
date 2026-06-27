@@ -1,0 +1,28 @@
+{
+  "sourceLanguage" : "ja",
+  "strings" : {
+    "漢字" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kanji"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "한자"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "汉字"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
