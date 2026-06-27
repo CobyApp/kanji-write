@@ -85,7 +85,7 @@ public struct KanjiDetailView: View {
             ForEach(store.words) { word in
                 VStack(alignment: .leading) {
                     Text("\(word.surface)（\(word.reading)）").font(.body)
-                    if let meaning = word.meaningEn {
+                    if let meaning = wordMeaning(word, appLanguage) {
                         Text(meaning).font(.caption).foregroundStyle(.secondary)
                     }
                 }

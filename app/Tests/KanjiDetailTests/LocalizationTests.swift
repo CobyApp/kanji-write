@@ -45,6 +45,18 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localizedTranslation(["zh": "", "ko": "높다."], .zh), "높다.")
     }
 
+    func testWordMeaningPrefersKoreanWhenLanguageIsKo() {
+        let withKo = WordEntry(id: 1, surface: "山", reading: "やま", meaningEn: "mountain", meaningKo: "산")
+        // ko language + ko present → ko
+        XCTAssertEqual(wordMeaning(withKo, .ko), "산")
+        // ko language + ko nil → fall back to en
+        let noKo = WordEntry(id: 1, surface: "山", reading: "やま", meaningEn: "mountain", meaningKo: nil)
+        XCTAssertEqual(wordMeaning(noKo, .ko), "mountain")
+        // non-ko language → always en even when ko is present
+        XCTAssertEqual(wordMeaning(withKo, .en), "mountain")
+        XCTAssertEqual(wordMeaning(withKo, .ja), "mountain")
+    }
+
     func testCatalogRoundTrip() {
         XCTAssertEqual(localized("読み", "ko"), "읽기")
     }
