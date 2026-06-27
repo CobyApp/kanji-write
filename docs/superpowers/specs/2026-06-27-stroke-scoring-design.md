@@ -1,79 +1,81 @@
-# Stroke Scoring (geometric heuristic) — Design + Plan
+# Handwriting Recognition (on-device Vision) — Design + Plan
 
 Date: 2026-06-27
-Status: Approved (delegated) — combined design + plan (fast path)
-Builds on: writing-canvas slice. Uses existing `SVGPath` + the kanji's
-`strokePaths` (KanjiVG) already loaded into `KanjiWritingFeature`.
+Status: Approved (delegated) — combined design + plan. Supersedes the earlier
+geometric-heuristic sketch: the user asked for real on-device ML (Apple Vision),
+iOS 27 beta acceptable.
 
 ## 1. Purpose
 
-After writing, give the learner feedback by comparing their strokes to the
-KanjiVG reference — without ML. A "採点" button reports stroke-count match and a
-shape score from per-stroke endpoint proximity.
+After writing, recognize the user's drawn kanji **on-device with Apple's Vision
+framework** (Neural Engine) and tell them whether it reads as the target kanji.
+A "採点" button rasterizes the drawing, runs Japanese text recognition, and shows
+正解 / もう一度 with the recognized candidates.
 
-## 2. Approach (no ML — pure geometry)
+## 2. Approach (on-device ML)
 
-For the reference (KanjiVG) and the user's `PKDrawing`, reduce each stroke to its
-**(start, end) endpoints**. Normalize each set independently to a unit square
-(by its combined bounding box, so canvas size is irrelevant). Compare stroke `i`
-of the reference to stroke `i` of the user: it "matches" if both its start and
-end are within a distance `threshold` (in unit space). Score = matched strokes /
-max(referenceCount, drawnCount); also report whether the stroke counts are equal.
+`PKDrawing` → raster `UIImage`/`CGImage` → Vision `RecognizeTextRequest`
+(`recognitionLanguages = [ja]`, `.accurate`) → top candidate strings → matched if
+any candidate contains the target literal. All on-device; no network, no server.
+Target the newest Vision Swift API (iOS 18+ `RecognizeTextRequest`/
+`ImageRequestHandler`), which is available on the iOS 26/27 deployment target.
 
-This is a coarse heuristic (endpoints + order), deliberately simple and robust —
-not handwriting recognition (that remains a deferred, separate effort).
+Recognition accuracy itself is device/manual QA (ML over rendered ink can't be
+unit-asserted deterministically); the **dependency boundary** makes the feature
+logic testable with a mock recognizer, and a pure candidate-matching helper is
+unit-tested.
 
 ## 3. Components (in `WritingCanvas`)
 
-Pure, unit-tested (`StrokeScoring.swift`):
-- `struct StrokeEndpoints: Equatable, Sendable { var start: CGPoint; var end: CGPoint }`
-- `func normalize(_ strokes: [StrokeEndpoints]) -> [StrokeEndpoints]` — map all
-  points by the combined bounding box to `[0,1]²` (no-op-safe if bbox is a point:
-  returns zeros).
-- `func endpoints(ofSVGPath d: String) -> StrokeEndpoints?` — via `SVGPath.parse`:
-  start = first `move` point; end = the last command's terminal point; nil if no
-  drawable command.
-- `struct StrokeScore: Equatable { var countMatch: Bool; var matched: Int; var total: Int; var percent: Int }`
-- `func scoreStrokes(reference: [StrokeEndpoints], drawn: [StrokeEndpoints], threshold: CGFloat = 0.18) -> StrokeScore`
-  — `total = max(reference.count, drawn.count)`; for `i` in the overlap, matched
-  if `dist(ref[i].start, drawn[i].start) <= threshold && dist(end,end) <= threshold`;
-  `percent = total == 0 ? 0 : matched*100/total`; `countMatch = reference.count == drawn.count`.
-
-Glue (build/manual-QA, not unit-tested):
-- `KanjiWritingView` derives drawn endpoints from `PKDrawing`:
-  for each `PKStroke`, `stroke.path.first?.location` / `.last?.location` →
-  `StrokeEndpoints`; `normalize(...)`; send `.score(drawn)`.
-- `KanjiWritingFeature`: `State.score: StrokeScore?`; `Action.score([StrokeEndpoints])`;
-  on `.score`, build reference endpoints from `state.strokePaths.compactMap(endpoints(ofSVGPath:))`,
-  `normalize` them, `scoreStrokes(reference:drawn:)` → `state.score`. A 採点
-  toolbar button (enabled when there's a drawing) sends `.score(...)`; the view
-  shows e.g. "画数 ✓ ・ 形 80%".
+- **`RecognitionResult`** (`Equatable, Sendable`): `{ matched: Bool, candidates: [String] }`.
+- **`kanjiMatches(target: String, candidates: [String]) -> Bool`** (pure):
+  true if any candidate string `contains(target)`. Unit-tested.
+- **`KanjiRecognizer`** (`@DependencyClient`):
+  `recognize: @Sendable (_ imageData: Data, _ target: String) async -> RecognitionResult`.
+  - `liveValue` (on-device, device-QA): decode `imageData` → `CGImage`; run
+    `RecognizeTextRequest` with `recognitionLanguages = [Locale.Language(identifier: "ja")]`,
+    `recognitionLevel = .accurate`, `usesLanguageCorrection = false`; collect
+    `observations.flatMap { $0.topCandidates(3).map(\.string) }`; return
+    `RecognitionResult(matched: kanjiMatches(target:candidates:), candidates:)`.
+    Failures (bad image / Vision error) → `RecognitionResult(matched: false, candidates: [])`.
+  - `testValue` = `@DependencyClient` unimplemented stub.
+  - Registered at `DependencyValues.kanjiRecognizer`.
+- **`KanjiWritingFeature`**: `State.recognition: RecognitionResult?`;
+  `Action.recognize(Data)`; on `.recognize(data)` → run
+  `recognizer.recognize(data, state.kanji.literal)` → `Action.recognized(RecognitionResult)`
+  → set `state.recognition`. (`@Dependency(\.kanjiRecognizer)`.)
+- **`KanjiWritingView`**: a 採点 toolbar button — rasterize the `@State drawing`:
+  `drawing.image(from: drawing.bounds (or a fixed square), scale: UIScreen…/2)` →
+  `pngData()` → `store.send(.recognize(data))`. Show the result: 正解！ when
+  `recognition?.matched`, else もう一度 with the first candidate (if any). Disable
+  the button when the drawing is empty.
 
 ## 4. Testing
 
-- `endpoints(ofSVGPath:)`: `"M10,10 L90,90"` → start (10,10), end (90,90);
-  a cubic `"M0,0 C…  e"` → start (0,0), end e; empty/`""` → nil.
-- `normalize`: a set spanning (10,10)-(90,90) maps to corners 0 and 1; a single
-  point → zeros (no div-by-zero).
-- `scoreStrokes`: identical sets → percent 100, countMatch true; off-by-one
-  count → countMatch false, total = max; a far-off stroke → not matched;
-  empty → percent 0.
-- `KanjiWritingFeature` (`TestStore`): `.score([...])` with known drawn endpoints
-  vs a stubbed `strokePaths` state → sets `state.score` to the expected value.
-- Build green. The PKDrawing→endpoints extraction and on-screen result are
-  manual/device QA.
+- **`kanjiMatches`**: `kanjiMatches("山", ["山", "川"])` true; `("山", ["川"])`
+  false; `("山", ["登山道"])` true (substring); `("山", [])` false.
+- **`KanjiWritingFeature`** (`TestStore`, mocked `kanjiRecognizer`):
+  `.recognize(data)` with a recognizer returning `RecognitionResult(matched: true,
+  candidates: ["山"])` → receives `.recognized(...)` → `state.recognition` set.
+- Build green. The live Vision recognition + rasterization + on-screen result are
+  device/manual QA (can't unit-test ML on rendered ink).
 
 ## 5. Build order
 
-1. `StrokeScoring.swift` (StrokeEndpoints, normalize, endpoints, StrokeScore,
-   scoreStrokes) + unit tests (TDD).
-2. `KanjiWritingFeature`: `State.score`, `Action.score`, reducer using the pure
-   funcs + feature test.
-3. `KanjiWritingView`: derive drawn endpoints from `PKDrawing`, 採点 button,
-   result display (build-verified).
+1. `KanjiRecognizer.swift` — `RecognitionResult`, `kanjiMatches`,
+   `@DependencyClient KanjiRecognizer` + Vision `liveValue` + DependencyValues +
+   `kanjiMatches` unit tests (TDD).
+2. `KanjiWritingFeature`: `State.recognition`, `Action.recognize(Data)` +
+   `.recognized(RecognitionResult)`, reducer + feature test (mock recognizer).
+3. `KanjiWritingView`: rasterize `PKDrawing` → 採点 button → result display
+   (build-verified).
+
+No `Project.swift` change (Vision/PencilKit/UIKit are system frameworks; all code
+in `WritingCanvas`).
 
 ## 6. Non-Goals / Follow-on
 
-True handwriting/shape recognition (DTW over full sampled curves, direction
-checks, ML); per-stroke red/green overlay; scoring history. This endpoint
-heuristic is intentionally coarse.
+Per-stroke order/shape scoring; confidence thresholds/tuning; offline model
+bundling; multi-character recognition. This is single-kanji on-device OCR
+matching. If recognition proves unreliable on sparse ink in device QA, a
+follow-on can add the stroke-count/endpoint heuristic as a fallback signal.
