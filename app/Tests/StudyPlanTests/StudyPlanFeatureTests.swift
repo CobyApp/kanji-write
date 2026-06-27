@@ -19,11 +19,13 @@ final class StudyPlanFeatureTests: XCTestCase {
         } withDependencies: {
             $0.userStore.loadPlan = { nil }
             $0.dictionaryClient.allKanji = { [.yama, .gaku] }
+            $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
         }
         await store.send(.onAppear) { $0.isLoading = true }
-        await store.receive(.loaded(nil, [.yama, .gaku])) {
+        await store.receive(.loaded(nil, [.yama, .gaku], 100)) {
             $0.isLoading = false
             $0.kanji = [.yama, .gaku]
+            $0.today = 100
         }
     }
 
@@ -31,15 +33,18 @@ final class StudyPlanFeatureTests: XCTestCase {
         let saved = LockIsolated<StudyPlan?>(nil)
         var initial = StudyPlanFeature.State()
         initial.kanji = [.yama, .gaku]
+        initial.today = 100
         let store = TestStore(initialState: initial) {
             StudyPlanFeature()
         } withDependencies: {
             $0.userStore.savePlan = { saved.setValue($0) }
+            $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
         }
         let expected = StudyPlan(axisLabel: "学年", durationDays: 2,
-                                 dayAssignments: [[1], [2]])
+                                 dayAssignments: [[1], [2]], startDay: 100)
         await store.send(.createPlan(days: 2)) { $0.plan = expected }
         XCTAssertEqual(saved.value, expected)
+        XCTAssertEqual(saved.value?.startDay, 100)
     }
 
     func testMarkDoneUpdatesAndSaves() async {
