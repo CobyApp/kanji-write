@@ -125,6 +125,7 @@ let project = Project(
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
                 .target(name: "WritingCanvas"),
+                .target(name: "Review"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
