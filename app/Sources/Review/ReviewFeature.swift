@@ -1,13 +1,9 @@
 import ComposableArchitecture
 import DictionaryClient
-import Foundation
 import SharedModels
 
 @Reducer
 public struct ReviewFeature {
-    /// How many never-seen kanji to introduce per session.
-    static let newCardLimit = 10
-
     @ObservableState
     public struct State: Equatable {
         public var records: IdentifiedArrayOf<ReviewRecord> = []
@@ -15,23 +11,12 @@ public struct ReviewFeature {
         public var today: Int = 0
         public var isLoading = false
         public init() {}
-
-        /// Tracked cards that are due, plus a few brand-new kanji.
-        public var dueKanji: [Kanji] {
-            let dueTracked = kanji.filter { k in
-                guard let r = records[id: k.id] else { return false }
-                return srsIsDue(box: r.box, lastReviewedDay: r.lastReviewedDay, today: today)
-            }
-            let newCards = kanji.filter { records[id: $0.id] == nil }
-                .prefix(ReviewFeature.newCardLimit)
-            return dueTracked + Array(newCards)
-        }
     }
 
     public enum Action: Equatable {
         case onAppear
         case loaded([ReviewRecord], [Kanji], Int)
-        case grade(kanjiID: Int, correct: Bool)
+        case grade(kanjiID: Int, grade: Grade)
         case kanjiTapped(Kanji)
     }
 
@@ -59,13 +44,26 @@ public struct ReviewFeature {
                 state.kanji = IdentifiedArray(uniqueElements: kanji)
                 state.today = today
                 return .none
-            case let .grade(kanjiID, correct):
-                let currentBox = state.records[id: kanjiID]?.box ?? 0
-                let record = ReviewRecord(
-                    kanjiID: kanjiID,
-                    box: srsAdvance(box: currentBox, correct: correct),
-                    lastReviewedDay: state.today)
-                state.records[id: kanjiID] = record
+            case let .grade(kanjiID, grade):
+                let today = state.today
+                let updated: ReviewRecord
+                if let rec = state.records[id: kanjiID] {
+                    let result = FSRS.schedule(
+                        state: MemoryState(stability: rec.stability, difficulty: rec.difficulty),
+                        grade: grade, elapsedDays: today - rec.lastReviewedDay)
+                    updated = ReviewRecord(
+                        kanjiID: kanjiID, stability: result.state.stability,
+                        difficulty: result.state.difficulty, due: today + result.intervalDays,
+                        lastReviewedDay: today, lapses: rec.lapses + (grade == .again ? 1 : 0),
+                        reps: rec.reps + 1)
+                } else {
+                    let result = FSRS.schedule(state: nil, grade: grade, elapsedDays: 0)
+                    updated = ReviewRecord(
+                        kanjiID: kanjiID, stability: result.state.stability,
+                        difficulty: result.state.difficulty, due: today + result.intervalDays,
+                        lastReviewedDay: today, lapses: grade == .again ? 1 : 0, reps: 1)
+                }
+                state.records[id: kanjiID] = updated
                 let all = Array(state.records)
                 return .run { _ in await reviewStore.saveRecords(all) }
             case .kanjiTapped:

@@ -1,5 +1,29 @@
 import SharedModels
 
+/// A day's study queue: due reviews plus a capped set of new kanji.
+public struct StudySession: Equatable, Sendable {
+    public var dueIDs: [Int]
+    public var newIDs: [Int]
+    public init(dueIDs: [Int], newIDs: [Int]) {
+        self.dueIDs = dueIDs
+        self.newIDs = newIDs
+    }
+}
+
+/// Build today's session: every tracked card whose `due` has arrived (ordered by
+/// due then difficulty), plus the next `newPerDay` never-seen kanji from
+/// `order`.
+public func todaysSession(
+    records: [ReviewRecord], order: [Kanji], today: Int, newPerDay: Int
+) -> StudySession {
+    let known = Set(records.map(\.kanjiID))
+    let due = records.filter { $0.due <= today }
+        .sorted { ($0.due, $0.difficulty) < ($1.due, $1.difficulty) }
+        .map(\.kanjiID)
+    let new = order.lazy.filter { !known.contains($0.id) }.prefix(max(0, newPerDay)).map(\.id)
+    return StudySession(dueIDs: due, newIDs: Array(new))
+}
+
 /// The order in which new kanji are introduced: by the classification's level
 /// sequence (JLPT N5→N1, or grade 小1→中学; un-leveled last), then by ascending
 /// stroke count (simpler first), then id for stability.

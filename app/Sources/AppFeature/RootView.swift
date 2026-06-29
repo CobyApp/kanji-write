@@ -29,7 +29,6 @@ public struct RootView: View {
                 path: $store.scope(state: \.planPath, action: \.planPath)
             ) {
                 StudyHubView(
-                    planStore: store.scope(state: \.plan, action: \.plan),
                     reviewStore: store.scope(state: \.review, action: \.review)
                 )
             } destination: { store in

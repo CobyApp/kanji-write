@@ -29,11 +29,9 @@ final class ReviewFeatureTests: XCTestCase {
             $0.kanji = [.make(1, "山"), .make(2, "学")]
             $0.today = 100
         }
-        // both are new (no record) → due
-        XCTAssertEqual(store.state.dueKanji.map(\.id), [1, 2])
     }
 
-    func testGradeAdvancesBoxAndSaves() async {
+    func testGradingNewKanjiCreatesFSRSRecordAndSaves() async {
         let saved = LockIsolated<[ReviewRecord]?>(nil)
         var initial = ReviewFeature.State()
         initial.kanji = [.make(1, "山")]
@@ -43,9 +41,33 @@ final class ReviewFeatureTests: XCTestCase {
         } withDependencies: {
             $0.reviewStore.saveRecords = { saved.setValue($0) }
         }
-        await store.send(.grade(kanjiID: 1, correct: true)) {
-            $0.records[id: 1] = ReviewRecord(kanjiID: 1, box: 1, lastReviewedDay: 100)
-        }
-        XCTAssertEqual(saved.value, [ReviewRecord(kanjiID: 1, box: 1, lastReviewedDay: 100)])
+        store.exhaustivity = .off
+
+        await store.send(.grade(kanjiID: 1, grade: .good))
+
+        let rec = store.state.records[id: 1]
+        XCTAssertNotNil(rec)
+        XCTAssertEqual(rec?.stability ?? 0, FSRS.w[2], accuracy: 1e-9)  // S0(Good)
+        XCTAssertEqual(rec?.reps, 1)
+        XCTAssertEqual(rec?.lapses, 0)
+        // due = today + interval(S0(Good)=3.173 @0.9 ≈ 3)
+        XCTAssertEqual(rec?.due, 100 + FSRS.interval(stability: FSRS.w[2], retention: 0.9))
+        XCTAssertEqual(saved.value?.count, 1)
+    }
+
+    func testGradingAgainCountsLapse() async {
+        var initial = ReviewFeature.State()
+        initial.kanji = [.make(1, "山")]
+        initial.today = 100
+        initial.records = [ReviewRecord(
+            kanjiID: 1, stability: 20, difficulty: 5, due: 100, lastReviewedDay: 80)]
+        let store = TestStore(initialState: initial) { ReviewFeature() }
+            withDependencies: { $0.reviewStore.saveRecords = { _ in } }
+        store.exhaustivity = .off
+
+        await store.send(.grade(kanjiID: 1, grade: .again))
+        XCTAssertEqual(store.state.records[id: 1]?.lapses, 1)
+        XCTAssertEqual(store.state.records[id: 1]?.reps, 2)
+        XCTAssertLessThan(store.state.records[id: 1]!.stability, 20)  // lapsed down
     }
 }

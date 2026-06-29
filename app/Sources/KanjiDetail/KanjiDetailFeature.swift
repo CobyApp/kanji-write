@@ -73,8 +73,11 @@ public struct KanjiDetailFeature {
                         await send(.markedAddedToReview)
                         return
                     }
-                    records.append(
-                        ReviewRecord(kanjiID: kanjiID, box: 0, lastReviewedDay: today))
+                    let initial = FSRS.initialState(.good)
+                    records.append(ReviewRecord(
+                        kanjiID: kanjiID, stability: initial.stability,
+                        difficulty: initial.difficulty, due: today,
+                        lastReviewedDay: today, lapses: 0, reps: 0))
                     await reviewStore.saveRecords(records)
                     await send(.markedAddedToReview)
                 }
