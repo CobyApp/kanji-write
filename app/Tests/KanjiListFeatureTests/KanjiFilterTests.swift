@@ -17,44 +17,45 @@ private extension Kanji {
 final class KanjiFilterTests: XCTestCase {
     let all: [Kanji] = [.yama, .gaku, .ai, .oyobu]
 
-    func testAllReturnsEverything() {
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: ""), all)
+    func testJLPTLevelsOrderAndLabels() {
+        let ls = levels(for: .jlpt)
+        XCTAssertEqual(ls.map(\.label), ["N5", "N4", "N3", "N2", "N1"])
+        XCTAssertEqual(ls.map(\.id), ["jlpt:N5", "jlpt:N4", "jlpt:N3", "jlpt:N2", "jlpt:N1"])
     }
 
-    func testFilterByJLPT() {
-        XCTAssertEqual(kanjiMatching(all, filter: .jlpt("N5"), search: ""), [.yama, .gaku])
-        XCTAssertEqual(kanjiMatching(all, filter: .jlpt("N3"), search: ""), [.ai])
+    func testGradeLevelsOrderAndLabels() {
+        let ls = levels(for: .grade)
+        // 小1…小6 then 中学 (grade 8)
+        XCTAssertEqual(ls.map(\.label), ["小1", "小2", "小3", "小4", "小5", "小6", "中学"])
+        XCTAssertEqual(ls.last?.id, "grade:8")
     }
 
-    func testFilterByGrade() {
-        XCTAssertEqual(kanjiMatching(all, filter: .grade(1), search: ""), [.yama, .gaku])
+    func testKanjiInJLPTLevel() {
+        let n5 = KanjiLevel(kind: .jlpt("N5"))
+        XCTAssertEqual(kanjiIn(all, in: n5), [.yama, .gaku])
+        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(kind: .jlpt("N3"))), [.ai])
+    }
+
+    func testKanjiInGradeLevel() {
+        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(kind: .grade(1))), [.yama, .gaku])
         // grade 8 is the 中学 bucket
-        XCTAssertEqual(kanjiMatching(all, filter: .grade(8), search: ""), [.oyobu])
+        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(kind: .grade(8))), [.oyobu])
     }
 
     func testSearchByLiteral() {
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: "山"), [.yama])
+        XCTAssertTrue(searchMatches(.yama, "山"))
+        XCTAssertFalse(searchMatches(.gaku, "山"))
     }
 
-    func testSearchByReading() {
-        // kun reading (dots in kun readings are ignored for matching)
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: "やま"), [.yama])
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: "およぶ"), [.oyobu])
-        // on reading
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: "アイ"), [.ai])
+    func testSearchByReadingIgnoresDots() {
+        XCTAssertTrue(searchMatches(.yama, "やま"))    // kun
+        XCTAssertTrue(searchMatches(.oyobu, "およぶ"))  // kun with dot removed
+        XCTAssertTrue(searchMatches(.ai, "アイ"))       // on
     }
 
-    func testSearchTrimsWhitespace() {
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: "  山 "), [.yama])
-    }
-
-    func testFilterAndSearchCombine() {
-        XCTAssertEqual(kanjiMatching(all, filter: .jlpt("N5"), search: "学"), [.gaku])
-        // filter excludes it even if search would match
-        XCTAssertEqual(kanjiMatching(all, filter: .grade(1), search: "愛"), [])
-    }
-
-    func testEmptyWhenNoMatch() {
-        XCTAssertEqual(kanjiMatching(all, filter: .all, search: "zzz"), [])
+    func testSearchTrimsAndRejectsEmpty() {
+        XCTAssertTrue(searchMatches(.yama, "  山 "))
+        XCTAssertFalse(searchMatches(.yama, "   "))
+        XCTAssertFalse(searchMatches(.yama, "zzz"))
     }
 }

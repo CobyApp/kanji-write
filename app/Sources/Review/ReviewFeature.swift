@@ -32,6 +32,7 @@ public struct ReviewFeature {
         case onAppear
         case loaded([ReviewRecord], [Kanji], Int)
         case grade(kanjiID: Int, correct: Bool)
+        case kanjiTapped(Kanji)
     }
 
     @Dependency(\.reviewStore) var reviewStore
@@ -67,6 +68,8 @@ public struct ReviewFeature {
                 state.records[id: kanjiID] = record
                 let all = Array(state.records)
                 return .run { _ in await reviewStore.saveRecords(all) }
+            case .kanjiTapped:
+                return .none
             }
         }
     }

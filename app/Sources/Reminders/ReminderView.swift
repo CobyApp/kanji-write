@@ -6,6 +6,7 @@ import SwiftUI
 public struct ReminderView: View {
     @Bindable public var store: StoreOf<ReminderFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("classification") private var classification: Classification = .jlpt
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
 
@@ -18,6 +19,7 @@ public struct ReminderView: View {
             Palette.background.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 16) {
+                    classificationCard
                     languageCard
                     reminderCard
                 }
@@ -32,6 +34,19 @@ public struct ReminderView: View {
         .onChange(of: hour) { _, newValue in
             store.send(.apply(enabled: enabled, hour: newValue))
         }
+    }
+
+    private var classificationCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("分類 / Classification", accent: Palette.mint)
+            Picker("Classification", selection: $classification) {
+                ForEach(Classification.allCases, id: \.self) { c in
+                    Text(c.label).tag(c)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .roundedCard()
     }
 
     private var languageCard: some View {

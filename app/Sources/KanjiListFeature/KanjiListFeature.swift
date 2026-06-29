@@ -2,30 +2,59 @@ import ComposableArchitecture
 import DictionaryClient
 import SharedModels
 
-/// How the browse list is narrowed.
-public enum KanjiFilter: Equatable, Sendable {
-    case all
-    case jlpt(String)  // "N5" … "N1"
-    case grade(Int)    // 1…6 (小学), 8 (中学 bucket)
+/// A browsable level within a classification (one JLPT level or one school grade).
+public struct KanjiLevel: Equatable, Identifiable, Sendable {
+    public enum Kind: Equatable, Sendable {
+        case jlpt(String)  // "N5" … "N1"
+        case grade(Int)    // 1…6 (小学), 8 (中学)
+    }
+
+    public let kind: Kind
+    public init(kind: Kind) { self.kind = kind }
+
+    public var id: String {
+        switch kind {
+        case let .jlpt(level): "jlpt:\(level)"
+        case let .grade(grade): "grade:\(grade)"
+        }
+    }
+
+    public var label: String {
+        switch kind {
+        case let .jlpt(level): level
+        case .grade(8): "中学"
+        case let .grade(grade): "小\(grade)"
+        }
+    }
 }
 
-/// Pure predicate: narrow `kanji` by `filter` then by free-text `search`
-/// (matches the literal or any on/kun reading; kun-reading dots are ignored).
-public func kanjiMatching(_ kanji: [Kanji], filter: KanjiFilter, search: String) -> [Kanji] {
-    let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
-    return kanji.filter { k in
-        let passesFilter: Bool
-        switch filter {
-        case .all: passesFilter = true
-        case let .jlpt(level): passesFilter = k.jlptLevel == level
-        case let .grade(g): passesFilter = k.grade == g
-        }
-        guard passesFilter else { return false }
-        guard !query.isEmpty else { return true }
-        if k.literal.contains(query) { return true }
-        let readings = (k.onReadings + k.kunReadings).map { $0.replacingOccurrences(of: ".", with: "") }
-        return readings.contains { $0.contains(query) }
+/// The ordered levels for a classification.
+public func levels(for classification: Classification) -> [KanjiLevel] {
+    switch classification {
+    case .jlpt:
+        ["N5", "N4", "N3", "N2", "N1"].map { KanjiLevel(kind: .jlpt($0)) }
+    case .grade:
+        [1, 2, 3, 4, 5, 6, 8].map { KanjiLevel(kind: .grade($0)) }
     }
+}
+
+/// The kanji belonging to a level.
+public func kanjiIn(_ all: [Kanji], in level: KanjiLevel) -> [Kanji] {
+    all.filter { k in
+        switch level.kind {
+        case let .jlpt(l): k.jlptLevel == l
+        case let .grade(g): k.grade == g
+        }
+    }
+}
+
+/// Free-text match: the literal, or any on/kun reading (kun dots ignored).
+public func searchMatches(_ k: Kanji, _ query: String) -> Bool {
+    let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !q.isEmpty else { return false }
+    if k.literal.contains(q) { return true }
+    let readings = (k.onReadings + k.kunReadings).map { $0.replacingOccurrences(of: ".", with: "") }
+    return readings.contains { $0.contains(q) }
 }
 
 @Reducer
@@ -35,13 +64,23 @@ public struct KanjiListFeature {
         public var kanji: IdentifiedArrayOf<Kanji> = []
         public var isLoading = false
         public var loadError: String?
-        public var filter: KanjiFilter = .all
+        public var selectedLevel: KanjiLevel?
         public var searchText: String = ""
         public init() {}
 
-        /// The kanji actually shown, after filter + search.
-        public var visibleKanji: [Kanji] {
-            kanjiMatching(kanji.elements, filter: filter, search: searchText)
+        /// Kanji in the selected level (empty if no level chosen).
+        public var levelKanji: [Kanji] {
+            guard let selectedLevel else { return [] }
+            return kanjiIn(kanji.elements, in: selectedLevel)
+        }
+
+        /// Search results across all kanji (used when `searchText` is non-empty).
+        public var searchResults: [Kanji] {
+            kanji.elements.filter { searchMatches($0, searchText) }
+        }
+
+        public var isSearching: Bool {
+            !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
     }
 
@@ -50,7 +89,8 @@ public struct KanjiListFeature {
         case kanjiLoaded([Kanji])
         case loadFailed(String)
         case kanjiTapped(Kanji)
-        case filterChanged(KanjiFilter)
+        case levelSelected(KanjiLevel)
+        case levelCleared
         case searchChanged(String)
     }
 
@@ -62,6 +102,7 @@ public struct KanjiListFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                guard state.kanji.isEmpty else { return .none }
                 state.isLoading = true
                 state.loadError = nil
                 return .run { send in
@@ -81,8 +122,11 @@ public struct KanjiListFeature {
                 return .none
             case .kanjiTapped:
                 return .none
-            case let .filterChanged(filter):
-                state.filter = filter
+            case let .levelSelected(level):
+                state.selectedLevel = level
+                return .none
+            case .levelCleared:
+                state.selectedLevel = nil
                 return .none
             case let .searchChanged(text):
                 state.searchText = text
