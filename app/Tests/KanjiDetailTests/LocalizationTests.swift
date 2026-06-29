@@ -45,16 +45,22 @@ final class LocalizationTests: XCTestCase {
         XCTAssertEqual(localizedTranslation(["zh": "", "ko": "높다."], .zh), "높다.")
     }
 
-    func testWordMeaningPrefersKoreanWhenLanguageIsKo() {
-        let withKo = WordEntry(id: 1, surface: "山", reading: "やま", meaningEn: "mountain", meaningKo: "산")
-        // ko language + ko present → ko
-        XCTAssertEqual(wordMeaning(withKo, .ko), "산")
-        // ko language + ko nil → fall back to en
-        let noKo = WordEntry(id: 1, surface: "山", reading: "やま", meaningEn: "mountain", meaningKo: nil)
-        XCTAssertEqual(wordMeaning(noKo, .ko), "mountain")
-        // non-ko language → always en even when ko is present
-        XCTAssertEqual(wordMeaning(withKo, .en), "mountain")
-        XCTAssertEqual(wordMeaning(withKo, .ja), "mountain")
+    func testWordMeaningPrefersSelectedLanguageThenFallsBackToEnglish() {
+        let full = WordEntry(
+            id: 1, surface: "山", reading: "やま", meaningEn: "mountain",
+            meaningKo: "산", meaningJa: "やま、高い地形", meaningZh: "山")
+        // each language returns its own gloss when present
+        XCTAssertEqual(wordMeaning(full, .ko), "산")
+        XCTAssertEqual(wordMeaning(full, .ja), "やま、高い地形")
+        XCTAssertEqual(wordMeaning(full, .zh), "山")
+        XCTAssertEqual(wordMeaning(full, .en), "mountain")
+
+        // each native gloss absent → fall back to en
+        let enOnly = WordEntry(id: 1, surface: "山", reading: "やま", meaningEn: "mountain")
+        XCTAssertEqual(wordMeaning(enOnly, .ko), "mountain")
+        XCTAssertEqual(wordMeaning(enOnly, .ja), "mountain")
+        XCTAssertEqual(wordMeaning(enOnly, .zh), "mountain")
+        XCTAssertEqual(wordMeaning(enOnly, .en), "mountain")
     }
 
     func testCatalogRoundTrip() {

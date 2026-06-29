@@ -139,6 +139,24 @@ def load_word_ko_glosses(
     conn.commit()
 
 
+def load_word_jazh_glosses(
+    conn: sqlite3.Connection,
+    entries: list[tuple[int, str | None, str | None]],
+) -> None:
+    for word_id, ja, zh in entries:
+        if ja:
+            conn.execute(
+                "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ja', ?)",
+                (word_id, ja),
+            )
+        if zh:
+            conn.execute(
+                "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'zh', ?)",
+                (word_id, zh),
+            )
+    conn.commit()
+
+
 def load_llm_glosses(conn: sqlite3.Connection, entries: list["LlmGloss"]) -> None:
     kanji_id_by_literal = {
         literal: kanji_id

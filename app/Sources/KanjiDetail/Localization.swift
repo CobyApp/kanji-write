@@ -1,9 +1,14 @@
 import SharedModels
 
-/// The word meaning for the selected language: Korean when `.ko` (falling back
-/// to English if the Korean gloss is absent), otherwise English.
+/// The word meaning for the selected language, falling back to English when the
+/// native gloss for that language is absent.
 func wordMeaning(_ word: WordEntry, _ language: AppLanguage) -> String? {
-    language == .ko ? (word.meaningKo ?? word.meaningEn) : word.meaningEn
+    switch language {
+    case .ko: return word.meaningKo ?? word.meaningEn
+    case .ja: return word.meaningJa ?? word.meaningEn
+    case .zh: return word.meaningZh ?? word.meaningEn
+    case .en: return word.meaningEn
+    }
 }
 
 /// The kanji gloss for the selected language, falling back deterministically.
