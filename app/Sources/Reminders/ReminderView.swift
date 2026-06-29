@@ -1,8 +1,11 @@
 import ComposableArchitecture
+import DesignSystem
+import SharedModels
 import SwiftUI
 
 public struct ReminderView: View {
     @Bindable public var store: StoreOf<ReminderFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
 
@@ -11,21 +14,14 @@ public struct ReminderView: View {
     }
 
     public var body: some View {
-        Form {
-            Section("リマインダー") {
-                Toggle("毎日のリマインダー", isOn: $enabled)
-                if enabled {
-                    Picker("時刻", selection: $hour) {
-                        ForEach(0..<24, id: \.self) { h in
-                            Text(String(format: "%02d:00", h)).tag(h)
-                        }
-                    }
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: 16) {
+                    languageCard
+                    reminderCard
                 }
-                if store.authorizationDenied {
-                    Text("通知が許可されていません。設定アプリで許可してください。")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                .padding(16)
             }
         }
         .navigationTitle("設定")
@@ -36,5 +32,39 @@ public struct ReminderView: View {
         .onChange(of: hour) { _, newValue in
             store.send(.apply(enabled: enabled, hour: newValue))
         }
+    }
+
+    private var languageCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("言語 / Language", accent: Palette.lavender)
+            Picker("Language", selection: $appLanguage) {
+                ForEach(AppLanguage.allCases, id: \.self) { language in
+                    Text(language.label).tag(language)
+                }
+            }
+            .pickerStyle(.segmented)
+        }
+        .roundedCard()
+    }
+
+    private var reminderCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("リマインダー", accent: Palette.pink)
+            Toggle("毎日のリマインダー", isOn: $enabled)
+                .font(.kawaii(16)).tint(Palette.accent)
+            if enabled {
+                Picker("時刻", selection: $hour) {
+                    ForEach(0..<24, id: \.self) { h in
+                        Text(String(format: "%02d:00", h)).tag(h)
+                    }
+                }
+                .font(.kawaii(16))
+            }
+            if store.authorizationDenied {
+                Text("通知が許可されていません。設定アプリで許可してください。")
+                    .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+            }
+        }
+        .roundedCard()
     }
 }

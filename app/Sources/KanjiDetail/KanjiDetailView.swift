@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DesignSystem
 import SharedModels
 import SwiftUI
 import WritingCanvas
@@ -12,17 +13,19 @@ public struct KanjiDetailView: View {
     }
 
     public var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                header
-                readings
-                if !store.strokePaths.isEmpty { strokeOrderSection }
-                if !store.words.isEmpty { wordsSection }
-                if !store.sentences.isEmpty { sentencesSection }
-                if !store.relations.isEmpty { relationsSection }
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    header
+                    readings
+                    if !store.strokePaths.isEmpty { strokeOrderSection }
+                    if !store.words.isEmpty { wordsSection }
+                    if !store.sentences.isEmpty { sentencesSection }
+                    if !store.relations.isEmpty { relationsSection }
+                }
+                .padding(16)
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .navigationTitle(store.kanji.literal)
         .toolbar {
@@ -36,90 +39,97 @@ public struct KanjiDetailView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 20) {
-            Text(store.kanji.literal)
-                .font(.system(size: 84))
-            VStack(alignment: .leading, spacing: 8) {
+        HStack(alignment: .top, spacing: 18) {
+            PastelTile(store.kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
+                       size: 96, fontSize: 60)
+            VStack(alignment: .leading, spacing: 10) {
                 Text(localizedGloss(store.glosses, appLanguage) ?? "")
-                    .font(.title)
+                    .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
                 HStack(spacing: 8) {
-                    if let grade = store.kanji.grade { chip("学\(grade)") }
-                    if let jlpt = store.kanji.jlptLevel { chip(jlpt) }
+                    if let grade = store.kanji.grade {
+                        CandyChip("学\(grade)", soft: Palette.butterSoft, accent: Palette.butter)
+                    }
+                    if let jlpt = store.kanji.jlptLevel {
+                        CandyChip(jlpt, soft: Palette.skySoft, accent: Palette.sky)
+                    }
                 }
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
-    }
-
-    private func chip(_ text: String) -> some View {
-        Text(text)
-            .font(.caption)
-            .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(Color(.secondarySystemBackground))
-            .clipShape(Capsule())
+        .roundedCard()
     }
 
     private var readings: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("読み").font(.headline)
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader("読み", accent: Palette.pink)
             if !store.kanji.onReadings.isEmpty {
                 Text("音 " + store.kanji.onReadings.joined(separator: "、"))
+                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
             if !store.kanji.kunReadings.isEmpty {
                 Text("訓 " + store.kanji.kunReadings.joined(separator: "、"))
-                    .foregroundStyle(.secondary)
+                    .font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             }
         }
+        .roundedCard()
     }
 
     private var strokeOrderSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("画順").font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader("画順", accent: Palette.mint)
             StrokeOrderPlayer(paths: store.strokePaths)
         }
+        .roundedCard()
     }
 
     private var wordsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("活用").font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader("活用", accent: Palette.lavender)
             ForEach(store.words) { word in
-                VStack(alignment: .leading) {
-                    Text("\(word.surface)（\(word.reading)）").font(.body)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(word.surface)（\(word.reading)）")
+                        .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
                     if let meaning = wordMeaning(word, appLanguage) {
-                        Text(meaning).font(.caption).foregroundStyle(.secondary)
+                        Text(meaning).font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
                     }
                 }
             }
         }
+        .roundedCard()
     }
 
     private var sentencesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("例文").font(.headline)
+            SectionHeader("例文", accent: Palette.butter)
             ForEach(store.sentences) { sentence in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sentence.textJa)
+                        .font(.kawaii(16)).foregroundStyle(Palette.ink)
                     if let translation = localizedTranslation(sentence.translations, appLanguage) {
-                        Text(translation).font(.callout).foregroundStyle(.secondary)
+                        Text(translation).font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
                     }
                 }
             }
         }
+        .roundedCard()
     }
 
     private var relationsSection: some View {
         let antonyms = store.relations.filter { $0.type == "antonym" }.map(\.surface)
         let related = store.relations.filter { $0.type == "related" }.map(\.surface)
         return VStack(alignment: .leading, spacing: 8) {
-            Text("関連").font(.headline)
+            SectionHeader("関連", accent: Palette.sky)
             if !antonyms.isEmpty {
-                Text("反意").font(.subheadline).foregroundStyle(.secondary)
+                Text("反意").font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
                 Text(antonyms.joined(separator: "、"))
+                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
             if !related.isEmpty {
-                Text("関連語").font(.subheadline).foregroundStyle(.secondary)
+                Text("関連語").font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
                 Text(related.joined(separator: "、"))
+                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
         }
+        .roundedCard()
     }
 }
