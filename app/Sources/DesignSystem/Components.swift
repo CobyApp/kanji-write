@@ -2,13 +2,7 @@ import SwiftUI
 
 // Reusable kawaii-pastel building blocks shared by every screen. Each piece has
 // one job, takes its colors explicitly, and carries no feature dependency.
-
-extension Font {
-    /// The app's friendly rounded type.
-    public static func kawaii(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .rounded)
-    }
-}
+// (The `Font.kawaii` cute-font helpers live in Fonts.swift.)
 
 extension View {
     /// Wraps content in a soft white rounded card with a gentle shadow.
