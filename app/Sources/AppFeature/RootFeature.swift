@@ -17,7 +17,7 @@ public struct RootFeature {
         public var reminder = ReminderFeature.State()
         public init() {}
 
-        public enum Tab: Equatable { case browse, plan, review, settings }
+        public enum Tab: Equatable { case browse, study, settings }
     }
 
     // StackActionOf<Path> is not Equatable, so Action intentionally omits Equatable.
@@ -45,6 +45,9 @@ public struct RootFeature {
                 state.selectedTab = tab
                 return .none
             case let .plan(.kanjiTapped(kanji)):
+                state.planPath.append(.detail(KanjiDetailFeature.State(kanji: kanji)))
+                return .none
+            case let .review(.kanjiTapped(kanji)):
                 state.planPath.append(.detail(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
             case let .planPath(.element(id: id, action: .detail(.writeTapped))):
