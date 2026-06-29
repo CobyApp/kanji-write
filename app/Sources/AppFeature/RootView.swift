@@ -28,7 +28,10 @@ public struct RootView: View {
             NavigationStack(
                 path: $store.scope(state: \.planPath, action: \.planPath)
             ) {
-                StudyPlanView(store: store.scope(state: \.plan, action: \.plan))
+                StudyHubView(
+                    planStore: store.scope(state: \.plan, action: \.plan),
+                    reviewStore: store.scope(state: \.review, action: \.review)
+                )
             } destination: { store in
                 switch store.case {
                 case let .detail(store):
@@ -37,14 +40,8 @@ public struct RootView: View {
                     KanjiWritingView(store: store)
                 }
             }
-            .tabItem { Label("プラン", systemImage: "calendar") }
-            .tag(RootFeature.State.Tab.plan)
-
-            NavigationStack {
-                ReviewView(store: store.scope(state: \.review, action: \.review))
-            }
-            .tabItem { Label("復習", systemImage: "calendar.badge.clock") }
-            .tag(RootFeature.State.Tab.review)
+            .tabItem { Label("学習", systemImage: "pencil.and.outline") }
+            .tag(RootFeature.State.Tab.study)
 
             NavigationStack {
                 ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
