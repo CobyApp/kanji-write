@@ -12,6 +12,14 @@ let project = Project(
         defaultKnownRegions: ["ja", "ko", "zh-Hans", "en"],
         developmentRegion: "ja"
     ),
+    settings: .settings(base: [
+        // The device runs a newer iOS (27 beta) than the build toolchain
+        // (Xcode 26.5). Xcode's "debug dylib" launch path (a separate
+        // *.debug.dylib loaded at startup) is fragile across that gap and
+        // aborts during libxpc initialization before app code runs. Disabling
+        // it falls back to a single-binary debug build that launches normally.
+        "ENABLE_DEBUG_DYLIB": "NO",
+    ]),
     targets: [
         .target(
             name: "SharedModels",
