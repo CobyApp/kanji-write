@@ -44,7 +44,8 @@ public struct KanjiDetailView: View {
                        size: 96, fontSize: 60)
             VStack(alignment: .leading, spacing: 10) {
                 Text(localizedGloss(store.glosses, appLanguage) ?? "")
-                    .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
+                    .font(.kawaii(24, weight: .bold, language: appLanguage))
+                    .foregroundStyle(Palette.ink)
                 HStack(spacing: 8) {
                     if let grade = store.kanji.grade {
                         CandyChip("学\(grade)", soft: Palette.butterSoft, accent: Palette.butter)
@@ -90,7 +91,8 @@ public struct KanjiDetailView: View {
                     Text("\(word.surface)（\(word.reading)）")
                         .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
                     if let meaning = wordMeaning(word, appLanguage) {
-                        Text(meaning).font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                        Text(meaning).font(.kawaii(13, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
                     }
                 }
             }
@@ -106,7 +108,8 @@ public struct KanjiDetailView: View {
                     Text(sentence.textJa)
                         .font(.kawaii(16)).foregroundStyle(Palette.ink)
                     if let translation = localizedTranslation(sentence.translations, appLanguage) {
-                        Text(translation).font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+                        Text(translation).font(.kawaii(14, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
                     }
                 }
             }
