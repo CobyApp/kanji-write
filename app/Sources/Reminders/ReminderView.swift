@@ -7,6 +7,7 @@ public struct ReminderView: View {
     @Bindable public var store: StoreOf<ReminderFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("classification") private var classification: Classification = .jlpt
+    @AppStorage("newPerDay") private var newPerDay = 7
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
 
@@ -20,6 +21,7 @@ public struct ReminderView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     classificationCard
+                    studyCard
                     languageCard
                     reminderCard
                 }
@@ -45,6 +47,18 @@ public struct ReminderView: View {
                 }
             }
             .pickerStyle(.segmented)
+        }
+        .roundedCard()
+    }
+
+    private var studyCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("学習", accent: Palette.butter)
+            Stepper(value: $newPerDay, in: 1...30) {
+                Text("1日の新しい漢字: \(newPerDay) 字")
+                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
+            }
+            .tint(Palette.accent)
         }
         .roundedCard()
     }

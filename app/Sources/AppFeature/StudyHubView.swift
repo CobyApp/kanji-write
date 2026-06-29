@@ -2,137 +2,124 @@ import ComposableArchitecture
 import DesignSystem
 import Review
 import SharedModels
-import StudyPlan
 import SwiftUI
 
-/// The 学習 tab: study plan (today's new kanji) and SRS review (due cards) in one
-/// daily hub. Composes the existing StudyPlan and Review stores.
+/// The 学習 tab: an FSRS-driven daily session — due reviews + a capped number of
+/// new kanji. Recall happens by tapping a card → detail → 書いて練習; the learner
+/// then self-grades (Again/Hard/Good/Easy), which feeds the FSRS scheduler.
 public struct StudyHubView: View {
-    @Bindable var planStore: StoreOf<StudyPlanFeature>
     @Bindable var reviewStore: StoreOf<ReviewFeature>
-    @State private var selectedDays = 10
+    @AppStorage("classification") private var classification: Classification = .jlpt
+    @AppStorage("newPerDay") private var newPerDay = 7
 
-    public init(planStore: StoreOf<StudyPlanFeature>, reviewStore: StoreOf<ReviewFeature>) {
-        self.planStore = planStore
+    public init(reviewStore: StoreOf<ReviewFeature>) {
         self.reviewStore = reviewStore
+    }
+
+    private var session: StudySession {
+        todaysSession(
+            records: reviewStore.records.elements,
+            order: studyOrder(reviewStore.kanji.elements, classification: classification),
+            today: reviewStore.today,
+            newPerDay: newPerDay)
     }
 
     public var body: some View {
         ZStack {
             Palette.background.ignoresSafeArea()
             ScrollView {
+                let session = session
                 VStack(spacing: 16) {
-                    if let plan = planStore.plan {
-                        progressCard(plan)
-                        todayCard(plan)
-                    } else {
-                        createCard
+                    summaryCard(session)
+                    if !session.dueIDs.isEmpty {
+                        gradeSection("復習", accent: Palette.lavender, soft: Palette.lavenderSoft,
+                                     ids: session.dueIDs)
                     }
-                    reviewCard
+                    if !session.newIDs.isEmpty {
+                        gradeSection("新規", accent: Palette.butter, soft: Palette.butterSoft,
+                                     ids: session.newIDs)
+                    }
+                    if session.dueIDs.isEmpty && session.newIDs.isEmpty {
+                        allDoneCard
+                    }
                 }
                 .padding(16)
             }
         }
         .navigationTitle("学習")
-        .task {
-            planStore.send(.onAppear)
-            reviewStore.send(.onAppear)
-        }
+        .task { reviewStore.send(.onAppear) }
     }
 
-    // MARK: Plan
-
-    private var createCard: some View {
-        VStack(spacing: 16) {
-            SectionHeader("学習プラン", accent: Palette.pink)
-            Picker("期間", selection: $selectedDays) {
-                Text("10日").tag(10); Text("14日").tag(14); Text("30日").tag(30)
+    private func summaryCard(_ session: StudySession) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("今日のセッション", accent: Palette.mint)
+            HStack(spacing: 12) {
+                stat("復習", session.dueIDs.count, Palette.lavender)
+                stat("新規", session.newIDs.count, Palette.butter)
+                stat("習得", reviewStore.records.count, Palette.mint)
             }
-            .pickerStyle(.segmented)
-            Button { planStore.send(.createPlan(days: selectedDays)) } label: {
-                Text("プラン作成").font(.kawaii(17, weight: .bold)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 13)
-                    .background(Palette.accent).clipShape(Capsule())
+        }
+        .roundedCard()
+    }
+
+    private func stat(_ label: String, _ value: Int, _ accent: Color) -> some View {
+        VStack(spacing: 4) {
+            Text("\(value)").font(.kawaii(26, weight: .bold)).foregroundStyle(accent)
+            Text(label).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var allDoneCard: some View {
+        VStack(spacing: 10) {
+            Text("🎉").font(.system(size: 44))
+            Text("今日の学習は完了！").font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
+            Text("また明日ね").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 24)
+        .roundedCard()
+    }
+
+    private func gradeSection(_ title: String, accent: Color, soft: Color, ids: [Int]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title, accent: accent)
+            ForEach(ids, id: \.self) { id in
+                if let kanji = reviewStore.kanji[id: id] {
+                    gradeRow(kanji, accent: accent, soft: soft)
+                }
+            }
+        }
+        .roundedCard()
+    }
+
+    private func gradeRow(_ kanji: Kanji, accent: Color, soft: Color) -> some View {
+        VStack(spacing: 10) {
+            Button { reviewStore.send(.kanjiTapped(kanji)) } label: {
+                HStack(spacing: 14) {
+                    PastelTile(kanji.literal, soft: soft, accent: accent, size: 50, fontSize: 28)
+                    Text(kanji.onReadings.joined(separator: "、"))
+                        .font(.kawaii(15)).foregroundStyle(Palette.ink)
+                    Spacer()
+                    Image(systemName: "pencil.tip").foregroundStyle(Palette.inkSoft)
+                }
             }
             .buttonStyle(.plain)
+            HStack(spacing: 6) {
+                gradeButton(kanji.id, .again, "もう一度", Palette.pink)
+                gradeButton(kanji.id, .hard, "むずい", Palette.butter)
+                gradeButton(kanji.id, .good, "できた", Palette.mint)
+                gradeButton(kanji.id, .easy, "かんたん", Palette.sky)
+            }
         }
-        .roundedCard()
     }
 
-    private func progressCard(_ plan: StudyPlan) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader("進捗", accent: Palette.mint)
-            ProgressView(value: plan.progress).tint(Palette.mint)
-            Text("\(plan.completedCount) / \(plan.totalCount)")
-                .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+    private func gradeButton(_ id: Int, _ grade: Grade, _ label: String, _ color: Color) -> some View {
+        Button { reviewStore.send(.grade(kanjiID: id, grade: grade)) } label: {
+            Text(label)
+                .font(.kawaii(12, weight: .bold)).foregroundStyle(color)
+                .frame(maxWidth: .infinity).padding(.vertical, 8)
+                .background(color.opacity(0.16)).clipShape(Capsule())
         }
-        .roundedCard()
-    }
-
-    private func todayCard(_ plan: StudyPlan) -> some View {
-        let dayIndex = plan.scheduledDayIndex(today: planStore.today) ?? plan.currentDayIndex
-        let ids = plan.dayAssignments.indices.contains(dayIndex) ? plan.dayAssignments[dayIndex] : []
-        return VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("今日学ぶ (Day \(dayIndex + 1))", accent: Palette.butter)
-            if ids.isEmpty {
-                Text("今日の割り当てはありません").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
-            }
-            ForEach(ids, id: \.self) { id in
-                if let kanji = planStore.kanji[id: id] {
-                    HStack(spacing: 14) {
-                        Button { planStore.send(.kanjiTapped(kanji)) } label: {
-                            HStack(spacing: 14) {
-                                PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
-                                           size: 50, fontSize: 28)
-                                Text(kanji.onReadings.joined(separator: "、"))
-                                    .font(.kawaii(15)).foregroundStyle(Palette.ink)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        Spacer()
-                        Button { planStore.send(.markDone(id)) } label: {
-                            Image(systemName: plan.completedKanjiIDs.contains(id)
-                                  ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 25))
-                                .foregroundStyle(plan.completedKanjiIDs.contains(id)
-                                                 ? Palette.mint : Palette.inkSoft)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-        .roundedCard()
-    }
-
-    // MARK: Review
-
-    private var reviewCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("復習", accent: Palette.lavender)
-            if reviewStore.dueKanji.isEmpty {
-                Text("今日の復習はありません").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
-            }
-            ForEach(reviewStore.dueKanji) { kanji in
-                HStack(spacing: 12) {
-                    Button { reviewStore.send(.kanjiTapped(kanji)) } label: {
-                        PastelTile(kanji.literal, soft: Palette.lavenderSoft, accent: Palette.lavender,
-                                   size: 50, fontSize: 28)
-                    }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    Button("もう一度") { reviewStore.send(.grade(kanjiID: kanji.id, correct: false)) }
-                        .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                        .padding(.horizontal, 12).padding(.vertical, 7)
-                        .background(Palette.card).clipShape(Capsule())
-                        .overlay(Capsule().stroke(Palette.inkSoft.opacity(0.3), lineWidth: 1))
-                    Button("正解") { reviewStore.send(.grade(kanjiID: kanji.id, correct: true)) }
-                        .font(.kawaii(13, weight: .bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 14).padding(.vertical, 7)
-                        .background(Palette.lavender).clipShape(Capsule())
-                }
-            }
-        }
-        .roundedCard()
+        .buttonStyle(.plain)
     }
 }

@@ -56,14 +56,17 @@ final class KanjiDetailFeatureTests: XCTestCase {
         }
         await store.send(.addToReview)
         await store.receive(.markedAddedToReview) { $0.addedToReview = true }
-        XCTAssertEqual(
-            saved.value,
-            [ReviewRecord(kanjiID: 1, box: 0, lastReviewedDay: 100)]
-        )
+        // A fresh FSRS record, due today, not yet reviewed.
+        let rec = saved.value?.first
+        XCTAssertEqual(rec?.kanjiID, 1)
+        XCTAssertEqual(rec?.due, 100)
+        XCTAssertEqual(rec?.lastReviewedDay, 100)
+        XCTAssertEqual(rec?.reps, 0)
     }
 
     func testAddToReviewDoesNotDuplicateExistingRecord() async {
-        let existing = ReviewRecord(kanjiID: 1, box: 2, lastReviewedDay: 50)
+        let existing = ReviewRecord(
+            kanjiID: 1, stability: 5, difficulty: 5, due: 60, lastReviewedDay: 50)
         let saved = LockIsolated<[ReviewRecord]?>(nil)
         let store = TestStore(initialState: KanjiDetailFeature.State(kanji: .yama)) {
             KanjiDetailFeature()
