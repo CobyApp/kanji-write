@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DesignSystem
 import KanjiDetail
 import Reminders
 import Review
@@ -51,6 +52,7 @@ public struct RootView: View {
             .tabItem { Label("設定", systemImage: "gearshape") }
             .tag(RootFeature.State.Tab.settings)
         }
+        .tint(Palette.accent)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
     }
 }

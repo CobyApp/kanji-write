@@ -30,6 +30,14 @@ let project = Project(
             sources: ["Sources/SharedModels/**"]
         ),
         .target(
+            name: "DesignSystem",
+            destinations: [.iPad],
+            product: .staticFramework,
+            bundleId: "com.cobyapp.kanjiwrite.designsystem",
+            deploymentTargets: iOS,
+            sources: ["Sources/DesignSystem/**"]
+        ),
+        .target(
             name: "DictionaryClient",
             destinations: [.iPad],
             product: .staticFramework,
@@ -39,6 +47,7 @@ let project = Project(
             resources: ["Sources/DictionaryClient/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
                 .external(name: "GRDB"),
             ]
@@ -54,6 +63,7 @@ let project = Project(
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -72,6 +82,7 @@ let project = Project(
                 .target(name: "KanjiDetail"),
                 .target(name: "Review"),
                 .target(name: "Reminders"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -86,6 +97,7 @@ let project = Project(
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -109,6 +121,7 @@ let project = Project(
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -134,6 +147,7 @@ let project = Project(
                 .target(name: "DictionaryClient"),
                 .target(name: "WritingCanvas"),
                 .target(name: "Review"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -157,6 +171,7 @@ let project = Project(
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DictionaryClient"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -178,6 +193,8 @@ let project = Project(
             sources: ["Sources/Reminders/**"],
             resources: ["Sources/Reminders/Resources/**"],
             dependencies: [
+                .target(name: "SharedModels"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
@@ -209,10 +226,13 @@ let project = Project(
                 "UILaunchScreen": ["UIColorName": ""]
             ]),
             sources: ["Sources/KanjiApp/**"],
+            resources: ["Sources/KanjiApp/Resources/**"],
             dependencies: [
                 .target(name: "AppFeature"),
+                .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
-            ]
+            ],
+            settings: .settings(base: ["ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon"])
         ),
         .target(
             name: "KanjiListFeatureTests",
@@ -247,7 +267,19 @@ let project = Project(
                 "AppFeatureTests",
                 "ReviewTests",
                 "RemindersTests",
-            ])
+            ]),
+            // The iOS 27 beta device + Xcode 26.5 toolchain mismatch makes the
+            // injected debug dylibs (Main Thread Checker / Thread Performance
+            // Checker) SIGKILL the process during dyld's inserted-library load.
+            // Disable them so a debug Run launches on the device.
+            runAction: .runAction(
+                configuration: .debug,
+                executable: "KanjiApp",
+                diagnosticsOptions: .options(
+                    mainThreadCheckerEnabled: false,
+                    performanceAntipatternCheckerEnabled: false
+                )
+            )
         )
     ]
 )
