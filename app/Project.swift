@@ -267,7 +267,19 @@ let project = Project(
                 "AppFeatureTests",
                 "ReviewTests",
                 "RemindersTests",
-            ])
+            ]),
+            // The iOS 27 beta device + Xcode 26.5 toolchain mismatch makes the
+            // injected debug dylibs (Main Thread Checker / Thread Performance
+            // Checker) SIGKILL the process during dyld's inserted-library load.
+            // Disable them so a debug Run launches on the device.
+            runAction: .runAction(
+                configuration: .debug,
+                executable: "KanjiApp",
+                diagnosticsOptions: .options(
+                    mainThreadCheckerEnabled: false,
+                    performanceAntipatternCheckerEnabled: false
+                )
+            )
         )
     ]
 )
