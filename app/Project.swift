@@ -35,7 +35,11 @@ let project = Project(
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.designsystem",
             deploymentTargets: iOS,
-            sources: ["Sources/DesignSystem/**"]
+            sources: ["Sources/DesignSystem/**"],
+            resources: ["Sources/DesignSystem/Resources/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+            ]
         ),
         .target(
             name: "DictionaryClient",
