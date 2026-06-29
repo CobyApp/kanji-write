@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DesignSystem
 import SharedModels
 import SwiftUI
 
@@ -11,7 +12,8 @@ public struct StudyPlanView: View {
     }
 
     public var body: some View {
-        Group {
+        ZStack {
+            Palette.background.ignoresSafeArea()
             if let plan = store.plan {
                 planContent(plan)
             } else {
@@ -23,54 +25,86 @@ public struct StudyPlanView: View {
     }
 
     private var createContent: some View {
-        VStack(spacing: 24) {
-            Text("学習プランを作成").font(.title2)
+        VStack(spacing: 20) {
+            Text("学習プランを作成")
+                .font(.kawaii(22, weight: .bold)).foregroundStyle(Palette.ink)
             Picker("期間", selection: $selectedDays) {
                 Text("10日").tag(10)
                 Text("14日").tag(14)
                 Text("30日").tag(30)
             }
             .pickerStyle(.segmented)
-            Button("プラン作成") { store.send(.createPlan(days: selectedDays)) }
-                .buttonStyle(.borderedProminent)
+            Button {
+                store.send(.createPlan(days: selectedDays))
+            } label: {
+                Text("プラン作成")
+                    .font(.kawaii(17, weight: .bold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Palette.accent).clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
-        .padding()
+        .roundedCard()
+        .padding(16)
     }
 
     private func planContent(_ plan: StudyPlan) -> some View {
         let dayIndex = plan.scheduledDayIndex(today: store.today) ?? plan.currentDayIndex
         let todaysIDs = plan.dayAssignments.indices.contains(dayIndex)
             ? plan.dayAssignments[dayIndex] : []
-        return VStack(spacing: 0) {
-            ProgressView(value: plan.progress) {
-                Text("進捗") + Text(verbatim: " \(plan.completedCount) / \(plan.totalCount)")
+        return ScrollView {
+            VStack(spacing: 16) {
+                progressCard(plan)
+                todayCard(plan, dayIndex: dayIndex, todaysIDs: todaysIDs)
             }
-            .padding()
-            List {
-                Section {
-                    ForEach(todaysIDs, id: \.self) { id in
-                        if let kanji = store.kanji[id: id] {
-                            HStack {
-                                Button {
-                                    store.send(.kanjiTapped(kanji))
-                                } label: {
-                                    Text(kanji.literal).font(.title)
-                                }
-                                .buttonStyle(.plain)
-                                Spacer()
-                                Button {
-                                    store.send(.markDone(id))
-                                } label: {
-                                    Image(systemName: plan.completedKanjiIDs.contains(id)
-                                          ? "checkmark.circle.fill" : "circle")
-                                }
+            .padding(16)
+        }
+    }
+
+    private func progressCard(_ plan: StudyPlan) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader("進捗", accent: Palette.mint)
+            ProgressView(value: plan.progress)
+                .tint(Palette.mint)
+            Text("\(plan.completedCount) / \(plan.totalCount)")
+                .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+        }
+        .roundedCard()
+    }
+
+    private func todayCard(_ plan: StudyPlan, dayIndex: Int, todaysIDs: [Int]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("今日の漢字 (Day \(dayIndex + 1))", accent: Palette.butter)
+            ForEach(Array(todaysIDs.enumerated()), id: \.element) { index, id in
+                if let kanji = store.kanji[id: id] {
+                    let tint = Palette.tint(index)
+                    HStack(spacing: 14) {
+                        Button {
+                            store.send(.kanjiTapped(kanji))
+                        } label: {
+                            HStack(spacing: 14) {
+                                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
+                                           size: 52, fontSize: 30)
+                                Text(kanji.onReadings.joined(separator: "、"))
+                                    .font(.kawaii(15)).foregroundStyle(Palette.ink)
                             }
                         }
+                        .buttonStyle(.plain)
+                        Spacer()
+                        Button {
+                            store.send(.markDone(id))
+                        } label: {
+                            Image(systemName: plan.completedKanjiIDs.contains(id)
+                                  ? "checkmark.circle.fill" : "circle")
+                                .font(.system(size: 26))
+                                .foregroundStyle(plan.completedKanjiIDs.contains(id)
+                                                 ? Palette.mint : Palette.inkSoft)
+                        }
+                        .buttonStyle(.plain)
                     }
-                } header: {
-                    Text("今日の漢字") + Text(verbatim: " (Day \(dayIndex + 1))")
                 }
             }
         }
+        .roundedCard()
     }
 }
