@@ -51,6 +51,9 @@ final class DictionaryClientTests: XCTestCase {
         // The bundled DB now carries both English and Korean word glosses.
         XCTAssertTrue(words.contains { $0.meaningEn != nil })
         XCTAssertTrue(words.contains { $0.meaningKo != nil })
+        // The bundled DB now also carries ja/zh word glosses (4-language parity).
+        XCTAssertTrue(words.contains { $0.meaningJa != nil })
+        XCTAssertTrue(words.contains { $0.meaningZh != nil })
 
         let sentences = try await client.sentences(yama.id, 3)
         XCTAssertFalse(sentences.isEmpty)

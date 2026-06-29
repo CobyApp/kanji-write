@@ -7,13 +7,20 @@ public struct WordEntry: Equatable, Identifiable, Sendable {
     public let reading: String
     public let meaningEn: String?
     public let meaningKo: String?
+    public let meaningJa: String?
+    public let meaningZh: String?
 
-    public init(id: Int, surface: String, reading: String, meaningEn: String?, meaningKo: String? = nil) {
+    public init(
+        id: Int, surface: String, reading: String, meaningEn: String?,
+        meaningKo: String? = nil, meaningJa: String? = nil, meaningZh: String? = nil
+    ) {
         self.id = id
         self.surface = surface
         self.reading = reading
         self.meaningEn = meaningEn
         self.meaningKo = meaningKo
+        self.meaningJa = meaningJa
+        self.meaningZh = meaningZh
     }
 }
 
