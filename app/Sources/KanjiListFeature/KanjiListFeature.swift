@@ -1,6 +1,8 @@
-import ComposableArchitecture
-import DictionaryClient
 import SharedModels
+
+// Pure browse helpers shared by the app shell (RootView). The old
+// KanjiListFeature reducer + view were retired with the NavigationSplitView
+// refactor; only this level/search logic remains.
 
 /// A browsable level within a classification (one JLPT level or one school grade).
 public struct KanjiLevel: Equatable, Identifiable, Sendable {
@@ -55,83 +57,4 @@ public func searchMatches(_ k: Kanji, _ query: String) -> Bool {
     if k.literal.contains(q) { return true }
     let readings = (k.onReadings + k.kunReadings).map { $0.replacingOccurrences(of: ".", with: "") }
     return readings.contains { $0.contains(q) }
-}
-
-@Reducer
-public struct KanjiListFeature {
-    @ObservableState
-    public struct State: Equatable {
-        public var kanji: IdentifiedArrayOf<Kanji> = []
-        public var isLoading = false
-        public var loadError: String?
-        public var selectedLevel: KanjiLevel?
-        public var searchText: String = ""
-        public init() {}
-
-        /// Kanji in the selected level (empty if no level chosen).
-        public var levelKanji: [Kanji] {
-            guard let selectedLevel else { return [] }
-            return kanjiIn(kanji.elements, in: selectedLevel)
-        }
-
-        /// Search results across all kanji (used when `searchText` is non-empty).
-        public var searchResults: [Kanji] {
-            kanji.elements.filter { searchMatches($0, searchText) }
-        }
-
-        public var isSearching: Bool {
-            !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-    }
-
-    public enum Action: Equatable {
-        case onAppear
-        case kanjiLoaded([Kanji])
-        case loadFailed(String)
-        case kanjiTapped(Kanji)
-        case levelSelected(KanjiLevel)
-        case levelCleared
-        case searchChanged(String)
-    }
-
-    @Dependency(\.dictionaryClient) var dictionaryClient
-
-    public init() {}
-
-    public var body: some ReducerOf<Self> {
-        Reduce { state, action in
-            switch action {
-            case .onAppear:
-                guard state.kanji.isEmpty else { return .none }
-                state.isLoading = true
-                state.loadError = nil
-                return .run { send in
-                    do {
-                        await send(.kanjiLoaded(try await dictionaryClient.allKanji()))
-                    } catch {
-                        await send(.loadFailed(error.localizedDescription))
-                    }
-                }
-            case let .kanjiLoaded(kanji):
-                state.isLoading = false
-                state.kanji = IdentifiedArray(uniqueElements: kanji)
-                return .none
-            case let .loadFailed(message):
-                state.isLoading = false
-                state.loadError = message
-                return .none
-            case .kanjiTapped:
-                return .none
-            case let .levelSelected(level):
-                state.selectedLevel = level
-                return .none
-            case .levelCleared:
-                state.selectedLevel = nil
-                return .none
-            case let .searchChanged(text):
-                state.searchText = text
-                return .none
-            }
-        }
-    }
 }
