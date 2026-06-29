@@ -66,9 +66,6 @@ let project = Project(
             resources: ["Sources/KanjiListFeature/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
-                .target(name: "DictionaryClient"),
-                .target(name: "DesignSystem"),
-                .external(name: "ComposableArchitecture"),
             ]
         ),
         .target(
@@ -82,7 +79,6 @@ let project = Project(
             dependencies: [
                 .target(name: "KanjiListFeature"),
                 .target(name: "WritingCanvas"),
-                .target(name: "StudyPlan"),
                 .target(name: "KanjiDetail"),
                 .target(name: "Review"),
                 .target(name: "Reminders"),
@@ -113,30 +109,6 @@ let project = Project(
             deploymentTargets: iOS,
             sources: ["Tests/WritingCanvasTests/**"],
             dependencies: [.target(name: "WritingCanvas")]
-        ),
-        .target(
-            name: "StudyPlan",
-            destinations: [.iPad],
-            product: .staticFramework,
-            bundleId: "com.cobyapp.kanjiwrite.studyplan",
-            deploymentTargets: iOS,
-            sources: ["Sources/StudyPlan/**"],
-            resources: ["Sources/StudyPlan/Resources/**"],
-            dependencies: [
-                .target(name: "SharedModels"),
-                .target(name: "DictionaryClient"),
-                .target(name: "DesignSystem"),
-                .external(name: "ComposableArchitecture"),
-            ]
-        ),
-        .target(
-            name: "StudyPlanTests",
-            destinations: [.iPad],
-            product: .unitTests,
-            bundleId: "com.cobyapp.kanjiwrite.studyplantests",
-            deploymentTargets: iOS,
-            sources: ["Tests/StudyPlanTests/**"],
-            dependencies: [.target(name: "StudyPlan")]
         ),
         .target(
             name: "KanjiDetail",
@@ -266,7 +238,6 @@ let project = Project(
                 "KanjiListFeatureTests",
                 "DictionaryClientTests",
                 "WritingCanvasTests",
-                "StudyPlanTests",
                 "KanjiDetailTests",
                 "AppFeatureTests",
                 "ReviewTests",
