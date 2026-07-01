@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import KanjiDetail
+import KanjiListFeature
 import Review
 import SharedModels
 import WritingCanvas
@@ -10,6 +11,13 @@ import XCTest
 private extension Kanji {
     static let yama = Kanji(id: 1, literal: "山", strokeCount: 3, grade: 1,
                             jlptLevel: "N5", onReadings: ["サン"], kunReadings: ["やま"])
+    static let gaku = Kanji(id: 2, literal: "学", strokeCount: 8, grade: 1,
+                            jlptLevel: "N5", onReadings: ["ガク"], kunReadings: ["まな.ぶ"])
+}
+
+private extension WordEntry {
+    static let yamamichi = WordEntry(id: 10, surface: "山道", reading: "やまみち",
+                                     meaningEn: "mountain path")
 }
 
 @MainActor
@@ -26,43 +34,94 @@ final class RootFeatureTests: XCTestCase {
         XCTAssertEqual(store.state.searchText, "山")
     }
 
-    func testKanjiSelectedOpensDetail() async {
+    func testKanjiSelectedMakesKanjiTheStackRoot() async {
         let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
         store.exhaustivity = .off
 
         await store.send(.kanjiSelected(.yama))
-        XCTAssertEqual(store.state.detail?.kanji, .yama)
-        XCTAssertNil(store.state.writing)
+        XCTAssertEqual(store.state.path.count, 1)
+        guard case let .kanji(detail) = store.state.path.first else {
+            return XCTFail("expected a kanji at the stack root")
+        }
+        XCTAssertEqual(detail.kanji, .yama)
     }
 
-    func testReviewTapOpensDetail() async {
+    func testReviewTapMakesKanjiTheStackRoot() async {
         let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
         store.exhaustivity = .off
 
         await store.send(.review(.kanjiTapped(.yama)))
-        XCTAssertEqual(store.state.detail?.kanji, .yama)
+        guard case .kanji = store.state.path.first else {
+            return XCTFail("expected a kanji at the stack root")
+        }
+    }
+
+    func testLevelSelectedPushesKanjiList() async {
+        var initial = RootFeature.State()
+        initial.review.kanji = IdentifiedArray(uniqueElements: [.yama, .gaku])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.levelSelected(KanjiLevel(level: "N5")))
+        guard case let .kanjiList(list) = store.state.path.first else {
+            return XCTFail("expected a kanji list at the stack root")
+        }
+        XCTAssertEqual(list.kanji, [.yama, .gaku])
+    }
+
+    func testWordTappedInKanjiDetailPushesWordDetail() async {
+        var initial = RootFeature.State()
+        initial.path = StackState([.kanji(KanjiDetailFeature.State(kanji: .yama))])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        let id = store.state.path.ids.first!
+        await store.send(.path(.element(id: id, action: .kanji(.wordTapped(.yamamichi)))))
+        XCTAssertEqual(store.state.path.count, 2)
+        guard case let .word(word) = store.state.path.last else {
+            return XCTFail("expected a word pushed on top")
+        }
+        XCTAssertEqual(word.word, .yamamichi)
+    }
+
+    func testKanjiTappedInWordDetailPushesKanjiDetail() async {
+        var initial = RootFeature.State()
+        initial.path = StackState([.word(WordDetailFeature.State(word: .yamamichi))])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        let id = store.state.path.ids.first!
+        await store.send(.path(.element(id: id, action: .word(.kanjiTapped(.gaku)))))
+        XCTAssertEqual(store.state.path.count, 2)
+        guard case let .kanji(detail) = store.state.path.last else {
+            return XCTFail("expected a kanji pushed on top")
+        }
+        XCTAssertEqual(detail.kanji, .gaku)
     }
 
     func testWriteTappedPushesWritingCanvas() async {
         var initial = RootFeature.State()
-        initial.detail = KanjiDetailFeature.State(kanji: .yama)
+        initial.path = StackState([.kanji(KanjiDetailFeature.State(kanji: .yama))])
         let store = TestStore(initialState: initial) { RootFeature() }
         store.exhaustivity = .off
 
-        await store.send(.detail(.presented(.writeTapped)))
-        XCTAssertEqual(store.state.writing?.kanji, .yama)
+        let id = store.state.path.ids.first!
+        await store.send(.path(.element(id: id, action: .kanji(.writeTapped))))
+        XCTAssertEqual(store.state.path.count, 2)
+        guard case let .writing(writing) = store.state.path.last else {
+            return XCTFail("expected the writing canvas pushed on top")
+        }
+        XCTAssertEqual(writing.kanji, .yama)
     }
 
-    func testTabSwitchClearsPushedDetailAndWriting() async {
+    func testTabSwitchClearsStack() async {
         var initial = RootFeature.State()
-        initial.detail = KanjiDetailFeature.State(kanji: .yama)
-        initial.writing = KanjiWritingFeature.State(kanji: .yama)
+        initial.path = StackState([.kanji(KanjiDetailFeature.State(kanji: .yama))])
         let store = TestStore(initialState: initial) { RootFeature() }
         store.exhaustivity = .off
 
         await store.send(.tabSelected(.browse))
         XCTAssertEqual(store.state.tab, .browse)
-        XCTAssertNil(store.state.detail)
-        XCTAssertNil(store.state.writing)
+        XCTAssertTrue(store.state.path.isEmpty)
     }
 }
