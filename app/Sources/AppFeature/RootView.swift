@@ -90,6 +90,8 @@ struct RegularRootView: View {
             Section {
                 Label("学習", systemImage: "pencil.and.outline")
                     .tag(RootFeature.SidebarSelection.study)
+                Label("単語", systemImage: "character.book.closed")
+                    .tag(RootFeature.SidebarSelection.words)
             }
             Section("一覧") {
                 ForEach(levels()) { level in
@@ -121,6 +123,8 @@ struct RegularRootView: View {
             switch store.sidebar {
             case .study, .none:
                 StudyHubView(reviewStore: store.scope(state: \.review, action: \.review))
+            case .words:
+                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
             case .settings:
                 ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
             case let .level(id):
@@ -152,6 +156,14 @@ struct CompactRootView: View {
             }
             .tag(RootFeature.Tab.study)
             .tabItem { Label("学習", systemImage: "pencil.and.outline") }
+
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
+            } destination: { store in
+                pathDestination(store)
+            }
+            .tag(RootFeature.Tab.words)
+            .tabItem { Label("単語", systemImage: "character.book.closed") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 BrowseColumn(store: store)

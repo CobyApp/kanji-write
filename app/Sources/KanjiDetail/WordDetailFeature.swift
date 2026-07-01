@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import DictionaryClient
 import Foundation
+import Review
 import SharedModels
 
 /// The word detail screen: a saved/usage word with its reading, native meaning,
@@ -14,6 +15,7 @@ public struct WordDetailFeature {
         public var kanji: [Kanji] = []
         public var isLoading = false
         public var loaded = false
+        public var addedToWordbook = false
         public init(word: WordEntry) { self.word = word }
     }
 
@@ -21,9 +23,13 @@ public struct WordDetailFeature {
         case onAppear
         case loaded([ExampleSentence], [Kanji])
         case kanjiTapped(Kanji)  // delegate → parent pushes the kanji detail
+        case addToWordbook
+        case markedAddedToWordbook
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
+    @Dependency(\.wordReviewStore) var wordReviewStore
+    @Dependency(\.date) var date
 
     public init() {}
 
@@ -49,6 +55,26 @@ public struct WordDetailFeature {
                 return .none
             case .kanjiTapped:
                 return .none  // handled by the parent (navigation)
+            case .addToWordbook:
+                let wordID = state.word.id
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
+                return .run { send in
+                    var records = await wordReviewStore.loadRecords()
+                    guard !records.contains(where: { $0.kanjiID == wordID }) else {
+                        await send(.markedAddedToWordbook)
+                        return
+                    }
+                    let initial = FSRS.initialState(.good)
+                    records.append(ReviewRecord(
+                        kanjiID: wordID, stability: initial.stability,
+                        difficulty: initial.difficulty, due: today,
+                        lastReviewedDay: today, lapses: 0, reps: 0))
+                    await wordReviewStore.saveRecords(records)
+                    await send(.markedAddedToWordbook)
+                }
+            case .markedAddedToWordbook:
+                state.addedToWordbook = true
+                return .none
             }
         }
     }

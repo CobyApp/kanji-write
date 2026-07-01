@@ -10,8 +10,8 @@ public struct ReviewStore: Sendable {
 }
 
 extension ReviewStore {
-    public static func directory(_ directory: URL) -> ReviewStore {
-        let url = directory.appending(path: "reviews.json")
+    public static func directory(_ directory: URL, file: String = "reviews.json") -> ReviewStore {
+        let url = directory.appending(path: file)
         return ReviewStore(
             loadRecords: {
                 guard let data = try? Data(contentsOf: url),
@@ -42,5 +42,20 @@ extension DependencyValues {
     public var reviewStore: ReviewStore {
         get { self[ReviewStore.self] }
         set { self[ReviewStore.self] = newValue }
+    }
+}
+
+/// The word wordbook/SRS store — same shape as `ReviewStore` but a separate file
+/// so kanji and word progress never mix. Records key `kanjiID` holds a word id.
+public enum WordReviewStoreKey: DependencyKey {
+    public static let liveValue = ReviewStore.directory(
+        URL.applicationSupportDirectory, file: "word_reviews.json")
+    public static let testValue = ReviewStore()
+}
+
+extension DependencyValues {
+    public var wordReviewStore: ReviewStore {
+        get { self[WordReviewStoreKey.self] }
+        set { self[WordReviewStoreKey.self] = newValue }
     }
 }
