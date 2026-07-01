@@ -23,7 +23,7 @@ let project = Project(
     targets: [
         .target(
             name: "SharedModels",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.sharedmodels",
             deploymentTargets: iOS,
@@ -31,7 +31,7 @@ let project = Project(
         ),
         .target(
             name: "DesignSystem",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.designsystem",
             deploymentTargets: iOS,
@@ -43,7 +43,7 @@ let project = Project(
         ),
         .target(
             name: "DictionaryClient",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.dictionaryclient",
             deploymentTargets: iOS,
@@ -58,7 +58,7 @@ let project = Project(
         ),
         .target(
             name: "KanjiListFeature",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.kanjilistfeature",
             deploymentTargets: iOS,
@@ -70,7 +70,7 @@ let project = Project(
         ),
         .target(
             name: "AppFeature",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.appfeature",
             deploymentTargets: iOS,
@@ -88,7 +88,7 @@ let project = Project(
         ),
         .target(
             name: "WritingCanvas",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.writingcanvas",
             deploymentTargets: iOS,
@@ -103,7 +103,7 @@ let project = Project(
         ),
         .target(
             name: "WritingCanvasTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.writingcanvastests",
             deploymentTargets: iOS,
@@ -112,7 +112,7 @@ let project = Project(
         ),
         .target(
             name: "KanjiDetail",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.kanjidetail",
             deploymentTargets: iOS,
@@ -129,7 +129,7 @@ let project = Project(
         ),
         .target(
             name: "KanjiDetailTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.kanjidetailtests",
             deploymentTargets: iOS,
@@ -138,7 +138,7 @@ let project = Project(
         ),
         .target(
             name: "Review",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.review",
             deploymentTargets: iOS,
@@ -153,7 +153,7 @@ let project = Project(
         ),
         .target(
             name: "ReviewTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.reviewtests",
             deploymentTargets: iOS,
@@ -162,7 +162,7 @@ let project = Project(
         ),
         .target(
             name: "Reminders",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.reminders",
             deploymentTargets: iOS,
@@ -176,7 +176,7 @@ let project = Project(
         ),
         .target(
             name: "RemindersTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.reminderstests",
             deploymentTargets: iOS,
@@ -185,7 +185,7 @@ let project = Project(
         ),
         .target(
             name: "AppFeatureTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.appfeaturetests",
             deploymentTargets: iOS,
@@ -194,7 +194,7 @@ let project = Project(
         ),
         .target(
             name: "KanjiApp",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .app,
             bundleId: "com.cobyapp.kanjiwrite",
             deploymentTargets: iOS,
@@ -212,7 +212,7 @@ let project = Project(
         ),
         .target(
             name: "KanjiListFeatureTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.kanjilistfeaturetests",
             deploymentTargets: iOS,
@@ -221,7 +221,7 @@ let project = Project(
         ),
         .target(
             name: "DictionaryClientTests",
-            destinations: [.iPad],
+            destinations: [.iPhone, .iPad],
             product: .unitTests,
             bundleId: "com.cobyapp.kanjiwrite.dictionaryclienttests",
             deploymentTargets: iOS,

@@ -18,28 +18,15 @@ final class KanjiFilterTests: XCTestCase {
     let all: [Kanji] = [.yama, .gaku, .ai, .oyobu]
 
     func testJLPTLevelsOrderAndLabels() {
-        let ls = levels(for: .jlpt)
+        let ls = levels()
         XCTAssertEqual(ls.map(\.label), ["N5", "N4", "N3", "N2", "N1"])
-        XCTAssertEqual(ls.map(\.id), ["jlpt:N5", "jlpt:N4", "jlpt:N3", "jlpt:N2", "jlpt:N1"])
-    }
-
-    func testGradeLevelsOrderAndLabels() {
-        let ls = levels(for: .grade)
-        // 小1…小6 then 中学 (grade 8)
-        XCTAssertEqual(ls.map(\.label), ["小1", "小2", "小3", "小4", "小5", "小6", "中学"])
-        XCTAssertEqual(ls.last?.id, "grade:8")
+        XCTAssertEqual(ls.map(\.id), ["N5", "N4", "N3", "N2", "N1"])
     }
 
     func testKanjiInJLPTLevel() {
-        let n5 = KanjiLevel(kind: .jlpt("N5"))
+        let n5 = KanjiLevel(level: "N5")
         XCTAssertEqual(kanjiIn(all, in: n5), [.yama, .gaku])
-        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(kind: .jlpt("N3"))), [.ai])
-    }
-
-    func testKanjiInGradeLevel() {
-        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(kind: .grade(1))), [.yama, .gaku])
-        // grade 8 is the 中学 bucket
-        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(kind: .grade(8))), [.oyobu])
+        XCTAssertEqual(kanjiIn(all, in: KanjiLevel(level: "N3")), [.ai])
     }
 
     func testSearchByLiteral() {

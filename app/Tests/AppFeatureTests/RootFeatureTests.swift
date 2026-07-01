@@ -2,6 +2,7 @@ import ComposableArchitecture
 import KanjiDetail
 import Review
 import SharedModels
+import WritingCanvas
 import XCTest
 
 @testable import AppFeature
@@ -19,8 +20,8 @@ final class RootFeatureTests: XCTestCase {
 
         await store.send(.sidebarSelected(.settings))
         XCTAssertEqual(store.state.sidebar, .settings)
-        await store.send(.sidebarSelected(.level("jlpt:N5")))
-        XCTAssertEqual(store.state.sidebar, .level("jlpt:N5"))
+        await store.send(.sidebarSelected(.level("N5")))
+        XCTAssertEqual(store.state.sidebar, .level("N5"))
         await store.send(.searchChanged("山"))
         XCTAssertEqual(store.state.searchText, "山")
     }
@@ -48,7 +49,20 @@ final class RootFeatureTests: XCTestCase {
         let store = TestStore(initialState: initial) { RootFeature() }
         store.exhaustivity = .off
 
-        await store.send(.detail(.writeTapped))
+        await store.send(.detail(.presented(.writeTapped)))
         XCTAssertEqual(store.state.writing?.kanji, .yama)
+    }
+
+    func testTabSwitchClearsPushedDetailAndWriting() async {
+        var initial = RootFeature.State()
+        initial.detail = KanjiDetailFeature.State(kanji: .yama)
+        initial.writing = KanjiWritingFeature.State(kanji: .yama)
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.tabSelected(.browse))
+        XCTAssertEqual(store.state.tab, .browse)
+        XCTAssertNil(store.state.detail)
+        XCTAssertNil(store.state.writing)
     }
 }
