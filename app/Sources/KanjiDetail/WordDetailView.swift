@@ -25,6 +25,12 @@ public struct WordDetailView: View {
         }
         .navigationTitle(store.word.surface)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            Button(store.addedToWordbook ? "単語帳に追加済み" : "単語帳に追加") {
+                store.send(.addToWordbook)
+            }
+            .disabled(store.addedToWordbook)
+        }
         .task { store.send(.onAppear) }
     }
 

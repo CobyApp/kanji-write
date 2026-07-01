@@ -11,6 +11,7 @@ public struct RootFeature {
     /// Which sidebar item is selected (regular width). `.level` carries a `KanjiLevel.id`.
     public enum SidebarSelection: Hashable, Sendable {
         case study
+        case words
         case settings
         case level(String)
     }
@@ -18,6 +19,7 @@ public struct RootFeature {
     /// The bottom-tab selection on compact width (iPhone).
     public enum Tab: Hashable, Sendable {
         case study
+        case words
         case browse
         case settings
     }
@@ -36,6 +38,8 @@ public struct RootFeature {
     public struct State: Equatable {
         // Data + FSRS session + grading (loads kanji/records/today).
         public var review = ReviewFeature.State()
+        // The wordbook + its own (word-only) FSRS review.
+        public var wordReview = WordReviewFeature.State()
         // Settings (new-per-day / language / reminder).
         public var reminder = ReminderFeature.State()
 
@@ -55,6 +59,7 @@ public struct RootFeature {
     public enum Action {
         case onAppear
         case review(ReviewFeature.Action)
+        case wordReview(WordReviewFeature.Action)
         case reminder(ReminderFeature.Action)
         case sidebarSelected(SidebarSelection?)
         case tabSelected(Tab)
@@ -68,6 +73,7 @@ public struct RootFeature {
 
     public var body: some ReducerOf<Self> {
         Scope(state: \.review, action: \.review) { ReviewFeature() }
+        Scope(state: \.wordReview, action: \.wordReview) { WordReviewFeature() }
         Scope(state: \.reminder, action: \.reminder) { ReminderFeature() }
         Reduce { state, action in
             switch action {
@@ -95,6 +101,11 @@ public struct RootFeature {
                 return .none
             case let .review(.kanjiTapped(kanji)):
                 state.path = StackState([.kanji(KanjiDetailFeature.State(kanji: kanji))])
+                return .none
+
+            // Tapping a word in the 単語 hub makes it the stack root.
+            case let .wordReview(.wordTapped(word)):
+                state.path = StackState([.word(WordDetailFeature.State(word: word))])
                 return .none
 
             // Opening a level's kanji list (compact 一覧 tab).
@@ -126,7 +137,7 @@ public struct RootFeature {
                 state.path.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 return .none
 
-            case .review, .reminder, .path:
+            case .review, .wordReview, .reminder, .path:
                 return .none
             }
         }
