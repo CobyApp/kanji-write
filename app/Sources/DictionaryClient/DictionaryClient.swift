@@ -16,6 +16,14 @@ public struct DictionaryClient: Sendable {
     public var words: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [WordEntry]
     public var sentences: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [ExampleSentence]
     public var relations: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [RelationEntry]
+
+    // Word-centric reads (for the word detail screen).
+    /// A single word by id (surface, reading, 4-language meanings).
+    public var word: @Sendable (_ wordID: Int) async throws -> WordEntry?
+    /// Example sentences containing a word (via `sentence_word`).
+    public var sentencesForWord: @Sendable (_ wordID: Int, _ limit: Int) async throws -> [ExampleSentence]
+    /// The jōyō kanji a word contains, ordered by their position in the surface.
+    public var kanjiForWord: @Sendable (_ wordID: Int) async throws -> [Kanji]
 }
 
 extension DictionaryClient: TestDependencyKey {

@@ -145,6 +145,86 @@ extension DictionaryClient: DependencyKey {
                     RelationEntry(surface: row["surface"], type: row["type"])
                 }
             }
+        },
+        word: { wordID in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> WordEntry? in
+                guard let row = try Row.fetchOne(
+                    db, sql: "SELECT id, surface, reading_kana FROM word WHERE id = ?",
+                    arguments: [wordID]) else { return nil }
+                let id: Int = row["id"]
+                func gloss(_ lang: String) throws -> String? {
+                    try String.fetchOne(
+                        db, sql: "SELECT text FROM word_gloss WHERE word_id = ? AND lang = ? LIMIT 1",
+                        arguments: [id, lang])
+                }
+                return WordEntry(
+                    id: id, surface: row["surface"], reading: row["reading_kana"],
+                    meaningEn: try gloss("en"), meaningKo: try gloss("ko"),
+                    meaningJa: try gloss("ja"), meaningZh: try gloss("zh"))
+            }
+        },
+        sentencesForWord: { wordID, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [ExampleSentence] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT s.id, s.text_ja FROM sentence s
+                    JOIN sentence_word sw ON sw.sentence_id = s.id
+                    WHERE sw.word_id = ?
+                    ORDER BY LENGTH(s.text_ja), s.id
+                    LIMIT ?
+                    """, arguments: [wordID, limit])
+                return try rows.map { row in
+                    let id: Int = row["id"]
+                    var translations: [String: String] = [:]
+                    for tr in try Row.fetchAll(
+                        db, sql: "SELECT lang, text FROM sentence_translation WHERE sentence_id = ?",
+                        arguments: [id]
+                    ) {
+                        let lang: String = tr["lang"]
+                        translations[lang] = tr["text"]
+                    }
+                    return ExampleSentence(
+                        id: id, textJa: row["text_ja"], translations: translations)
+                }
+            }
+        },
+        kanjiForWord: { wordID in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [Kanji] in
+                let surface = try String.fetchOne(
+                    db, sql: "SELECT surface FROM word WHERE id = ?", arguments: [wordID]) ?? ""
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT k.id, k.literal, k.stroke_count, k.grade, k.jlpt_level
+                    FROM kanji k JOIN word_kanji wk ON wk.kanji_id = k.id
+                    WHERE wk.word_id = ?
+                    """, arguments: [wordID])
+                let kanji = try rows.map { row -> Kanji in
+                    let id: Int = row["id"]
+                    let readingRows = try Row.fetchAll(db, sql: """
+                        SELECT lang_axis, value FROM reading
+                        WHERE kanji_id = ? AND lang_axis IN ('on', 'kun')
+                        """, arguments: [id])
+                    var onReadings: [String] = []
+                    var kunReadings: [String] = []
+                    for r in readingRows {
+                        let axis: String = r["lang_axis"]
+                        let value: String = r["value"]
+                        if axis == "on" { onReadings.append(value) } else { kunReadings.append(value) }
+                    }
+                    return Kanji(
+                        id: id, literal: row["literal"], strokeCount: row["stroke_count"],
+                        grade: row["grade"], jlptLevel: row["jlpt_level"],
+                        onReadings: onReadings, kunReadings: kunReadings)
+                }
+                // Order by first appearance in the surface (山 before 学 in "登山学").
+                func position(_ literal: String) -> Int {
+                    guard let ch = literal.first,
+                          let idx = surface.firstIndex(of: ch) else { return Int.max }
+                    return surface.distance(from: surface.startIndex, to: idx)
+                }
+                return kanji.sorted { position($0.literal) < position($1.literal) }
+            }
         }
     )
 

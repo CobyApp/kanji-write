@@ -61,6 +61,36 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertFalse(sentences[0].translations.isEmpty)
     }
 
+    func testLiveReadsWordDetailAndBackLinks() async throws {
+        let client = DictionaryClient.liveValue
+        let allKanji = try await client.allKanji()
+        let yama = try XCTUnwrap(allKanji.first { $0.literal == "山" })
+
+        // Pick a real multi-kanji word containing 山 from the bundled DB.
+        let words = try await client.words(yama.id, 50)
+        let multi = try XCTUnwrap(words.first { $0.surface.count >= 2 })
+
+        // word(id) round-trips surface/reading + at least one native meaning.
+        let fetchedWord = try await client.word(multi.id)
+        let fetched = try XCTUnwrap(fetchedWord)
+        XCTAssertEqual(fetched.surface, multi.surface)
+        XCTAssertFalse(fetched.reading.isEmpty)
+        XCTAssertNotNil(fetched.meaningKo ?? fetched.meaningEn)
+
+        // kanjiForWord returns the word's jōyō kanji, ordered by surface position.
+        let kanji = try await client.kanjiForWord(multi.id)
+        XCTAssertFalse(kanji.isEmpty)
+        XCTAssertTrue(kanji.allSatisfy { multi.surface.contains($0.literal) })
+        let positions = kanji.map { multi.surface.distance(
+            from: multi.surface.startIndex,
+            to: multi.surface.firstIndex(of: Character($0.literal))!) }
+        XCTAssertEqual(positions, positions.sorted())
+
+        // sentencesForWord: every returned sentence contains the surface.
+        let sentences = try await client.sentencesForWord(multi.id, 3)
+        XCTAssertTrue(sentences.allSatisfy { $0.textJa.contains(multi.surface) })
+    }
+
     func testLiveReadsRelationsForKanji() async throws {
         let client = DictionaryClient.liveValue
         let allKanji = try await client.allKanji()
