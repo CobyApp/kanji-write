@@ -1,4 +1,6 @@
 # kanjipipe/loader.py
+from __future__ import annotations
+
 import sqlite3
 
 from kanjipipe.models import Kanji, LlmGloss, Relation, Sentence, Word
@@ -108,6 +110,49 @@ def load_sentences(
                 (sentence_id, kanji_id),
             )
             counts[kanji_id] = counts.get(kanji_id, 0) + 1
+    conn.commit()
+
+
+def load_sentence_words(conn: sqlite3.Connection, per_word_cap: int = 3) -> None:
+    """Link each stored sentence to the words it contains.
+
+    No JA tokenizer is available, so this works purely from stored rows: a word
+    is a candidate for a sentence when it shares ≥1 kanji with the sentence
+    text, and is linked when its `surface` occurs verbatim in the text. Shortest
+    sentences first, capped per word so a common word doesn't collect thousands.
+    Idempotent: safe to run on an existing DB (INSERT OR IGNORE + UNIQUE).
+    """
+    kanji_id_by_literal = {
+        literal: kanji_id
+        for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")
+    }
+    words_by_kanji: dict[int, list[tuple[int, str]]] = {}
+    for word_id, kanji_id, surface in conn.execute(
+        "SELECT wk.word_id, wk.kanji_id, w.surface "
+        "FROM word_kanji wk JOIN word w ON w.id = wk.word_id"
+    ):
+        words_by_kanji.setdefault(kanji_id, []).append((word_id, surface))
+
+    word_counts: dict[int, int] = {}
+    for sentence_id, text in conn.execute(
+        "SELECT id, text_ja FROM sentence ORDER BY length(text_ja), id"
+    ):
+        seen_kanji = {
+            kanji_id_by_literal[c] for c in text if c in kanji_id_by_literal
+        }
+        linked: set[int] = set()
+        for kanji_id in seen_kanji:
+            for word_id, surface in words_by_kanji.get(kanji_id, ()):
+                if word_id in linked or word_counts.get(word_id, 0) >= per_word_cap:
+                    continue
+                if surface in text:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO sentence_word (sentence_id, word_id) "
+                        "VALUES (?, ?)",
+                        (sentence_id, word_id),
+                    )
+                    linked.add(word_id)
+                    word_counts[word_id] = word_counts.get(word_id, 0) + 1
     conn.commit()
 
 

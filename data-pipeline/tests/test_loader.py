@@ -1,6 +1,6 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentence_glosses, load_sentences, load_stroke_order, load_word_jazh_glosses, load_word_ko_glosses, load_words
+from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentence_glosses, load_sentence_words, load_sentences, load_stroke_order, load_word_jazh_glosses, load_word_ko_glosses, load_words
 from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Relation, Sentence, Word
 
 
@@ -124,6 +124,48 @@ def test_load_sentences_skips_sentence_without_joyo_kanji():
     load_kanji(conn, [_yama()])
     load_sentences(conn, [Sentence(ja_text="これはペンです。", translations={"en": "This is a pen."})])
     assert conn.execute("SELECT COUNT(*) FROM sentence").fetchone()[0] == 0
+
+
+def test_load_sentences_links_words_by_shared_kanji_and_surface():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])  # 山
+    load_words(conn, [
+        Word(surface="山", reading_kana="やま", en_glosses=["mountain"]),
+        Word(surface="富士山", reading_kana="ふじさん", en_glosses=["Mt. Fuji"]),  # shares 山, in text
+        Word(surface="山道", reading_kana="やまみち", en_glosses=["mountain path"]),  # shares 山, NOT in text
+    ])
+    load_sentences(conn, [Sentence(ja_text="富士山は高い。", translations={"en": "Fuji is high."})])
+    load_sentence_words(conn)
+
+    linked = conn.execute(
+        "SELECT w.surface FROM sentence_word sw JOIN word w ON w.id = sw.word_id "
+        "ORDER BY w.surface").fetchall()
+    # both surfaces present as substrings link; 山道 (absent from text) does not
+    assert linked == [("富士山",), ("山",)]
+
+
+def test_load_sentences_word_link_respects_cap_and_requires_substring():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_words(conn, [
+        Word(surface="山", reading_kana="やま", en_glosses=["mountain"]),
+        Word(surface="登山", reading_kana="とざん", en_glosses=["climbing"]),  # shares 山, never in text
+    ])
+    load_sentences(conn, [
+        Sentence(ja_text="山。", translations={"en": "1"}),
+        Sentence(ja_text="山が。", translations={"en": "2"}),
+        Sentence(ja_text="山だ。", translations={"en": "3"}),
+    ], per_kanji_cap=5)
+    load_sentence_words(conn, per_word_cap=2)
+
+    yama = conn.execute(
+        "SELECT COUNT(*) FROM sentence_word sw JOIN word w ON w.id = sw.word_id "
+        "WHERE w.surface = '山'").fetchone()[0]
+    tozan = conn.execute(
+        "SELECT COUNT(*) FROM sentence_word sw JOIN word w ON w.id = sw.word_id "
+        "WHERE w.surface = '登山'").fetchone()[0]
+    assert yama == 2   # substring in all 3, capped at 2 (shortest first)
+    assert tozan == 0  # shares 山 but surface never appears
 
 
 def test_load_sentence_glosses_attaches_ko_zh_by_text():

@@ -16,8 +16,8 @@ from kanjipipe.ingest.tatoeba import parse_tatoeba
 from kanjipipe.ingest.word_glosses import parse_word_glosses, parse_word_jazh
 from kanjipipe.loader import (
     load_kanji, load_llm_glosses, load_relations, load_sentence_glosses,
-    load_sentences, load_stroke_order, load_word_jazh_glosses,
-    load_word_ko_glosses, load_words)
+    load_sentence_words, load_sentences, load_stroke_order,
+    load_word_jazh_glosses, load_word_ko_glosses, load_words)
 from kanjipipe.validate import assert_core_gates
 
 
@@ -57,6 +57,7 @@ def build(
         if word_jazh_path is not None and os.path.exists(word_jazh_path):
             load_word_jazh_glosses(conn, parse_word_jazh(word_jazh_path))
         load_sentences(conn, sentences)
+        load_sentence_words(conn)  # link sentences to the words they contain
         if sentence_glosses_path is not None and os.path.exists(sentence_glosses_path):
             load_sentence_glosses(conn, parse_sentence_glosses(sentence_glosses_path))
         report = assert_core_gates(conn)  # raises if a gate fails

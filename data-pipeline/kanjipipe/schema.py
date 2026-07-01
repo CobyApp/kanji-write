@@ -80,8 +80,15 @@ CREATE TABLE sentence_kanji (
     UNIQUE(sentence_id, kanji_id)
 );
 
+CREATE TABLE sentence_word (
+    sentence_id INTEGER NOT NULL REFERENCES sentence(id),
+    word_id     INTEGER NOT NULL REFERENCES word(id),
+    UNIQUE(sentence_id, word_id)
+);
+
 CREATE INDEX idx_sentence_translation_sentence ON sentence_translation(sentence_id);
 CREATE INDEX idx_sentence_kanji_kanji ON sentence_kanji(kanji_id);
+CREATE INDEX idx_sentence_word_word ON sentence_word(word_id);
 
 CREATE TABLE relation (
     id        INTEGER PRIMARY KEY,
