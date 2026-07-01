@@ -9,7 +9,6 @@ import SwiftUI
 /// then self-grades (Again/Hard/Good/Easy), which feeds the FSRS scheduler.
 public struct StudyHubView: View {
     @Bindable var reviewStore: StoreOf<ReviewFeature>
-    @AppStorage("classification") private var classification: Classification = .jlpt
     @AppStorage("newPerDay") private var newPerDay = 7
 
     public init(reviewStore: StoreOf<ReviewFeature>) {
@@ -19,7 +18,7 @@ public struct StudyHubView: View {
     private var session: StudySession {
         todaysSession(
             records: reviewStore.records.elements,
-            order: studyOrder(reviewStore.kanji.elements, classification: classification),
+            order: studyOrder(reviewStore.kanji.elements),
             today: reviewStore.today,
             newPerDay: newPerDay)
     }
