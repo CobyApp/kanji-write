@@ -32,3 +32,4 @@ app/Tuist/.build/
 !data-pipeline/sources/llm_glosses.jsonl
 !data-pipeline/sources/word_glosses_ko.jsonl
 !data-pipeline/sources/word_glosses_jazh.jsonl
+!data-pipeline/sources/sentence_glosses.jsonl
