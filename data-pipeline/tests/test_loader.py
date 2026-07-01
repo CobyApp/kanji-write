@@ -1,6 +1,6 @@
 # tests/test_loader.py
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentences, load_stroke_order, load_word_jazh_glosses, load_word_ko_glosses, load_words
+from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentence_glosses, load_sentences, load_stroke_order, load_word_jazh_glosses, load_word_ko_glosses, load_words
 from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Relation, Sentence, Word
 
 
@@ -124,6 +124,33 @@ def test_load_sentences_skips_sentence_without_joyo_kanji():
     load_kanji(conn, [_yama()])
     load_sentences(conn, [Sentence(ja_text="これはペンです。", translations={"en": "This is a pen."})])
     assert conn.execute("SELECT COUNT(*) FROM sentence").fetchone()[0] == 0
+
+
+def test_load_sentence_glosses_attaches_ko_zh_by_text():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_sentences(conn, [Sentence(ja_text="山。", translations={"en": "Mountain."})])
+
+    load_sentence_glosses(conn, [("山。", "산.", "山。"), ("知らない文。", "무시됨", None)])
+
+    rows = dict(conn.execute("SELECT lang, text FROM sentence_translation").fetchall())
+    assert rows == {"en": "Mountain.", "ko": "산.", "zh": "山。"}
+
+
+def test_load_sentence_glosses_does_not_overwrite_existing_lang():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    # Tatoeba already supplied a ko translation for this sentence.
+    load_sentences(conn, [Sentence(ja_text="山。", translations={"ko": "기존 번역"})])
+
+    load_sentence_glosses(conn, [("山。", "새 번역", "山。")])
+
+    ko = conn.execute(
+        "SELECT text FROM sentence_translation WHERE lang = 'ko'").fetchall()
+    assert ko == [("기존 번역",)]  # existing ko kept, not duplicated
+    zh = conn.execute(
+        "SELECT text FROM sentence_translation WHERE lang = 'zh'").fetchone()
+    assert zh == ("山。",)  # zh newly added
 
 
 def test_load_relations_links_stored_words_only():
