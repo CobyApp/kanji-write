@@ -9,11 +9,10 @@ import SwiftUI
 import WritingCanvas
 
 /// The app shell. It adapts to the horizontal size class:
-/// - **regular** (iPad, full-width): a 3-column `NavigationSplitView`.
+/// - **regular** (iPad, full-width): a 3-column `NavigationSplitView` whose
+///   detail column is the navigation stack.
 /// - **compact** (iPhone, Slide Over): a bottom `TabView`, each tab a
-///   `NavigationStack` that pushes the selected kanji's detail → writing canvas.
-///
-/// Both layouts read the same `RootFeature` store; only navigation differs.
+///   `NavigationStack` that drills kanji ↔ word ↔ writing to any depth.
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
@@ -37,6 +36,22 @@ public struct RootView: View {
     }
 }
 
+/// The shared destination builder for every navigation stack (both layouts).
+@ViewBuilder
+func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
+    switch store.case {
+    case let .kanjiList(s):
+        KanjiCardList(items: s.kanji, onSelect: { s.send(.kanjiTapped($0)) })
+            .navigationTitle(s.title)
+    case let .kanji(s):
+        KanjiDetailView(store: s)
+    case let .word(s):
+        WordDetailView(store: s)
+    case let .writing(s):
+        KanjiWritingView(store: s)
+    }
+}
+
 // MARK: - Regular width (iPad): 3-column split view
 
 struct RegularRootView: View {
@@ -57,11 +72,18 @@ struct RegularRootView: View {
             contentColumn
                 .navigationBarTitleDisplayMode(.inline)
         } detail: {
-            detailColumn
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+                ZStack {
+                    Palette.background.ignoresSafeArea()
+                    ContentUnavailableView("漢字を選んでください",
+                                           systemImage: "hand.tap",
+                                           description: Text("一覧や学習から漢字を選ぶと\nここに表示されます"))
+                }
+            } destination: { store in
+                pathDestination(store)
+            }
         }
     }
-
-    // MARK: Sidebar
 
     private var sidebar: some View {
         List(selection: sidebarBinding) {
@@ -89,8 +111,6 @@ struct RegularRootView: View {
         .searchable(text: searchBinding, placement: .sidebar, prompt: "漢字・読みで検索")
     }
 
-    // MARK: Content
-
     @ViewBuilder private var contentColumn: some View {
         if !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
             KanjiCardList(
@@ -112,30 +132,6 @@ struct RegularRootView: View {
             }
         }
     }
-
-    // MARK: Detail
-
-    @ViewBuilder private var detailColumn: some View {
-        NavigationStack {
-            Group {
-                if let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
-                    KanjiDetailView(store: detailStore)
-                } else {
-                    ZStack {
-                        Palette.background.ignoresSafeArea()
-                        ContentUnavailableView("漢字を選んでください",
-                                               systemImage: "hand.tap",
-                                               description: Text("一覧や学習から漢字を選ぶと\nここに表示されます"))
-                    }
-                }
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.writing, action: \.writing)
-            ) { writingStore in
-                KanjiWritingView(store: writingStore)
-            }
-        }
-    }
 }
 
 // MARK: - Compact width (iPhone): tab bar + navigation stacks
@@ -149,16 +145,18 @@ struct CompactRootView: View {
 
     var body: some View {
         TabView(selection: tabBinding) {
-            NavigationStack {
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 StudyHubView(reviewStore: store.scope(state: \.review, action: \.review))
-                    .kanjiNavigation(store: store)
+            } destination: { store in
+                pathDestination(store)
             }
             .tag(RootFeature.Tab.study)
             .tabItem { Label("学習", systemImage: "pencil.and.outline") }
 
-            NavigationStack {
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 BrowseColumn(store: store)
-                    .kanjiNavigation(store: store)
+            } destination: { store in
+                pathDestination(store)
             }
             .tag(RootFeature.Tab.browse)
             .tabItem { Label("一覧", systemImage: "square.grid.2x2") }
@@ -172,8 +170,8 @@ struct CompactRootView: View {
     }
 }
 
-/// The compact 一覧 tab root: a level drill-down (or search results), each level
-/// pushing its kanji list.
+/// The compact 一覧 tab root: a level drill-down (or search results). Tapping a
+/// level opens its kanji list on the stack.
 private struct BrowseColumn: View {
     @Bindable var store: StoreOf<RootFeature>
 
@@ -197,12 +195,6 @@ private struct BrowseColumn: View {
         }
         .navigationTitle("一覧")
         .searchable(text: searchBinding, prompt: "漢字・読みで検索")
-        .navigationDestination(for: KanjiLevel.self) { level in
-            KanjiCardList(
-                items: kanjiIn(store.review.kanji.elements, in: level),
-                onSelect: { store.send(.kanjiSelected($0)) })
-                .navigationTitle(level.label)
-        }
     }
 
     private var levelList: some View {
@@ -212,7 +204,7 @@ private struct BrowseColumn: View {
                 LazyVStack(spacing: 10) {
                     ForEach(levels()) { level in
                         let count = kanjiIn(store.review.kanji.elements, in: level).count
-                        NavigationLink(value: level) {
+                        Button { store.send(.levelSelected(level)) } label: {
                             HStack(spacing: 14) {
                                 Text(level.label)
                                     .font(.kawaii(17, weight: .semibold)).foregroundStyle(Palette.ink)
@@ -235,8 +227,7 @@ private struct BrowseColumn: View {
 
 // MARK: - Shared
 
-/// A scrolling list of kanji cards, reused by the search results and every
-/// level list across both layouts.
+/// A scrolling list of kanji cards, reused by search results and every level list.
 struct KanjiCardList: View {
     let items: [Kanji]
     let onSelect: (Kanji) -> Void
@@ -272,31 +263,5 @@ struct KanjiCardList: View {
                 .padding(16)
             }
         }
-    }
-}
-
-/// Attaches the detail → writing push chain to a compact tab's stack. Both tabs
-/// that open kanji share `RootFeature`'s single detail/writing state;
-/// `tabSelected` clears it on switch so it never leaks between stacks.
-private struct KanjiNavigation: ViewModifier {
-    @Bindable var store: StoreOf<RootFeature>
-
-    func body(content: Content) -> some View {
-        content.navigationDestination(
-            item: $store.scope(state: \.detail, action: \.detail)
-        ) { detailStore in
-            KanjiDetailView(store: detailStore)
-                .navigationDestination(
-                    item: $store.scope(state: \.writing, action: \.writing)
-                ) { writingStore in
-                    KanjiWritingView(store: writingStore)
-                }
-        }
-    }
-}
-
-private extension View {
-    func kanjiNavigation(store: StoreOf<RootFeature>) -> some View {
-        modifier(KanjiNavigation(store: store))
     }
 }

@@ -1,0 +1,88 @@
+import ComposableArchitecture
+import DesignSystem
+import SharedModels
+import SwiftUI
+
+public struct WordDetailView: View {
+    @Bindable public var store: StoreOf<WordDetailFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+
+    public init(store: StoreOf<WordDetailFeature>) {
+        self.store = store
+    }
+
+    public var body: some View {
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    header
+                    if !store.kanji.isEmpty { kanjiSection }
+                    if !store.sentences.isEmpty { sentencesSection }
+                }
+                .padding(16)
+            }
+        }
+        .navigationTitle(store.word.surface)
+        .navigationBarTitleDisplayMode(.inline)
+        .task { store.send(.onAppear) }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(store.word.surface)
+                .font(.kawaii(34, weight: .bold)).foregroundStyle(Palette.ink)
+            Text(store.word.reading)
+                .font(.kawaii(17)).foregroundStyle(Palette.inkSoft)
+            if let meaning = wordMeaning(store.word, appLanguage) {
+                Text(meaning)
+                    .font(.kawaii(18, weight: .semibold, language: appLanguage))
+                    .foregroundStyle(Palette.ink)
+                    .padding(.top, 2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .roundedCard()
+    }
+
+    private var kanjiSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader("漢字", accent: Palette.mint)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(Array(store.kanji.enumerated()), id: \.element.id) { index, kanji in
+                        let tint = Palette.tint(index)
+                        Button { store.send(.kanjiTapped(kanji)) } label: {
+                            VStack(spacing: 4) {
+                                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
+                                           size: 56, fontSize: 32)
+                                Text(kanji.onReadings.first ?? kanji.kunReadings.first ?? "")
+                                    .font(.kawaii(11)).foregroundStyle(Palette.inkSoft)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .roundedCard()
+    }
+
+    private var sentencesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("例文", accent: Palette.butter)
+            ForEach(store.sentences) { sentence in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(sentence.textJa)
+                        .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                    if let translation = localizedTranslation(sentence.translations, appLanguage) {
+                        Text(translation).font(.kawaii(14, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
+                    }
+                }
+            }
+        }
+        .roundedCard()
+    }
+}

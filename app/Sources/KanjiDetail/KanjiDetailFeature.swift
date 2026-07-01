@@ -23,6 +23,7 @@ public struct KanjiDetailFeature {
         case onAppear
         case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String])
         case writeTapped
+        case wordTapped(WordEntry)  // delegate → parent pushes the word detail
         case addToReview
         case markedAddedToReview
     }
@@ -62,7 +63,7 @@ public struct KanjiDetailFeature {
                 state.relations = relations
                 state.strokePaths = strokePaths
                 return .none
-            case .writeTapped:
+            case .writeTapped, .wordTapped:
                 return .none  // handled by the parent (navigation)
             case .addToReview:
                 let kanjiID = state.kanji.id
