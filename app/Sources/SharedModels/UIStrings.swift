@@ -169,6 +169,12 @@ public enum L {
     // Practice — level filter
     public static let level = L10nText(ko: "급수", ja: "レベル", zh: "级别", en: "Level")
 
+    // Home plan (level + date range → per-day goal)
+    public static let planStart = L10nText(ko: "시작일", ja: "開始日", zh: "开始日期", en: "Start")
+    public static let planEnd = L10nText(ko: "목표일", ja: "目標日", zh: "目标日期", en: "Goal")
+    public static let perDayGoal = L10nText(ko: "하루 목표", ja: "1日の目標", zh: "每日目标", en: "Daily goal")
+    public static let perDayUnit = L10nText(ko: "자", ja: "字", zh: "字", en: "/day")
+
     // Bookmarks
     public static let bookmark = L10nText(ko: "북마크", ja: "ブックマーク", zh: "收藏", en: "Bookmark")
     public static let bookmarks = L10nText(ko: "북마크", ja: "ブックマーク", zh: "收藏", en: "Bookmarks")

@@ -12,6 +12,8 @@ struct HomeView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("newPerDay") private var newPerDay = 7
+    @AppStorage("planStartTS") private var planStartTS: Double = 0
+    @AppStorage("planEndTS") private var planEndTS: Double = 0
 
     private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, level: targetLevel) }
     private var learnedInLevel: Int {
@@ -25,6 +27,25 @@ struct HomeView: View {
                       today: store.review.today, newPerDay: newPerDay)
     }
 
+    // MARK: Plan (level + date range → per-day goal)
+
+    private var startDate: Date {
+        planStartTS > 0 ? Date(timeIntervalSince1970: planStartTS) : Date()
+    }
+    private var endDate: Date {
+        planEndTS > 0 ? Date(timeIntervalSince1970: planEndTS) : Date().addingTimeInterval(60 * 86_400)
+    }
+    private var planDays: Int {
+        max(1, Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1)
+    }
+    /// Kanji/day needed to finish the level's remaining kanji by the goal date.
+    private var plannedPerDay: Int {
+        let remaining = max(1, levelTotal - learnedInLevel)
+        return max(1, Int((Double(remaining) / Double(planDays)).rounded(.up)))
+    }
+
+    private func syncPerDay() { newPerDay = min(50, plannedPerDay) }
+
     var body: some View {
         ZStack {
             Palette.background.ignoresSafeArea()
@@ -33,8 +54,9 @@ struct HomeView: View {
                 VStack(spacing: 28) {
                     greeting.popIn(delay: 0.02)
                     ring.popIn(delay: 0.08)
-                    continueButton.popIn(delay: 0.16)
-                    statsRow.popIn(delay: 0.24)
+                    planCard.popIn(delay: 0.14)
+                    continueButton.popIn(delay: 0.20)
+                    statsRow.popIn(delay: 0.28)
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 12)
@@ -44,6 +66,45 @@ struct HomeView: View {
             }
         }
         .navigationTitle(L.today[appLanguage])
+        .onChange(of: targetLevel) { _, _ in syncPerDay() }
+        .onChange(of: planStartTS) { _, _ in syncPerDay() }
+        .onChange(of: planEndTS) { _, _ in syncPerDay() }
+    }
+
+    private var planCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            SectionHeader(L.studyPlan[appLanguage], accent: Palette.sky)
+            Picker(L.targetLevel[appLanguage], selection: $targetLevel) {
+                ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            DatePicker(
+                L.planStart[appLanguage],
+                selection: Binding(
+                    get: { startDate },
+                    set: { planStartTS = $0.timeIntervalSince1970 }),
+                displayedComponents: .date)
+                .font(.kawaii(15))
+            DatePicker(
+                L.planEnd[appLanguage],
+                selection: Binding(
+                    get: { endDate },
+                    set: { planEndTS = $0.timeIntervalSince1970 }),
+                in: startDate..., displayedComponents: .date)
+                .font(.kawaii(15))
+            HStack {
+                Text(L.perDayGoal[appLanguage])
+                    .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                Spacer()
+                Text("\(plannedPerDay)\(L.perDayUnit[appLanguage])")
+                    .font(.kawaii(22, weight: .bold)).foregroundStyle(Palette.pink)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.card)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: Palette.ink.opacity(0.05), radius: 8, y: 3)
     }
 
     private var greeting: some View {
