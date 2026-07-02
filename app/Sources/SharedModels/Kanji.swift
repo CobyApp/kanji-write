@@ -10,6 +10,8 @@ public struct Kanji: Equatable, Identifiable, Sendable {
     public let jlptLevel: String?
     public let onReadings: [String]
     public let kunReadings: [String]
+    /// KANGXI radical index (1…214), if known.
+    public let radical: Int?
 
     public init(
         id: Int,
@@ -18,7 +20,8 @@ public struct Kanji: Equatable, Identifiable, Sendable {
         grade: Int?,
         jlptLevel: String?,
         onReadings: [String],
-        kunReadings: [String]
+        kunReadings: [String],
+        radical: Int? = nil
     ) {
         self.id = id
         self.literal = literal
@@ -27,5 +30,11 @@ public struct Kanji: Equatable, Identifiable, Sendable {
         self.jlptLevel = jlptLevel
         self.onReadings = onReadings
         self.kunReadings = kunReadings
+        self.radical = radical
+    }
+
+    /// The KANGXI radical glyph (部首) for this kanji, if known.
+    public var radicalGlyph: String? {
+        radical.flatMap(kangxiRadical)
     }
 }

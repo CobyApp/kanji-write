@@ -9,7 +9,7 @@ extension DictionaryClient: DependencyKey {
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [Kanji] in
                 let kanjiRows = try Row.fetchAll(db, sql: """
-                    SELECT id, literal, stroke_count, grade, jlpt_level
+                    SELECT id, literal, stroke_count, grade, jlpt_level, radical
                     FROM kanji
                     ORDER BY id
                     """)
@@ -17,6 +17,7 @@ extension DictionaryClient: DependencyKey {
                     let id: Int = row["id"]
                     let grade: Int? = row["grade"]
                     let jlpt: String? = row["jlpt_level"]
+                    let radical: Int? = row["radical"]
 
                     // NOTE: N+1 by design for the 2-row scaffold DB; replace with a single
                     // grouped query (or JOIN) when loading the full kanji set.
@@ -41,7 +42,8 @@ extension DictionaryClient: DependencyKey {
                         grade: grade,
                         jlptLevel: jlpt,
                         onReadings: onReadings,
-                        kunReadings: kunReadings
+                        kunReadings: kunReadings,
+                        radical: radical
                     )
                 }
             }

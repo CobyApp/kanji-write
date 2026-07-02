@@ -15,6 +15,9 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertEqual(yama.jlptLevel, "N5")
         XCTAssertTrue(yama.onReadings.contains("サン"))
         XCTAssertTrue(yama.kunReadings.contains("やま"))
+        // Radical plumbing: DB radical index → KANGXI glyph.
+        XCTAssertEqual(yama.radical, 46)
+        XCTAssertEqual(yama.radicalGlyph, "山")
     }
 
     func testLiveReadsStrokeOrderForKanji() async throws {

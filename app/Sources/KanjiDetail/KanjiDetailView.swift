@@ -53,6 +53,10 @@ public struct KanjiDetailView: View {
                     if let jlpt = store.kanji.jlptLevel {
                         CandyChip(jlpt, soft: Palette.skySoft, accent: Palette.sky)
                     }
+                    if let radical = store.kanji.radicalGlyph {
+                        CandyChip("\(L.radical[appLanguage]) \(radical)",
+                                  soft: Palette.mintSoft, accent: Palette.mint)
+                    }
                 }
             }
             Spacer(minLength: 0)
