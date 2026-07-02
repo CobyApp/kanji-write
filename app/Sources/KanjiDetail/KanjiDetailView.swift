@@ -29,11 +29,11 @@ public struct KanjiDetailView: View {
         }
         .navigationTitle(store.kanji.literal)
         .toolbar {
-            Button(store.addedToReview ? "復習に追加済み" : "復習に追加") {
+            Button(store.addedToReview ? L.addedToReview[appLanguage] : L.addToReview[appLanguage]) {
                 store.send(.addToReview)
             }
             .disabled(store.addedToReview)
-            Button("書いて練習") { store.send(.writeTapped) }
+            Button(L.practiceWriting[appLanguage]) { store.send(.writeTapped) }
         }
         .task { store.send(.onAppear) }
     }
@@ -62,13 +62,13 @@ public struct KanjiDetailView: View {
 
     private var readings: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionHeader("読み", accent: Palette.pink)
+            SectionHeader(L.readings[appLanguage], accent: Palette.pink)
             if !store.kanji.onReadings.isEmpty {
-                Text("音 " + store.kanji.onReadings.joined(separator: "、"))
+                Text(L.onReading[appLanguage] + " " + store.kanji.onReadings.joined(separator: "、"))
                     .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
             if !store.kanji.kunReadings.isEmpty {
-                Text("訓 " + store.kanji.kunReadings.joined(separator: "、"))
+                Text(L.kunReading[appLanguage] + " " + store.kanji.kunReadings.joined(separator: "、"))
                     .font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             }
         }
@@ -77,7 +77,7 @@ public struct KanjiDetailView: View {
 
     private var strokeOrderSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader("画順", accent: Palette.mint)
+            SectionHeader(L.strokeOrder[appLanguage], accent: Palette.mint)
             StrokeOrderPlayer(paths: store.strokePaths)
         }
         .roundedCard()
@@ -85,7 +85,7 @@ public struct KanjiDetailView: View {
 
     private var wordsSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader("単語", accent: Palette.lavender)
+            SectionHeader(L.words[appLanguage], accent: Palette.lavender)
             ForEach(store.words) { word in
                 Button { store.send(.wordTapped(word)) } label: {
                     HStack(spacing: 10) {
@@ -112,7 +112,7 @@ public struct KanjiDetailView: View {
 
     private var sentencesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("例文", accent: Palette.butter)
+            SectionHeader(L.examples[appLanguage], accent: Palette.butter)
             ForEach(store.sentences) { sentence in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sentence.textJa)
@@ -131,14 +131,14 @@ public struct KanjiDetailView: View {
         let antonyms = store.relations.filter { $0.type == "antonym" }.map(\.surface)
         let related = store.relations.filter { $0.type == "related" }.map(\.surface)
         return VStack(alignment: .leading, spacing: 8) {
-            SectionHeader("関連", accent: Palette.sky)
+            SectionHeader(L.related[appLanguage], accent: Palette.sky)
             if !antonyms.isEmpty {
-                Text("反意").font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
+                Text(L.antonym[appLanguage]).font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
                 Text(antonyms.joined(separator: "、"))
                     .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
             if !related.isEmpty {
-                Text("関連語").font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
+                Text(L.relatedWords[appLanguage]).font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
                 Text(related.joined(separator: "、"))
                     .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
