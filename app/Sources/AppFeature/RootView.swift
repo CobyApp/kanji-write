@@ -113,6 +113,8 @@ struct RegularRootView: View {
             List(selection: destinationBinding) {
                 Label(L.today[appLanguage], systemImage: "sun.max")
                     .tag(RootFeature.Destination.home)
+                Label(L.study[appLanguage], systemImage: "pencil.and.outline")
+                    .tag(RootFeature.Destination.study)
                 Label(L.dictionary[appLanguage], systemImage: "character.book.closed")
                     .tag(RootFeature.Destination.dictionary)
                 Label(L.settings[appLanguage], systemImage: "gearshape")
@@ -127,7 +129,9 @@ struct RegularRootView: View {
     @ViewBuilder private var detailColumn: some View {
         switch store.destination {
         case .home:
-            HomeView(store: store)
+            NavigationStack { HomeView(store: store) }
+        case .study:
+            NavigationStack { StudyHubView(store: store) }
         case .dictionary:
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 DictionaryColumn(store: store)
@@ -159,6 +163,12 @@ struct CompactRootView: View {
             }
             .tag(RootFeature.Destination.home)
             .tabItem { Label(L.today[appLanguage], systemImage: "sun.max") }
+
+            NavigationStack {
+                StudyHubView(store: store)
+            }
+            .tag(RootFeature.Destination.study)
+            .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 DictionaryColumn(store: store)

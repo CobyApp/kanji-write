@@ -11,9 +11,10 @@ import WritingCanvas
 
 @Reducer
 public struct RootFeature {
-    /// The three top-level destinations (tab on iPhone, sidebar on iPad).
+    /// The four top-level destinations (tab on iPhone, sidebar on iPad).
     public enum Destination: Hashable, Sendable {
-        case home        // 오늘: dashboard + session launchers
+        case home        // 오늘: glanceable progress dashboard + quick continue
+        case study       // 학습: the study-mode launcher hub (learn / review / practice)
         case dictionary  // 사전: browse / search / detail / wordbook
         case settings
     }
