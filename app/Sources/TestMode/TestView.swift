@@ -20,6 +20,7 @@ public struct TestView: View {
     @Bindable public var store: StoreOf<TestFeature>
     @State private var drawing = PKDrawing()
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<TestFeature>) {
         self.store = store
@@ -44,7 +45,10 @@ public struct TestView: View {
                 VStack(spacing: 16) {
                     progressCard
                     promptCard
-                    canvasCard(kanji)
+                    // Recall-by-writing is iPad-only; iPhone is a flip card.
+                    if sizeClass != .compact {
+                        canvasCard(kanji)
+                    }
                     if store.revealed {
                         answerCard(kanji)
                         gradeButtons

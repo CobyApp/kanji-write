@@ -9,10 +9,10 @@ import SharedModels
 /// `Kanji`. IDs whose kanji is missing are dropped so the queue never holds an
 /// unshowable lesson. Order is preserved from `newIDs` (JLPT → strokes → id).
 public func buildWorksheetQueue(
-    records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int
+    records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int, level: String? = nil
 ) -> [Kanji] {
     let session = todaysSession(
-        records: records, order: studyOrder(kanji), today: today, newPerDay: newPerDay)
+        records: records, order: studyOrder(kanji, level: level), today: today, newPerDay: newPerDay)
     let byID = Dictionary(kanji.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     return session.newIDs.compactMap { byID[$0] }
 }
@@ -35,6 +35,9 @@ public struct WorksheetFeature {
         public var today = 0
         /// New kanji per day (from `@AppStorage("newPerDay")`, passed on appear).
         public var newPerDay = 7
+        /// Target JLPT level for the plan (from `@AppStorage("targetLevel")`); new
+        /// kanji are drawn only from this level. nil = all levels.
+        public var targetLevel: String? = "N5"
         /// A word that uses the current kanji (the first returned), if any.
         public var word: WordEntry?
         /// An example sentence for the current kanji (the first returned), if any.
@@ -43,6 +46,8 @@ public struct WorksheetFeature {
         public var strokePaths: [String] = []
         /// Bumped whenever the write canvas should reset to a blank page.
         public var clearToken = 0
+        /// Never-seen kanji remaining in the target level (for the finish estimate).
+        public var remaining = 0
         public var isLoading = false
         public var isFinished = false
 
@@ -58,7 +63,7 @@ public struct WorksheetFeature {
     }
 
     public enum Action: Equatable {
-        case onAppear(newPerDay: Int)
+        case onAppear(newPerDay: Int, level: String?)
         case loaded([ReviewRecord], [Kanji], Int)
         case cardContentLoaded(word: WordEntry?, sentence: ExampleSentence?, strokePaths: [String])
         case nextTapped
@@ -74,10 +79,11 @@ public struct WorksheetFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .onAppear(newPerDay):
+            case let .onAppear(newPerDay, level):
                 guard state.queue.isEmpty, !state.isFinished, !state.isLoading else { return .none }
                 state.isLoading = true
                 state.newPerDay = newPerDay
+                state.targetLevel = level
                 let today = Int(date.now.timeIntervalSince1970 / 86_400)
                 return .run { send in
                     async let records = reviewStore.loadRecords()
@@ -90,7 +96,10 @@ public struct WorksheetFeature {
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.today = today
                 state.queue = buildWorksheetQueue(
-                    records: records, kanji: kanji, today: today, newPerDay: state.newPerDay)
+                    records: records, kanji: kanji, today: today, newPerDay: state.newPerDay,
+                    level: state.targetLevel)
+                state.remaining = remainingNew(
+                    order: studyOrder(kanji, level: state.targetLevel), records: records)
                 state.index = 0
                 return loadCardContent(state: &state)
 

@@ -59,7 +59,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
         }
         store.exhaustivity = .off
 
-        await store.send(.onAppear(newPerDay: 7))
+        await store.send(.onAppear(newPerDay: 7, level: nil))
         await store.receive(\.loaded)
         await store.receive(\.cardContentLoaded)
 
@@ -86,7 +86,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
         }
         store.exhaustivity = .off
 
-        await store.send(.onAppear(newPerDay: 7))
+        await store.send(.onAppear(newPerDay: 7, level: nil))
         await store.receive(\.loaded)
         await store.receive(\.cardContentLoaded)
 
@@ -120,7 +120,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
         }
         store.exhaustivity = .off
 
-        await store.send(.onAppear(newPerDay: 7))
+        await store.send(.onAppear(newPerDay: 7, level: nil))
         await store.receive(\.loaded)
         await store.receive(\.cardContentLoaded)
 
