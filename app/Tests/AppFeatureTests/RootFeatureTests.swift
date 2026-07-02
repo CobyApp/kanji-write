@@ -1,8 +1,11 @@
 import ComposableArchitecture
 import KanjiDetail
 import KanjiListFeature
+import Practice
 import Review
 import SharedModels
+import TestMode
+import Worksheet
 import WritingCanvas
 import XCTest
 
@@ -22,14 +25,21 @@ private extension WordEntry {
 
 @MainActor
 final class RootFeatureTests: XCTestCase {
-    func testSidebarAndSearchSelection() async {
+    func testDestinationSelectionClearsStack() async {
+        var initial = RootFeature.State()
+        initial.path = StackState([.kanji(KanjiDetailFeature.State(kanji: .yama))])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.destinationSelected(.settings))
+        XCTAssertEqual(store.state.destination, .settings)
+        XCTAssertTrue(store.state.path.isEmpty)
+    }
+
+    func testSearchSelection() async {
         let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
         store.exhaustivity = .off
 
-        await store.send(.sidebarSelected(.settings))
-        XCTAssertEqual(store.state.sidebar, .settings)
-        await store.send(.sidebarSelected(.level("N5")))
-        XCTAssertEqual(store.state.sidebar, .level("N5"))
         await store.send(.searchChanged("山"))
         XCTAssertEqual(store.state.searchText, "山")
     }
@@ -44,16 +54,6 @@ final class RootFeatureTests: XCTestCase {
             return XCTFail("expected a kanji at the stack root")
         }
         XCTAssertEqual(detail.kanji, .yama)
-    }
-
-    func testReviewTapMakesKanjiTheStackRoot() async {
-        let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
-        store.exhaustivity = .off
-
-        await store.send(.review(.kanjiTapped(.yama)))
-        guard case .kanji = store.state.path.first else {
-            return XCTFail("expected a kanji at the stack root")
-        }
     }
 
     func testLevelSelectedPushesKanjiList() async {
@@ -114,14 +114,43 @@ final class RootFeatureTests: XCTestCase {
         XCTAssertEqual(writing.kanji, .yama)
     }
 
-    func testTabSwitchClearsStack() async {
+    func testStartStudyPresentsWorksheetSession() async {
+        let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.startStudy)
+        guard case .worksheet = store.state.session else {
+            return XCTFail("expected a worksheet session")
+        }
+    }
+
+    func testStartReviewPresentsTestSession() async {
+        let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.startReview)
+        guard case .test = store.state.session else {
+            return XCTFail("expected a test session")
+        }
+    }
+
+    func testStartPracticePresentsPracticeSession() async {
+        let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.startPractice)
+        guard case .practice = store.state.session else {
+            return XCTFail("expected a practice session")
+        }
+    }
+
+    func testDismissingSessionClearsIt() async {
         var initial = RootFeature.State()
-        initial.path = StackState([.kanji(KanjiDetailFeature.State(kanji: .yama))])
+        initial.session = .worksheet(WorksheetFeature.State())
         let store = TestStore(initialState: initial) { RootFeature() }
         store.exhaustivity = .off
 
-        await store.send(.tabSelected(.browse))
-        XCTAssertEqual(store.state.tab, .browse)
-        XCTAssertTrue(store.state.path.isEmpty)
+        await store.send(.session(.dismiss))
+        XCTAssertNil(store.state.session)
     }
 }

@@ -33,6 +33,11 @@ public struct L10nText: Sendable, Equatable {
 public enum L {
     // Navigation / sections
     public static let browse = L10nText(ko: "목록", ja: "一覧", zh: "列表", en: "Browse")
+    public static let today = L10nText(ko: "오늘", ja: "今日", zh: "今天", en: "Today")
+    public static let dictionary = L10nText(ko: "사전", ja: "辞書", zh: "词典", en: "Dictionary")
+    public static let startStudy = L10nText(ko: "학습 시작", ja: "学習を始める", zh: "开始学习", en: "Start studying")
+    public static let startPractice = L10nText(ko: "연습하기", ja: "練習する", zh: "去练习", en: "Practice")
+    public static let close = L10nText(ko: "닫기", ja: "閉じる", zh: "关闭", en: "Close")
     public static let study = L10nText(ko: "학습", ja: "学習", zh: "学习", en: "Study")
     public static let review = L10nText(ko: "복습", ja: "復習", zh: "复习", en: "Review")
     public static let words = L10nText(ko: "단어", ja: "単語", zh: "单词", en: "Words")
