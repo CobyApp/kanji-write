@@ -72,17 +72,10 @@ struct RegularRootView: View {
     var body: some View {
         NavigationSplitView {
             sidebar
-        } content: {
-            contentColumn
-                .navigationBarTitleDisplayMode(.inline)
         } detail: {
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                ZStack {
-                    Palette.background.ignoresSafeArea()
-                    ContentUnavailableView(L.pickKanji[appLanguage],
-                                           systemImage: "hand.tap",
-                                           description: Text(L.pickKanjiHint[appLanguage]))
-                }
+                mainColumn
+                    .navigationBarTitleDisplayMode(.inline)
             } destination: { store in
                 pathDestination(store)
             }
@@ -121,7 +114,7 @@ struct RegularRootView: View {
         .searchable(text: searchBinding, placement: .sidebar, prompt: L.searchPrompt[appLanguage])
     }
 
-    @ViewBuilder private var contentColumn: some View {
+    @ViewBuilder private var mainColumn: some View {
         if !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
             KanjiCardList(
                 items: store.review.kanji.elements.filter { searchMatches($0, store.searchText) },

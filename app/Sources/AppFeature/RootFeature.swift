@@ -98,6 +98,7 @@ public struct RootFeature {
 
             case let .sidebarSelected(selection):
                 state.sidebar = selection
+                state.path.removeAll()  // switching section resets any pushed detail
                 return .none
 
             // Switching tabs (compact) resets the stack so it never leaks from
@@ -111,17 +112,17 @@ public struct RootFeature {
                 state.searchText = text
                 return .none
 
-            // Selecting a kanji (list / search / session) makes it the stack root.
+            // Selecting a kanji (list / search / session) pushes its detail.
             case let .kanjiSelected(kanji):
-                state.path = StackState([.kanji(KanjiDetailFeature.State(kanji: kanji))])
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
             case let .review(.kanjiTapped(kanji)):
-                state.path = StackState([.kanji(KanjiDetailFeature.State(kanji: kanji))])
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
 
-            // Tapping a word in the 単語 hub makes it the stack root.
+            // Tapping a word in the 単語 hub pushes its detail.
             case let .wordReview(.wordTapped(word)):
-                state.path = StackState([.word(WordDetailFeature.State(word: word))])
+                state.path.append(.word(WordDetailFeature.State(word: word)))
                 return .none
 
             // Opening a level's kanji list (compact 一覧 tab).

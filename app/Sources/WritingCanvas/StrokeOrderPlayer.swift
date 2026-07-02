@@ -1,3 +1,5 @@
+import DesignSystem
+import SharedModels
 import SwiftUI
 
 /// Fraction (0...1) of stroke `index` drawn at overall `progress`
@@ -34,33 +36,51 @@ private struct StrokesShape: Shape {
     }
 }
 
-/// An animated stroke-order display with a replay button.
+/// An animated stroke-order display: strokes draw on in order, auto-playing once
+/// on appear, with a replay button. Kawaii-styled and localized.
 public struct StrokeOrderPlayer: View {
     private let paths: [String]
+    private let size: CGFloat
     @State private var progress: Double
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
-    public init(paths: [String]) {
+    public init(paths: [String], size: CGFloat = 200) {
         self.paths = paths
-        // Start showing the full glyph.
+        self.size = size
+        // Start on the full glyph; auto-plays from 0 on appear.
         _progress = State(initialValue: Double(paths.count))
     }
 
+    private var duration: Double { max(0.8, Double(paths.count) * 0.5) }
+
+    private func play() {
+        progress = 0
+        withAnimation(.easeInOut(duration: duration)) { progress = Double(paths.count) }
+    }
+
     public var body: some View {
-        VStack(spacing: 12) {
-            StrokesShape(progress: progress, paths: paths)
-                .stroke(Color.primary,
-                        style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-                .aspectRatio(1, contentMode: .fit)
-                .frame(maxWidth: 220)
-                .background(Color(.secondarySystemBackground))
-            Button {
-                progress = 0
-                withAnimation(.easeInOut(duration: Double(paths.count) * 0.5)) {
-                    progress = Double(paths.count)
-                }
-            } label: {
-                Label("再生", systemImage: "play.circle")
+        VStack(spacing: 10) {
+            ZStack {
+                // Faint full glyph as a target behind the animated strokes.
+                StrokesShape(progress: Double(paths.count), paths: paths)
+                    .stroke(Palette.inkSoft.opacity(0.25),
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
+                StrokesShape(progress: progress, paths: paths)
+                    .stroke(Palette.ink,
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
+            .frame(width: size, height: size)
+            .background(Palette.background)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Palette.mint.opacity(0.35), lineWidth: 1.5))
+
+            Button(action: play) {
+                Label(L.play[appLanguage], systemImage: "play.circle.fill")
+                    .font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.mint)
+            }
+            .buttonStyle(.plain)
         }
+        .onAppear(perform: play)
     }
 }
