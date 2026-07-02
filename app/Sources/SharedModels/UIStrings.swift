@@ -65,6 +65,7 @@ public enum L {
     public static let onReading = L10nText(ko: "음", ja: "音", zh: "音读", en: "On")
     public static let kunReading = L10nText(ko: "훈", ja: "訓", zh: "训读", en: "Kun")
     public static let strokeOrder = L10nText(ko: "획순", ja: "画順", zh: "笔顺", en: "Stroke order")
+    public static let radical = L10nText(ko: "부수", ja: "部首", zh: "部首", en: "Radical")
     public static let examples = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Examples")
     public static let related = L10nText(ko: "관련", ja: "関連", zh: "相关", en: "Related")
     public static let antonym = L10nText(ko: "반의어", ja: "反意", zh: "反义", en: "Antonym")
