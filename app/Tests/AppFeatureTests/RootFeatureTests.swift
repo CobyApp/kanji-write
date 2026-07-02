@@ -153,4 +153,47 @@ final class RootFeatureTests: XCTestCase {
         await store.send(.session(.dismiss))
         XCTAssertNil(store.state.session)
     }
+
+    // MARK: In-session navigation (drilling while studying)
+
+    func testWordTappedWhileStudyingDrillsOnSessionPath() async {
+        var initial = RootFeature.State()
+        initial.session = .worksheet(WorksheetFeature.State())
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.session(.presented(.worksheet(.wordTapped(.yamamichi)))))
+        XCTAssertEqual(store.state.sessionPath.count, 1)
+        guard case let .word(word) = store.state.sessionPath.first else {
+            return XCTFail("expected the word pushed on the in-session stack")
+        }
+        XCTAssertEqual(word.word, .yamamichi)
+    }
+
+    func testKanjiTappedInSessionWordDrillsToKanji() async {
+        var initial = RootFeature.State()
+        initial.session = .worksheet(WorksheetFeature.State())
+        initial.sessionPath = StackState([.word(WordDetailFeature.State(word: .yamamichi))])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        let id = store.state.sessionPath.ids.first!
+        await store.send(.sessionPath(.element(id: id, action: .word(.kanjiTapped(.gaku)))))
+        XCTAssertEqual(store.state.sessionPath.count, 2)
+        guard case let .kanji(detail) = store.state.sessionPath.last else {
+            return XCTFail("expected the kanji pushed on the in-session stack")
+        }
+        XCTAssertEqual(detail.kanji, .gaku)
+    }
+
+    func testDismissingSessionClearsSessionPath() async {
+        var initial = RootFeature.State()
+        initial.session = .worksheet(WorksheetFeature.State())
+        initial.sessionPath = StackState([.word(WordDetailFeature.State(word: .yamamichi))])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.session(.dismiss))
+        XCTAssertTrue(store.state.sessionPath.isEmpty)
+    }
 }

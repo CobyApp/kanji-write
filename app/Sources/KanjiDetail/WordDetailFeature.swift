@@ -13,6 +13,9 @@ public struct WordDetailFeature {
         public let word: WordEntry
         public var sentences: [ExampleSentence] = []
         public var kanji: [Kanji] = []
+        /// KanjiVG stroke-order guides for the word's kanji (kanji id → path d's),
+        /// used by the word tracing grid.
+        public var strokesByID: [Int: [String]] = [:]
         public var isLoading = false
         public var loaded = false
         public var addedToWordbook = false
@@ -21,7 +24,7 @@ public struct WordDetailFeature {
 
     public enum Action: Equatable {
         case onAppear
-        case loaded([ExampleSentence], [Kanji])
+        case loaded([ExampleSentence], [Kanji], [Int: [String]])
         case kanjiTapped(Kanji)  // delegate → parent pushes the kanji detail
         case addToWordbook
         case markedAddedToWordbook
@@ -41,17 +44,21 @@ public struct WordDetailFeature {
                 state.isLoading = true
                 let id = state.word.id
                 return .run { send in
-                    async let sentences = dictionaryClient.sentencesForWord(id, 5)
-                    async let kanji = dictionaryClient.kanjiForWord(id)
-                    await send(.loaded(
-                        (try? await sentences) ?? [],
-                        (try? await kanji) ?? []))
+                    async let sentencesTask = dictionaryClient.sentencesForWord(id, 5)
+                    let kanji = (try? await dictionaryClient.kanjiForWord(id)) ?? []
+                    var strokes: [Int: [String]] = [:]
+                    for k in kanji {
+                        strokes[k.id] = (try? await dictionaryClient.strokeOrder(k.id)) ?? []
+                    }
+                    let sentences = (try? await sentencesTask) ?? []
+                    await send(.loaded(sentences, kanji, strokes))
                 }
-            case let .loaded(sentences, kanji):
+            case let .loaded(sentences, kanji, strokes):
                 state.isLoading = false
                 state.loaded = true
                 state.sentences = sentences
                 state.kanji = kanji
+                state.strokesByID = strokes
                 return .none
             case .kanjiTapped:
                 return .none  // handled by the parent (navigation)

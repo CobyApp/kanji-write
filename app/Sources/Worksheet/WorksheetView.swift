@@ -115,11 +115,12 @@ public struct WorksheetView: View {
             } else {
                 StrokeOrderPlayer(paths: store.strokePaths, size: 150)
             }
-            // Tracing is an iPad / Apple-Pencil activity; iPhone just watches.
-            if sizeClass != .compact {
-                TracingGrid(paths: store.strokePaths, showGuide: true,
-                            clearToken: store.clearToken, cellCount: 6)
-            }
+            // Trace the kanji over the guide. Fewer, larger cells on iPhone
+            // (finger) than on iPad (Apple Pencil).
+            TracingGrid(glyph: kanji.literal, paths: store.strokePaths, showGuide: true,
+                        clearToken: store.clearToken,
+                        cellCount: sizeClass == .compact ? 4 : 6,
+                        minCell: sizeClass == .compact ? 84 : 108)
         }
         .roundedCard()
     }
@@ -131,17 +132,31 @@ public struct WorksheetView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(L.worksheetWord[appLanguage], accent: Palette.lavender)
             if let word = store.word {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(word.surface)
-                        .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
-                    Text("（\(word.reading)）")
-                        .font(.kawaii(15)).foregroundStyle(Palette.inkSoft)
+                // Tap the word to drill into its detail (and from there, its
+                // kanji) without leaving the study session.
+                Button { store.send(.wordTapped(word)) } label: {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text(word.surface)
+                                    .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
+                                Text("（\(word.reading)）")
+                                    .font(.kawaii(15)).foregroundStyle(Palette.inkSoft)
+                            }
+                            if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
+                                Text(meaning)
+                                    .font(.kawaii(16, language: appLanguage))
+                                    .foregroundStyle(Palette.ink)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Palette.inkSoft)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
-                    Text(meaning)
-                        .font(.kawaii(16, language: appLanguage))
-                        .foregroundStyle(Palette.ink)
-                }
+                .buttonStyle(.plain)
             } else {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             }

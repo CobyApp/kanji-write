@@ -73,6 +73,8 @@ public struct WorksheetFeature {
             glosses: [String: String])
         case nextTapped
         case doneTapped
+        case kanjiTapped(Kanji)   // delegate → parent drills into the kanji detail
+        case wordTapped(WordEntry) // delegate → parent drills into the word detail
     }
 
     @Dependency(\.reviewStore) var reviewStore
@@ -141,6 +143,9 @@ public struct WorksheetFeature {
                 state.isFinished = true
                 let all = Array(state.records)
                 return .run { _ in await reviewStore.saveRecords(all) }
+
+            case .kanjiTapped, .wordTapped:
+                return .none  // handled by the parent (in-session navigation)
             }
         }
     }

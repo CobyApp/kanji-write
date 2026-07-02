@@ -73,8 +73,8 @@ public struct PracticeView: View {
                         .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 }
             }
-            TracingGrid(paths: store.strokePaths, showGuide: store.showGuide,
-                        clearToken: store.clearToken, cellCount: 12)
+            TracingGrid(glyph: store.selected?.literal ?? "", paths: store.strokePaths,
+                        showGuide: store.showGuide, clearToken: store.clearToken, cellCount: 12)
         }
         .roundedCard()
     }

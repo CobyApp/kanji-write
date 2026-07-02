@@ -2,6 +2,7 @@ import ComposableArchitecture
 import DesignSystem
 import SharedModels
 import SwiftUI
+import WritingCanvas
 
 public struct WordDetailView: View {
     @Bindable public var store: StoreOf<WordDetailFeature>
@@ -18,6 +19,7 @@ public struct WordDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header
                     if !store.kanji.isEmpty { kanjiSection }
+                    tracingSection
                     if !store.sentences.isEmpty { sentencesSection }
                 }
                 .padding(16)
@@ -71,6 +73,25 @@ public struct WordDetailView: View {
                 }
                 .padding(.vertical, 2)
             }
+        }
+        .roundedCard()
+    }
+
+    /// One tracing cell per character of the word (kanji show their stroke guide;
+    /// kana show the faint glyph template).
+    private var traceChars: [WordTracingGrid.Char] {
+        Array(store.word.surface.enumerated()).map { index, character in
+            let glyph = String(character)
+            let paths = store.kanji.first { $0.literal == glyph }
+                .flatMap { store.strokesByID[$0.id] } ?? []
+            return WordTracingGrid.Char(id: index, glyph: glyph, paths: paths)
+        }
+    }
+
+    private var tracingSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(L.practiceWriting[appLanguage], accent: Palette.pink)
+            WordTracingGrid(characters: traceChars, showGuide: true)
         }
         .roundedCard()
     }

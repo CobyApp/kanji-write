@@ -47,12 +47,12 @@ public struct RootView: View {
 /// The full-screen study session: the mode view inside its own NavigationStack
 /// with a single ✕ that returns to Home. No sidebar/tabs while studying.
 private struct SessionCover: View {
-    let store: StoreOf<RootFeature>
+    @Bindable var store: StoreOf<RootFeature>
     let sessionStore: StoreOf<RootFeature.Session>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $store.scope(state: \.sessionPath, action: \.sessionPath)) {
             sessionView(sessionStore)
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
@@ -63,6 +63,8 @@ private struct SessionCover: View {
                         .accessibilityLabel(L.close[appLanguage])
                     }
                 }
+        } destination: { store in
+            pathDestination(store)
         }
         .tint(Palette.accent)
     }
