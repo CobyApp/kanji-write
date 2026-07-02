@@ -28,14 +28,14 @@ struct StudyHubView: View {
                 VStack(spacing: 20) {
                     planCard.popIn(delay: 0.02)
                     launcher(
-                        emoji: "✏️", title: L.startStudy[appLanguage], subtitle: L.newKanjiSub[appLanguage],
+                        icon: "pencil.and.outline", title: L.startStudy[appLanguage], subtitle: L.newKanjiSub[appLanguage],
                         count: session.newIDs.count, soft: Palette.pinkSoft, accent: Palette.pink,
                         action: { store.send(.startStudy) }
                     ).popIn(delay: 0.10)
                     reviewLauncher.popIn(delay: 0.18)
                     if sizeClass != .compact {
                         launcher(
-                            emoji: "🖌️", title: L.startPractice[appLanguage], subtitle: L.practiceSub[appLanguage],
+                            icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage], subtitle: L.practiceSub[appLanguage],
                             count: nil, soft: Palette.mintSoft, accent: Palette.mint,
                             action: { store.send(.startPractice) }
                         ).popIn(delay: 0.26)
@@ -81,7 +81,7 @@ struct StudyHubView: View {
         let due = session.dueIDs.count
         return Button { store.send(.startReview) } label: {
             launcherBody(
-                emoji: "🔁", title: L.review[appLanguage],
+                icon: "arrow.2.circlepath", title: L.review[appLanguage],
                 subtitle: due > 0 ? L.reviewSub[appLanguage] : L.allCaughtUp[appLanguage],
                 count: due, soft: Palette.lavenderSoft, accent: Palette.lavender,
                 dimmed: due == 0)
@@ -91,23 +91,24 @@ struct StudyHubView: View {
     }
 
     private func launcher(
-        emoji: String, title: String, subtitle: String, count: Int?,
+        icon: String, title: String, subtitle: String, count: Int?,
         soft: Color, accent: Color, action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            launcherBody(emoji: emoji, title: title, subtitle: subtitle,
+            launcherBody(icon: icon, title: title, subtitle: subtitle,
                          count: count, soft: soft, accent: accent, dimmed: false)
         }
         .buttonStyle(.bouncy)
     }
 
     private func launcherBody(
-        emoji: String, title: String, subtitle: String, count: Int?,
+        icon: String, title: String, subtitle: String, count: Int?,
         soft: Color, accent: Color, dimmed: Bool
     ) -> some View {
         HStack(spacing: 16) {
-            Text(emoji)
-                .font(.system(size: 30))
+            Image(systemName: icon)
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(accent)
                 .frame(width: 62, height: 62)
                 .background(Palette.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))

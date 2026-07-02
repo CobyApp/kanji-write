@@ -47,17 +47,14 @@ struct HomeView: View {
     }
 
     private var greeting: some View {
-        HStack(spacing: 12) {
-            Text("🌸").font(.system(size: 34))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L.greeting[appLanguage] + " 👋")
-                    .font(.kawaii(24, weight: .bold, language: appLanguage))
-                    .foregroundStyle(Palette.ink)
-                Text("\(targetLevel) · \(learnedInLevel)/\(levelTotal)")
-                    .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
-            }
-            Spacer()
+        VStack(alignment: .leading, spacing: 3) {
+            Text(L.greeting[appLanguage])
+                .font(.kawaii(24, weight: .bold, language: appLanguage))
+                .foregroundStyle(Palette.ink)
+            Text("\(targetLevel) · \(learnedInLevel)/\(levelTotal)")
+                .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var ring: some View {
@@ -74,7 +71,7 @@ struct HomeView: View {
     private var continueButton: some View {
         Button { store.send(.startStudy) } label: {
             HStack(spacing: 14) {
-                Image(systemName: "sparkles")
+                Image(systemName: "pencil.and.outline")
                     .font(.system(size: 22, weight: .bold))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L.continueStudy[appLanguage])
@@ -100,20 +97,19 @@ struct HomeView: View {
 
     private var statsRow: some View {
         HStack(spacing: 14) {
-            statChip("📚", L.learned[appLanguage], store.review.records.count, Palette.mint)
-            statChip("🔁", L.review[appLanguage], session.dueIDs.count, Palette.lavender)
-            statChip("✨", L.newItems[appLanguage], session.newIDs.count, Palette.butter)
+            statChip(L.learned[appLanguage], store.review.records.count, Palette.mint)
+            statChip(L.review[appLanguage], session.dueIDs.count, Palette.lavender)
+            statChip(L.newItems[appLanguage], session.newIDs.count, Palette.butter)
         }
     }
 
-    private func statChip(_ emoji: String, _ label: String, _ value: Int, _ accent: Color) -> some View {
+    private func statChip(_ label: String, _ value: Int, _ accent: Color) -> some View {
         VStack(spacing: 6) {
-            Text(emoji).font(.system(size: 22))
-            Text("\(value)").font(.kawaii(22, weight: .bold)).foregroundStyle(accent)
-            Text(label).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
+            Text("\(value)").font(.kawaii(28, weight: .bold)).foregroundStyle(accent)
+            Text(label).font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
+        .padding(.vertical, 20)
         .background(Palette.card.opacity(0.85))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Palette.ink.opacity(0.05), radius: 6, y: 3)
