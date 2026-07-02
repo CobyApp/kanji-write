@@ -35,6 +35,7 @@ public struct PracticeView: View {
             }
         }
         .navigationTitle(L.practice[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button(store.showGuide ? L.hideGuide[appLanguage] : L.showGuide[appLanguage]) {
                 store.send(.toggleGuide)

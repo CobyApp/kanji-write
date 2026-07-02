@@ -69,7 +69,7 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .navigationTitle(L.today[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { store.send(.setShowSettings(true)) } label: {
