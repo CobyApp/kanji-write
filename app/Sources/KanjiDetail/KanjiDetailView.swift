@@ -28,6 +28,7 @@ public struct KanjiDetailView: View {
             }
         }
         .navigationTitle(store.kanji.literal)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button { store.send(.toggleBookmark) } label: {
                 Image(systemName: store.isBookmarked ? "star.fill" : "star")

@@ -27,6 +27,7 @@ public struct ReminderView: View {
             }
         }
         .navigationTitle(L.settings[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
             L.resetProgress[appLanguage], isPresented: $showResetConfirm, titleVisibility: .visible
         ) {

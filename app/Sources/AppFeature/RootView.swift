@@ -101,6 +101,7 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
     case let .kanjiList(s):
         KanjiCardList(items: s.kanji, glosses: s.glosses, onSelect: { s.send(.kanjiTapped($0)) })
             .navigationTitle(s.title)
+            .navigationBarTitleDisplayMode(.inline)
     case let .kanji(s):
         KanjiDetailView(store: s)
     case let .word(s):

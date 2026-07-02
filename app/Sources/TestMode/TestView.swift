@@ -29,6 +29,7 @@ public struct TestView: View {
             content
         }
         .navigationTitle(L.test[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .task { store.send(.onAppear) }
     }
 

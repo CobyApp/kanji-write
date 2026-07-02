@@ -59,6 +59,7 @@ public struct KanjiWritingView: View {
         }
         .padding()
         .navigationTitle(store.kanji.literal)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button(store.showGuide ? L.hideGuide[appLanguage] : L.showGuide[appLanguage]) {
                 store.send(.toggleGuide)

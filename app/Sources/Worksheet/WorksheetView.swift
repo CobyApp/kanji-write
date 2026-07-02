@@ -53,6 +53,7 @@ public struct WorksheetView: View {
             content
         }
         .navigationTitle(L.study[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .task { store.send(.onAppear(newPerDay: newPerDay, level: targetLevel)) }
     }
 
