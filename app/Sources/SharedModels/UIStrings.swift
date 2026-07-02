@@ -156,6 +156,19 @@ public enum L {
     public static let correct = L10nText(ko: "정답!", ja: "正解！", zh: "正确！", en: "Correct!")
     public static let recognized = L10nText(ko: "인식", ja: "認識", zh: "识别", en: "Recognized")
 
+    // Settings — reset progress
+    public static let resetProgress = L10nText(ko: "학습 기록 초기화", ja: "学習記録をリセット", zh: "重置学习记录", en: "Reset progress")
+    public static let resetProgressMessage = L10nText(
+        ko: "모든 한자·단어 학습 기록과 단어장이 삭제됩니다. 되돌릴 수 없어요.",
+        ja: "すべての漢字・単語の学習記録と単語帳が削除されます。元に戻せません。",
+        zh: "将删除所有汉字·单词的学习记录和单词本，无法撤销。",
+        en: "Deletes all kanji/word progress and your wordbook. This can’t be undone.")
+    public static let cancel = L10nText(ko: "취소", ja: "キャンセル", zh: "取消", en: "Cancel")
+    public static let reset = L10nText(ko: "초기화", ja: "リセット", zh: "重置", en: "Reset")
+
+    // Practice — level filter
+    public static let level = L10nText(ko: "급수", ja: "レベル", zh: "级别", en: "Level")
+
     // Notification
     public static let notifTitle = L10nText(ko: "한자 연습", ja: "漢字の練習", zh: "汉字练习", en: "Kanji practice")
     public static let notifBody = L10nText(

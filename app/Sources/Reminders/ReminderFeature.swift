@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Review
 
 @Reducer
 public struct ReminderFeature {
@@ -11,15 +12,23 @@ public struct ReminderFeature {
     public enum Action: Equatable {
         case apply(enabled: Bool, hour: Int)
         case authorizationResult(Bool)
+        case resetProgress   // clears kanji + word SRS records and the wordbook
     }
 
     @Dependency(\.notificationClient) var notificationClient
+    @Dependency(\.reviewStore) var reviewStore
+    @Dependency(\.wordReviewStore) var wordReviewStore
 
     public init() {}
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case .resetProgress:
+                return .run { _ in
+                    await reviewStore.saveRecords([])
+                    await wordReviewStore.saveRecords([])
+                }
             case let .apply(enabled, hour):
                 guard enabled else {
                     return .run { _ in await notificationClient.cancelReminders() }

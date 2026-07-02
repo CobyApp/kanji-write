@@ -12,8 +12,15 @@ public struct PracticeFeature {
     public struct State: Equatable {
         /// All kanji available to pick from (loaded on appear).
         public var kanji: IdentifiedArrayOf<Kanji> = []
+        /// The JLPT level whose kanji are shown in the picker strip.
+        public var level = "N5"
         /// The kanji currently being practiced, if any.
         public var selected: Kanji?
+
+        /// The kanji shown in the picker, filtered to `level`.
+        public var levelKanji: [Kanji] {
+            kanji.elements.filter { $0.jlptLevel == level }
+        }
         /// Faint stroke-order guide (KanjiVG path `d` strings) for `selected`.
         public var strokePaths: [String] = []
         /// Whether the faint guide is shown behind each cell.
@@ -27,6 +34,7 @@ public struct PracticeFeature {
         case onAppear
         case kanjiLoaded([Kanji])
         case kanjiSelected(Kanji)
+        case levelSelected(String)
         case strokesLoaded([String])
         case toggleGuide
         case clearAll
@@ -49,8 +57,17 @@ public struct PracticeFeature {
 
             case let .kanjiLoaded(all):
                 state.kanji = IdentifiedArray(uniqueElements: all)
-                // Default to the first kanji so the notebook is usable immediately.
-                if state.selected == nil, let first = all.first {
+                // Default to the first kanji of the current level so the notebook
+                // is usable immediately.
+                if state.selected == nil, let first = state.levelKanji.first {
+                    return .send(.kanjiSelected(first))
+                }
+                return .none
+
+            case let .levelSelected(level):
+                state.level = level
+                // Jump the notebook to the first kanji of the newly picked level.
+                if let first = state.levelKanji.first {
                     return .send(.kanjiSelected(first))
                 }
                 return .none
