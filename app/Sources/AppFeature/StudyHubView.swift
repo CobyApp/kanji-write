@@ -36,8 +36,7 @@ public struct StudyHubView: View {
                                      ids: session.dueIDs)
                     }
                     if !session.newIDs.isEmpty {
-                        gradeSection(L.newItems[appLanguage], accent: Palette.butter, soft: Palette.butterSoft,
-                                     ids: session.newIDs)
+                        lessonSection(ids: session.newIDs)
                     }
                     if session.dueIDs.isEmpty && session.newIDs.isEmpty {
                         allDoneCard
@@ -77,6 +76,33 @@ public struct StudyHubView: View {
             Text(L.seeTomorrow[appLanguage]).font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 24)
+        .roundedCard()
+    }
+
+    /// New kanji are LEARNED (write practice), not blind-graded: each row opens
+    /// the detail → stroke order + 書いて練習; "復習に追加" there schedules it.
+    private func lessonSection(ids: [Int]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(L.toLearn[appLanguage], accent: Palette.butter)
+            ForEach(ids, id: \.self) { id in
+                if let kanji = reviewStore.kanji[id: id] {
+                    Button { reviewStore.send(.kanjiTapped(kanji)) } label: {
+                        HStack(spacing: 14) {
+                            PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
+                                       size: 50, fontSize: 28)
+                            Text(kanji.onReadings.joined(separator: "、"))
+                                .font(.kawaii(15)).foregroundStyle(Palette.ink)
+                            Spacer()
+                            Text(L.learn[appLanguage])
+                                .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.butter)
+                            Image(systemName: "chevron.right").font(.system(size: 12))
+                                .foregroundStyle(Palette.inkSoft)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
         .roundedCard()
     }
 

@@ -47,6 +47,8 @@ public enum L {
     public static let todaySession = L10nText(ko: "오늘의 세션", ja: "今日のセッション", zh: "今日学习", en: "Today")
     public static let todayWords = L10nText(ko: "오늘의 단어", ja: "今日の単語", zh: "今日单词", en: "Today's words")
     public static let newItems = L10nText(ko: "신규", ja: "新規", zh: "新学", en: "New")
+    public static let toLearn = L10nText(ko: "오늘 배울 한자", ja: "今日学ぶ漢字", zh: "今天要学的汉字", en: "To learn")
+    public static let learn = L10nText(ko: "배우기", ja: "学ぶ", zh: "去学习", en: "Learn")
     public static let learned = L10nText(ko: "습득", ja: "習得", zh: "已掌握", en: "Learned")
     public static let doneToday = L10nText(
         ko: "오늘 학습 완료!", ja: "今日の学習は完了！", zh: "今日学习完成！", en: "All done for today!")
