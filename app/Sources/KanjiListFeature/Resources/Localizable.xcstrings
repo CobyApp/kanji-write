@@ -2,6 +2,7 @@
   "sourceLanguage" : "ja",
   "strings" : {
     "漢字" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -24,6 +25,7 @@
       }
     },
     "読み込み失敗" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

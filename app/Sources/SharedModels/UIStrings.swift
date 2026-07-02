@@ -90,6 +90,11 @@ public enum L {
     public static let dailyReminder = L10nText(ko: "매일 리마인더", ja: "毎日のリマインダー", zh: "每日提醒", en: "Daily reminder")
     public static let time = L10nText(ko: "시각", ja: "時刻", zh: "时间", en: "Time")
     public static let newPerDay = L10nText(ko: "하루 새 한자", ja: "1日の新しい漢字", zh: "每日新汉字", en: "New kanji / day")
+    public static let studyPlan = L10nText(ko: "학습 플랜", ja: "学習プラン", zh: "学习计划", en: "Study plan")
+    public static let targetLevel = L10nText(ko: "목표 레벨", ja: "目標レベル", zh: "目标等级", en: "Target level")
+    public static let left = L10nText(ko: "남음", ja: "残り", zh: "剩余", en: "left")
+    public static let daysUnit = L10nText(ko: "일", ja: "日", zh: "天", en: "d")
+    public static let levelDone = L10nText(ko: "이 레벨 완료!", ja: "このレベル完了！", zh: "本等级完成！", en: "Level complete!")
     public static let notifDenied = L10nText(
         ko: "알림이 허용되지 않았습니다. 설정 앱에서 허용해 주세요.",
         ja: "通知が許可されていません。設定アプリで許可してください。",

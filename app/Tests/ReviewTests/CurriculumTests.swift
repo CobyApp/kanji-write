@@ -9,6 +9,27 @@ private func k(_ id: Int, strokes: Int, grade: Int?, jlpt: String?) -> Kanji {
 }
 
 final class CurriculumTests: XCTestCase {
+    func testStudyOrderScopedToLevel() {
+        let input = [k(1, strokes: 5, grade: 1, jlpt: "N5"),
+                     k(2, strokes: 3, grade: 1, jlpt: "N4"),
+                     k(3, strokes: 2, grade: 1, jlpt: "N5")]
+        // Only N5, ordered by strokes: id 3 (2str) then id 1 (5str).
+        XCTAssertEqual(studyOrder(input, level: "N5").map(\.id), [3, 1])
+        // nil level = all.
+        XCTAssertEqual(studyOrder(input, level: nil).count, 3)
+    }
+
+    func testRemainingNewAndDaysToFinish() {
+        let order = (1...10).map { k($0, strokes: 1, grade: 1, jlpt: "N5") }
+        let records = [ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: 0, lastReviewedDay: 0),
+                       ReviewRecord(kanjiID: 2, stability: 5, difficulty: 5, due: 0, lastReviewedDay: 0)]
+        XCTAssertEqual(remainingNew(order: order, records: records), 8)  // 10 - 2 tracked
+        XCTAssertEqual(daysToFinish(remaining: 8, perDay: 3), 3)   // ceil(8/3)
+        XCTAssertEqual(daysToFinish(remaining: 9, perDay: 3), 3)   // exact
+        XCTAssertEqual(daysToFinish(remaining: 0, perDay: 3), 0)
+        XCTAssertEqual(daysToFinish(remaining: 8, perDay: 0), 0)   // guard
+    }
+
     func testJLPTOrderThenStrokesThenID() {
         let input = [
             k(1, strokes: 10, grade: 1, jlpt: "N1"),
