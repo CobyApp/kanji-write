@@ -11,11 +11,11 @@ import TestMode
 import Worksheet
 import WritingCanvas
 
-/// The app shell. It adapts to the horizontal size class:
-/// - **regular** (iPad, full-width): a 3-column `NavigationSplitView` whose
-///   detail column is the navigation stack.
-/// - **compact** (iPhone, Slide Over): a bottom `TabView`, each tab a
-///   `NavigationStack` that drills kanji ↔ word ↔ writing to any depth.
+/// The app shell. Three destinations — 오늘 / 사전 / 설정 — plus a full-screen
+/// study session presented over everything. It adapts to the size class:
+/// - **regular** (iPad): a `NavigationSplitView` (sidebar destinations → content).
+/// - **compact** (iPhone): a bottom `TabView`.
+/// Both attach the same `.fullScreenCover` for the immersive study session.
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
@@ -36,10 +36,51 @@ public struct RootView: View {
         .tint(Palette.accent)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
         .task { store.send(.onAppear) }
+        .fullScreenCover(
+            item: $store.scope(state: \.session, action: \.session)
+        ) { sessionStore in
+            SessionCover(store: store, sessionStore: sessionStore)
+        }
     }
 }
 
-/// The shared destination builder for every navigation stack (both layouts).
+/// The full-screen study session: the mode view inside its own NavigationStack
+/// with a single ✕ that returns to Home. No sidebar/tabs while studying.
+private struct SessionCover: View {
+    let store: StoreOf<RootFeature>
+    let sessionStore: StoreOf<RootFeature.Session>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+
+    var body: some View {
+        NavigationStack {
+            sessionView(sessionStore)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button { store.send(.session(.dismiss)) } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 15, weight: .bold))
+                        }
+                        .accessibilityLabel(L.close[appLanguage])
+                    }
+                }
+        }
+        .tint(Palette.accent)
+    }
+}
+
+@ViewBuilder
+private func sessionView(_ store: StoreOf<RootFeature.Session>) -> some View {
+    switch store.case {
+    case let .worksheet(s):
+        WorksheetView(store: s)
+    case let .test(s):
+        TestView(store: s)
+    case let .practice(s):
+        PracticeView(store: s)
+    }
+}
+
+/// The shared destination builder for the dictionary navigation stack.
 @ViewBuilder
 func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
     switch store.case {
@@ -55,141 +96,95 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
     }
 }
 
-// MARK: - Regular width (iPad): 3-column split view
+// MARK: - Regular width (iPad): split view
 
 struct RegularRootView: View {
     @Bindable var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
-    private var sidebarBinding: Binding<RootFeature.SidebarSelection?> {
-        Binding(get: { store.sidebar }, set: { store.send(.sidebarSelected($0)) })
-    }
-
-    private var searchBinding: Binding<String> {
-        Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
+    private var destinationBinding: Binding<RootFeature.Destination?> {
+        Binding(
+            get: { store.destination },
+            set: { if let d = $0 { store.send(.destinationSelected(d)) } })
     }
 
     var body: some View {
         NavigationSplitView {
-            sidebar
+            List(selection: destinationBinding) {
+                Label(L.today[appLanguage], systemImage: "sun.max")
+                    .tag(RootFeature.Destination.home)
+                Label(L.dictionary[appLanguage], systemImage: "character.book.closed")
+                    .tag(RootFeature.Destination.dictionary)
+                Label(L.settings[appLanguage], systemImage: "gearshape")
+                    .tag(RootFeature.Destination.settings)
+            }
+            .navigationTitle("漢字")
         } detail: {
+            detailColumn
+        }
+    }
+
+    @ViewBuilder private var detailColumn: some View {
+        switch store.destination {
+        case .home:
+            HomeView(store: store)
+        case .dictionary:
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                mainColumn
-                    .navigationBarTitleDisplayMode(.inline)
+                DictionaryColumn(store: store)
             } destination: { store in
                 pathDestination(store)
             }
-        }
-    }
-
-    private var sidebar: some View {
-        List(selection: sidebarBinding) {
-            Section {
-                Label(L.study[appLanguage], systemImage: "pencil.and.outline")
-                    .tag(RootFeature.SidebarSelection.study)
-                Label(L.practice[appLanguage], systemImage: "square.grid.3x3")
-                    .tag(RootFeature.SidebarSelection.practice)
-                Label(L.test[appLanguage], systemImage: "checkmark.circle")
-                    .tag(RootFeature.SidebarSelection.test)
-                Label(L.words[appLanguage], systemImage: "character.book.closed")
-                    .tag(RootFeature.SidebarSelection.words)
-            }
-            Section(L.browse[appLanguage]) {
-                ForEach(levels()) { level in
-                    let count = kanjiIn(store.review.kanji.elements, in: level).count
-                    HStack {
-                        Text(level.label).font(.kawaii(16, weight: .semibold))
-                        Spacer()
-                        Text("\(count)").font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
-                    }
-                    .tag(RootFeature.SidebarSelection.level(level.id))
-                }
-            }
-            Section {
-                Label(L.settings[appLanguage], systemImage: "gearshape")
-                    .tag(RootFeature.SidebarSelection.settings)
-            }
-        }
-        .navigationTitle(L.kanji[appLanguage])
-        .searchable(text: searchBinding, placement: .sidebar, prompt: L.searchPrompt[appLanguage])
-    }
-
-    @ViewBuilder private var mainColumn: some View {
-        if !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
-            KanjiCardList(
-                items: store.review.kanji.elements.filter { searchMatches($0, store.searchText) },
-                onSelect: { store.send(.kanjiSelected($0)) })
-                .navigationTitle(L.search[appLanguage])
-        } else {
-            switch store.sidebar {
-            case .study, .none:
-                WorksheetView(store: store.scope(state: \.worksheet, action: \.worksheet))
-            case .practice:
-                PracticeView(store: store.scope(state: \.practice, action: \.practice))
-            case .test:
-                TestView(store: store.scope(state: \.test, action: \.test))
-            case .words:
-                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
-            case .settings:
+        case .settings:
+            NavigationStack {
                 ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
-            case let .level(id):
-                let level = levels().first { $0.id == id }
-                KanjiCardList(
-                    items: level.map { kanjiIn(store.review.kanji.elements, in: $0) } ?? [],
-                    onSelect: { store.send(.kanjiSelected($0)) })
-                    .navigationTitle(level?.label ?? L.browse[appLanguage])
             }
         }
     }
 }
 
-// MARK: - Compact width (iPhone): tab bar + navigation stacks
+// MARK: - Compact width (iPhone): tab bar
 
 struct CompactRootView: View {
     @Bindable var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
-    private var tabBinding: Binding<RootFeature.Tab> {
-        Binding(get: { store.tab }, set: { store.send(.tabSelected($0)) })
+    private var tabBinding: Binding<RootFeature.Destination> {
+        Binding(get: { store.destination }, set: { store.send(.destinationSelected($0)) })
     }
 
     var body: some View {
         TabView(selection: tabBinding) {
             NavigationStack {
-                WorksheetView(store: store.scope(state: \.worksheet, action: \.worksheet))
+                HomeView(store: store)
             }
-            .tag(RootFeature.Tab.study)
-            .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
-
-            // 練習 (writing notebook) is iPad-only — omitted on iPhone.
-            NavigationStack {
-                TestView(store: store.scope(state: \.test, action: \.test))
-            }
-            .tag(RootFeature.Tab.test)
-            .tabItem { Label(L.test[appLanguage], systemImage: "checkmark.circle") }
+            .tag(RootFeature.Destination.home)
+            .tabItem { Label(L.today[appLanguage], systemImage: "sun.max") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                BrowseColumn(store: store)
+                DictionaryColumn(store: store)
             } destination: { store in
                 pathDestination(store)
             }
-            .tag(RootFeature.Tab.browse)
-            .tabItem { Label(L.browse[appLanguage], systemImage: "square.grid.2x2") }
+            .tag(RootFeature.Destination.dictionary)
+            .tabItem { Label(L.dictionary[appLanguage], systemImage: "character.book.closed") }
 
             NavigationStack {
                 ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
             }
-            .tag(RootFeature.Tab.settings)
+            .tag(RootFeature.Destination.settings)
             .tabItem { Label(L.settings[appLanguage], systemImage: "gearshape") }
         }
     }
 }
 
-/// The compact 一覧 tab root: a level drill-down (or search results). Tapping a
-/// level opens its kanji list on the stack.
-private struct BrowseColumn: View {
+// MARK: - Dictionary
+
+/// The 사전 root: level browse + search, with a segmented toggle to the 단어장
+/// (wordbook). Tapping a level opens its kanji list; tapping a kanji/word drills.
+private struct DictionaryColumn: View {
     @Bindable var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @State private var showWordbook = false
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
@@ -200,43 +195,54 @@ private struct BrowseColumn: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
+            Palette.background.ignoresSafeArea()
             if searching {
                 KanjiCardList(
                     items: store.review.kanji.elements.filter { searchMatches($0, store.searchText) },
                     onSelect: { store.send(.kanjiSelected($0)) })
+            } else if showWordbook {
+                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
             } else {
                 levelList
             }
         }
-        .navigationTitle(L.browse[appLanguage])
+        .navigationTitle(L.dictionary[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .searchable(text: searchBinding, prompt: L.searchPrompt[appLanguage])
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Picker("", selection: $showWordbook) {
+                    Text(L.kanji[appLanguage]).tag(false)
+                    Text(L.words[appLanguage]).tag(true)
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 220)
+            }
+        }
     }
 
     private var levelList: some View {
-        ZStack {
-            Palette.background.ignoresSafeArea()
-            ScrollView {
-                LazyVStack(spacing: 10) {
-                    ForEach(levels()) { level in
-                        let count = kanjiIn(store.review.kanji.elements, in: level).count
-                        Button { store.send(.levelSelected(level)) } label: {
-                            HStack(spacing: 14) {
-                                Text(level.label)
-                                    .font(.kawaii(17, weight: .semibold)).foregroundStyle(Palette.ink)
-                                Spacer()
-                                Text("\(count)").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(Palette.inkSoft)
-                            }
-                            .roundedCard()
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                ForEach(levels()) { level in
+                    let count = kanjiIn(store.review.kanji.elements, in: level).count
+                    Button { store.send(.levelSelected(level)) } label: {
+                        HStack(spacing: 14) {
+                            Text(level.label)
+                                .font(.kawaii(17, weight: .semibold)).foregroundStyle(Palette.ink)
+                            Spacer()
+                            Text("\(count)").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Palette.inkSoft)
                         }
-                        .buttonStyle(.plain)
+                        .roundedCard()
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(16)
             }
+            .padding(16)
         }
     }
 }
