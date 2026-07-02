@@ -17,10 +17,10 @@ public struct WordDetailView: View {
             Palette.background.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    header
-                    if !store.kanji.isEmpty { kanjiSection }
-                    tracingSection
-                    if !store.sentences.isEmpty { sentencesSection }
+                    header.popIn(delay: 0.02)
+                    if !store.kanji.isEmpty { kanjiSection.popIn(delay: 0.10) }
+                    tracingSection.popIn(delay: 0.16)
+                    if !store.sentences.isEmpty { sentencesSection.popIn(delay: 0.22) }
                 }
                 .padding(16)
             }
