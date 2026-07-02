@@ -71,6 +71,20 @@ extension DictionaryClient: DependencyKey {
                 return result
             }
         },
+        allGlosses: {
+            let queue = try openBundledDatabase()
+            return try await queue.read { db in
+                var result: [Int: [String: String]] = [:]
+                for row in try Row.fetchAll(
+                    db, sql: "SELECT kanji_id, lang, GROUP_CONCAT(text, '; ') AS text FROM gloss GROUP BY kanji_id, lang"
+                ) {
+                    let id: Int = row["kanji_id"]
+                    let lang: String = row["lang"]
+                    result[id, default: [:]][lang] = row["text"]
+                }
+                return result
+            }
+        },
         words: { kanjiID, limit in
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [WordEntry] in

@@ -22,11 +22,13 @@ final class ReviewFeatureTests: XCTestCase {
             $0.date = .constant(Date(timeIntervalSince1970: day))
             $0.reviewStore.loadRecords = { [] }
             $0.dictionaryClient.allKanji = { [.make(1, "山"), .make(2, "学")] }
+            $0.dictionaryClient.allGlosses = { [1: ["ko": "메 산"]] }
         }
         await store.send(.onAppear) { $0.isLoading = true }
-        await store.receive(.loaded([], [.make(1, "山"), .make(2, "学")], 100)) {
+        await store.receive(.loaded([], [.make(1, "山"), .make(2, "学")], 100, [1: ["ko": "메 산"]])) {
             $0.isLoading = false
             $0.kanji = [.make(1, "山"), .make(2, "学")]
+            $0.glosses = [1: ["ko": "메 산"]]
             $0.today = 100
         }
     }

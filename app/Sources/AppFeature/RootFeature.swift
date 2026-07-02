@@ -98,7 +98,8 @@ public struct RootFeature {
             case let .levelSelected(level):
                 let items = kanjiIn(state.review.kanji.elements, in: level)
                 state.path.append(
-                    .kanjiList(KanjiListPathFeature.State(title: level.label, kanji: items)))
+                    .kanjiList(KanjiListPathFeature.State(
+                        title: level.label, kanji: items, glosses: state.review.glosses)))
                 return .none
 
             case let .wordReview(.wordTapped(word)):
