@@ -67,7 +67,6 @@ public enum L {
     public static let reviewSub = L10nText(ko: "복습할 시간", ja: "復習の時間", zh: "复习时间", en: "Time to review")
     public static let practiceSub = L10nText(ko: "자유롭게 써보기", ja: "自由に書いて練習", zh: "自由书写练习", en: "Free writing")
     public static let allCaughtUp = L10nText(ko: "복습 완료!", ja: "復習は完了！", zh: "复习完成！", en: "All caught up!")
-    public static let ofDaily = L10nText(ko: "오늘 목표", ja: "今日の目標", zh: "今日目标", en: "of today")
 
     // Grades (FSRS)
     public static let gradeAgain = L10nText(ko: "다시", ja: "もう一度", zh: "再来", en: "Again")
