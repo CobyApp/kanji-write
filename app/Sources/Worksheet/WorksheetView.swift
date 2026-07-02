@@ -24,6 +24,14 @@ private func localizedTranslation(_ translations: [String: String], _ language: 
     return translations.values.first(where: { !$0.isEmpty })
 }
 
+/// The kanji's own meaning for the selected language, falling back deterministically.
+private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage) -> String? {
+    for key in [language.glossKey, "en", "ja", "ko", "zh"] {
+        if let value = glosses[key], !value.isEmpty { return value }
+    }
+    return glosses.values.first(where: { !$0.isEmpty })
+}
+
 /// A guided study-sheet (학습) for today's NEW kanji. For each kanji: write it
 /// once over the stroke-order guide, read one word that uses it, and one example
 /// sentence. Finishing schedules them all for review (initial FSRS record).
@@ -92,6 +100,14 @@ public struct WorksheetView: View {
     private func writeCard(_ kanji: Kanji) -> some View {
         VStack(spacing: 12) {
             SectionHeader(L.worksheetWrite[appLanguage], accent: Palette.mint)
+            // The kanji's own meaning (뜻) in the selected language, so a learner
+            // knows what they are writing.
+            if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
+                Text(meaning)
+                    .font(.kawaii(20, weight: .bold, language: appLanguage))
+                    .foregroundStyle(Palette.ink)
+                    .multilineTextAlignment(.center)
+            }
             // Show the stroke order animated (how to write).
             if store.strokePaths.isEmpty {
                 PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,

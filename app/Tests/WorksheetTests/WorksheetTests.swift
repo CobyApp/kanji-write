@@ -56,6 +56,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
             $0.dictionaryClient.words = { _, _ in [] }
             $0.dictionaryClient.sentences = { _, _ in [] }
             $0.dictionaryClient.strokeOrder = { _ in [] }
+            $0.dictionaryClient.glosses = { _ in [:] }
         }
         store.exhaustivity = .off
 
@@ -83,6 +84,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
             $0.dictionaryClient.words = { _, _ in [] }
             $0.dictionaryClient.sentences = { _, _ in [] }
             $0.dictionaryClient.strokeOrder = { _ in [] }
+            $0.dictionaryClient.glosses = { _ in [:] }
         }
         store.exhaustivity = .off
 
@@ -117,6 +119,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
             $0.dictionaryClient.words = { _, _ in [] }
             $0.dictionaryClient.sentences = { _, _ in [] }
             $0.dictionaryClient.strokeOrder = { _ in [] }
+            $0.dictionaryClient.glosses = { _ in [:] }
         }
         store.exhaustivity = .off
 
