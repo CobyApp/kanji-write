@@ -52,7 +52,7 @@ public struct ReminderView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.language[appLanguage], accent: Palette.lavender)
             Picker("Language", selection: $appLanguage) {
-                ForEach(AppLanguage.allCases, id: \.self) { language in
+                ForEach(AppLanguage.displayOrder, id: \.self) { language in
                     Text(language.label).tag(language)
                 }
             }

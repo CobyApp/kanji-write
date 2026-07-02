@@ -3,6 +3,11 @@
 public enum AppLanguage: String, CaseIterable, Sendable {
     case ko, ja, zh, en
 
+    /// Order for the language picker: Japanese first (the language being learned),
+    /// then Korean, Chinese, English. Distinct from `allCases` (declaration order)
+    /// so the picker can be reordered without affecting other iteration.
+    public static let displayOrder: [AppLanguage] = [.ja, .ko, .zh, .en]
+
     public var glossKey: String { rawValue }
 
     public var label: String {
