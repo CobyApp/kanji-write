@@ -91,24 +91,28 @@ public struct KanjiDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(L.words[appLanguage], accent: Palette.lavender)
             ForEach(store.words) { word in
-                Button { store.send(.wordTapped(word)) } label: {
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(word.surface)（\(word.reading)）")
-                                .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
-                            if let meaning = wordMeaning(word, appLanguage) {
-                                Text(meaning).font(.kawaii(13, language: appLanguage))
-                                    .foregroundStyle(Palette.inkSoft)
+                HStack(spacing: 8) {
+                    Button { store.send(.wordTapped(word)) } label: {
+                        HStack(spacing: 10) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(word.surface)（\(word.reading)）")
+                                    .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
+                                if let meaning = wordMeaning(word, appLanguage) {
+                                    Text(meaning).font(.kawaii(13, language: appLanguage))
+                                        .foregroundStyle(Palette.inkSoft)
+                                }
                             }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Palette.inkSoft)
                         }
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Palette.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .buttonStyle(.plain)
+                    SpeakButton(word.surface)
                 }
-                .buttonStyle(.plain)
             }
         }
         .roundedCard()
@@ -118,13 +122,17 @@ public struct KanjiDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.examples[appLanguage], accent: Palette.butter)
             ForEach(store.sentences) { sentence in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(sentence.textJa)
-                        .font(.kawaii(16)).foregroundStyle(Palette.ink)
-                    if let translation = localizedTranslation(sentence.translations, appLanguage) {
-                        Text(translation).font(.kawaii(14, language: appLanguage))
-                            .foregroundStyle(Palette.inkSoft)
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(sentence.textJa)
+                            .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                        if let translation = localizedTranslation(sentence.translations, appLanguage) {
+                            Text(translation).font(.kawaii(14, language: appLanguage))
+                                .foregroundStyle(Palette.inkSoft)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    SpeakButton(sentence.textJa)
                 }
             }
         }

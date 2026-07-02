@@ -38,10 +38,10 @@ public struct WorksheetFeature {
         /// Target JLPT level for the plan (from `@AppStorage("targetLevel")`); new
         /// kanji are drawn only from this level. nil = all levels.
         public var targetLevel: String? = "N5"
-        /// A word that uses the current kanji (the first returned), if any.
-        public var word: WordEntry?
-        /// An example sentence for the current kanji (the first returned), if any.
-        public var sentence: ExampleSentence?
+        /// Words that use the current kanji (a few, in commonness order).
+        public var words: [WordEntry] = []
+        /// Example sentences for the current kanji (a few).
+        public var sentences: [ExampleSentence] = []
         /// KanjiVG stroke-order guide (path `d` strings) for the current kanji.
         public var strokePaths: [String] = []
         /// Raw gloss map (lang code → meaning) for the current kanji; the view
@@ -69,7 +69,7 @@ public struct WorksheetFeature {
         case onAppear(newPerDay: Int, level: String?)
         case loaded([ReviewRecord], [Kanji], Int)
         case cardContentLoaded(
-            word: WordEntry?, sentence: ExampleSentence?, strokePaths: [String],
+            words: [WordEntry], sentences: [ExampleSentence], strokePaths: [String],
             glosses: [String: String])
         case nextTapped
         case doneTapped
@@ -110,9 +110,9 @@ public struct WorksheetFeature {
                 state.index = 0
                 return loadCardContent(state: &state)
 
-            case let .cardContentLoaded(word, sentence, strokePaths, glosses):
-                state.word = word
-                state.sentence = sentence
+            case let .cardContentLoaded(words, sentences, strokePaths, glosses):
+                state.words = words
+                state.sentences = sentences
                 state.strokePaths = strokePaths
                 state.glosses = glosses
                 return .none
@@ -120,8 +120,8 @@ public struct WorksheetFeature {
             case .nextTapped:
                 guard !state.isLast else { return .none }
                 state.index += 1
-                state.word = nil
-                state.sentence = nil
+                state.words = []
+                state.sentences = []
                 state.strokePaths = []
                 state.glosses = [:]
                 state.clearToken += 1
@@ -157,15 +157,15 @@ public struct WorksheetFeature {
         guard let kanji = state.current else { return .none }
         let id = kanji.id
         return .run { send in
-            async let wordsTask = try? await dictionaryClient.words(id, 1)
-            async let sentencesTask = try? await dictionaryClient.sentences(id, 1)
+            async let wordsTask = try? await dictionaryClient.words(id, 4)
+            async let sentencesTask = try? await dictionaryClient.sentences(id, 3)
             async let glossesTask = try? await dictionaryClient.glosses(id)
             let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
-            let word = (await wordsTask ?? []).first
-            let sentence = (await sentencesTask ?? []).first
+            let words = await wordsTask ?? []
+            let sentences = await sentencesTask ?? []
             let glosses = await glossesTask ?? [:]
             await send(.cardContentLoaded(
-                word: word, sentence: sentence, strokePaths: paths, glosses: glosses))
+                words: words, sentences: sentences, strokePaths: paths, glosses: glosses))
         }
     }
 }

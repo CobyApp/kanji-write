@@ -20,10 +20,12 @@ func localizedGloss(_ glosses: [String: String], _ language: AppLanguage) -> Str
     return nil
 }
 
-/// A sentence translation for the selected language, falling back deterministically.
-/// Skips empty strings.
+/// A sentence translation for the selected language. In Japanese mode the
+/// example is already Japanese, so we show no translation line (rather than
+/// falling back to English). Other languages fall back deterministically.
 func localizedTranslation(_ translations: [String: String], _ language: AppLanguage) -> String? {
-    for key in [language.glossKey, "en", "ko", "ja", "zh"] {
+    if language == .ja { return nil }
+    for key in [language.glossKey, "ko", "zh", "en"] {
         if let value = translations[key], !value.isEmpty { return value }
     }
     return nil

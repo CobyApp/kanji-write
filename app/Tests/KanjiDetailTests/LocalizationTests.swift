@@ -34,8 +34,11 @@ final class LocalizationTests: XCTestCase {
     func testLocalizedTranslationFallbackChain() {
         let tr = ["en": "It is high.", "ko": "높다."]
         XCTAssertEqual(localizedTranslation(tr, .ko), "높다.")
-        XCTAssertEqual(localizedTranslation(tr, .zh), "It is high.")  // selected absent → en
-        XCTAssertEqual(localizedTranslation(["ja": "高い。"], .zh), "高い。")  // → ... → ja
+        // Selected language absent → ko / zh / en fallback (ko before en).
+        XCTAssertEqual(localizedTranslation(tr, .zh), "높다.")
+        // Japanese mode never shows a translation line (the example is already
+        // Japanese), even when other translations exist.
+        XCTAssertNil(localizedTranslation(tr, .ja))
         XCTAssertNil(localizedTranslation([:], .ja))
     }
 

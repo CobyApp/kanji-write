@@ -16,12 +16,14 @@ private func wordMeaning(_ word: WordEntry, _ language: AppLanguage) -> String? 
     }
 }
 
-/// A sentence translation for the selected language, falling back deterministically.
+/// A sentence translation for the selected language. Japanese mode shows no
+/// translation (the example is already Japanese); others fall back to English.
 private func localizedTranslation(_ translations: [String: String], _ language: AppLanguage) -> String? {
-    for key in [language.glossKey, "en", "ko", "ja", "zh"] {
+    if language == .ja { return nil }
+    for key in [language.glossKey, "ko", "zh", "en"] {
         if let value = translations[key], !value.isEmpty { return value }
     }
-    return translations.values.first(where: { !$0.isEmpty })
+    return nil
 }
 
 /// The kanji's own meaning for the selected language, falling back deterministically.
@@ -41,6 +43,14 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var vSize
+
+    /// A 10-cell (5×2 or 2×5) tracing sheet that fills the width: landscape /
+    /// iPad → 5 columns × 2 rows; iPhone portrait → 2 columns × 5 rows.
+    private var traceColumns: Int {
+        if sizeClass == .regular { return 5 }
+        return vSize == .compact ? 5 : 2
+    }
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -115,12 +125,10 @@ public struct WorksheetView: View {
             } else {
                 StrokeOrderPlayer(paths: store.strokePaths, size: 150)
             }
-            // Trace the kanji over the guide. Fewer, larger cells on iPhone
-            // (finger) than on iPad (Apple Pencil).
+            // Trace the kanji 10 times over the guide — a 5×2 (or 2×5) sheet that
+            // fills the width and adapts to portrait / landscape.
             TracingGrid(glyph: kanji.literal, paths: store.strokePaths, showGuide: true,
-                        clearToken: store.clearToken,
-                        cellCount: sizeClass == .compact ? 4 : 6,
-                        minCell: sizeClass == .compact ? 84 : 108)
+                        clearToken: store.clearToken, cellCount: 10, columns: traceColumns)
         }
         .roundedCard()
     }
@@ -129,58 +137,66 @@ public struct WorksheetView: View {
 
     @ViewBuilder
     private var wordCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.worksheetWord[appLanguage], accent: Palette.lavender)
-            if let word = store.word {
-                // Tap the word to drill into its detail (and from there, its
-                // kanji) without leaving the study session.
-                Button { store.send(.wordTapped(word)) } label: {
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text(word.surface)
-                                    .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
-                                Text("（\(word.reading)）")
-                                    .font(.kawaii(15)).foregroundStyle(Palette.inkSoft)
-                            }
-                            if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
-                                Text(meaning)
-                                    .font(.kawaii(16, language: appLanguage))
-                                    .foregroundStyle(Palette.ink)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Palette.inkSoft)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(.plain)
-            } else {
+            if store.words.isEmpty {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
+            } else {
+                ForEach(store.words) { word in
+                    HStack(spacing: 8) {
+                        // Tap a word to drill into its detail (and from there, its
+                        // kanji) without leaving the study session.
+                        Button { store.send(.wordTapped(word)) } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                    Text(word.surface)
+                                        .font(.kawaii(20, weight: .bold)).foregroundStyle(Palette.ink)
+                                    Text("（\(word.reading)）")
+                                        .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                                }
+                                if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
+                                    Text(meaning)
+                                        .font(.kawaii(14, language: appLanguage))
+                                        .foregroundStyle(Palette.ink)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        SpeakButton(word.surface)
+                    }
+                }
             }
         }
         .roundedCard()
     }
 
-    // MARK: 3) One example sentence
+    // MARK: 3) Example sentences
 
     @ViewBuilder
     private var exampleCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.worksheetExample[appLanguage], accent: Palette.sky)
-            if let sentence = store.sentence {
-                Text(sentence.textJa)
-                    .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
-                if let translation = localizedTranslation(sentence.translations, appLanguage),
-                   !translation.isEmpty {
-                    Text(translation)
-                        .font(.kawaii(15, language: appLanguage))
-                        .foregroundStyle(Palette.inkSoft)
-                }
-            } else {
+            if store.sentences.isEmpty {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
+            } else {
+                ForEach(store.sentences) { sentence in
+                    HStack(alignment: .top, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(sentence.textJa)
+                                .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
+                            if let translation = localizedTranslation(sentence.translations, appLanguage),
+                               !translation.isEmpty {
+                                Text(translation)
+                                    .font(.kawaii(14, language: appLanguage))
+                                    .foregroundStyle(Palette.inkSoft)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        SpeakButton(sentence.textJa)
+                    }
+                }
             }
         }
         .roundedCard()
