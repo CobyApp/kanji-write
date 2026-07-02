@@ -51,6 +51,9 @@ public struct RootFeature {
         public var path = StackState<Path.State>()
         // The active full-screen study session, if any.
         @Presents public var session: Session.State?
+        // Navigation stack *inside* the study session (tapping a word/kanji while
+        // studying drills into its detail without leaving the session).
+        public var sessionPath = StackState<Path.State>()
 
         public init() {}
     }
@@ -68,6 +71,7 @@ public struct RootFeature {
         case startReview
         case startPractice
         case path(StackActionOf<Path>)
+        case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
     }
 
@@ -106,15 +110,47 @@ public struct RootFeature {
                 state.path.append(.word(WordDetailFeature.State(word: word)))
                 return .none
 
-            // Home session launchers → full-screen cover.
+            // Home session launchers → full-screen cover. Start each with a fresh
+            // in-session navigation stack.
             case .startStudy:
+                state.sessionPath.removeAll()
                 state.session = .worksheet(WorksheetFeature.State())
                 return .none
             case .startReview:
+                state.sessionPath.removeAll()
                 state.session = .test(TestFeature.State())
                 return .none
             case .startPractice:
+                state.sessionPath.removeAll()
                 state.session = .practice(PracticeFeature.State())
+                return .none
+
+            // Tapping a word / kanji while studying drills into its detail on the
+            // in-session stack (stays inside the full-screen session).
+            case let .session(.presented(.worksheet(.wordTapped(word)))):
+                state.sessionPath.append(.word(WordDetailFeature.State(word: word)))
+                return .none
+            case let .session(.presented(.worksheet(.kanjiTapped(kanji)))):
+                state.sessionPath.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
+                return .none
+            case .session(.dismiss):
+                state.sessionPath.removeAll()
+                return .none
+
+            // In-session drilling (word ↔ kanji ↔ writing), mirroring the
+            // dictionary stack.
+            case let .sessionPath(.element(id: _, action: .kanji(.wordTapped(word)))):
+                state.sessionPath.append(.word(WordDetailFeature.State(word: word)))
+                return .none
+            case let .sessionPath(.element(id: _, action: .word(.kanjiTapped(kanji)))):
+                state.sessionPath.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
+                return .none
+            case let .sessionPath(.element(id: _, action: .kanjiList(.kanjiTapped(kanji)))):
+                state.sessionPath.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
+                return .none
+            case let .sessionPath(.element(id: id, action: .kanji(.writeTapped))):
+                guard case let .kanji(detail)? = state.sessionPath[id: id] else { return .none }
+                state.sessionPath.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 return .none
 
             // Dictionary drill routing.
@@ -132,11 +168,12 @@ public struct RootFeature {
                 state.path.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 return .none
 
-            case .review, .wordReview, .reminder, .path, .session:
+            case .review, .wordReview, .reminder, .path, .sessionPath, .session:
                 return .none
             }
         }
         .forEach(\.path, action: \.path)
+        .forEach(\.sessionPath, action: \.sessionPath)
         .ifLet(\.$session, action: \.session)
     }
 }
