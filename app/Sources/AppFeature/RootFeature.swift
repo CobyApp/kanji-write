@@ -1,16 +1,21 @@
 import ComposableArchitecture
 import KanjiDetail
 import KanjiListFeature
+import Practice
 import Reminders
 import Review
 import SharedModels
+import TestMode
+import Worksheet
 import WritingCanvas
 
 @Reducer
 public struct RootFeature {
     /// Which sidebar item is selected (regular width). `.level` carries a `KanjiLevel.id`.
     public enum SidebarSelection: Hashable, Sendable {
-        case study
+        case study     // 学習: worksheet for new kanji
+        case practice  // 練習: free repetition writing
+        case test      // テスト: FSRS flashcard quiz
         case words
         case settings
         case level(String)
@@ -18,8 +23,9 @@ public struct RootFeature {
 
     /// The bottom-tab selection on compact width (iPhone).
     public enum Tab: Hashable, Sendable {
-        case study
-        case words
+        case study     // worksheet
+        case practice
+        case test
         case browse
         case settings
     }
@@ -40,6 +46,10 @@ public struct RootFeature {
         public var review = ReviewFeature.State()
         // The wordbook + its own (word-only) FSRS review.
         public var wordReview = WordReviewFeature.State()
+        // The three study modes.
+        public var worksheet = WorksheetFeature.State()
+        public var practice = PracticeFeature.State()
+        public var test = TestFeature.State()
         // Settings (new-per-day / language / reminder).
         public var reminder = ReminderFeature.State()
 
@@ -60,6 +70,9 @@ public struct RootFeature {
         case onAppear
         case review(ReviewFeature.Action)
         case wordReview(WordReviewFeature.Action)
+        case worksheet(WorksheetFeature.Action)
+        case practice(PracticeFeature.Action)
+        case test(TestFeature.Action)
         case reminder(ReminderFeature.Action)
         case sidebarSelected(SidebarSelection?)
         case tabSelected(Tab)
@@ -74,6 +87,9 @@ public struct RootFeature {
     public var body: some ReducerOf<Self> {
         Scope(state: \.review, action: \.review) { ReviewFeature() }
         Scope(state: \.wordReview, action: \.wordReview) { WordReviewFeature() }
+        Scope(state: \.worksheet, action: \.worksheet) { WorksheetFeature() }
+        Scope(state: \.practice, action: \.practice) { PracticeFeature() }
+        Scope(state: \.test, action: \.test) { TestFeature() }
         Scope(state: \.reminder, action: \.reminder) { ReminderFeature() }
         Reduce { state, action in
             switch action {
@@ -137,7 +153,7 @@ public struct RootFeature {
                 state.path.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 return .none
 
-            case .review, .wordReview, .reminder, .path:
+            case .review, .wordReview, .worksheet, .practice, .test, .reminder, .path:
                 return .none
             }
         }

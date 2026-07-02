@@ -2,10 +2,13 @@ import ComposableArchitecture
 import DesignSystem
 import KanjiDetail
 import KanjiListFeature
+import Practice
 import Reminders
 import Review
 import SharedModels
 import SwiftUI
+import TestMode
+import Worksheet
 import WritingCanvas
 
 /// The app shell. It adapts to the horizontal size class:
@@ -91,6 +94,10 @@ struct RegularRootView: View {
             Section {
                 Label(L.study[appLanguage], systemImage: "pencil.and.outline")
                     .tag(RootFeature.SidebarSelection.study)
+                Label(L.practice[appLanguage], systemImage: "square.grid.3x3")
+                    .tag(RootFeature.SidebarSelection.practice)
+                Label(L.test[appLanguage], systemImage: "checkmark.circle")
+                    .tag(RootFeature.SidebarSelection.test)
                 Label(L.words[appLanguage], systemImage: "character.book.closed")
                     .tag(RootFeature.SidebarSelection.words)
             }
@@ -123,7 +130,11 @@ struct RegularRootView: View {
         } else {
             switch store.sidebar {
             case .study, .none:
-                StudyHubView(reviewStore: store.scope(state: \.review, action: \.review))
+                WorksheetView(store: store.scope(state: \.worksheet, action: \.worksheet))
+            case .practice:
+                PracticeView(store: store.scope(state: \.practice, action: \.practice))
+            case .test:
+                TestView(store: store.scope(state: \.test, action: \.test))
             case .words:
                 WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
             case .settings:
@@ -151,21 +162,23 @@ struct CompactRootView: View {
 
     var body: some View {
         TabView(selection: tabBinding) {
-            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                StudyHubView(reviewStore: store.scope(state: \.review, action: \.review))
-            } destination: { store in
-                pathDestination(store)
+            NavigationStack {
+                WorksheetView(store: store.scope(state: \.worksheet, action: \.worksheet))
             }
             .tag(RootFeature.Tab.study)
             .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
 
-            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
-            } destination: { store in
-                pathDestination(store)
+            NavigationStack {
+                PracticeView(store: store.scope(state: \.practice, action: \.practice))
             }
-            .tag(RootFeature.Tab.words)
-            .tabItem { Label(L.words[appLanguage], systemImage: "character.book.closed") }
+            .tag(RootFeature.Tab.practice)
+            .tabItem { Label(L.practice[appLanguage], systemImage: "square.grid.3x3") }
+
+            NavigationStack {
+                TestView(store: store.scope(state: \.test, action: \.test))
+            }
+            .tag(RootFeature.Tab.test)
+            .tabItem { Label(L.test[appLanguage], systemImage: "checkmark.circle") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 BrowseColumn(store: store)

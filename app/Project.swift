@@ -82,6 +82,9 @@ let project = Project(
                 .target(name: "KanjiDetail"),
                 .target(name: "Review"),
                 .target(name: "Reminders"),
+                .target(name: "Worksheet"),
+                .target(name: "Practice"),
+                .target(name: "TestMode"),
                 .target(name: "DesignSystem"),
                 .external(name: "ComposableArchitecture"),
             ]
@@ -137,6 +140,31 @@ let project = Project(
             dependencies: [.target(name: "KanjiDetail")]
         ),
         .target(
+            name: "Practice",
+            destinations: [.iPhone, .iPad],
+            product: .staticFramework,
+            bundleId: "com.cobyapp.kanjiwrite.practice",
+            deploymentTargets: iOS,
+            sources: ["Sources/Practice/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+                .target(name: "DictionaryClient"),
+                .target(name: "WritingCanvas"),
+                .target(name: "Review"),
+                .target(name: "DesignSystem"),
+                .external(name: "ComposableArchitecture"),
+            ]
+        ),
+        .target(
+            name: "PracticeTests",
+            destinations: [.iPhone, .iPad],
+            product: .unitTests,
+            bundleId: "com.cobyapp.kanjiwrite.practicetests",
+            deploymentTargets: iOS,
+            sources: ["Tests/PracticeTests/**"],
+            dependencies: [.target(name: "Practice")]
+        ),
+        .target(
             name: "Review",
             destinations: [.iPhone, .iPad],
             product: .staticFramework,
@@ -182,6 +210,56 @@ let project = Project(
             deploymentTargets: iOS,
             sources: ["Tests/RemindersTests/**"],
             dependencies: [.target(name: "Reminders")]
+        ),
+        .target(
+            name: "TestMode",
+            destinations: [.iPhone, .iPad],
+            product: .staticFramework,
+            bundleId: "com.cobyapp.kanjiwrite.testmode",
+            deploymentTargets: iOS,
+            sources: ["Sources/TestMode/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+                .target(name: "DictionaryClient"),
+                .target(name: "WritingCanvas"),
+                .target(name: "Review"),
+                .target(name: "DesignSystem"),
+                .external(name: "ComposableArchitecture"),
+            ]
+        ),
+        .target(
+            name: "TestModeTests",
+            destinations: [.iPhone, .iPad],
+            product: .unitTests,
+            bundleId: "com.cobyapp.kanjiwrite.testmodetests",
+            deploymentTargets: iOS,
+            sources: ["Tests/TestModeTests/**"],
+            dependencies: [.target(name: "TestMode")]
+        ),
+        .target(
+            name: "Worksheet",
+            destinations: [.iPhone, .iPad],
+            product: .staticFramework,
+            bundleId: "com.cobyapp.kanjiwrite.worksheet",
+            deploymentTargets: iOS,
+            sources: ["Sources/Worksheet/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+                .target(name: "DictionaryClient"),
+                .target(name: "WritingCanvas"),
+                .target(name: "Review"),
+                .target(name: "DesignSystem"),
+                .external(name: "ComposableArchitecture"),
+            ]
+        ),
+        .target(
+            name: "WorksheetTests",
+            destinations: [.iPhone, .iPad],
+            product: .unitTests,
+            bundleId: "com.cobyapp.kanjiwrite.worksheettests",
+            deploymentTargets: iOS,
+            sources: ["Tests/WorksheetTests/**"],
+            dependencies: [.target(name: "Worksheet")]
         ),
         .target(
             name: "AppFeatureTests",
@@ -242,6 +320,9 @@ let project = Project(
                 "AppFeatureTests",
                 "ReviewTests",
                 "RemindersTests",
+                "PracticeTests",
+                "TestModeTests",
+                "WorksheetTests",
             ]),
             // The iOS 27 beta device + Xcode 26.5 toolchain mismatch makes the
             // injected debug dylibs (Main Thread Checker / Thread Performance
