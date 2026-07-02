@@ -44,6 +44,9 @@ public struct WorksheetFeature {
         public var sentence: ExampleSentence?
         /// KanjiVG stroke-order guide (path `d` strings) for the current kanji.
         public var strokePaths: [String] = []
+        /// Raw gloss map (lang code → meaning) for the current kanji; the view
+        /// resolves the display meaning per app-language with a fallback.
+        public var glosses: [String: String] = [:]
         /// Bumped whenever the write canvas should reset to a blank page.
         public var clearToken = 0
         /// Never-seen kanji remaining in the target level (for the finish estimate).
@@ -65,7 +68,9 @@ public struct WorksheetFeature {
     public enum Action: Equatable {
         case onAppear(newPerDay: Int, level: String?)
         case loaded([ReviewRecord], [Kanji], Int)
-        case cardContentLoaded(word: WordEntry?, sentence: ExampleSentence?, strokePaths: [String])
+        case cardContentLoaded(
+            word: WordEntry?, sentence: ExampleSentence?, strokePaths: [String],
+            glosses: [String: String])
         case nextTapped
         case doneTapped
     }
@@ -103,10 +108,11 @@ public struct WorksheetFeature {
                 state.index = 0
                 return loadCardContent(state: &state)
 
-            case let .cardContentLoaded(word, sentence, strokePaths):
+            case let .cardContentLoaded(word, sentence, strokePaths, glosses):
                 state.word = word
                 state.sentence = sentence
                 state.strokePaths = strokePaths
+                state.glosses = glosses
                 return .none
 
             case .nextTapped:
@@ -115,6 +121,7 @@ public struct WorksheetFeature {
                 state.word = nil
                 state.sentence = nil
                 state.strokePaths = []
+                state.glosses = [:]
                 state.clearToken += 1
                 return loadCardContent(state: &state)
 
@@ -147,10 +154,13 @@ public struct WorksheetFeature {
         return .run { send in
             async let wordsTask = try? await dictionaryClient.words(id, 1)
             async let sentencesTask = try? await dictionaryClient.sentences(id, 1)
+            async let glossesTask = try? await dictionaryClient.glosses(id)
             let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
             let word = (await wordsTask ?? []).first
             let sentence = (await sentencesTask ?? []).first
-            await send(.cardContentLoaded(word: word, sentence: sentence, strokePaths: paths))
+            let glosses = await glossesTask ?? [:]
+            await send(.cardContentLoaded(
+                word: word, sentence: sentence, strokePaths: paths, glosses: glosses))
         }
     }
 }
