@@ -41,3 +41,21 @@ private func orderRank(_ k: Kanji) -> (level: Int, strokes: Int, id: Int) {
     let level = ["N5": 0, "N4": 1, "N3": 2, "N2": 3, "N1": 4][k.jlptLevel ?? ""] ?? 99
     return (level, k.strokeCount, k.id)
 }
+
+/// Study order scoped to a single JLPT level (nil = all levels).
+public func studyOrder(_ kanji: [Kanji], level: String?) -> [Kanji] {
+    guard let level else { return studyOrder(kanji) }
+    return studyOrder(kanji.filter { $0.jlptLevel == level })
+}
+
+/// How many kanji in `order` have not been started yet (no review record).
+public func remainingNew(order: [Kanji], records: [ReviewRecord]) -> Int {
+    let known = Set(records.map(\.kanjiID))
+    return order.filter { !known.contains($0.id) }.count
+}
+
+/// Days to finish `remaining` new kanji at `perDay` per day (round up).
+public func daysToFinish(remaining: Int, perDay: Int) -> Int {
+    guard perDay > 0 else { return 0 }
+    return (remaining + perDay - 1) / perDay
+}

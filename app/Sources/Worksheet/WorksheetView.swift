@@ -1,6 +1,6 @@
 import ComposableArchitecture
 import DesignSystem
-import PencilKit
+import Review
 import SharedModels
 import SwiftUI
 import WritingCanvas
@@ -29,9 +29,10 @@ private func localizedTranslation(_ translations: [String: String], _ language: 
 /// sentence. Finishing schedules them all for review (initial FSRS record).
 public struct WorksheetView: View {
     @Bindable public var store: StoreOf<WorksheetFeature>
-    @State private var drawing = PKDrawing()
     @AppStorage("newPerDay") private var newPerDay = 7
+    @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -43,8 +44,7 @@ public struct WorksheetView: View {
             content
         }
         .navigationTitle(L.study[appLanguage])
-        .task { store.send(.onAppear(newPerDay: newPerDay)) }
-        .onChange(of: store.clearToken) { _, _ in drawing = PKDrawing() }
+        .task { store.send(.onAppear(newPerDay: newPerDay, level: targetLevel)) }
     }
 
     @ViewBuilder
@@ -70,12 +70,19 @@ public struct WorksheetView: View {
     // MARK: Progress
 
     private var progressCard: some View {
-        HStack(spacing: 8) {
-            SectionHeader(L.toLearn[appLanguage], accent: Palette.butter)
-            Spacer()
-            Text("\(min(store.index + 1, store.queue.count)) / \(store.queue.count)")
-                .font(.kawaii(15, weight: .bold)).monospacedDigit()
-                .foregroundStyle(Palette.inkSoft)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                SectionHeader(L.toLearn[appLanguage], accent: Palette.butter)
+                Spacer()
+                Text("\(min(store.index + 1, store.queue.count)) / \(store.queue.count)")
+                    .font(.kawaii(15, weight: .bold)).monospacedDigit()
+                    .foregroundStyle(Palette.inkSoft)
+            }
+            // Plan summary: level · N/day · remaining · ~days to finish.
+            Text("\(targetLevel) · \(newPerDay)/\(L.daysUnit[appLanguage]) · "
+                + "\(store.remaining) \(L.left[appLanguage]) · "
+                + "~\(daysToFinish(remaining: store.remaining, perDay: newPerDay))\(L.daysUnit[appLanguage])")
+                .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
         }
         .roundedCard()
     }
@@ -85,29 +92,17 @@ public struct WorksheetView: View {
     private func writeCard(_ kanji: Kanji) -> some View {
         VStack(spacing: 12) {
             SectionHeader(L.worksheetWrite[appLanguage], accent: Palette.mint)
-            // Show the stroke order animated (how to write), then trace below.
+            // Show the stroke order animated (how to write).
             if store.strokePaths.isEmpty {
                 PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
                            size: 96, fontSize: 60)
             } else {
                 StrokeOrderPlayer(paths: store.strokePaths, size: 150)
             }
-            ZStack {
-                GuideStrokes(paths: store.strokePaths)
-                PencilCanvasView(drawing: $drawing)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .background(Palette.card)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Palette.mint.opacity(0.35), lineWidth: 1.5))
-            HStack {
-                Spacer()
-                Button(L.clearWriting[appLanguage]) { drawing = PKDrawing() }
-                    .font(.kawaii(13, weight: .bold))
-                    .foregroundStyle(Palette.pink)
-                    .disabled(drawing.strokes.isEmpty)
+            // Tracing is an iPad / Apple-Pencil activity; iPhone just watches.
+            if sizeClass != .compact {
+                TracingGrid(paths: store.strokePaths, showGuide: true,
+                            clearToken: store.clearToken, cellCount: 6)
             }
         }
         .roundedCard()

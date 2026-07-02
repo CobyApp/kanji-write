@@ -161,12 +161,7 @@ struct CompactRootView: View {
             .tag(RootFeature.Tab.study)
             .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
 
-            NavigationStack {
-                PracticeView(store: store.scope(state: \.practice, action: \.practice))
-            }
-            .tag(RootFeature.Tab.practice)
-            .tabItem { Label(L.practice[appLanguage], systemImage: "square.grid.3x3") }
-
+            // 練習 (writing notebook) is iPad-only — omitted on iPhone.
             NavigationStack {
                 TestView(store: store.scope(state: \.test, action: \.test))
             }
