@@ -29,17 +29,20 @@ public struct PracticeFeature {
         public var showGuide = true
         /// Incremented to force every canvas cell to reset (clear-all).
         public var clearToken = 0
+        /// How many write cells the notebook shows (grows by 10 on demand).
+        public var cellCount = 10
         public init() {}
     }
 
     public enum Action: Equatable {
-        case onAppear
-        case kanjiLoaded([Kanji])
+        case onAppear(selectedID: Int?)
+        case kanjiLoaded([Kanji], selectedID: Int?)
         case kanjiSelected(Kanji)
         case levelSelected(String)
         case strokesLoaded([String])
         case toggleGuide
         case clearAll
+        case addCells
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
@@ -49,19 +52,24 @@ public struct PracticeFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear:
+            case let .onAppear(selectedID):
                 // Reload only when empty so re-appearing keeps the selection.
                 guard state.kanji.isEmpty else { return .none }
                 return .run { send in
                     let all = (try? await dictionaryClient.allKanji()) ?? []
-                    await send(.kanjiLoaded(all))
+                    await send(.kanjiLoaded(all, selectedID: selectedID))
                 }
 
-            case let .kanjiLoaded(all):
+            case let .kanjiLoaded(all, selectedID):
                 state.kanji = IdentifiedArray(uniqueElements: all)
-                // Default to the first kanji of the current level so the notebook
-                // is usable immediately.
-                if state.selected == nil, let first = state.levelKanji.first {
+                guard state.selected == nil else { return .none }
+                // Restore the last-practiced kanji (jump to its level); otherwise
+                // default to the first kanji of the current level.
+                if let id = selectedID, let restored = state.kanji[id: id] {
+                    state.level = restored.jlptLevel ?? state.level
+                    return .send(.kanjiSelected(restored))
+                }
+                if let first = state.levelKanji.first {
                     return .send(.kanjiSelected(first))
                 }
                 return .none
@@ -78,6 +86,7 @@ public struct PracticeFeature {
                 state.selected = kanji
                 state.strokePaths = []
                 state.clearToken += 1  // fresh page when switching kanji
+                state.cellCount = 10   // reset the notebook length
                 let id = kanji.id
                 return .run { send in
                     let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
@@ -94,6 +103,10 @@ public struct PracticeFeature {
 
             case .clearAll:
                 state.clearToken += 1
+                return .none
+
+            case .addCells:
+                state.cellCount += 10
                 return .none
             }
         }

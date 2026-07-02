@@ -7,11 +7,13 @@ import WritingCanvas
 public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    /// The last-practiced kanji id, restored on next open (0 = none yet).
+    @AppStorage("practiceKanjiID") private var savedKanjiID = 0
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.verticalSizeClass) private var vSize
 
-    /// A 10-cell (5×2 or 2×5) notebook filling the width: landscape / iPad → 5
-    /// columns × 2 rows; iPhone portrait → 2 columns × 5 rows.
+    /// A responsive notebook filling the width: landscape / iPad → 5 columns;
+    /// iPhone portrait → 2 columns.
     private var traceColumns: Int {
         if sizeClass == .regular { return 5 }
         return vSize == .compact ? 5 : 2
@@ -40,12 +42,14 @@ public struct PracticeView: View {
             Button(store.showGuide ? L.hideGuide[appLanguage] : L.showGuide[appLanguage]) {
                 store.send(.toggleGuide)
             }
-            Button(L.clearWriting[appLanguage]) { store.send(.clearAll) }
         }
-        .task { store.send(.onAppear) }
+        .task { store.send(.onAppear(selectedID: savedKanjiID == 0 ? nil : savedKanjiID)) }
+        .onChange(of: store.selected?.id) { _, id in
+            if let id { savedKanjiID = id }  // remember the selection
+        }
     }
 
-    // MARK: - Kanji picker (horizontal strip of pastel tiles)
+    // MARK: - Kanji picker (horizontal strip of pastel tiles, auto-focused)
 
     private var levelBinding: Binding<String> {
         Binding(get: { store.level }, set: { store.send(.levelSelected($0)) })
@@ -60,30 +64,39 @@ public struct PracticeView: View {
                 }
             }
             .pickerStyle(.segmented)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(Array(store.levelKanji.enumerated()), id: \.element.id) { index, kanji in
-                        let tint = Palette.tint(index)
-                        Button { store.send(.kanjiSelected(kanji)) } label: {
-                            PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
-                                       size: 56, fontSize: 30)
-                                // strokeBorder draws inside the tile bounds so the
-                                // selection ring is never clipped by the card/scroll.
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .strokeBorder(store.selected?.id == kanji.id ? Palette.accent : Color.clear,
-                                                      lineWidth: 3))
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(Array(store.levelKanji.enumerated()), id: \.element.id) { index, kanji in
+                            let tint = Palette.tint(index)
+                            Button { store.send(.kanjiSelected(kanji)) } label: {
+                                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
+                                           size: 56, fontSize: 30)
+                                    // strokeBorder draws inside the tile bounds so the
+                                    // selection ring is never clipped by the card/scroll.
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                            .strokeBorder(store.selected?.id == kanji.id ? Palette.accent : Color.clear,
+                                                          lineWidth: 3))
+                            }
+                            .buttonStyle(.plain)
+                            .id(kanji.id)
                         }
-                        .buttonStyle(.plain)
                     }
+                    .padding(.vertical, 3)
                 }
-                .padding(.vertical, 3)
+                // Auto-scroll the strip to the selected kanji (restore / change).
+                .task(id: store.selected?.id) {
+                    guard let id = store.selected?.id else { return }
+                    try? await Task.sleep(nanoseconds: 150_000_000)
+                    withAnimation(.easeInOut) { proxy.scrollTo(id, anchor: .center) }
+                }
             }
         }
         .roundedCard()
     }
 
-    // MARK: - Notebook grid (responsive, fills width)
+    // MARK: - Notebook grid (responsive, fills width) + actions
 
     private var notebookCard: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -97,8 +110,27 @@ public struct PracticeView: View {
             }
             TracingGrid(glyph: store.selected?.literal ?? "", paths: store.strokePaths,
                         showGuide: store.showGuide, clearToken: store.clearToken,
-                        cellCount: 10, columns: traceColumns)
+                        cellCount: store.cellCount, columns: traceColumns)
+            HStack(spacing: 12) {
+                actionButton(L.clearWriting[appLanguage], "eraser", Palette.pink) {
+                    store.send(.clearAll)
+                }
+                actionButton(L.addCells[appLanguage], "plus", Palette.mint) {
+                    store.send(.addCells)
+                }
+            }
         }
         .roundedCard()
+    }
+
+    private func actionButton(_ label: String, _ icon: String, _ color: Color,
+                              _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(label, systemImage: icon)
+                .font(.kawaii(14, weight: .bold)).foregroundStyle(color)
+                .frame(maxWidth: .infinity).padding(.vertical, 10)
+                .background(color.opacity(0.14)).clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

@@ -142,6 +142,7 @@ public enum L {
     public static let pass = L10nText(ko: "합격", ja: "合格", zh: "通过", en: "Pass")
     public static let fail = L10nText(ko: "불합격", ja: "不合格", zh: "没记住", en: "Fail")
     public static let clearWriting = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
+    public static let addCells = L10nText(ko: "칸 10개 추가", ja: "10マス追加", zh: "添加10格", en: "Add 10")
     public static let worksheetWrite = L10nText(ko: "한자를 써보세요", ja: "漢字を書いてみよう", zh: "写一写这个汉字", en: "Write the kanji")
     public static let worksheetWord = L10nText(ko: "이 한자가 든 단어", ja: "この漢字を使う単語", zh: "含这个汉字的单词", en: "A word using it")
     public static let worksheetExample = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Example")
