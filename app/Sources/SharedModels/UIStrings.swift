@@ -114,6 +114,24 @@ public enum L {
         zh: "在单词详情中“加入单词本”保存后\n即可在此复习",
         en: "Save words with “Add to wordbook” in a word’s detail\nto review them here")
 
+    // Study modes (worksheet / practice / test)
+    public static let practice = L10nText(ko: "연습", ja: "練習", zh: "练习", en: "Practice")
+    public static let test = L10nText(ko: "시험", ja: "テスト", zh: "测验", en: "Test")
+    public static let next = L10nText(ko: "다음", ja: "次へ", zh: "下一个", en: "Next")
+    public static let done = L10nText(ko: "완료", ja: "完了", zh: "完成", en: "Done")
+    public static let showAnswer = L10nText(ko: "정답 보기", ja: "答えを見る", zh: "看答案", en: "Show answer")
+    public static let pass = L10nText(ko: "합격", ja: "合格", zh: "通过", en: "Pass")
+    public static let fail = L10nText(ko: "불합격", ja: "不合格", zh: "没记住", en: "Fail")
+    public static let clearWriting = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
+    public static let worksheetWrite = L10nText(ko: "한자를 써보세요", ja: "漢字を書いてみよう", zh: "写一写这个汉字", en: "Write the kanji")
+    public static let worksheetWord = L10nText(ko: "이 한자가 든 단어", ja: "この漢字を使う単語", zh: "含这个汉字的单词", en: "A word using it")
+    public static let worksheetExample = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Example")
+    public static let testPrompt = L10nText(ko: "뜻을 보고 한자를 써보세요", ja: "意味を見て漢字を書こう", zh: "根据意思写汉字", en: "Write the kanji for this meaning")
+    public static let practicePrompt = L10nText(ko: "반복해서 써보며 익히세요", ja: "繰り返し書いて覚えよう", zh: "反复书写来记住", en: "Write it repeatedly to memorize")
+    public static let pickToPractice = L10nText(ko: "연습할 한자를 고르세요", ja: "練習する漢字を選ぼう", zh: "选择要练习的汉字", en: "Pick a kanji to practice")
+    public static let nothingDue = L10nText(ko: "오늘 볼 시험이 없어요", ja: "今日のテストはありません", zh: "今天没有要测验的", en: "Nothing due today")
+    public static let noLessons = L10nText(ko: "오늘 배울 한자가 없어요", ja: "今日学ぶ漢字はありません", zh: "今天没有要学的汉字", en: "No new kanji today")
+
     // Writing
     public static let strokes = L10nText(ko: "획수", ja: "画数", zh: "笔画", en: "Strokes")
     public static let correct = L10nText(ko: "정답!", ja: "正解！", zh: "正确！", en: "Correct!")
