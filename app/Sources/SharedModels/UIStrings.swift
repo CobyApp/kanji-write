@@ -169,6 +169,16 @@ public enum L {
     // Practice — level filter
     public static let level = L10nText(ko: "급수", ja: "レベル", zh: "级别", en: "Level")
 
+    // Bookmarks
+    public static let bookmark = L10nText(ko: "북마크", ja: "ブックマーク", zh: "收藏", en: "Bookmark")
+    public static let bookmarks = L10nText(ko: "북마크", ja: "ブックマーク", zh: "收藏", en: "Bookmarks")
+    public static let noBookmarkedKanji = L10nText(
+        ko: "북마크한 한자가 없어요", ja: "ブックマークした漢字はありません",
+        zh: "还没有收藏的汉字", en: "No bookmarked kanji yet")
+    public static let noBookmarkedWords = L10nText(
+        ko: "저장한 단어가 없어요", ja: "保存した単語はありません",
+        zh: "还没有保存的单词", en: "No saved words yet")
+
     // Notification
     public static let notifTitle = L10nText(ko: "한자 연습", ja: "漢字の練習", zh: "汉字练习", en: "Kanji practice")
     public static let notifBody = L10nText(

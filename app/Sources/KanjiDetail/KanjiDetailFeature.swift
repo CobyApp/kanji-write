@@ -16,20 +16,24 @@ public struct KanjiDetailFeature {
         public var strokePaths: [String] = []
         public var isLoading = false
         public var addedToReview = false
+        public var isBookmarked = false
         public init(kanji: Kanji) { self.kanji = kanji }
     }
 
     public enum Action: Equatable {
         case onAppear
         case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String])
+        case bookmarkLoaded(Bool)
         case writeTapped
         case wordTapped(WordEntry)  // delegate → parent pushes the word detail
         case addToReview
         case markedAddedToReview
+        case toggleBookmark
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.reviewStore) var reviewStore
+    @Dependency(\.kanjiBookmarkStore) var kanjiBookmarkStore
     @Dependency(\.date) var date
 
     public init() {}
@@ -54,6 +58,7 @@ public struct KanjiDetailFeature {
                         (try? await relations) ?? [],
                         (try? await strokes) ?? []
                     ))
+                    await send(.bookmarkLoaded(await kanjiBookmarkStore.load().contains(id)))
                 }
             case let .loaded(glosses, words, sentences, relations, strokePaths):
                 state.isLoading = false
@@ -63,6 +68,22 @@ public struct KanjiDetailFeature {
                 state.relations = relations
                 state.strokePaths = strokePaths
                 return .none
+            case let .bookmarkLoaded(bookmarked):
+                state.isBookmarked = bookmarked
+                return .none
+            case .toggleBookmark:
+                state.isBookmarked.toggle()
+                let id = state.kanji.id
+                let nowBookmarked = state.isBookmarked
+                return .run { _ in
+                    var ids = await kanjiBookmarkStore.load()
+                    if nowBookmarked {
+                        if !ids.contains(id) { ids.append(id) }
+                    } else {
+                        ids.removeAll { $0 == id }
+                    }
+                    await kanjiBookmarkStore.save(ids)
+                }
             case .writeTapped, .wordTapped:
                 return .none  // handled by the parent (navigation)
             case .addToReview:

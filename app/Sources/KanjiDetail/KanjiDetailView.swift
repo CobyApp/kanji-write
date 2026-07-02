@@ -29,6 +29,11 @@ public struct KanjiDetailView: View {
         }
         .navigationTitle(store.kanji.literal)
         .toolbar {
+            Button { store.send(.toggleBookmark) } label: {
+                Image(systemName: store.isBookmarked ? "star.fill" : "star")
+                    .foregroundStyle(store.isBookmarked ? Palette.butter : Palette.inkSoft)
+            }
+            .accessibilityLabel(L.bookmark[appLanguage])
             Button(store.addedToReview ? L.addedToReview[appLanguage] : L.addToReview[appLanguage]) {
                 store.send(.addToReview)
             }

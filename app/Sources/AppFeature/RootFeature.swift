@@ -14,18 +14,20 @@ public struct RootFeature {
     /// The four top-level destinations (tab on iPhone, sidebar on iPad).
     public enum Destination: Hashable, Sendable {
         case home        // 오늘: glanceable progress dashboard + quick continue
-        case study       // 학습: the study-mode launcher hub (learn / review / practice)
-        case dictionary  // 사전: browse / search / detail / wordbook
+        case study       // 학습: study-mode launchers (learn / review / practice) + 사전
+        case bookmarks   // 북마크: bookmarked kanji + saved words
         case settings
     }
 
-    /// One screen on the dictionary navigation stack (kanji ↔ word ↔ writing).
+    /// One screen on a navigation stack (kanji ↔ word ↔ writing, plus the
+    /// dictionary browse reached from the 학습 hub).
     @Reducer(state: .equatable)
     public enum Path {
         case kanjiList(KanjiListPathFeature)
         case kanji(KanjiDetailFeature)
         case word(WordDetailFeature)
         case writing(KanjiWritingFeature)
+        case dictionary(DictionaryFeature)
     }
 
     /// A full-screen study session launched from Home.
@@ -48,6 +50,8 @@ public struct RootFeature {
 
         public var destination: Destination = .home
         public var searchText = ""
+        // Bookmarked kanji ids (loaded when the 북마크 tab appears).
+        public var bookmarkedIDs: [Int] = []
         public var path = StackState<Path.State>()
         // The active full-screen study session, if any.
         @Presents public var session: Session.State?
@@ -67,6 +71,9 @@ public struct RootFeature {
         case searchChanged(String)
         case kanjiSelected(Kanji)
         case levelSelected(KanjiLevel)
+        case openDictionary
+        case bookmarksAppeared
+        case bookmarksLoaded([Int])
         case startStudy
         case startReview
         case startPractice
@@ -74,6 +81,8 @@ public struct RootFeature {
         case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
     }
+
+    @Dependency(\.kanjiBookmarkStore) var kanjiBookmarkStore
 
     public init() {}
 
@@ -104,6 +113,29 @@ public struct RootFeature {
                 state.path.append(
                     .kanjiList(KanjiListPathFeature.State(
                         title: level.label, kanji: items, glosses: state.review.glosses)))
+                return .none
+
+            // Open the dictionary browse from the 학습 hub (pushed onto its stack).
+            case .openDictionary:
+                state.path.append(.dictionary(DictionaryFeature.State(
+                    kanji: state.review.kanji.elements, glosses: state.review.glosses)))
+                return .none
+
+            case .bookmarksAppeared:
+                return .run { send in await send(.bookmarksLoaded(await kanjiBookmarkStore.load())) }
+            case let .bookmarksLoaded(ids):
+                state.bookmarkedIDs = ids
+                return .none
+
+            // Dictionary browse (from 학습) → drill into a level / a searched kanji.
+            case let .path(.element(id: _, action: .dictionary(.levelSelected(level)))):
+                let items = kanjiIn(state.review.kanji.elements, in: level)
+                state.path.append(
+                    .kanjiList(KanjiListPathFeature.State(
+                        title: level.label, kanji: items, glosses: state.review.glosses)))
+                return .none
+            case let .path(.element(id: _, action: .dictionary(.kanjiSelected(kanji)))):
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
 
             case let .wordReview(.wordTapped(word)):
