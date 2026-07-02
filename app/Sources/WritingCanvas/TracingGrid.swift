@@ -72,10 +72,13 @@ public struct TracingGrid: View {
     let clearToken: Int
     let cellCount: Int
     let minCell: CGFloat
+    /// When set, lay out exactly this many equal columns (e.g. 5 → a 5×2 sheet
+    /// for 10 cells). When nil, columns auto-fill to `minCell`.
+    let columns: Int?
 
     public init(
         glyph: String, paths: [String], showGuide: Bool = true, clearToken: Int = 0,
-        cellCount: Int = 12, minCell: CGFloat = 108
+        cellCount: Int = 12, minCell: CGFloat = 108, columns: Int? = nil
     ) {
         self.glyph = glyph
         self.paths = paths
@@ -83,12 +86,18 @@ public struct TracingGrid: View {
         self.clearToken = clearToken
         self.cellCount = cellCount
         self.minCell = minCell
+        self.columns = columns
+    }
+
+    private var gridColumns: [GridItem] {
+        if let columns {
+            return Array(repeating: GridItem(.flexible(), spacing: 12), count: max(1, columns))
+        }
+        return [GridItem(.adaptive(minimum: minCell), spacing: 12)]
     }
 
     public var body: some View {
-        LazyVGrid(
-            columns: [GridItem(.adaptive(minimum: minCell), spacing: 12)], spacing: 12
-        ) {
+        LazyVGrid(columns: gridColumns, spacing: 12) {
             ForEach(0..<cellCount, id: \.self) { _ in
                 TraceCell(glyph: glyph, paths: paths, showGuide: showGuide, clearToken: clearToken)
             }

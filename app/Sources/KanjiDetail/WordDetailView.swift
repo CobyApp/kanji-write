@@ -38,8 +38,11 @@ public struct WordDetailView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(store.word.surface)
-                .font(.kawaii(34, weight: .bold)).foregroundStyle(Palette.ink)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(store.word.surface)
+                    .font(.kawaii(34, weight: .bold)).foregroundStyle(Palette.ink)
+                SpeakButton(store.word.surface)
+            }
             Text(store.word.reading)
                 .font(.kawaii(17)).foregroundStyle(Palette.inkSoft)
             if let meaning = wordMeaning(store.word, appLanguage) {
@@ -100,13 +103,17 @@ public struct WordDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.examples[appLanguage], accent: Palette.butter)
             ForEach(store.sentences) { sentence in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(sentence.textJa)
-                        .font(.kawaii(16)).foregroundStyle(Palette.ink)
-                    if let translation = localizedTranslation(sentence.translations, appLanguage) {
-                        Text(translation).font(.kawaii(14, language: appLanguage))
-                            .foregroundStyle(Palette.inkSoft)
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(sentence.textJa)
+                            .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                        if let translation = localizedTranslation(sentence.translations, appLanguage) {
+                            Text(translation).font(.kawaii(14, language: appLanguage))
+                                .foregroundStyle(Palette.inkSoft)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    SpeakButton(sentence.textJa)
                 }
             }
         }
