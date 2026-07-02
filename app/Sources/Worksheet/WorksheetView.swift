@@ -85,8 +85,13 @@ public struct WorksheetView: View {
     private func writeCard(_ kanji: Kanji) -> some View {
         VStack(spacing: 12) {
             SectionHeader(L.worksheetWrite[appLanguage], accent: Palette.mint)
-            PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
-                       size: 96, fontSize: 60)
+            // Show the stroke order animated (how to write), then trace below.
+            if store.strokePaths.isEmpty {
+                PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
+                           size: 96, fontSize: 60)
+            } else {
+                StrokeOrderPlayer(paths: store.strokePaths, size: 150)
+            }
             ZStack {
                 GuideStrokes(paths: store.strokePaths)
                 PencilCanvasView(drawing: $drawing)
