@@ -1,6 +1,7 @@
 import ComposableArchitecture
 import DictionaryClient
 import Foundation
+import Review
 import SharedModels
 
 /// Free-repetition writing notebook (한자노트). The learner picks a kanji and
@@ -17,9 +18,10 @@ public struct PracticeFeature {
         /// The kanji currently being practiced, if any.
         public var selected: Kanji?
 
-        /// The kanji shown in the picker, filtered to `level`.
+        /// The kanji shown in the picker, filtered to `level` and in the same
+        /// order as study / the dictionary (JLPT → stroke count → id).
         public var levelKanji: [Kanji] {
-            kanji.elements.filter { $0.jlptLevel == level }
+            studyOrder(kanji.elements, level: level)
         }
         /// Faint stroke-order guide (KanjiVG path `d` strings) for `selected`.
         public var strokePaths: [String] = []
