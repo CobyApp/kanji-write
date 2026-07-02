@@ -10,6 +10,7 @@ public struct ReminderView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
+    @State private var showResetConfirm = false
 
     public init(store: StoreOf<ReminderFeature>) {
         self.store = store
@@ -23,11 +24,20 @@ public struct ReminderView: View {
                     studyCard
                     languageCard
                     reminderCard
+                    resetCard
                 }
                 .padding(16)
             }
         }
         .navigationTitle(L.settings[appLanguage])
+        .confirmationDialog(
+            L.resetProgress[appLanguage], isPresented: $showResetConfirm, titleVisibility: .visible
+        ) {
+            Button(L.reset[appLanguage], role: .destructive) { store.send(.resetProgress) }
+            Button(L.cancel[appLanguage], role: .cancel) {}
+        } message: {
+            Text(L.resetProgressMessage[appLanguage])
+        }
         .task { store.send(.apply(enabled: enabled, hour: hour)) }
         .onChange(of: enabled) { _, newValue in
             store.send(.apply(enabled: newValue, hour: hour))
@@ -87,6 +97,20 @@ public struct ReminderView: View {
                 Text(L.notifDenied[appLanguage])
                     .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             }
+        }
+        .roundedCard()
+    }
+
+    private var resetCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(L.resetProgress[appLanguage], accent: Palette.pink)
+            Button(role: .destructive) { showResetConfirm = true } label: {
+                Text(L.resetProgress[appLanguage])
+                    .font(.kawaii(16, weight: .bold)).foregroundStyle(Palette.pink)
+                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .background(Palette.pinkSoft).clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
         .roundedCard()
     }

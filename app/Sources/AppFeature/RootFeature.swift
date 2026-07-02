@@ -168,6 +168,14 @@ public struct RootFeature {
                 state.path.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 return .none
 
+            // Reset clears the store files (in ReminderFeature); also drop the
+            // in-memory records so Home/Study/단어 update immediately.
+            case .reminder(.resetProgress):
+                state.review.records.removeAll()
+                state.wordReview.records.removeAll()
+                state.wordReview.words.removeAll()
+                return .none
+
             case .review, .wordReview, .reminder, .path, .sessionPath, .session:
                 return .none
             }

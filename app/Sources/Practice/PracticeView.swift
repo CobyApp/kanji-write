@@ -37,12 +37,22 @@ public struct PracticeView: View {
 
     // MARK: - Kanji picker (horizontal strip of pastel tiles)
 
+    private var levelBinding: Binding<String> {
+        Binding(get: { store.level }, set: { store.send(.levelSelected($0)) })
+    }
+
     private var pickerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.pickToPractice[appLanguage], accent: Palette.pink)
+            Picker(L.level[appLanguage], selection: levelBinding) {
+                ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { level in
+                    Text(level).tag(level)
+                }
+            }
+            .pickerStyle(.segmented)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(Array(store.kanji.enumerated()), id: \.element.id) { index, kanji in
+                    ForEach(Array(store.levelKanji.enumerated()), id: \.element.id) { index, kanji in
                         let tint = Palette.tint(index)
                         Button { store.send(.kanjiSelected(kanji)) } label: {
                             PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,

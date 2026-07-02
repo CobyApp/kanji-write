@@ -199,6 +199,7 @@ let project = Project(
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DesignSystem"),
+                .target(name: "Review"),
                 .external(name: "ComposableArchitecture"),
             ]
         ),
