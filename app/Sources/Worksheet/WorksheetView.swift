@@ -42,15 +42,6 @@ public struct WorksheetView: View {
     @AppStorage("newPerDay") private var newPerDay = 7
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.verticalSizeClass) private var vSize
-
-    /// A 10-cell (5×2 or 2×5) tracing sheet that fills the width: landscape /
-    /// iPad → 5 columns × 2 rows; iPhone portrait → 2 columns × 5 rows.
-    private var traceColumns: Int {
-        if sizeClass == .regular { return 5 }
-        return vSize == .compact ? 5 : 2
-    }
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -105,30 +96,25 @@ public struct WorksheetView: View {
         .roundedCard()
     }
 
-    // MARK: 1) Write the kanji (big glyph + stroke guide behind the canvas)
+    // MARK: 1) Learn the kanji — meaning + animated stroke order (no writing here;
+    // writing practice lives in the 연습 screen).
 
     private func writeCard(_ kanji: Kanji) -> some View {
         VStack(spacing: 12) {
             SectionHeader(L.worksheetWrite[appLanguage], accent: Palette.mint)
-            // The kanji's own meaning (뜻) in the selected language, so a learner
-            // knows what they are writing.
             if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                 Text(meaning)
                     .font(.kawaii(20, weight: .bold, language: appLanguage))
                     .foregroundStyle(Palette.ink)
                     .multilineTextAlignment(.center)
             }
-            // Show the stroke order animated (how to write).
+            // Animated stroke order (how it's written).
             if store.strokePaths.isEmpty {
                 PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
-                           size: 96, fontSize: 60)
+                           size: 120, fontSize: 76)
             } else {
-                StrokeOrderPlayer(paths: store.strokePaths, size: 150)
+                StrokeOrderPlayer(paths: store.strokePaths, size: 180)
             }
-            // Trace the kanji 10 times over the guide — a 5×2 (or 2×5) sheet that
-            // fills the width and adapts to portrait / landscape.
-            TracingGrid(glyph: kanji.literal, paths: store.strokePaths, showGuide: true,
-                        clearToken: store.clearToken, cellCount: 10, columns: traceColumns)
         }
         .roundedCard()
     }
