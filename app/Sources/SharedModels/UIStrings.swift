@@ -59,6 +59,16 @@ public enum L {
         ko: "오늘 학습 완료!", ja: "今日の学習は完了！", zh: "今日学习完成！", en: "All done for today!")
     public static let seeTomorrow = L10nText(ko: "내일 또 만나요", ja: "また明日ね", zh: "明天见", en: "See you tomorrow")
 
+    // Home dashboard + study hub
+    public static let greeting = L10nText(ko: "안녕하세요", ja: "こんにちは", zh: "你好", en: "Hello")
+    public static let todayProgress = L10nText(ko: "오늘 진도", ja: "今日の進捗", zh: "今日进度", en: "Today")
+    public static let continueStudy = L10nText(ko: "이어서 학습", ja: "学習を続ける", zh: "继续学习", en: "Keep going")
+    public static let newKanjiSub = L10nText(ko: "새 한자 배우기", ja: "新しい漢字を学ぶ", zh: "学习新汉字", en: "Learn new kanji")
+    public static let reviewSub = L10nText(ko: "복습할 시간", ja: "復習の時間", zh: "复习时间", en: "Time to review")
+    public static let practiceSub = L10nText(ko: "자유롭게 써보기", ja: "自由に書いて練習", zh: "自由书写练习", en: "Free writing")
+    public static let allCaughtUp = L10nText(ko: "복습 완료!", ja: "復習は完了！", zh: "复习完成！", en: "All caught up!")
+    public static let ofDaily = L10nText(ko: "오늘 목표", ja: "今日の目標", zh: "今日目标", en: "of today")
+
     // Grades (FSRS)
     public static let gradeAgain = L10nText(ko: "다시", ja: "もう一度", zh: "再来", en: "Again")
     public static let gradeHard = L10nText(ko: "어려움", ja: "むずい", zh: "有点难", en: "Hard")
