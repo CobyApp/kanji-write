@@ -67,15 +67,17 @@ public struct PracticeView: View {
                         Button { store.send(.kanjiSelected(kanji)) } label: {
                             PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
                                        size: 56, fontSize: 30)
+                                // strokeBorder draws inside the tile bounds so the
+                                // selection ring is never clipped by the card/scroll.
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                        .stroke(store.selected?.id == kanji.id ? Palette.accent : Color.clear,
-                                                lineWidth: 3))
+                                        .strokeBorder(store.selected?.id == kanji.id ? Palette.accent : Color.clear,
+                                                      lineWidth: 3))
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.vertical, 2)
+                .padding(.vertical, 3)
             }
         }
         .roundedCard()
