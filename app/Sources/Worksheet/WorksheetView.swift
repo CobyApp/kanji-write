@@ -102,7 +102,6 @@ public struct WorksheetView: View {
 
     private func writeCard(_ kanji: Kanji) -> some View {
         VStack(spacing: 12) {
-            SectionHeader(L.worksheetWrite[appLanguage], accent: Palette.mint)
             if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                 Text(meaning)
                     .font(.kawaii(20, weight: .bold, language: appLanguage))
