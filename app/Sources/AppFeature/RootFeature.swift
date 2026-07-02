@@ -11,16 +11,9 @@ import WritingCanvas
 
 @Reducer
 public struct RootFeature {
-    /// The four top-level destinations (tab on iPhone, sidebar on iPad).
-    public enum Destination: Hashable, Sendable {
-        case home        // 오늘: glanceable progress dashboard + quick continue
-        case study       // 학습: study-mode launchers (learn / review / practice) + 사전
-        case bookmarks   // 북마크: bookmarked kanji + saved words
-        case settings
-    }
-
-    /// One screen on a navigation stack (kanji ↔ word ↔ writing, plus the
-    /// dictionary browse reached from the 학습 hub).
+    /// One screen on the navigation stack, all reached from the single Home
+    /// dashboard: the dictionary browse, a level's kanji list, kanji ↔ word
+    /// detail, and the writing canvas.
     @Reducer(state: .equatable)
     public enum Path {
         case kanjiList(KanjiListPathFeature)
@@ -48,9 +41,9 @@ public struct RootFeature {
         // Settings (plan / language / reminder).
         public var reminder = ReminderFeature.State()
 
-        public var destination: Destination = .home
-        public var searchText = ""
-        // Bookmarked kanji ids (loaded when the 북마크 tab appears).
+        // Settings sheet presented from the Home toolbar.
+        public var showSettings = false
+        // Bookmarked kanji ids (loaded on Home appear).
         public var bookmarkedIDs: [Int] = []
         public var path = StackState<Path.State>()
         // The active full-screen study session, if any.
@@ -67,8 +60,7 @@ public struct RootFeature {
         case review(ReviewFeature.Action)
         case wordReview(WordReviewFeature.Action)
         case reminder(ReminderFeature.Action)
-        case destinationSelected(Destination)
-        case searchChanged(String)
+        case setShowSettings(Bool)
         case kanjiSelected(Kanji)
         case levelSelected(KanjiLevel)
         case openDictionary
@@ -95,13 +87,8 @@ public struct RootFeature {
             case .onAppear:
                 return .send(.review(.onAppear))
 
-            case let .destinationSelected(destination):
-                state.destination = destination
-                state.path.removeAll()
-                return .none
-
-            case let .searchChanged(text):
-                state.searchText = text
+            case let .setShowSettings(show):
+                state.showSettings = show
                 return .none
 
             case let .kanjiSelected(kanji):

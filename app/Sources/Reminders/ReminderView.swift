@@ -6,8 +6,6 @@ import SwiftUI
 public struct ReminderView: View {
     @Bindable public var store: StoreOf<ReminderFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("newPerDay") private var newPerDay = 7
-    @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
     @State private var showResetConfirm = false
@@ -21,7 +19,6 @@ public struct ReminderView: View {
             Palette.background.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 16) {
-                    studyCard
                     languageCard
                     reminderCard
                     resetCard
@@ -45,26 +42,6 @@ public struct ReminderView: View {
         .onChange(of: hour) { _, newValue in
             store.send(.apply(enabled: enabled, hour: newValue))
         }
-    }
-
-    private var studyCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(L.studyPlan[appLanguage], accent: Palette.butter)
-            Text(L.targetLevel[appLanguage])
-                .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.inkSoft)
-            Picker(L.targetLevel[appLanguage], selection: $targetLevel) {
-                ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { level in
-                    Text(level).tag(level)
-                }
-            }
-            .pickerStyle(.segmented)
-            Stepper(value: $newPerDay, in: 1...30) {
-                Text("\(L.newPerDay[appLanguage]): \(newPerDay)")
-                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
-            }
-            .tint(Palette.accent)
-        }
-        .roundedCard()
     }
 
     private var languageCard: some View {

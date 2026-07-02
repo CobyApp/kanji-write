@@ -25,23 +25,26 @@ private extension WordEntry {
 
 @MainActor
 final class RootFeatureTests: XCTestCase {
-    func testDestinationSelectionClearsStack() async {
-        var initial = RootFeature.State()
-        initial.path = StackState([.kanji(KanjiDetailFeature.State(kanji: .yama))])
-        let store = TestStore(initialState: initial) { RootFeature() }
-        store.exhaustivity = .off
-
-        await store.send(.destinationSelected(.settings))
-        XCTAssertEqual(store.state.destination, .settings)
-        XCTAssertTrue(store.state.path.isEmpty)
-    }
-
-    func testSearchSelection() async {
+    func testSettingsSheetToggles() async {
         let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
         store.exhaustivity = .off
 
-        await store.send(.searchChanged("山"))
-        XCTAssertEqual(store.state.searchText, "山")
+        await store.send(.setShowSettings(true))
+        XCTAssertTrue(store.state.showSettings)
+        await store.send(.setShowSettings(false))
+        XCTAssertFalse(store.state.showSettings)
+    }
+
+    func testOpenDictionaryPushesBrowse() async {
+        var initial = RootFeature.State()
+        initial.review.kanji = IdentifiedArray(uniqueElements: [.yama])
+        let store = TestStore(initialState: initial) { RootFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.openDictionary)
+        guard case .dictionary = store.state.path.first else {
+            return XCTFail("expected the dictionary browse pushed as the stack root")
+        }
     }
 
     func testKanjiSelectedMakesKanjiTheStackRoot() async {

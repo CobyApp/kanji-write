@@ -11,27 +11,27 @@ import TestMode
 import Worksheet
 import WritingCanvas
 
-/// The app shell. Three destinations — 오늘 / 사전 / 설정 — plus a full-screen
-/// study session presented over everything. It adapts to the size class:
-/// - **regular** (iPad): a `NavigationSplitView` (sidebar destinations → content).
-/// - **compact** (iPhone): a bottom `TabView`.
-/// Both attach the same `.fullScreenCover` for the immersive study session.
+/// The app shell — one Home dashboard holding every feature. Details (kanji /
+/// word / dictionary / writing) push onto a single navigation stack; study,
+/// review, and practice open as full-screen sessions; settings is a sheet.
+/// No tab bar or sidebar.
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<RootFeature>) {
         self.store = store
     }
 
+    private var settingsShown: Binding<Bool> {
+        Binding(get: { store.showSettings }, set: { store.send(.setShowSettings($0)) })
+    }
+
     public var body: some View {
-        Group {
-            if sizeClass == .compact {
-                CompactRootView(store: store)
-            } else {
-                RegularRootView(store: store)
-            }
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            HomeView(store: store)
+        } destination: { store in
+            pathDestination(store)
         }
         .tint(Palette.accent)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
@@ -40,6 +40,18 @@ public struct RootView: View {
             item: $store.scope(state: \.session, action: \.session)
         ) { sessionStore in
             SessionCover(store: store, sessionStore: sessionStore)
+        }
+        .sheet(isPresented: settingsShown) {
+            NavigationStack {
+                ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(L.close[appLanguage]) { store.send(.setShowSettings(false)) }
+                        }
+                    }
+            }
+            .tint(Palette.accent)
+            .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
         }
     }
 }
@@ -100,103 +112,6 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
     }
 }
 
-// MARK: - Regular width (iPad): split view
-
-struct RegularRootView: View {
-    @Bindable var store: StoreOf<RootFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-
-    private var destinationBinding: Binding<RootFeature.Destination?> {
-        Binding(
-            get: { store.destination },
-            set: { if let d = $0 { store.send(.destinationSelected(d)) } })
-    }
-
-    var body: some View {
-        NavigationSplitView {
-            List(selection: destinationBinding) {
-                Label(L.today[appLanguage], systemImage: "sun.max")
-                    .tag(RootFeature.Destination.home)
-                Label(L.study[appLanguage], systemImage: "pencil.and.outline")
-                    .tag(RootFeature.Destination.study)
-                Label(L.bookmarks[appLanguage], systemImage: "star")
-                    .tag(RootFeature.Destination.bookmarks)
-                Label(L.settings[appLanguage], systemImage: "gearshape")
-                    .tag(RootFeature.Destination.settings)
-            }
-            .navigationTitle("漢字")
-        } detail: {
-            detailColumn
-        }
-    }
-
-    @ViewBuilder private var detailColumn: some View {
-        switch store.destination {
-        case .home:
-            NavigationStack { HomeView(store: store) }
-        case .study:
-            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                StudyHubView(store: store)
-            } destination: { store in
-                pathDestination(store)
-            }
-        case .bookmarks:
-            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                BookmarksView(store: store)
-            } destination: { store in
-                pathDestination(store)
-            }
-        case .settings:
-            NavigationStack {
-                ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
-            }
-        }
-    }
-}
-
-// MARK: - Compact width (iPhone): tab bar
-
-struct CompactRootView: View {
-    @Bindable var store: StoreOf<RootFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-
-    private var tabBinding: Binding<RootFeature.Destination> {
-        Binding(get: { store.destination }, set: { store.send(.destinationSelected($0)) })
-    }
-
-    var body: some View {
-        TabView(selection: tabBinding) {
-            NavigationStack {
-                HomeView(store: store)
-            }
-            .tag(RootFeature.Destination.home)
-            .tabItem { Label(L.today[appLanguage], systemImage: "sun.max") }
-
-            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                StudyHubView(store: store)
-            } destination: { store in
-                pathDestination(store)
-            }
-            .tag(RootFeature.Destination.study)
-            .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
-
-            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                BookmarksView(store: store)
-            } destination: { store in
-                pathDestination(store)
-            }
-            .tag(RootFeature.Destination.bookmarks)
-            .tabItem { Label(L.bookmarks[appLanguage], systemImage: "star") }
-
-            NavigationStack {
-                ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
-            }
-            .tag(RootFeature.Destination.settings)
-            .tabItem { Label(L.settings[appLanguage], systemImage: "gearshape") }
-        }
-    }
-}
-
 // MARK: - Dictionary (opened from the 학습 hub)
 
 /// The 사전 browse: level list + search over its own kanji snapshot. Tapping a
@@ -242,56 +157,6 @@ private struct DictionaryPathView: View {
         .navigationTitle(L.dictionary[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: searchBinding, prompt: L.searchPrompt[appLanguage])
-    }
-}
-
-// MARK: - Bookmarks
-
-/// The 북마크 tab: a segmented view over bookmarked kanji and saved words.
-private struct BookmarksView: View {
-    @Bindable var store: StoreOf<RootFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @State private var showWords = false
-
-    private var bookmarkedKanji: [Kanji] {
-        let ids = Set(store.bookmarkedIDs)
-        return store.review.kanji.elements.filter { ids.contains($0.id) }
-    }
-
-    var body: some View {
-        ZStack {
-            Palette.background.ignoresSafeArea()
-            if showWords {
-                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
-            } else if bookmarkedKanji.isEmpty {
-                emptyState(L.noBookmarkedKanji[appLanguage])
-            } else {
-                KanjiCardList(items: bookmarkedKanji, glosses: store.review.glosses,
-                              onSelect: { store.send(.kanjiSelected($0)) })
-            }
-        }
-        .navigationTitle(L.bookmarks[appLanguage])
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Picker("", selection: $showWords) {
-                    Text(L.kanji[appLanguage]).tag(false)
-                    Text(L.words[appLanguage]).tag(true)
-                }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 220)
-            }
-        }
-        .task { store.send(.bookmarksAppeared) }
-    }
-
-    private func emptyState(_ message: String) -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: "star")
-                .font(.system(size: 40)).foregroundStyle(Palette.inkSoft)
-            Text(message).font(.kawaii(15)).foregroundStyle(Palette.inkSoft)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
