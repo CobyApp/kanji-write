@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import PencilKit
+import SharedModels
 import SwiftUI
 import UIKit
 
@@ -24,6 +25,7 @@ private struct GuideStrokesView: View {
 public struct KanjiWritingView: View {
     @Bindable public var store: StoreOf<KanjiWritingFeature>
     @State private var drawing = PKDrawing()
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     public init(store: StoreOf<KanjiWritingFeature>) {
         self.store = store
@@ -31,7 +33,7 @@ public struct KanjiWritingView: View {
 
     public var body: some View {
         VStack(spacing: 8) {
-            Text("画数 \(strokeCountStatus(expected: store.strokePaths.count, drawn: drawing.strokes.count))")
+            Text("\(L.strokes[appLanguage]) \(strokeCountStatus(expected: store.strokePaths.count, drawn: drawing.strokes.count))")
                 .font(.headline)
                 .monospacedDigit()
             ZStack {
@@ -44,11 +46,11 @@ public struct KanjiWritingView: View {
             .background(Color(.secondarySystemBackground))
             if let recognition = store.recognition {
                 VStack(spacing: 4) {
-                    Text(recognition.matched ? "正解！" : "もう一度")
+                    Text(recognition.matched ? L.correct[appLanguage] : L.gradeAgain[appLanguage])
                         .font(.title2.bold())
                         .foregroundStyle(recognition.matched ? Color.green : Color.red)
                     if let candidate = recognition.candidates.first {
-                        Text("認識: \(candidate)")
+                        Text("\(L.recognized[appLanguage]): \(candidate)")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -58,17 +60,17 @@ public struct KanjiWritingView: View {
         .padding()
         .navigationTitle(store.kanji.literal)
         .toolbar {
-            Button(store.showGuide ? "ガイド非表示" : "ガイド表示") {
+            Button(store.showGuide ? L.hideGuide[appLanguage] : L.showGuide[appLanguage]) {
                 store.send(.toggleGuide)
             }
-            Button("消す") { drawing = PKDrawing() }
-            Button("採点") {
+            Button(L.clear[appLanguage]) { drawing = PKDrawing() }
+            Button(L.grade[appLanguage]) {
                 if let data = rasterizedDrawingData() {
                     store.send(.recognize(data))
                 }
             }
             .disabled(drawing.strokes.isEmpty)
-            Button("保存") { store.send(.saveDrawing(drawing.dataRepresentation())) }
+            Button(L.save[appLanguage]) { store.send(.saveDrawing(drawing.dataRepresentation())) }
         }
         .task { store.send(.onAppear) }
         .onChange(of: store.savedDrawingData) { _, data in

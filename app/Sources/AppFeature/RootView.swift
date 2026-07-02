@@ -56,6 +56,7 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
 
 struct RegularRootView: View {
     @Bindable var store: StoreOf<RootFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     private var sidebarBinding: Binding<RootFeature.SidebarSelection?> {
         Binding(get: { store.sidebar }, set: { store.send(.sidebarSelected($0)) })
@@ -75,9 +76,9 @@ struct RegularRootView: View {
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 ZStack {
                     Palette.background.ignoresSafeArea()
-                    ContentUnavailableView("漢字を選んでください",
+                    ContentUnavailableView(L.pickKanji[appLanguage],
                                            systemImage: "hand.tap",
-                                           description: Text("一覧や学習から漢字を選ぶと\nここに表示されます"))
+                                           description: Text(L.pickKanjiHint[appLanguage]))
                 }
             } destination: { store in
                 pathDestination(store)
@@ -88,12 +89,12 @@ struct RegularRootView: View {
     private var sidebar: some View {
         List(selection: sidebarBinding) {
             Section {
-                Label("学習", systemImage: "pencil.and.outline")
+                Label(L.study[appLanguage], systemImage: "pencil.and.outline")
                     .tag(RootFeature.SidebarSelection.study)
-                Label("単語", systemImage: "character.book.closed")
+                Label(L.words[appLanguage], systemImage: "character.book.closed")
                     .tag(RootFeature.SidebarSelection.words)
             }
-            Section("一覧") {
+            Section(L.browse[appLanguage]) {
                 ForEach(levels()) { level in
                     let count = kanjiIn(store.review.kanji.elements, in: level).count
                     HStack {
@@ -105,12 +106,12 @@ struct RegularRootView: View {
                 }
             }
             Section {
-                Label("設定", systemImage: "gearshape")
+                Label(L.settings[appLanguage], systemImage: "gearshape")
                     .tag(RootFeature.SidebarSelection.settings)
             }
         }
-        .navigationTitle("漢字")
-        .searchable(text: searchBinding, placement: .sidebar, prompt: "漢字・読みで検索")
+        .navigationTitle(L.kanji[appLanguage])
+        .searchable(text: searchBinding, placement: .sidebar, prompt: L.searchPrompt[appLanguage])
     }
 
     @ViewBuilder private var contentColumn: some View {
@@ -118,7 +119,7 @@ struct RegularRootView: View {
             KanjiCardList(
                 items: store.review.kanji.elements.filter { searchMatches($0, store.searchText) },
                 onSelect: { store.send(.kanjiSelected($0)) })
-                .navigationTitle("検索")
+                .navigationTitle(L.search[appLanguage])
         } else {
             switch store.sidebar {
             case .study, .none:
@@ -132,7 +133,7 @@ struct RegularRootView: View {
                 KanjiCardList(
                     items: level.map { kanjiIn(store.review.kanji.elements, in: $0) } ?? [],
                     onSelect: { store.send(.kanjiSelected($0)) })
-                    .navigationTitle(level?.label ?? "一覧")
+                    .navigationTitle(level?.label ?? L.browse[appLanguage])
             }
         }
     }
@@ -142,6 +143,7 @@ struct RegularRootView: View {
 
 struct CompactRootView: View {
     @Bindable var store: StoreOf<RootFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     private var tabBinding: Binding<RootFeature.Tab> {
         Binding(get: { store.tab }, set: { store.send(.tabSelected($0)) })
@@ -155,7 +157,7 @@ struct CompactRootView: View {
                 pathDestination(store)
             }
             .tag(RootFeature.Tab.study)
-            .tabItem { Label("学習", systemImage: "pencil.and.outline") }
+            .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
@@ -163,7 +165,7 @@ struct CompactRootView: View {
                 pathDestination(store)
             }
             .tag(RootFeature.Tab.words)
-            .tabItem { Label("単語", systemImage: "character.book.closed") }
+            .tabItem { Label(L.words[appLanguage], systemImage: "character.book.closed") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 BrowseColumn(store: store)
@@ -171,13 +173,13 @@ struct CompactRootView: View {
                 pathDestination(store)
             }
             .tag(RootFeature.Tab.browse)
-            .tabItem { Label("一覧", systemImage: "square.grid.2x2") }
+            .tabItem { Label(L.browse[appLanguage], systemImage: "square.grid.2x2") }
 
             NavigationStack {
                 ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
             }
             .tag(RootFeature.Tab.settings)
-            .tabItem { Label("設定", systemImage: "gearshape") }
+            .tabItem { Label(L.settings[appLanguage], systemImage: "gearshape") }
         }
     }
 }
@@ -186,6 +188,7 @@ struct CompactRootView: View {
 /// level opens its kanji list on the stack.
 private struct BrowseColumn: View {
     @Bindable var store: StoreOf<RootFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
@@ -205,8 +208,8 @@ private struct BrowseColumn: View {
                 levelList
             }
         }
-        .navigationTitle("一覧")
-        .searchable(text: searchBinding, prompt: "漢字・読みで検索")
+        .navigationTitle(L.browse[appLanguage])
+        .searchable(text: searchBinding, prompt: L.searchPrompt[appLanguage])
     }
 
     private var levelList: some View {
@@ -243,6 +246,7 @@ private struct BrowseColumn: View {
 struct KanjiCardList: View {
     let items: [Kanji]
     let onSelect: (Kanji) -> Void
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     var body: some View {
         ZStack {
@@ -268,7 +272,7 @@ struct KanjiCardList: View {
                         .buttonStyle(.plain)
                     }
                     if items.isEmpty {
-                        Text("該当する漢字がありません")
+                        Text(L.noKanjiFound[appLanguage])
                             .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
                     }
                 }

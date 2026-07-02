@@ -26,7 +26,7 @@ public struct WordDetailView: View {
         .navigationTitle(store.word.surface)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            Button(store.addedToWordbook ? "単語帳に追加済み" : "単語帳に追加") {
+            Button(store.addedToWordbook ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage]) {
                 store.send(.addToWordbook)
             }
             .disabled(store.addedToWordbook)
@@ -53,7 +53,7 @@ public struct WordDetailView: View {
 
     private var kanjiSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader("漢字", accent: Palette.mint)
+            SectionHeader(L.kanji[appLanguage], accent: Palette.mint)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(Array(store.kanji.enumerated()), id: \.element.id) { index, kanji in
@@ -77,7 +77,7 @@ public struct WordDetailView: View {
 
     private var sentencesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("例文", accent: Palette.butter)
+            SectionHeader(L.examples[appLanguage], accent: Palette.butter)
             ForEach(store.sentences) { sentence in
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sentence.textJa)
