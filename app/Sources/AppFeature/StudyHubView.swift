@@ -10,6 +10,7 @@ import SwiftUI
 public struct StudyHubView: View {
     @Bindable var reviewStore: StoreOf<ReviewFeature>
     @AppStorage("newPerDay") private var newPerDay = 7
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
     public init(reviewStore: StoreOf<ReviewFeature>) {
         self.reviewStore = reviewStore
@@ -31,11 +32,11 @@ public struct StudyHubView: View {
                 VStack(spacing: 16) {
                     summaryCard(session)
                     if !session.dueIDs.isEmpty {
-                        gradeSection("復習", accent: Palette.lavender, soft: Palette.lavenderSoft,
+                        gradeSection(L.review[appLanguage], accent: Palette.lavender, soft: Palette.lavenderSoft,
                                      ids: session.dueIDs)
                     }
                     if !session.newIDs.isEmpty {
-                        gradeSection("新規", accent: Palette.butter, soft: Palette.butterSoft,
+                        gradeSection(L.newItems[appLanguage], accent: Palette.butter, soft: Palette.butterSoft,
                                      ids: session.newIDs)
                     }
                     if session.dueIDs.isEmpty && session.newIDs.isEmpty {
@@ -45,17 +46,17 @@ public struct StudyHubView: View {
                 .padding(16)
             }
         }
-        .navigationTitle("学習")
+        .navigationTitle(L.study[appLanguage])
         .task { reviewStore.send(.onAppear) }
     }
 
     private func summaryCard(_ session: StudySession) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("今日のセッション", accent: Palette.mint)
+            SectionHeader(L.todaySession[appLanguage], accent: Palette.mint)
             HStack(spacing: 12) {
-                stat("復習", session.dueIDs.count, Palette.lavender)
-                stat("新規", session.newIDs.count, Palette.butter)
-                stat("習得", reviewStore.records.count, Palette.mint)
+                stat(L.review[appLanguage], session.dueIDs.count, Palette.lavender)
+                stat(L.newItems[appLanguage], session.newIDs.count, Palette.butter)
+                stat(L.learned[appLanguage], reviewStore.records.count, Palette.mint)
             }
         }
         .roundedCard()
@@ -72,8 +73,8 @@ public struct StudyHubView: View {
     private var allDoneCard: some View {
         VStack(spacing: 10) {
             Text("🎉").font(.system(size: 44))
-            Text("今日の学習は完了！").font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
-            Text("また明日ね").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+            Text(L.doneToday[appLanguage]).font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
+            Text(L.seeTomorrow[appLanguage]).font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 24)
         .roundedCard()
@@ -104,10 +105,10 @@ public struct StudyHubView: View {
             }
             .buttonStyle(.plain)
             HStack(spacing: 6) {
-                gradeButton(kanji.id, .again, "もう一度", Palette.pink)
-                gradeButton(kanji.id, .hard, "むずい", Palette.butter)
-                gradeButton(kanji.id, .good, "できた", Palette.mint)
-                gradeButton(kanji.id, .easy, "かんたん", Palette.sky)
+                gradeButton(kanji.id, .again, L.gradeAgain[appLanguage], Palette.pink)
+                gradeButton(kanji.id, .hard, L.gradeHard[appLanguage], Palette.butter)
+                gradeButton(kanji.id, .good, L.gradeGood[appLanguage], Palette.mint)
+                gradeButton(kanji.id, .easy, L.gradeEasy[appLanguage], Palette.sky)
             }
         }
     }

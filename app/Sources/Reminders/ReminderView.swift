@@ -26,7 +26,7 @@ public struct ReminderView: View {
                 .padding(16)
             }
         }
-        .navigationTitle("設定")
+        .navigationTitle(L.settings[appLanguage])
         .task { store.send(.apply(enabled: enabled, hour: hour)) }
         .onChange(of: enabled) { _, newValue in
             store.send(.apply(enabled: newValue, hour: hour))
@@ -38,9 +38,9 @@ public struct ReminderView: View {
 
     private var studyCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("学習", accent: Palette.butter)
+            SectionHeader(L.study[appLanguage], accent: Palette.butter)
             Stepper(value: $newPerDay, in: 1...30) {
-                Text("1日の新しい漢字: \(newPerDay) 字")
+                Text("\(L.newPerDay[appLanguage]): \(newPerDay)")
                     .font(.kawaii(16)).foregroundStyle(Palette.ink)
             }
             .tint(Palette.accent)
@@ -50,7 +50,7 @@ public struct ReminderView: View {
 
     private var languageCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("言語 / Language", accent: Palette.lavender)
+            SectionHeader(L.language[appLanguage], accent: Palette.lavender)
             Picker("Language", selection: $appLanguage) {
                 ForEach(AppLanguage.allCases, id: \.self) { language in
                     Text(language.label).tag(language)
@@ -63,11 +63,11 @@ public struct ReminderView: View {
 
     private var reminderCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("リマインダー", accent: Palette.pink)
-            Toggle("毎日のリマインダー", isOn: $enabled)
+            SectionHeader(L.reminder[appLanguage], accent: Palette.pink)
+            Toggle(L.dailyReminder[appLanguage], isOn: $enabled)
                 .font(.kawaii(16)).tint(Palette.accent)
             if enabled {
-                Picker("時刻", selection: $hour) {
+                Picker(L.time[appLanguage], selection: $hour) {
                     ForEach(0..<24, id: \.self) { h in
                         Text(String(format: "%02d:00", h)).tag(h)
                     }
@@ -75,7 +75,7 @@ public struct ReminderView: View {
                 .font(.kawaii(16))
             }
             if store.authorizationDenied {
-                Text("通知が許可されていません。設定アプリで許可してください。")
+                Text(L.notifDenied[appLanguage])
                     .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             }
         }

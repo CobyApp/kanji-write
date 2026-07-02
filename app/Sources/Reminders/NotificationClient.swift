@@ -1,5 +1,12 @@
 import ComposableArchitecture
+import SharedModels
 import UserNotifications
+
+/// The learner's selected UI language, read from the same `@AppStorage` key the
+/// views use, so the reminder is localized without threading state through TCA.
+private var currentLanguage: AppLanguage {
+    AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "ko") ?? .ko
+}
 
 /// Schedules a single repeating daily study reminder.
 @DependencyClient
@@ -20,9 +27,10 @@ extension NotificationClient: DependencyKey {
         scheduleDailyReminder: { hour, minute in
             let center = UNUserNotificationCenter.current()
             center.removePendingNotificationRequests(withIdentifiers: [reminderIdentifier])
+            let language = currentLanguage
             let content = UNMutableNotificationContent()
-            content.title = "漢字の練習"
-            content.body = "今日の漢字を書いて覚えましょう。"
+            content.title = L.notifTitle[language]
+            content.body = L.notifBody[language]
             content.sound = .default
             var components = DateComponents()
             components.hour = hour
