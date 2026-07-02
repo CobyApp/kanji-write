@@ -1,0 +1,147 @@
+import ComposableArchitecture
+import DictionaryClient
+import Foundation
+import Review
+import SharedModels
+
+/// Builds today's guided-study queue: the next `newPerDay` never-seen kanji from
+/// `studyOrder(kanji)`, mapped from `todaysSession(...).newIDs` to the matching
+/// `Kanji`. IDs whose kanji is missing are dropped so the queue never holds an
+/// unshowable lesson. Order is preserved from `newIDs` (JLPT → strokes → id).
+public func buildWorksheetQueue(
+    records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int
+) -> [Kanji] {
+    let session = todaysSession(
+        records: records, order: studyOrder(kanji), today: today, newPerDay: newPerDay)
+    let byID = Dictionary(kanji.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    return session.newIDs.compactMap { byID[$0] }
+}
+
+/// A guided study-sheet for today's NEW kanji: for each one, write it once over
+/// the stroke-order guide, see one word that uses it, and one example sentence.
+/// Finishing schedules an initial FSRS record for every kanji learned so it
+/// enters the review cycle.
+@Reducer
+public struct WorksheetFeature {
+    @ObservableState
+    public struct State: Equatable {
+        /// All persisted SRS records, keyed by kanji id.
+        public var records: IdentifiedArrayOf<ReviewRecord> = []
+        /// Today's new-kanji lesson queue, in study order.
+        public var queue: [Kanji] = []
+        /// Index into `queue` of the kanji currently being studied.
+        public var index = 0
+        /// Today as an integer epoch-day number.
+        public var today = 0
+        /// New kanji per day (from `@AppStorage("newPerDay")`, passed on appear).
+        public var newPerDay = 7
+        /// A word that uses the current kanji (the first returned), if any.
+        public var word: WordEntry?
+        /// An example sentence for the current kanji (the first returned), if any.
+        public var sentence: ExampleSentence?
+        /// KanjiVG stroke-order guide (path `d` strings) for the current kanji.
+        public var strokePaths: [String] = []
+        /// Bumped whenever the write canvas should reset to a blank page.
+        public var clearToken = 0
+        public var isLoading = false
+        public var isFinished = false
+
+        public init() {}
+
+        /// The kanji currently being studied, or nil when the queue is exhausted.
+        public var current: Kanji? {
+            queue.indices.contains(index) ? queue[index] : nil
+        }
+
+        /// True when the current kanji is the last one in the queue.
+        public var isLast: Bool { index >= queue.count - 1 }
+    }
+
+    public enum Action: Equatable {
+        case onAppear(newPerDay: Int)
+        case loaded([ReviewRecord], [Kanji], Int)
+        case cardContentLoaded(word: WordEntry?, sentence: ExampleSentence?, strokePaths: [String])
+        case nextTapped
+        case doneTapped
+    }
+
+    @Dependency(\.reviewStore) var reviewStore
+    @Dependency(\.dictionaryClient) var dictionaryClient
+    @Dependency(\.date) var date
+
+    public init() {}
+
+    public var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case let .onAppear(newPerDay):
+                guard state.queue.isEmpty, !state.isFinished, !state.isLoading else { return .none }
+                state.isLoading = true
+                state.newPerDay = newPerDay
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
+                return .run { send in
+                    async let records = reviewStore.loadRecords()
+                    let kanji = (try? await dictionaryClient.allKanji()) ?? []
+                    await send(.loaded(await records, kanji, today))
+                }
+
+            case let .loaded(records, kanji, today):
+                state.isLoading = false
+                state.records = IdentifiedArray(uniqueElements: records)
+                state.today = today
+                state.queue = buildWorksheetQueue(
+                    records: records, kanji: kanji, today: today, newPerDay: state.newPerDay)
+                state.index = 0
+                return loadCardContent(state: &state)
+
+            case let .cardContentLoaded(word, sentence, strokePaths):
+                state.word = word
+                state.sentence = sentence
+                state.strokePaths = strokePaths
+                return .none
+
+            case .nextTapped:
+                guard !state.isLast else { return .none }
+                state.index += 1
+                state.word = nil
+                state.sentence = nil
+                state.strokePaths = []
+                state.clearToken += 1
+                return loadCardContent(state: &state)
+
+            case .doneTapped:
+                let today = state.today
+                // Each learned kanji gets an initial FSRS record (rated Good) so it
+                // enters the review cycle, due today + the first interval. Never
+                // overwrite an existing record.
+                for kanji in state.queue where state.records[id: kanji.id] == nil {
+                    let initial = FSRS.initialState(.good)
+                    let interval = FSRS.interval(stability: initial.stability, retention: 0.9)
+                    state.records[id: kanji.id] = ReviewRecord(
+                        kanjiID: kanji.id, stability: initial.stability,
+                        difficulty: initial.difficulty, due: today + interval,
+                        lastReviewedDay: today, lapses: 0, reps: 1)
+                }
+                state.isFinished = true
+                let all = Array(state.records)
+                return .run { _ in await reviewStore.saveRecords(all) }
+            }
+        }
+    }
+
+    /// Loads the first word, first example sentence, and stroke-order guide for
+    /// the current kanji. All are optional/non-critical: on any failure the
+    /// worksheet still shows the glyph + write canvas.
+    private func loadCardContent(state: inout State) -> Effect<Action> {
+        guard let kanji = state.current else { return .none }
+        let id = kanji.id
+        return .run { send in
+            async let wordsTask = try? await dictionaryClient.words(id, 1)
+            async let sentencesTask = try? await dictionaryClient.sentences(id, 1)
+            let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
+            let word = (await wordsTask ?? []).first
+            let sentence = (await sentencesTask ?? []).first
+            await send(.cardContentLoaded(word: word, sentence: sentence, strokePaths: paths))
+        }
+    }
+}
