@@ -40,6 +40,12 @@ struct StudyHubView: View {
                             action: { store.send(.startPractice) }
                         ).popIn(delay: 0.26)
                     }
+                    launcher(
+                        icon: "character.book.closed", title: L.dictionary[appLanguage],
+                        subtitle: L.searchPrompt[appLanguage],
+                        count: nil, soft: Palette.skySoft, accent: Palette.sky,
+                        action: { store.send(.openDictionary) }
+                    ).popIn(delay: 0.32)
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 12)

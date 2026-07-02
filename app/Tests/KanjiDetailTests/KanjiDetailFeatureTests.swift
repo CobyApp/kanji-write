@@ -27,6 +27,7 @@ final class KanjiDetailFeatureTests: XCTestCase {
                 [RelationEntry(surface: "小", type: "antonym")]
             }
             $0.dictionaryClient.strokeOrder = { _ in ["M10 10", "M20 20", "M30 30"] }
+            $0.kanjiBookmarkStore.load = { [] }
         }
         await store.send(.onAppear) { $0.isLoading = true }
         await store.receive(
@@ -43,6 +44,7 @@ final class KanjiDetailFeatureTests: XCTestCase {
             $0.relations = [RelationEntry(surface: "小", type: "antonym")]
             $0.strokePaths = ["M10 10", "M20 20", "M30 30"]
         }
+        await store.receive(.bookmarkLoaded(false))
     }
 
     func testAddToReviewAddsNewRecord() async {

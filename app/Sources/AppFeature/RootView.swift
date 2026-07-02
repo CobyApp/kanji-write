@@ -95,6 +95,8 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
         WordDetailView(store: s)
     case let .writing(s):
         KanjiWritingView(store: s)
+    case let .dictionary(s):
+        DictionaryPathView(store: s)
     }
 }
 
@@ -117,8 +119,8 @@ struct RegularRootView: View {
                     .tag(RootFeature.Destination.home)
                 Label(L.study[appLanguage], systemImage: "pencil.and.outline")
                     .tag(RootFeature.Destination.study)
-                Label(L.dictionary[appLanguage], systemImage: "character.book.closed")
-                    .tag(RootFeature.Destination.dictionary)
+                Label(L.bookmarks[appLanguage], systemImage: "star")
+                    .tag(RootFeature.Destination.bookmarks)
                 Label(L.settings[appLanguage], systemImage: "gearshape")
                     .tag(RootFeature.Destination.settings)
             }
@@ -133,10 +135,14 @@ struct RegularRootView: View {
         case .home:
             NavigationStack { HomeView(store: store) }
         case .study:
-            NavigationStack { StudyHubView(store: store) }
-        case .dictionary:
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                DictionaryColumn(store: store)
+                StudyHubView(store: store)
+            } destination: { store in
+                pathDestination(store)
+            }
+        case .bookmarks:
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+                BookmarksView(store: store)
             } destination: { store in
                 pathDestination(store)
             }
@@ -166,19 +172,21 @@ struct CompactRootView: View {
             .tag(RootFeature.Destination.home)
             .tabItem { Label(L.today[appLanguage], systemImage: "sun.max") }
 
-            NavigationStack {
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
                 StudyHubView(store: store)
+            } destination: { store in
+                pathDestination(store)
             }
             .tag(RootFeature.Destination.study)
             .tabItem { Label(L.study[appLanguage], systemImage: "pencil.and.outline") }
 
             NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-                DictionaryColumn(store: store)
+                BookmarksView(store: store)
             } destination: { store in
                 pathDestination(store)
             }
-            .tag(RootFeature.Destination.dictionary)
-            .tabItem { Label(L.dictionary[appLanguage], systemImage: "character.book.closed") }
+            .tag(RootFeature.Destination.bookmarks)
+            .tabItem { Label(L.bookmarks[appLanguage], systemImage: "star") }
 
             NavigationStack {
                 ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
@@ -189,43 +197,84 @@ struct CompactRootView: View {
     }
 }
 
-// MARK: - Dictionary
+// MARK: - Dictionary (opened from the 학습 hub)
 
-/// The 사전 root: level browse + search, with a segmented toggle to the 단어장
-/// (wordbook). Tapping a level opens its kanji list; tapping a kanji/word drills.
-private struct DictionaryColumn: View {
-    @Bindable var store: StoreOf<RootFeature>
+/// The 사전 browse: level list + search over its own kanji snapshot. Tapping a
+/// level or a searched kanji delegates up to `RootFeature`, which pushes next.
+private struct DictionaryPathView: View {
+    @Bindable var store: StoreOf<DictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @State private var showWordbook = false
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
     }
 
-    private var searching: Bool {
-        !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
     var body: some View {
         ZStack {
             Palette.background.ignoresSafeArea()
-            if searching {
-                KanjiCardList(
-                    items: store.review.kanji.elements.filter { searchMatches($0, store.searchText) },
-                    glosses: store.review.glosses,
-                    onSelect: { store.send(.kanjiSelected($0)) })
-            } else if showWordbook {
-                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
+            if !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+                KanjiCardList(items: store.searchResults, glosses: store.glosses,
+                              onSelect: { store.send(.kanjiSelected($0)) })
             } else {
-                levelList
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(levels()) { level in
+                            let count = kanjiIn(store.kanji, in: level).count
+                            Button { store.send(.levelSelected(level)) } label: {
+                                HStack(spacing: 14) {
+                                    Text(level.label)
+                                        .font(.kawaii(17, weight: .semibold)).foregroundStyle(Palette.ink)
+                                    Spacer()
+                                    Text("\(count)").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Palette.inkSoft)
+                                }
+                                .roundedCard()
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(16)
+                }
             }
         }
         .navigationTitle(L.dictionary[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: searchBinding, prompt: L.searchPrompt[appLanguage])
+    }
+}
+
+// MARK: - Bookmarks
+
+/// The 북마크 tab: a segmented view over bookmarked kanji and saved words.
+private struct BookmarksView: View {
+    @Bindable var store: StoreOf<RootFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @State private var showWords = false
+
+    private var bookmarkedKanji: [Kanji] {
+        let ids = Set(store.bookmarkedIDs)
+        return store.review.kanji.elements.filter { ids.contains($0.id) }
+    }
+
+    var body: some View {
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            if showWords {
+                WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
+            } else if bookmarkedKanji.isEmpty {
+                emptyState(L.noBookmarkedKanji[appLanguage])
+            } else {
+                KanjiCardList(items: bookmarkedKanji, glosses: store.review.glosses,
+                              onSelect: { store.send(.kanjiSelected($0)) })
+            }
+        }
+        .navigationTitle(L.bookmarks[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Picker("", selection: $showWordbook) {
+                Picker("", selection: $showWords) {
                     Text(L.kanji[appLanguage]).tag(false)
                     Text(L.words[appLanguage]).tag(true)
                 }
@@ -233,30 +282,16 @@ private struct DictionaryColumn: View {
                 .frame(maxWidth: 220)
             }
         }
+        .task { store.send(.bookmarksAppeared) }
     }
 
-    private var levelList: some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(levels()) { level in
-                    let count = kanjiIn(store.review.kanji.elements, in: level).count
-                    Button { store.send(.levelSelected(level)) } label: {
-                        HStack(spacing: 14) {
-                            Text(level.label)
-                                .font(.kawaii(17, weight: .semibold)).foregroundStyle(Palette.ink)
-                            Spacer()
-                            Text("\(count)").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(Palette.inkSoft)
-                        }
-                        .roundedCard()
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(16)
+    private func emptyState(_ message: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: "star")
+                .font(.system(size: 40)).foregroundStyle(Palette.inkSoft)
+            Text(message).font(.kawaii(15)).foregroundStyle(Palette.inkSoft)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
