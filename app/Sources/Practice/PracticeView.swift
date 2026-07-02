@@ -7,6 +7,15 @@ import WritingCanvas
 public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.verticalSizeClass) private var vSize
+
+    /// A 10-cell (5×2 or 2×5) notebook filling the width: landscape / iPad → 5
+    /// columns × 2 rows; iPhone portrait → 2 columns × 5 rows.
+    private var traceColumns: Int {
+        if sizeClass == .regular { return 5 }
+        return vSize == .compact ? 5 : 2
+    }
 
     public init(store: StoreOf<PracticeFeature>) {
         self.store = store
@@ -84,7 +93,8 @@ public struct PracticeView: View {
                 }
             }
             TracingGrid(glyph: store.selected?.literal ?? "", paths: store.strokePaths,
-                        showGuide: store.showGuide, clearToken: store.clearToken, cellCount: 12)
+                        showGuide: store.showGuide, clearToken: store.clearToken,
+                        cellCount: 10, columns: traceColumns)
         }
         .roundedCard()
     }
