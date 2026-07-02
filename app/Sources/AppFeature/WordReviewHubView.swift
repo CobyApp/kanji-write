@@ -33,15 +33,15 @@ public struct WordReviewHubView: View {
                 .padding(16)
             }
         }
-        .navigationTitle("単語")
+        .navigationTitle(L.words[appLanguage])
         .task { wordStore.send(.onAppear) }
     }
 
     private var emptyCard: some View {
         VStack(spacing: 10) {
             Text("📖").font(.system(size: 44))
-            Text("単語帳はまだ空です").font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
-            Text("単語の詳細から「単語帳に追加」で保存すると\nここで復習できます")
+            Text(L.wordbookEmpty[appLanguage]).font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
+            Text(L.wordbookEmptyHint[appLanguage])
                 .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
                 .multilineTextAlignment(.center)
         }
@@ -51,10 +51,10 @@ public struct WordReviewHubView: View {
 
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("今日の単語", accent: Palette.mint)
+            SectionHeader(L.todayWords[appLanguage], accent: Palette.mint)
             HStack(spacing: 12) {
-                stat("復習", wordStore.dueIDs.count, Palette.lavender)
-                stat("単語帳", wordStore.savedIDs.count, Palette.mint)
+                stat(L.review[appLanguage], wordStore.dueIDs.count, Palette.lavender)
+                stat(L.wordbook[appLanguage], wordStore.savedIDs.count, Palette.mint)
             }
         }
         .roundedCard()
@@ -70,16 +70,16 @@ public struct WordReviewHubView: View {
 
     private var gradeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader("復習", accent: Palette.lavender)
+            SectionHeader(L.review[appLanguage], accent: Palette.lavender)
             ForEach(wordStore.dueIDs, id: \.self) { id in
                 if let word = wordStore.words[id: id] {
                     VStack(spacing: 10) {
                         wordRow(word, soft: Palette.lavenderSoft, accent: Palette.lavender)
                         HStack(spacing: 6) {
-                            gradeButton(id, .again, "もう一度", Palette.pink)
-                            gradeButton(id, .hard, "むずい", Palette.butter)
-                            gradeButton(id, .good, "できた", Palette.mint)
-                            gradeButton(id, .easy, "かんたん", Palette.sky)
+                            gradeButton(id, .again, L.gradeAgain[appLanguage], Palette.pink)
+                            gradeButton(id, .hard, L.gradeHard[appLanguage], Palette.butter)
+                            gradeButton(id, .good, L.gradeGood[appLanguage], Palette.mint)
+                            gradeButton(id, .easy, L.gradeEasy[appLanguage], Palette.sky)
                         }
                     }
                 }
@@ -90,7 +90,7 @@ public struct WordReviewHubView: View {
 
     private var wordbookSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader("単語帳", accent: Palette.butter)
+            SectionHeader(L.wordbook[appLanguage], accent: Palette.butter)
             ForEach(wordStore.savedIDs, id: \.self) { id in
                 if let word = wordStore.words[id: id] {
                     Button { wordStore.send(.wordTapped(word)) } label: {
