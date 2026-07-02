@@ -3,29 +3,13 @@ import PencilKit
 import SharedModels
 import SwiftUI
 
-/// Renders the KanjiVG stroke guide (109x109 viewBox) scaled into a cell.
-private struct TraceGuide: View {
-    private static let viewBoxSize: CGFloat = 109.0
-    let paths: [String]
-
-    var body: some View {
-        GeometryReader { geo in
-            let scale = min(geo.size.width, geo.size.height) / Self.viewBoxSize
-            ForEach(Array(paths.enumerated()), id: \.offset) { _, d in
-                SVGPath.path(from: SVGPath.parse(d))
-                    .applying(CGAffineTransform(scaleX: scale, y: scale))
-                    .stroke(Palette.inkSoft.opacity(0.4), lineWidth: 3)
-            }
-        }
-    }
-}
-
-/// One square write cell: an independent Pencil canvas over a faint character
-/// template (so the cell is never an empty box) plus the stroke-order guide,
-/// with squared-paper center lines (原稿用紙). Wipes when `clearToken` changes.
+/// One square write cell: an independent Pencil canvas over a single faint
+/// character template (shown when `showGuide` is on) with squared-paper center
+/// lines (原稿用紙). Wipes when `clearToken` changes. Stroke *order* is taught by
+/// the animated player above the grid, so cells show only the glyph to trace —
+/// no overlapping stroke outlines.
 private struct TraceCell: View {
     let glyph: String
-    let paths: [String]
     let showGuide: Bool
     let clearToken: Int
     @State private var drawing = PKDrawing()
@@ -42,15 +26,16 @@ private struct TraceCell: View {
                 }
                 .stroke(Palette.pinkSoft, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
             }
-            // Faint character template — always shown so a cell is never a blank
-            // box; the learner traces right over it.
-            Text(glyph)
-                .font(.system(size: 500))
-                .minimumScaleFactor(0.01)
-                .lineLimit(1)
-                .foregroundStyle(Palette.ink.opacity(0.14))
-                .padding(8)
-            if showGuide && !paths.isEmpty { TraceGuide(paths: paths) }
+            // The single faint character to trace over. Hidden when the guide is
+            // off (free writing / a blank practice cell).
+            if showGuide {
+                Text(glyph)
+                    .font(.system(size: 500))
+                    .minimumScaleFactor(0.01)
+                    .lineLimit(1)
+                    .foregroundStyle(Palette.ink.opacity(0.2))
+                    .padding(8)
+            }
             PencilCanvasView(drawing: $drawing)
         }
         .aspectRatio(1, contentMode: .fit)
@@ -99,7 +84,7 @@ public struct TracingGrid: View {
     public var body: some View {
         LazyVGrid(columns: gridColumns, spacing: 12) {
             ForEach(0..<cellCount, id: \.self) { _ in
-                TraceCell(glyph: glyph, paths: paths, showGuide: showGuide, clearToken: clearToken)
+                TraceCell(glyph: glyph, showGuide: showGuide, clearToken: clearToken)
             }
         }
     }
@@ -138,8 +123,7 @@ public struct WordTracingGrid: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(characters) { char in
-                    TraceCell(glyph: char.glyph, paths: char.paths,
-                              showGuide: showGuide, clearToken: clearToken)
+                    TraceCell(glyph: char.glyph, showGuide: showGuide, clearToken: clearToken)
                         .frame(width: cell, height: cell)
                 }
             }
