@@ -221,7 +221,11 @@ public struct WorksheetView: View {
 
     private var finishedCard: some View {
         VStack(spacing: 12) {
-            Text("🎉").font(.system(size: 52))
+            ZStack {
+                Sparkles()
+                Text("🎉").font(.system(size: 52)).celebrate()
+            }
+            .frame(height: 80)
             Text(L.doneToday[appLanguage])
                 .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
             Text(L.seeTomorrow[appLanguage])

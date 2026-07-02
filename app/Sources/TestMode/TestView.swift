@@ -157,7 +157,11 @@ public struct TestView: View {
 
     private var doneCard: some View {
         VStack(spacing: 12) {
-            Text("🎉").font(.system(size: 52))
+            ZStack {
+                Sparkles()
+                Text("🎉").font(.system(size: 52)).celebrate()
+            }
+            .frame(height: 80)
             Text(L.nothingDue[appLanguage])
                 .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
             Text(L.seeTomorrow[appLanguage])

@@ -134,3 +134,52 @@ extension View {
     /// Springy scale+fade entrance. Stagger a list by passing increasing delays.
     public func popIn(delay: Double = 0) -> some View { modifier(PopIn(delay: delay)) }
 }
+
+/// A looping celebratory bounce + wiggle for a badge/emoji on completion screens.
+private struct Celebrate: ViewModifier {
+    @State private var animate = false
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(animate ? 1.12 : 0.92)
+            .rotationEffect(.degrees(animate ? 7 : -7))
+            .onAppear {
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.45)
+                    .repeatForever(autoreverses: true)) { animate = true }
+            }
+    }
+}
+
+extension View {
+    /// A never-ending celebratory bounce+wiggle (for 🎉 on done screens).
+    public func celebrate() -> some View { modifier(Celebrate()) }
+}
+
+/// A pulsing ring of sparkles radiating outward — a flourish behind completion
+/// badges.
+public struct Sparkles: View {
+    var count = 10
+    var radius: CGFloat = 66
+    @State private var on = false
+
+    public init(count: Int = 10, radius: CGFloat = 66) {
+        self.count = count
+        self.radius = radius
+    }
+
+    public var body: some View {
+        ZStack {
+            ForEach(0..<count, id: \.self) { i in
+                Image(systemName: "sparkle")
+                    .font(.system(size: i.isMultiple(of: 2) ? 16 : 11))
+                    .foregroundStyle(i.isMultiple(of: 2) ? Palette.butter : Palette.pink)
+                    .offset(y: -radius)
+                    .rotationEffect(.degrees(Double(i) / Double(count) * 360))
+                    .scaleEffect(on ? 1 : 0.2)
+                    .opacity(on ? 0.9 : 0.3)
+            }
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true)) { on = true }
+        }
+    }
+}
