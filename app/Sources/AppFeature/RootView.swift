@@ -85,7 +85,7 @@ private func sessionView(_ store: StoreOf<RootFeature.Session>) -> some View {
 func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
     switch store.case {
     case let .kanjiList(s):
-        KanjiCardList(items: s.kanji, onSelect: { s.send(.kanjiTapped($0)) })
+        KanjiCardList(items: s.kanji, glosses: s.glosses, onSelect: { s.send(.kanjiTapped($0)) })
             .navigationTitle(s.title)
     case let .kanji(s):
         KanjiDetailView(store: s)
@@ -210,6 +210,7 @@ private struct DictionaryColumn: View {
             if searching {
                 KanjiCardList(
                     items: store.review.kanji.elements.filter { searchMatches($0, store.searchText) },
+                    glosses: store.review.glosses,
                     onSelect: { store.send(.kanjiSelected($0)) })
             } else if showWordbook {
                 WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
@@ -259,9 +260,20 @@ private struct DictionaryColumn: View {
 
 // MARK: - Shared
 
+/// The kanji's meaning for the selected language, falling back deterministically.
+func kanjiGloss(_ glosses: [String: String], _ language: AppLanguage) -> String? {
+    for key in [language.glossKey, "en", "ja", "ko", "zh"] {
+        if let value = glosses[key], !value.isEmpty { return value }
+    }
+    return glosses.values.first(where: { !$0.isEmpty })
+}
+
 /// A scrolling list of kanji cards, reused by search results and every level list.
+/// Each row leads with the kanji's meaning (뜻음) in the selected language for
+/// easier memorization, with the Japanese on/kun readings underneath.
 struct KanjiCardList: View {
     let items: [Kanji]
+    var glosses: [Int: [String: String]] = [:]
     let onSelect: (Kanji) -> Void
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
@@ -272,15 +284,22 @@ struct KanjiCardList: View {
                 LazyVStack(spacing: 10) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
                         let tint = Palette.tint(index)
+                        let meaning = kanjiGloss(glosses[kanji.id] ?? [:], appLanguage)
+                        let readings = (kanji.onReadings + kanji.kunReadings).joined(separator: "、")
                         Button { onSelect(kanji) } label: {
                             HStack(spacing: 14) {
                                 PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
                                            size: 48, fontSize: 26)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(kanji.onReadings.joined(separator: "、"))
-                                        .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.ink)
-                                    Text(kanji.kunReadings.joined(separator: "、"))
-                                        .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                                    if let meaning, !meaning.isEmpty {
+                                        Text(meaning)
+                                            .font(.kawaii(15, weight: .bold, language: appLanguage))
+                                            .foregroundStyle(Palette.ink)
+                                    }
+                                    if !readings.isEmpty {
+                                        Text(readings)
+                                            .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                                    }
                                 }
                                 Spacer()
                             }

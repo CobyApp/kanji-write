@@ -10,9 +10,12 @@ public struct KanjiListPathFeature {
     public struct State: Equatable {
         public let title: String
         public let kanji: [Kanji]
-        public init(title: String, kanji: [Kanji]) {
+        /// Per-kanji glosses (kanjiID → lang code → meaning) for the row meanings.
+        public let glosses: [Int: [String: String]]
+        public init(title: String, kanji: [Kanji], glosses: [Int: [String: String]] = [:]) {
             self.title = title
             self.kanji = kanji
+            self.glosses = glosses
         }
     }
 

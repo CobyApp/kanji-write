@@ -8,6 +8,8 @@ public struct ReviewFeature {
     public struct State: Equatable {
         public var records: IdentifiedArrayOf<ReviewRecord> = []
         public var kanji: IdentifiedArrayOf<Kanji> = []
+        /// Every kanji's glosses (kanjiID → lang code → meaning), for list rows.
+        public var glosses: [Int: [String: String]] = [:]
         public var today: Int = 0
         public var isLoading = false
         public init() {}
@@ -15,7 +17,7 @@ public struct ReviewFeature {
 
     public enum Action: Equatable {
         case onAppear
-        case loaded([ReviewRecord], [Kanji], Int)
+        case loaded([ReviewRecord], [Kanji], Int, [Int: [String: String]])
         case grade(kanjiID: Int, grade: Grade)
         case kanjiTapped(Kanji)
     }
@@ -35,13 +37,16 @@ public struct ReviewFeature {
                 let today = Int(date.now.timeIntervalSince1970 / 86_400)
                 return .run { send in
                     async let records = reviewStore.loadRecords()
+                    async let glossesTask = try? await dictionaryClient.allGlosses()
                     let kanji = (try? await dictionaryClient.allKanji()) ?? []
-                    await send(.loaded(await records, kanji, today))
+                    let glosses = await glossesTask ?? [:]
+                    await send(.loaded(await records, kanji, today, glosses))
                 }
-            case let .loaded(records, kanji, today):
+            case let .loaded(records, kanji, today, glosses):
                 state.isLoading = false
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.kanji = IdentifiedArray(uniqueElements: kanji)
+                state.glosses = glosses
                 state.today = today
                 return .none
             case let .grade(kanjiID, grade):
