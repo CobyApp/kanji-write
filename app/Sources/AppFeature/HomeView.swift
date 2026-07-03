@@ -262,6 +262,8 @@ struct HomeView: View {
 
     // MARK: Study-mode launchers
 
+    /// Compact (iPhone) launchers — learn + review only. Practice (free
+    /// writing) is an iPad/Apple-Pencil activity, so it's omitted here.
     private var launchers: some View {
         VStack(spacing: 12) {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
@@ -272,9 +274,6 @@ struct HomeView: View {
                      subtitle: due > 0 ? L.reviewSub[appLanguage] : L.allCaughtUp[appLanguage],
                      count: due, soft: Palette.lavenderSoft, accent: Palette.lavender,
                      dimmed: due == 0) { if due > 0 { store.send(.startReview) } }
-            launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
-                     subtitle: L.practiceSub[appLanguage], count: nil,
-                     soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
         }
     }
 
