@@ -18,6 +18,7 @@ private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage
 public struct TestView: View {
     @Bindable public var store: StoreOf<TestFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<TestFeature>) {
         self.store = store
@@ -42,11 +43,21 @@ public struct TestView: View {
                 VStack(spacing: 16) {
                     progressGrid
                     promptCard
-                    if store.revealed {
-                        answerCard(kanji)
-                        gradeButtons
+                    if sizeClass == .compact {
+                        // iPhone: pick the kanji from four choices.
+                        choiceGrid(kanji)
+                        if store.revealed {
+                            answerCard(kanji)
+                            nextButton(kanji)
+                        }
                     } else {
-                        showAnswerButton
+                        // iPad: recall in your head, reveal, self-grade.
+                        if store.revealed {
+                            answerCard(kanji)
+                            gradeButtons
+                        } else {
+                            showAnswerButton
+                        }
                     }
                 }
                 .padding(16)
@@ -89,7 +100,7 @@ public struct TestView: View {
 
     private var promptCard: some View {
         VStack(spacing: 10) {
-            Text(L.testPrompt[appLanguage])
+            Text((sizeClass == .compact ? L.testChoosePrompt : L.testPrompt)[appLanguage])
                 .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
             Text(localizedGloss(store.glosses, appLanguage) ?? "…")
                 .font(.kawaii(26, weight: .bold, language: appLanguage))
@@ -143,6 +154,48 @@ public struct TestView: View {
         HStack(spacing: 12) {
             gradeButton(L.fail[appLanguage], Palette.pink) { store.send(.graded(pass: false)) }
             gradeButton(L.pass[appLanguage], Palette.mint) { store.send(.graded(pass: true)) }
+        }
+    }
+
+    // MARK: iPhone multiple-choice
+
+    private func choiceGrid(_ answer: Kanji) -> some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                  spacing: 12) {
+            ForEach(store.options) { option in
+                Button { store.send(.optionSelected(option.id)) } label: {
+                    Text(option.literal)
+                        .font(.kawaii(40, weight: .bold)).foregroundStyle(Palette.ink)
+                        .frame(maxWidth: .infinity).frame(height: 92)
+                        .background(choiceFill(option, answer))
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(choiceStroke(option, answer), lineWidth: 2))
+                }
+                .buttonStyle(.bouncy)
+                .disabled(store.revealed)
+            }
+        }
+    }
+
+    /// After reveal: the correct choice turns mint, a wrong pick turns pink.
+    private func choiceFill(_ option: Kanji, _ answer: Kanji) -> Color {
+        guard store.revealed else { return Palette.card }
+        if option.id == answer.id { return Palette.mintSoft }
+        if option.id == store.selected { return Palette.pinkSoft }
+        return Palette.card
+    }
+
+    private func choiceStroke(_ option: Kanji, _ answer: Kanji) -> Color {
+        guard store.revealed else { return Palette.inkSoft.opacity(0.2) }
+        if option.id == answer.id { return Palette.mint }
+        if option.id == store.selected { return Palette.pink }
+        return .clear
+    }
+
+    private func nextButton(_ answer: Kanji) -> some View {
+        gradeButton(L.next[appLanguage], Palette.lavender) {
+            store.send(.graded(pass: store.selected == answer.id))
         }
     }
 
