@@ -25,6 +25,8 @@ public struct PracticeFeature {
         }
         /// Faint stroke-order guide (KanjiVG path `d` strings) for `selected`.
         public var strokePaths: [String] = []
+        /// Meaning map (lang code → text) for `selected`; view resolves per language.
+        public var glosses: [String: String] = [:]
         /// Whether the faint guide is shown behind each cell.
         public var showGuide = true
         /// Incremented to force every canvas cell to reset (clear-all).
@@ -40,6 +42,7 @@ public struct PracticeFeature {
         case kanjiSelected(Kanji)
         case levelSelected(String)
         case strokesLoaded([String])
+        case glossesLoaded([String: String])
         case toggleGuide
         case clearAll
         case addCells
@@ -85,16 +88,23 @@ public struct PracticeFeature {
             case let .kanjiSelected(kanji):
                 state.selected = kanji
                 state.strokePaths = []
+                state.glosses = [:]
                 state.clearToken += 1  // fresh page when switching kanji
                 state.cellCount = 10   // reset the notebook length
                 let id = kanji.id
                 return .run { send in
+                    async let glossesTask = try? await dictionaryClient.glosses(id)
                     let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
                     await send(.strokesLoaded(paths))
+                    await send(.glossesLoaded(await glossesTask ?? [:]))
                 }
 
             case let .strokesLoaded(paths):
                 state.strokePaths = paths
+                return .none
+
+            case let .glossesLoaded(glosses):
+                state.glosses = glosses
                 return .none
 
             case .toggleGuide:
