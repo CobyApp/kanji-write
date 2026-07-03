@@ -30,11 +30,14 @@ private struct TraceCell: View {
             // off (free writing / a blank practice cell).
             if showGuide {
                 Text(glyph)
-                    .font(.system(size: 500))
+                    .font(.kawaii(500))
                     .minimumScaleFactor(0.01)
                     .lineLimit(1)
                     .foregroundStyle(Palette.ink.opacity(0.2))
-                    .padding(8)
+                    .padding(4)
+                    // CJK glyphs sit small inside their line box; scale up a touch
+                    // (the cell clips) so the character fills the cell, balanced.
+                    .scaleEffect(1.18)
             }
             PencilCanvasView(drawing: $drawing)
         }
