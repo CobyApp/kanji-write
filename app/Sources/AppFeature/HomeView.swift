@@ -16,6 +16,7 @@ struct HomeView: View {
     @AppStorage("planStartTS") private var planStartTS: Double = 0
     @AppStorage("planEndTS") private var planEndTS: Double = 0
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var showPlan = false
 
     private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, level: targetLevel) }
     private var learnedInLevel: Int {
@@ -56,6 +57,7 @@ struct HomeView: View {
     }
     private var doneToday: Int { learnedToday(records: store.review.records.elements, today: store.review.today) }
     private var goalFraction: Double { newPerDay > 0 ? min(Double(doneToday) / Double(newPerDay), 1) : 0 }
+    private var remaining: Int { remainingNew(order: levelOrder, records: store.review.records.elements) }
 
     var body: some View {
         ZStack {
@@ -88,6 +90,22 @@ struct HomeView: View {
             syncPerDay()  // keep the active per-day (goal chip / session) equal to the plan
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
+        }
+        .sheet(isPresented: $showPlan) {
+            NavigationStack {
+                ScrollView { planEditor.padding(20) }
+                    .background(Palette.background)
+                    .navigationTitle(L.studyPlan[appLanguage])
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(L.close[appLanguage]) { showPlan = false }
+                        }
+                    }
+            }
+            .presentationDetents([.medium, .large])
+            .tint(Palette.accent)
+            .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
         }
     }
 
@@ -123,7 +141,7 @@ struct HomeView: View {
             greeting.popIn(delay: 0.02)
             ring(168).popIn(delay: 0.08)
             HStack(spacing: 12) { streakChip; goalChip }.popIn(delay: 0.12)
-            planCard.popIn(delay: 0.16)
+            planButton.popIn(delay: 0.16)
             launchers.popIn(delay: 0.22)
             dictionaryButton.popIn(delay: 0.28)
             bookmarksSection.popIn(delay: 0.34)
@@ -137,7 +155,7 @@ struct HomeView: View {
             greeting.popIn(delay: 0.02)
             ring(200).popIn(delay: 0.08)
             HStack(spacing: 14) { streakChip; goalChip }.popIn(delay: 0.12)
-            planCard.popIn(delay: 0.16)
+            planButton.popIn(delay: 0.16)
             launchersGrid.popIn(delay: 0.22)
             bookmarksSection.popIn(delay: 0.30)
         }
@@ -194,7 +212,29 @@ struct HomeView: View {
 
     // MARK: Plan
 
-    private var planCard: some View {
+    /// A slim home entry that opens the plan editor sheet.
+    private var planButton: some View {
+        Button { showPlan = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "target")
+                    .font(.system(size: 20, weight: .semibold)).foregroundStyle(Palette.sky)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L.studyPlan[appLanguage])
+                        .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                    Text("\(targetLevel) · \(newPerDay)\(L.perDayUnit[appLanguage]) · ~\(daysToFinish(remaining: remaining, perDay: newPerDay))\(L.daysUnit[appLanguage])")
+                        .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.inkSoft)
+            }
+            .cardBackground()
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    /// The full plan editor, shown inside the plan sheet.
+    private var planEditor: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(L.studyPlan[appLanguage], accent: Palette.sky)
             Picker(L.targetLevel[appLanguage], selection: $targetLevel) {

@@ -42,6 +42,7 @@ public struct WorksheetView: View {
     @AppStorage("newPerDay") private var newPerDay = 7
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -101,21 +102,24 @@ public struct WorksheetView: View {
     // writing practice lives in the 연습 screen).
 
     private func writeCard(_ kanji: Kanji) -> some View {
-        VStack(spacing: 12) {
+        // A big, centered glyph — iPhone has no tracing grid, so give it room.
+        let glyphSize: CGFloat = sizeClass == .compact ? 260 : 220
+        return VStack(spacing: 16) {
             if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                 Text(meaning)
-                    .font(.kawaii(20, weight: .bold, language: appLanguage))
+                    .font(.kawaii(22, weight: .bold, language: appLanguage))
                     .foregroundStyle(Palette.ink)
                     .multilineTextAlignment(.center)
             }
             // Animated stroke order (how it's written).
             if store.strokePaths.isEmpty {
                 PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
-                           size: 120, fontSize: 76)
+                           size: glyphSize, fontSize: glyphSize * 0.62)
             } else {
-                StrokeOrderPlayer(paths: store.strokePaths, size: 180)
+                StrokeOrderPlayer(paths: store.strokePaths, size: glyphSize)
             }
         }
+        .frame(maxWidth: .infinity)
         .roundedCard()
     }
 
