@@ -278,7 +278,11 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite",
             deploymentTargets: iOS,
             infoPlist: .extendingDefault(with: [
-                "UILaunchScreen": ["UIColorName": ""]
+                "UILaunchScreen": ["UIColorName": ""],
+                // Portrait-only on both iPhone and iPad — the whole UI is designed
+                // as a single portrait column.
+                "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
+                "UISupportedInterfaceOrientations~ipad": ["UIInterfaceOrientationPortrait"],
             ]),
             sources: ["Sources/KanjiApp/**"],
             resources: ["Sources/KanjiApp/Resources/**"],
