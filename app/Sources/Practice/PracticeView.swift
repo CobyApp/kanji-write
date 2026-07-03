@@ -127,15 +127,19 @@ public struct PracticeView: View {
     }
 
     /// The selected kanji's meaning (뜻음) + readings (음/훈) with a speaker.
+    /// The glyph tile is a fixed size matching the full info block (meaning +
+    /// on + kun) so it stays the same across kanji, even when a reading is absent.
     private func infoRow(_ kanji: Kanji) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        // Fixed height = meaning line + on line + kun line + spacings.
+        let tileSize: CGFloat = 84
+        return HStack(alignment: .center, spacing: 14) {
             PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
-                       size: 56, fontSize: 32)
-            VStack(alignment: .leading, spacing: 4) {
+                       size: tileSize, fontSize: tileSize * 0.6)
+            VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 8) {
                     if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                         Text(meaning)
-                            .font(.kawaii(18, weight: .bold, language: appLanguage))
+                            .font(.kawaii(19, weight: .bold, language: appLanguage))
                             .foregroundStyle(Palette.ink)
                     }
                     SpeakButton(kanji.literal)
@@ -149,6 +153,8 @@ public struct PracticeView: View {
             }
             Spacer(minLength: 0)
         }
+        // Reserve the full-info height so the tile size (and row) never changes.
+        .frame(minHeight: tileSize, alignment: .center)
     }
 
     private func readingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
