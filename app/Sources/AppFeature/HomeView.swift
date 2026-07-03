@@ -63,12 +63,12 @@ struct HomeView: View {
             FloatingBlobs()
             ScrollView {
                 Group {
-                    if sizeClass == .compact { compactLayout } else { regularLayout }
+                    if sizeClass == .compact { compactLayout } else { padPortraitLayout }
                 }
-                .padding(.horizontal, sizeClass == .compact ? 18 : 24)
+                .padding(.horizontal, sizeClass == .compact ? 18 : 26)
                 .padding(.top, 8)
                 .padding(.bottom, 40)
-                .frame(maxWidth: sizeClass == .compact ? 560 : 920)
+                .frame(maxWidth: sizeClass == .compact ? 560 : 900)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -85,6 +85,7 @@ struct HomeView: View {
         .onChange(of: planStartTS) { _, _ in syncPerDay() }
         .onChange(of: planEndTS) { _, _ in syncPerDay() }
         .task {
+            syncPerDay()  // keep the active per-day (goal chip / session) equal to the plan
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
         }
@@ -131,20 +132,15 @@ struct HomeView: View {
         }
     }
 
-    /// iPad: use the width — ring + plan side by side, launchers in a 2-up grid.
-    @ViewBuilder private var regularLayout: some View {
-        VStack(spacing: 22) {
+    /// iPad portrait: a centered column — ring + stats on top, plan below full
+    /// width, launchers in a 2-up grid. (Taller than it is wide, so no side panes.)
+    @ViewBuilder private var padPortraitLayout: some View {
+        VStack(spacing: 20) {
             greeting.popIn(delay: 0.02)
-            HStack(alignment: .top, spacing: 20) {
-                VStack(spacing: 16) {
-                    ring(190)
-                    HStack(spacing: 12) { streakChip; goalChip }
-                }
-                .frame(maxWidth: .infinity)
-                planCard.frame(maxWidth: .infinity)
-            }
-            .popIn(delay: 0.10)
-            launchersGrid.popIn(delay: 0.20)
+            ring(200).popIn(delay: 0.08)
+            HStack(spacing: 14) { streakChip; goalChip }.popIn(delay: 0.12)
+            planCard.popIn(delay: 0.16)
+            launchersGrid.popIn(delay: 0.22)
             bookmarksSection.popIn(delay: 0.30)
         }
     }
@@ -219,7 +215,7 @@ struct HomeView: View {
                 Text(L.perDayGoal[appLanguage])
                     .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
                 Spacer()
-                Text("\(plannedPerDay)\(L.perDayUnit[appLanguage])")
+                Text("\(newPerDay)\(L.perDayUnit[appLanguage])")
                     .font(.kawaii(22, weight: .bold)).foregroundStyle(Palette.pink)
             }
         }
