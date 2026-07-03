@@ -59,3 +59,29 @@ public func daysToFinish(remaining: Int, perDay: Int) -> Int {
     guard perDay > 0 else { return 0 }
     return (remaining + perDay - 1) / perDay
 }
+
+/// The set of epoch-days on which the learner studied at least one kanji,
+/// derived from each record's last-reviewed day. (Approximate: only the most
+/// recent review per kanji is stored, so it undercounts re-reviews, but it is
+/// enough to drive a motivational streak.)
+public func studyDays(records: [ReviewRecord]) -> Set<Int> {
+    Set(records.map(\.lastReviewedDay))
+}
+
+/// Current consecutive-day study streak ending today (or yesterday if today is
+/// not yet studied). Zero if neither today nor yesterday has activity.
+public func currentStreak(activeDays: Set<Int>, today: Int) -> Int {
+    var day = activeDays.contains(today) ? today : today - 1
+    guard activeDays.contains(day) else { return 0 }
+    var streak = 0
+    while activeDays.contains(day) {
+        streak += 1
+        day -= 1
+    }
+    return streak
+}
+
+/// How many kanji were reviewed/learned today (records last touched today).
+public func learnedToday(records: [ReviewRecord], today: Int) -> Int {
+    records.filter { $0.lastReviewedDay == today }.count
+}

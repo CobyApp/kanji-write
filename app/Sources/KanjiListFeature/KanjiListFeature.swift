@@ -24,11 +24,16 @@ public func kanjiIn(_ all: [Kanji], in level: KanjiLevel) -> [Kanji] {
     all.filter { $0.jlptLevel == level.level }
 }
 
-/// Free-text match: the literal, or any on/kun reading (kun dots ignored).
-public func searchMatches(_ k: Kanji, _ query: String) -> Bool {
+/// Free-text match: the literal, any on/kun reading (kun dots ignored), or the
+/// kanji's meaning in any language when `meaning` is supplied (so a Korean/English
+/// learner can search by 뜻, e.g. "산" → 山, "mountain" → 山). Meaning matching is
+/// case-insensitive.
+public func searchMatches(_ k: Kanji, _ query: String, meaning: String? = nil) -> Bool {
     let q = query.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !q.isEmpty else { return false }
     if k.literal.contains(q) { return true }
     let readings = (k.onReadings + k.kunReadings).map { $0.replacingOccurrences(of: ".", with: "") }
-    return readings.contains { $0.contains(q) }
+    if readings.contains(where: { $0.contains(q) }) { return true }
+    if let meaning, meaning.lowercased().contains(q.lowercased()) { return true }
+    return false
 }
