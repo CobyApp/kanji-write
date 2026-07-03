@@ -116,19 +116,17 @@ struct HomeView: View {
 
     // MARK: Adaptive layouts
 
-    /// iPhone: a tight single column. Ring + stats share a row to save height.
+    /// iPhone: a single column mirroring the iPad flow — ring centered on top,
+    /// the streak/goal chips in a row beneath it, then plan and launchers.
     @ViewBuilder private var compactLayout: some View {
         VStack(spacing: 16) {
             greeting.popIn(delay: 0.02)
-            HStack(spacing: 16) {
-                ring(132)
-                VStack(spacing: 10) { streakChip; goalChip }
-            }
-            .popIn(delay: 0.08)
-            planCard.popIn(delay: 0.14)
-            launchers.popIn(delay: 0.20)
-            dictionaryButton.popIn(delay: 0.26)
-            bookmarksSection.popIn(delay: 0.32)
+            ring(168).popIn(delay: 0.08)
+            HStack(spacing: 12) { streakChip; goalChip }.popIn(delay: 0.12)
+            planCard.popIn(delay: 0.16)
+            launchers.popIn(delay: 0.22)
+            dictionaryButton.popIn(delay: 0.28)
+            bookmarksSection.popIn(delay: 0.34)
         }
     }
 
