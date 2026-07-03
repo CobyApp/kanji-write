@@ -4,6 +4,14 @@ import SharedModels
 import SwiftUI
 import WritingCanvas
 
+/// The kanji's meaning for the selected language, falling back deterministically.
+private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage) -> String? {
+    for key in [language.glossKey, "en", "ja", "ko", "zh"] {
+        if let value = glosses[key], !value.isEmpty { return value }
+    }
+    return glosses.values.first(where: { !$0.isEmpty })
+}
+
 public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
@@ -101,12 +109,7 @@ public struct PracticeView: View {
     private var notebookCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let selected = store.selected {
-                HStack(spacing: 10) {
-                    PastelTile(selected.literal, soft: Palette.pinkSoft, accent: Palette.pink,
-                               size: 44, fontSize: 26)
-                    Text(L.practicePrompt[appLanguage])
-                        .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                }
+                infoRow(selected)
             }
             TracingGrid(glyph: store.selected?.literal ?? "", paths: store.strokePaths,
                         showGuide: store.showGuide, clearToken: store.clearToken,
@@ -121,6 +124,41 @@ public struct PracticeView: View {
             }
         }
         .roundedCard()
+    }
+
+    /// The selected kanji's meaning (뜻음) + readings (음/훈) with a speaker.
+    private func infoRow(_ kanji: Kanji) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
+                       size: 56, fontSize: 32)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
+                        Text(meaning)
+                            .font(.kawaii(18, weight: .bold, language: appLanguage))
+                            .foregroundStyle(Palette.ink)
+                    }
+                    SpeakButton(kanji.literal)
+                }
+                if !kanji.onReadings.isEmpty {
+                    readingLine(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                }
+                if !kanji.kunReadings.isEmpty {
+                    readingLine(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func readingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(label)
+                .font(.kawaii(12, weight: .bold)).foregroundStyle(accent)
+                .frame(width: 26, alignment: .leading)
+            Text(readings.joined(separator: "、"))
+                .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+        }
     }
 
     private func actionButton(_ label: String, _ icon: String, _ color: Color,
