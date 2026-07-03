@@ -49,23 +49,26 @@ struct HomeView: View {
         return store.review.kanji.elements.filter { ids.contains($0.id) }
     }
 
+    // Streak + today's goal.
+    private var streak: Int {
+        currentStreak(activeDays: studyDays(records: store.review.records.elements),
+                      today: store.review.today)
+    }
+    private var doneToday: Int { learnedToday(records: store.review.records.elements, today: store.review.today) }
+    private var goalFraction: Double { newPerDay > 0 ? min(Double(doneToday) / Double(newPerDay), 1) : 0 }
+
     var body: some View {
         ZStack {
             Palette.background.ignoresSafeArea()
             FloatingBlobs()
             ScrollView {
-                VStack(spacing: 22) {
-                    greeting.popIn(delay: 0.02)
-                    ring.popIn(delay: 0.08)
-                    planCard.popIn(delay: 0.14)
-                    launchers.popIn(delay: 0.20)
-                    dictionaryButton.popIn(delay: 0.26)
-                    bookmarksSection.popIn(delay: 0.32)
+                Group {
+                    if sizeClass == .compact { compactLayout } else { regularLayout }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, sizeClass == .compact ? 18 : 24)
                 .padding(.top, 8)
                 .padding(.bottom, 40)
-                .frame(maxWidth: 620)
+                .frame(maxWidth: sizeClass == .compact ? 560 : 920)
                 .frame(maxWidth: .infinity)
             }
         }
@@ -100,13 +103,98 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var ring: some View {
-        ProgressRing(progress: progress, size: 172, lineWidth: 18) {
+    private func ring(_ size: CGFloat) -> some View {
+        ProgressRing(progress: progress, size: size, lineWidth: size > 160 ? 18 : 15) {
             VStack(spacing: 2) {
                 Text("\(Int(progress * 100))%")
-                    .font(.kawaii(38, weight: .bold)).foregroundStyle(Palette.ink)
-                Text(targetLevel).font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.pink)
+                    .font(.kawaii(size > 160 ? 38 : 30, weight: .bold)).foregroundStyle(Palette.ink)
+                Text(targetLevel).font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.pink)
             }
+        }
+    }
+
+    // MARK: Adaptive layouts
+
+    /// iPhone: a tight single column. Ring + stats share a row to save height.
+    @ViewBuilder private var compactLayout: some View {
+        VStack(spacing: 16) {
+            greeting.popIn(delay: 0.02)
+            HStack(spacing: 16) {
+                ring(132)
+                VStack(spacing: 10) { streakChip; goalChip }
+            }
+            .popIn(delay: 0.08)
+            planCard.popIn(delay: 0.14)
+            launchers.popIn(delay: 0.20)
+            dictionaryButton.popIn(delay: 0.26)
+            bookmarksSection.popIn(delay: 0.32)
+        }
+    }
+
+    /// iPad: use the width — ring + plan side by side, launchers in a 2-up grid.
+    @ViewBuilder private var regularLayout: some View {
+        VStack(spacing: 22) {
+            greeting.popIn(delay: 0.02)
+            HStack(alignment: .top, spacing: 20) {
+                VStack(spacing: 16) {
+                    ring(190)
+                    HStack(spacing: 12) { streakChip; goalChip }
+                }
+                .frame(maxWidth: .infinity)
+                planCard.frame(maxWidth: .infinity)
+            }
+            .popIn(delay: 0.10)
+            launchersGrid.popIn(delay: 0.20)
+            bookmarksSection.popIn(delay: 0.30)
+        }
+    }
+
+    // MARK: Streak + today's goal chips
+
+    private var streakChip: some View {
+        VStack(spacing: 4) {
+            Text("\(streak)").font(.kawaii(26, weight: .bold)).foregroundStyle(Palette.butter)
+            Text(L.streak[appLanguage]).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 14)
+        .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: Palette.ink.opacity(0.05), radius: 5, y: 2)
+    }
+
+    private var goalChip: some View {
+        VStack(spacing: 6) {
+            Text("\(doneToday)/\(newPerDay)")
+                .font(.kawaii(20, weight: .bold)).monospacedDigit().foregroundStyle(Palette.mint)
+            Capsule().fill(Palette.mintSoft).frame(height: 6)
+                .overlay(alignment: .leading) {
+                    GeometryReader { geo in
+                        Capsule().fill(Palette.mint).frame(width: geo.size.width * goalFraction)
+                    }
+                }
+                .frame(height: 6).padding(.horizontal, 10)
+            Text(L.todayGoal[appLanguage]).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 12)
+        .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: Palette.ink.opacity(0.05), radius: 5, y: 2)
+    }
+
+    /// The four launchers as a 2-column grid (iPad).
+    private var launchersGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                  spacing: 12) {
+            launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
+                     subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
+                     soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
+            let due = session.dueIDs.count
+            launcher(icon: "arrow.2.circlepath", title: L.review[appLanguage],
+                     subtitle: due > 0 ? L.reviewSub[appLanguage] : L.allCaughtUp[appLanguage],
+                     count: due, soft: Palette.lavenderSoft, accent: Palette.lavender,
+                     dimmed: due == 0) { if due > 0 { store.send(.startReview) } }
+            launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
+                     subtitle: L.practiceSub[appLanguage], count: nil,
+                     soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
+            dictionaryButton
         }
     }
 

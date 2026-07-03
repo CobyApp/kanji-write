@@ -30,6 +30,23 @@ final class CurriculumTests: XCTestCase {
         XCTAssertEqual(daysToFinish(remaining: 8, perDay: 0), 0)   // guard
     }
 
+    func testStreakAndLearnedToday() {
+        func rec(_ id: Int, day: Int) -> ReviewRecord {
+            ReviewRecord(kanjiID: id, stability: 5, difficulty: 5, due: 0, lastReviewedDay: day)
+        }
+        // Studied days 100, 99, 98, and 90 → streak from 100 is 3 (100,99,98).
+        let records = [rec(1, day: 100), rec(2, day: 99), rec(3, day: 98), rec(4, day: 90)]
+        let days = studyDays(records: records)
+        XCTAssertEqual(currentStreak(activeDays: days, today: 100), 3)
+        // Today not studied but yesterday was → streak still counts from yesterday.
+        XCTAssertEqual(currentStreak(activeDays: days, today: 101), 3)
+        // Gap of two days → streak broken.
+        XCTAssertEqual(currentStreak(activeDays: days, today: 103), 0)
+        XCTAssertEqual(learnedToday(records: records, today: 100), 1)
+        XCTAssertEqual(learnedToday(records: records, today: 90), 1)
+        XCTAssertEqual(learnedToday(records: records, today: 50), 0)
+    }
+
     func testJLPTOrderThenStrokesThenID() {
         let input = [
             k(1, strokes: 10, grade: 1, jlpt: "N1"),

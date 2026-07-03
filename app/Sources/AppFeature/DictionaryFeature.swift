@@ -20,7 +20,12 @@ public struct DictionaryFeature {
         public var searchResults: [Kanji] {
             let q = searchText.trimmingCharacters(in: .whitespaces)
             guard !q.isEmpty else { return [] }
-            return kanji.filter { searchMatches($0, searchText) }
+            return kanji.filter { k in
+                // Search the meaning across every language so 뜻 lookups work
+                // regardless of the app language ("산"/"mountain" → 山).
+                let meaning = glosses[k.id]?.values.joined(separator: " ")
+                return searchMatches(k, searchText, meaning: meaning)
+            }
         }
     }
 

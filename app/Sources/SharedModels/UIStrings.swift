@@ -176,6 +176,11 @@ public enum L {
     public static let perDayGoal = L10nText(ko: "하루 목표", ja: "1日の目標", zh: "每日目标", en: "Daily goal")
     public static let perDayUnit = L10nText(ko: "자", ja: "字", zh: "字", en: "/day")
 
+    // Streak + today's goal
+    public static let streak = L10nText(ko: "연속", ja: "連続", zh: "连续", en: "Streak")
+    public static let streakUnit = L10nText(ko: "일째", ja: "日", zh: "天", en: "days")
+    public static let todayGoal = L10nText(ko: "오늘 목표", ja: "今日の目標", zh: "今日目标", en: "Today")
+
     // Bookmarks
     public static let bookmark = L10nText(ko: "북마크", ja: "ブックマーク", zh: "收藏", en: "Bookmark")
     public static let bookmarks = L10nText(ko: "북마크", ja: "ブックマーク", zh: "收藏", en: "Bookmarks")
