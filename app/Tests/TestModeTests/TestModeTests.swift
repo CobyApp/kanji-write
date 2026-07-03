@@ -125,4 +125,36 @@ final class TestFeatureReducerTests: XCTestCase {
         }
         XCTAssertTrue(store.state.isFinished)
     }
+
+    func testMultipleChoiceOptionsIncludeCorrectAndSelectionReveals() async {
+        let record = ReviewRecord(
+            kanjiID: 1, stability: 20, difficulty: 5, due: 100, lastReviewedDay: 80)
+        let store = TestStore(initialState: TestFeature.State()) {
+            TestFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
+            $0.reviewStore.loadRecords = { [record] }
+            $0.reviewStore.saveRecords = { _ in }
+            $0.dictionaryClient.allKanji = { (1...6).map { k($0, literal: "\($0)") } }
+            $0.dictionaryClient.glosses = { _ in ["en": "one"] }
+            $0.dictionaryClient.strokeOrder = { _ in [] }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.onAppear)
+        await store.receive(\.loaded)
+        await store.receive(\.cardContentLoaded)
+
+        // Four options, all distinct, and the correct kanji is among them.
+        XCTAssertEqual(store.state.options.count, 4)
+        XCTAssertEqual(Set(store.state.options.map(\.id)).count, 4)
+        XCTAssertTrue(store.state.options.contains { $0.id == 1 })
+
+        // Tapping an option reveals correctness without advancing.
+        await store.send(.optionSelected(1)) {
+            $0.selected = 1
+            $0.revealed = true
+        }
+        XCTAssertEqual(store.state.index, 0)
+    }
 }

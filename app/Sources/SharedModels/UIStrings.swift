@@ -149,6 +149,9 @@ public enum L {
     public static let testPrompt = L10nText(ko: "뜻을 보고 한자를 써보세요", ja: "意味を見て漢字を書こう", zh: "根据意思写汉字", en: "Write the kanji for this meaning")
     public static let practicePrompt = L10nText(ko: "반복해서 써보며 익히세요", ja: "繰り返し書いて覚えよう", zh: "反复书写来记住", en: "Write it repeatedly to memorize")
     public static let pickToPractice = L10nText(ko: "연습할 한자를 고르세요", ja: "練習する漢字を選ぼう", zh: "选择要练习的汉字", en: "Pick a kanji to practice")
+    public static let testChoosePrompt = L10nText(
+        ko: "뜻에 맞는 한자를 고르세요", ja: "意味に合う漢字を選ぼう", zh: "选择对应意思的汉字",
+        en: "Pick the kanji for this meaning")
     public static let nothingDue = L10nText(ko: "오늘 볼 시험이 없어요", ja: "今日のテストはありません", zh: "今天没有要测验的", en: "Nothing due today")
     public static let noLessons = L10nText(ko: "오늘 배울 한자가 없어요", ja: "今日学ぶ漢字はありません", zh: "今天没有要学的汉字", en: "No new kanji today")
 

@@ -38,6 +38,14 @@ public struct TestFeature {
         /// Bumped whenever the canvas should reset to a blank page (new card).
         public var clearToken = 0
         public var isLoading = false
+        /// All kanji, kept to draw multiple-choice distractors (iPhone review).
+        public var pool: [Kanji] = []
+        /// The current card's shuffled choices (correct + 3 distractors), for the
+        /// iPhone multiple-choice mode.
+        public var options: [Kanji] = []
+        /// The option the learner tapped this card (kanji id) — drives the
+        /// correct/wrong highlight before advancing.
+        public var selected: Int?
 
         public init() {}
 
@@ -55,6 +63,7 @@ public struct TestFeature {
         case loaded([ReviewRecord], [Kanji], Int)
         case cardContentLoaded(glosses: [String: String], strokePaths: [String])
         case showAnswerTapped
+        case optionSelected(Int)  // iPhone multiple-choice tap (kanji id)
         case graded(pass: Bool)
     }
 
@@ -81,8 +90,10 @@ public struct TestFeature {
                 state.isLoading = false
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.today = today
+                state.pool = kanji
                 state.queue = buildTestQueue(records: records, kanji: kanji, today: today)
                 state.index = 0
+                setOptions(&state)
                 return loadCardContent(state: &state)
 
             case let .cardContentLoaded(glosses, strokePaths):
@@ -91,6 +102,12 @@ public struct TestFeature {
                 return .none
 
             case .showAnswerTapped:
+                state.revealed = true
+                return .none
+
+            case let .optionSelected(id):
+                guard !state.revealed else { return .none }
+                state.selected = id
                 state.revealed = true
                 return .none
 
@@ -121,9 +138,11 @@ public struct TestFeature {
                 // Advance to the next card and reset per-card view state.
                 state.index += 1
                 state.revealed = false
+                state.selected = nil
                 state.glosses = [:]
                 state.strokePaths = []
                 state.clearToken += 1
+                setOptions(&state)
 
                 let loadNext = loadCardContent(state: &state)
                 return .merge(
@@ -131,6 +150,14 @@ public struct TestFeature {
                     loadNext)
             }
         }
+    }
+
+    /// Builds the current card's multiple-choice options: the correct kanji plus
+    /// up to three distractors drawn from the pool, shuffled.
+    private func setOptions(_ state: inout State) {
+        guard let correct = state.current else { state.options = []; return }
+        let distractors = state.pool.filter { $0.id != correct.id }.shuffled().prefix(3)
+        state.options = (Array(distractors) + [correct]).shuffled()
     }
 
     /// Loads the localized meaning + stroke-order guide for the current card.
