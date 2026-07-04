@@ -61,7 +61,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            Palette.background.ignoresSafeArea()
+            AuroraBackground()
             FloatingBlobs()
             ScrollView {
                 Group {

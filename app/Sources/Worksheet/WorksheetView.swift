@@ -50,8 +50,9 @@ public struct WorksheetView: View {
 
     public var body: some View {
         ZStack {
-            Palette.background.ignoresSafeArea()
+            AuroraBackground()
             content
+            if store.isFinished { ConfettiView() }
         }
         .navigationTitle(L.study[appLanguage])
         .navigationBarTitleDisplayMode(.inline)

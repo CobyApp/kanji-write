@@ -26,8 +26,9 @@ public struct TestView: View {
 
     public var body: some View {
         ZStack {
-            Palette.background.ignoresSafeArea()
+            AuroraBackground()
             content
+            if store.isFinished { ConfettiView() }
         }
         .navigationTitle(L.test[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
