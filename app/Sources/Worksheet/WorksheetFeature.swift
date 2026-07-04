@@ -52,6 +52,9 @@ public struct WorksheetFeature {
         /// Never-seen kanji remaining in the target level (for the finish estimate).
         public var remaining = 0
         public var isLoading = false
+        /// True once today's queue has been built at least once. Until then the
+        /// view shows a loading placeholder instead of the "no kanji" empty state.
+        public var hasLoaded = false
         public var isFinished = false
 
         public init() {}
@@ -89,7 +92,7 @@ public struct WorksheetFeature {
             case let .onAppear(newPerDay, level):
                 guard state.queue.isEmpty, !state.isFinished, !state.isLoading else { return .none }
                 state.isLoading = true
-                state.newPerDay = newPerDay
+                state.newPerDay = max(1, newPerDay)  // never let a 0/day plan blank the lesson
                 state.targetLevel = level
                 let today = Int(date.now.timeIntervalSince1970 / 86_400)
                 return .run { send in
@@ -100,6 +103,7 @@ public struct WorksheetFeature {
 
             case let .loaded(records, kanji, today):
                 state.isLoading = false
+                state.hasLoaded = true
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.today = today
                 state.queue = buildWorksheetQueue(

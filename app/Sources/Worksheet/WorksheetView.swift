@@ -56,12 +56,14 @@ public struct WorksheetView: View {
         }
         .navigationTitle(L.study[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
-        .task { store.send(.onAppear(newPerDay: newPerDay, level: targetLevel)) }
+        .task { store.send(.onAppear(newPerDay: max(1, newPerDay), level: targetLevel)) }
     }
 
     @ViewBuilder
     private var content: some View {
-        if store.isFinished {
+        if !store.hasLoaded {
+            loadingCard
+        } else if store.isFinished {
             finishedCard
         } else if store.queue.isEmpty {
             emptyCard
@@ -241,6 +243,17 @@ public struct WorksheetView: View {
                 .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 32)
+        .roundedCard()
+        .padding(16)
+    }
+
+    private var loadingCard: some View {
+        VStack(spacing: 14) {
+            ProgressView().tint(Palette.pink)
+            Text(L.toLearn[appLanguage])
+                .font(.kawaii(15)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 40)
         .roundedCard()
         .padding(16)
     }
