@@ -36,8 +36,16 @@ public struct CandyChip: View {
             .foregroundStyle(selected ? Color.white : accent)
             .padding(.horizontal, 14)
             .padding(.vertical, 7)
-            .background(selected ? accent : soft)
+            .background {
+                if selected {
+                    LinearGradient(colors: [accent, accent.opacity(0.82)],
+                                   startPoint: .top, endPoint: .bottom)
+                } else {
+                    soft
+                }
+            }
             .clipShape(Capsule())
+            .shadow(color: selected ? accent.opacity(0.35) : .clear, radius: 5, y: 2)
     }
 }
 
@@ -61,16 +69,27 @@ public struct PastelTile: View {
     }
 
     public var body: some View {
-        Text(glyph)
+        let corner = min(22, size * 0.3)
+        return Text(glyph)
             .font(.kawaii(fontSize, weight: .bold))
             .foregroundStyle(Palette.ink)
             .frame(width: size, height: size)
-            .background(soft)
+            .background {
+                ZStack {
+                    // Candy gradient fill.
+                    LinearGradient(colors: [soft.opacity(0.65), soft],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                    // Soft top gloss for a glassy, kawaii sheen.
+                    LinearGradient(colors: [.white.opacity(0.5), .clear],
+                                   startPoint: .top, endPoint: .center)
+                }
+            }
             .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(accent.opacity(0.35), lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .stroke(accent.opacity(0.4), lineWidth: 1.5)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            .shadow(color: accent.opacity(0.28), radius: size * 0.09, y: size * 0.045)
     }
 }
 
