@@ -175,6 +175,6 @@ public struct PracticeView: View {
                 .frame(maxWidth: .infinity).padding(.vertical, 10)
                 .background(color.opacity(0.14)).clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bouncy)
     }
 }

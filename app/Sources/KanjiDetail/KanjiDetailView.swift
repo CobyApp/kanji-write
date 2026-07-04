@@ -17,12 +17,12 @@ public struct KanjiDetailView: View {
             Palette.background.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    header
-                    readings
-                    if !store.strokePaths.isEmpty { strokeOrderSection }
-                    if !store.words.isEmpty { wordsSection }
-                    if !store.sentences.isEmpty { sentencesSection }
-                    if !store.relations.isEmpty { relationsSection }
+                    header.popIn(delay: 0.02)
+                    readings.popIn(delay: 0.09)
+                    if !store.strokePaths.isEmpty { strokeOrderSection.popIn(delay: 0.16) }
+                    if !store.words.isEmpty { wordsSection.popIn(delay: 0.22) }
+                    if !store.sentences.isEmpty { sentencesSection.popIn(delay: 0.28) }
+                    if !store.relations.isEmpty { relationsSection.popIn(delay: 0.34) }
                 }
                 .padding(16)
             }
@@ -48,6 +48,7 @@ public struct KanjiDetailView: View {
         HStack(alignment: .top, spacing: 18) {
             PastelTile(store.kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
                        size: 96, fontSize: 60)
+                .breathe(1.03)
             VStack(alignment: .leading, spacing: 10) {
                 Text(localizedGloss(store.glosses, appLanguage) ?? "")
                     .font(.kawaii(24, weight: .bold, language: appLanguage))

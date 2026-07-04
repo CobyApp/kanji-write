@@ -67,13 +67,15 @@ public struct WorksheetView: View {
         } else if let kanji = store.current {
             ScrollView {
                 VStack(spacing: 16) {
-                    progressCard
-                    writeCard(kanji)
-                    wordCard
-                    exampleCard
-                    advanceButton
+                    progressCard.popIn(delay: 0.02)
+                    writeCard(kanji).popIn(delay: 0.09)
+                    wordCard.popIn(delay: 0.16)
+                    exampleCard.popIn(delay: 0.23)
+                    advanceButton.popIn(delay: 0.30)
                 }
                 .padding(16)
+                // Re-run the entrance animation each time the card advances.
+                .id(store.index)
             }
         }
     }
@@ -201,10 +203,13 @@ public struct WorksheetView: View {
             Text(store.isLast ? L.done[appLanguage] : L.next[appLanguage])
                 .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(store.isLast ? Palette.mint : Palette.butter)
+                .background(
+                    LinearGradient(colors: store.isLast ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink],
+                                   startPoint: .leading, endPoint: .trailing))
                 .clipShape(Capsule())
+                .shadow(color: (store.isLast ? Palette.mint : Palette.butter).opacity(0.4), radius: 10, y: 5)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bouncy)
     }
 
     // MARK: Finished / empty

@@ -12,7 +12,7 @@ import WritingCanvas
 @Reducer
 public struct RootFeature {
     /// One screen on the navigation stack, all reached from the single Home
-    /// dashboard: the dictionary browse, a level's kanji list, kanji ↔ word
+    /// dashboard: the dictionary browse, a level's kanji list, kanji â word
     /// detail, and the writing canvas.
     @Reducer(state: .equatable)
     public enum Path {
@@ -36,7 +36,7 @@ public struct RootFeature {
         // Data source (kanji / records / today) powering Home's plan summary and
         // due count; also the dictionary's kanji list.
         public var review = ReviewFeature.State()
-        // The wordbook (reached inside 사전).
+        // The wordbook (reached inside ì¬ì ).
         public var wordReview = WordReviewFeature.State()
         // Settings (plan / language / reminder).
         public var reminder = ReminderFeature.State()
@@ -102,7 +102,7 @@ public struct RootFeature {
                         title: level.label, kanji: items, glosses: state.review.glosses)))
                 return .none
 
-            // Open the dictionary browse from the 학습 hub (pushed onto its stack).
+            // Open the dictionary browse from the íìµ hub (pushed onto its stack).
             case .openDictionary:
                 state.path.append(.dictionary(DictionaryFeature.State(
                     kanji: state.review.kanji.elements, glosses: state.review.glosses)))
@@ -114,7 +114,7 @@ public struct RootFeature {
                 state.bookmarkedIDs = ids
                 return .none
 
-            // Dictionary browse (from 학습) → drill into a level / a searched kanji.
+            // Dictionary browse (from íìµ) â drill into a level / a searched kanji.
             case let .path(.element(id: _, action: .dictionary(.levelSelected(level)))):
                 let items = studyOrder(state.review.kanji.elements, level: level.level)
                 state.path.append(
@@ -129,7 +129,7 @@ public struct RootFeature {
                 state.path.append(.word(WordDetailFeature.State(word: word)))
                 return .none
 
-            // Home session launchers → full-screen cover. Start each with a fresh
+            // Home session launchers â full-screen cover. Start each with a fresh
             // in-session navigation stack.
             case .startStudy:
                 state.sessionPath.removeAll()
@@ -156,7 +156,7 @@ public struct RootFeature {
                 state.sessionPath.removeAll()
                 return .none
 
-            // In-session drilling (word ↔ kanji ↔ writing), mirroring the
+            // In-session drilling (word â kanji â writing), mirroring the
             // dictionary stack.
             case let .sessionPath(.element(id: _, action: .kanji(.wordTapped(word)))):
                 state.sessionPath.append(.word(WordDetailFeature.State(word: word)))
@@ -188,7 +188,7 @@ public struct RootFeature {
                 return .none
 
             // Reset clears the store files (in ReminderFeature); also drop the
-            // in-memory records so Home/Study/단어 update immediately.
+            // in-memory records so Home/Study/ë¨ì´ update immediately.
             case .reminder(.resetProgress):
                 state.review.records.removeAll()
                 state.wordReview.records.removeAll()

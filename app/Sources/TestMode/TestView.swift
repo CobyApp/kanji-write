@@ -41,11 +41,11 @@ public struct TestView: View {
         } else if let kanji = store.current {
             ScrollView {
                 VStack(spacing: 16) {
-                    progressGrid
-                    promptCard
+                    progressGrid.popIn(delay: 0.02)
+                    promptCard.popIn(delay: 0.10)
                     if sizeClass == .compact {
                         // iPhone: pick the kanji from four choices.
-                        choiceGrid(kanji)
+                        choiceGrid(kanji).popIn(delay: 0.18)
                         if store.revealed {
                             answerCard(kanji)
                             nextButton(kanji)
@@ -56,12 +56,14 @@ public struct TestView: View {
                             answerCard(kanji)
                             gradeButtons
                         } else {
-                            showAnswerButton
+                            showAnswerButton.popIn(delay: 0.18)
                         }
                     }
                 }
                 .padding(16)
                 .animation(.spring(response: 0.35, dampingFraction: 0.8), value: store.revealed)
+                // Replay the entrance each time the card changes.
+                .id(store.index)
             }
         }
     }
@@ -116,9 +118,13 @@ public struct TestView: View {
             Text(L.showAnswer[appLanguage])
                 .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Palette.lavender).clipShape(Capsule())
+                .background(
+                    LinearGradient(colors: [Palette.lavender, Palette.sky],
+                                   startPoint: .leading, endPoint: .trailing))
+                .clipShape(Capsule())
+                .shadow(color: Palette.lavender.opacity(0.4), radius: 10, y: 5)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bouncy)
     }
 
     private func answerCard(_ kanji: Kanji) -> some View {
@@ -204,9 +210,13 @@ public struct TestView: View {
             Text(label)
                 .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(color).clipShape(Capsule())
+                .background(
+                    LinearGradient(colors: [color, color.opacity(0.82)],
+                                   startPoint: .top, endPoint: .bottom))
+                .clipShape(Capsule())
+                .shadow(color: color.opacity(0.4), radius: 8, y: 4)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bouncy)
     }
 
     private var doneCard: some View {
