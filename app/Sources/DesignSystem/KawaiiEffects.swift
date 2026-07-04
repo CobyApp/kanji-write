@@ -31,6 +31,7 @@ public struct ProgressRing<Center: View>: View {
     let center: Center
 
     @State private var animated = false
+    @State private var glow = false
 
     public init(
         progress: Double, size: CGFloat = 150, lineWidth: CGFloat = 16,
@@ -44,23 +45,34 @@ public struct ProgressRing<Center: View>: View {
         self.center = center()
     }
 
+    private var gradient: AngularGradient {
+        AngularGradient(colors: colors, center: .center)
+    }
+
     public var body: some View {
         ZStack {
             Circle()
                 .stroke(Palette.pinkSoft, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+            // Soft breathing glow behind the arc.
             Circle()
                 .trim(from: 0, to: animated ? progress : 0)
-                .stroke(
-                    AngularGradient(colors: colors, center: .center),
-                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .stroke(gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .shadow(color: Palette.pink.opacity(0.3), radius: 6)
+                .blur(radius: 9)
+                .opacity(glow ? 0.85 : 0.35)
+            Circle()
+                .trim(from: 0, to: animated ? progress : 0)
+                .stroke(gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
             center
         }
         .frame(width: size, height: size)
         .onAppear {
             withAnimation(.spring(response: 1.0, dampingFraction: 0.72).delay(0.15)) {
                 animated = true
+            }
+            withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
+                glow = true
             }
         }
     }
@@ -133,6 +145,26 @@ private struct PopIn: ViewModifier {
 extension View {
     /// Springy scale+fade entrance. Stagger a list by passing increasing delays.
     public func popIn(delay: Double = 0) -> some View { modifier(PopIn(delay: delay)) }
+}
+
+/// A slow, gentle scale pulse — subtle "breathing" for hero elements.
+private struct Breathe: ViewModifier {
+    let amount: CGFloat
+    @State private var on = false
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(on ? amount : 1)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
+                    on = true
+                }
+            }
+    }
+}
+
+extension View {
+    /// A slow continuous scale pulse (default ~4%). Decoration only.
+    public func breathe(_ amount: CGFloat = 1.04) -> some View { modifier(Breathe(amount: amount)) }
 }
 
 /// A looping celebratory bounce + wiggle for a badge/emoji on completion screens.

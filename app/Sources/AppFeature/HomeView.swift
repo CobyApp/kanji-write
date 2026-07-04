@@ -166,6 +166,7 @@ struct HomeView: View {
     private var streakChip: some View {
         VStack(spacing: 4) {
             Text("\(streak)").font(.kawaii(26, weight: .bold)).foregroundStyle(Palette.butter)
+                .contentTransition(.numericText()).animation(.snappy, value: streak)
             Text(L.streak[appLanguage]).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 14)
@@ -177,13 +178,18 @@ struct HomeView: View {
         VStack(spacing: 6) {
             Text("\(doneToday)/\(newPerDay)")
                 .font(.kawaii(20, weight: .bold)).monospacedDigit().foregroundStyle(Palette.mint)
+                .contentTransition(.numericText()).animation(.snappy, value: doneToday)
             Capsule().fill(Palette.mintSoft).frame(height: 6)
                 .overlay(alignment: .leading) {
                     GeometryReader { geo in
-                        Capsule().fill(Palette.mint).frame(width: geo.size.width * goalFraction)
+                        Capsule()
+                            .fill(LinearGradient(colors: [Palette.mint, Palette.sky],
+                                                 startPoint: .leading, endPoint: .trailing))
+                            .frame(width: geo.size.width * goalFraction)
                     }
                 }
                 .frame(height: 6).padding(.horizontal, 10)
+                .animation(.spring(response: 0.6, dampingFraction: 0.8), value: goalFraction)
             Text(L.todayGoal[appLanguage]).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 12)
@@ -303,6 +309,8 @@ struct HomeView: View {
                 if let count {
                     Text("\(count)").font(.kawaii(24, weight: .bold)).monospacedDigit()
                         .foregroundStyle(accent)
+                        .contentTransition(.numericText())
+                        .animation(.snappy, value: count)
                 } else {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 15, weight: .bold)).foregroundStyle(accent)
@@ -310,7 +318,9 @@ struct HomeView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            .background(soft)
+            .background(
+                LinearGradient(colors: [soft, soft.opacity(0.72)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing))
             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(accent.opacity(0.35), lineWidth: 1.5))
