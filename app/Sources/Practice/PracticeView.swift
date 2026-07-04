@@ -33,7 +33,7 @@ public struct PracticeView: View {
 
     public var body: some View {
         ZStack {
-            Palette.background.ignoresSafeArea()
+            AuroraBackground()
             ScrollView {
                 VStack(spacing: 16) {
                     pickerSection

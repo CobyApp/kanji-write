@@ -32,6 +32,7 @@ public struct ProgressRing<Center: View>: View {
 
     @State private var animated = false
     @State private var glow = false
+    @State private var sweep = false
 
     public init(
         progress: Double, size: CGFloat = 150, lineWidth: CGFloat = 16,
@@ -64,6 +65,18 @@ public struct ProgressRing<Center: View>: View {
                 .trim(from: 0, to: animated ? progress : 0)
                 .stroke(gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+            // A light sweep traveling around the ring, masked to the filled arc.
+            Circle()
+                .stroke(
+                    AngularGradient(colors: [.clear, .white.opacity(0.85), .clear], center: .center),
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(sweep ? 360 : 0))
+                .mask(
+                    Circle()
+                        .trim(from: 0, to: animated ? progress : 0)
+                        .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                )
             center
         }
         .frame(width: size, height: size)
@@ -73,6 +86,9 @@ public struct ProgressRing<Center: View>: View {
             }
             withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
                 glow = true
+            }
+            withAnimation(.linear(duration: 2.6).repeatForever(autoreverses: false)) {
+                sweep = true
             }
         }
     }
@@ -165,6 +181,81 @@ private struct Breathe: ViewModifier {
 extension View {
     /// A slow continuous scale pulse (default ~4%). Decoration only.
     public func breathe(_ amount: CGFloat = 1.04) -> some View { modifier(Breathe(amount: amount)) }
+}
+
+/// A softly shifting pastel mesh-gradient backdrop (candy aurora). The interior
+/// control points drift continuously for a living, dreamy background.
+public struct AuroraBackground: View {
+    public init() {}
+
+    private let colors: [Color] = [
+        Palette.pinkSoft, Palette.background, Palette.skySoft,
+        Palette.lavenderSoft, Palette.background, Palette.mintSoft,
+        Palette.butterSoft, Palette.pinkSoft, Palette.skySoft,
+    ]
+
+    public var body: some View {
+        TimelineView(.animation) { context in
+            let t = context.date.timeIntervalSinceReferenceDate
+            let ax = Float(sin(t * 0.5)) * 0.08
+            let ay = Float(cos(t * 0.42) ) * 0.08
+            let bx = Float(cos(t * 0.37)) * 0.07
+            let by = Float(sin(t * 0.6)) * 0.07
+            MeshGradient(
+                width: 3, height: 3,
+                points: [
+                    .init(0, 0), .init(0.5 + bx, 0), .init(1, 0),
+                    .init(0, 0.5 + ay), .init(0.5 + ax, 0.5 + ay), .init(1, 0.5 - by),
+                    .init(0, 1), .init(0.5 - bx, 1), .init(1, 1),
+                ],
+                colors: colors)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// A one-shot confetti burst that rains pastel pieces down and fades out.
+/// Deterministic (seeded by index) so it needs no random source.
+public struct ConfettiView: View {
+    let count: Int
+    @State private var fall = false
+
+    public init(count: Int = 40) { self.count = count }
+
+    private let colors: [Color] = [
+        Palette.pink, Palette.mint, Palette.lavender, Palette.butter, Palette.sky,
+    ]
+
+    /// Deterministic pseudo-random in 0...1 from a seed.
+    private func rnd(_ seed: Double) -> Double {
+        let v = sin(seed * 12.9898) * 43_758.5453
+        return v - v.rounded(.down)
+    }
+
+    public var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                ForEach(0..<count, id: \.self) { i in
+                    let d = Double(i)
+                    let startX = geo.size.width * rnd(d)
+                    let drift = CGFloat(rnd(d + 3) - 0.5) * 80
+                    let sizePx = CGFloat(6 + rnd(d + 5) * 8)
+                    let delay = rnd(d + 7) * 0.5
+                    let duration = 1.5 + rnd(d + 9) * 1.0
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .fill(colors[i % colors.count])
+                        .frame(width: sizePx, height: sizePx * 1.4)
+                        .position(x: startX + (fall ? drift : 0),
+                                  y: fall ? geo.size.height + 40 : -40)
+                        .rotationEffect(.degrees(fall ? 360 * (rnd(d + 11) * 2 - 1) : 0))
+                        .opacity(fall ? 0 : 1)
+                        .animation(.easeIn(duration: duration).delay(delay), value: fall)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .onAppear { fall = true }
+    }
 }
 
 /// A looping celebratory bounce + wiggle for a badge/emoji on completion screens.
