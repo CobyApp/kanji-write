@@ -134,12 +134,14 @@ private struct DictionaryPathView: View {
             } else {
                 ScrollView {
                     LazyVStack(spacing: 10) {
-                        ForEach(levels()) { level in
+                        ForEach(Array(levels().enumerated()), id: \.element.id) { index, level in
                             let count = kanjiIn(store.kanji, in: level).count
+                            let tint = Palette.tint(index)
                             Button { store.send(.levelSelected(level)) } label: {
                                 HStack(spacing: 14) {
+                                    Circle().fill(tint.accent).frame(width: 10, height: 10)
                                     Text(level.label)
-                                        .font(.kawaii(17, weight: .semibold)).foregroundStyle(Palette.ink)
+                                        .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
                                     Spacer()
                                     Text("\(count)").font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
                                     Image(systemName: "chevron.right")
@@ -148,7 +150,8 @@ private struct DictionaryPathView: View {
                                 }
                                 .roundedCard()
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.bouncy)
+                            .popIn(delay: Double(index) * 0.05)
                         }
                     }
                     .padding(16)
@@ -208,7 +211,8 @@ struct KanjiCardList: View {
                             }
                             .roundedCard()
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.bouncy)
+                        .popIn(delay: min(Double(index), 6) * 0.04)
                     }
                     if items.isEmpty {
                         Text(L.noKanjiFound[appLanguage])
