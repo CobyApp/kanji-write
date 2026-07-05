@@ -138,9 +138,48 @@ private let voicingGroups: [[Character]] = [
     ["へ", "べ", "ぺ"], ["ほ", "ぼ", "ぽ"],
 ]
 
+private let iRowKana: Set<Character> = [
+    "い", "き", "し", "ち", "に", "ひ", "み", "り", "ぎ", "じ", "ぢ", "び", "ぴ",
+]
+/// Kana that a long-vowel う naturally follows (o-row and u-row).
+private let ouRowKana: Set<Character> = [
+    "う", "く", "す", "つ", "ぬ", "ふ", "む", "ゆ", "る", "ぐ", "ず", "づ", "ぶ", "ぷ",
+    "お", "こ", "そ", "と", "の", "ほ", "も", "よ", "ろ", "ご", "ぞ", "ど", "ぼ", "ぽ", "ょ",
+]
+/// Kana that a long-vowel い naturally follows (e-row).
+private let eRowKana: Set<Character> = [
+    "え", "け", "せ", "て", "ね", "へ", "め", "れ", "げ", "ぜ", "で", "べ", "ぺ",
+]
+private let smallLeadingKana: Set<Character> = [
+    "っ", "ゃ", "ゅ", "ょ", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ", "ー",
+]
+private let plainVowelKana: Set<Character> = ["あ", "い", "う", "え", "お"]
+
+/// Whether a kana string is a pronounceable reading — rejects impossible shapes
+/// (leading っ/ー/small kana, trailing っ, っ before a vowel, orphan yōon).
+func isPlausibleKana(_ s: String) -> Bool {
+    let a = Array(s)
+    guard let first = a.first, !smallLeadingKana.contains(first) else { return false }
+    guard a.last != "っ" else { return false }
+    for i in a.indices {
+        if a[i] == "っ" {
+            guard i + 1 < a.count else { return false }
+            let next = a[i + 1]
+            if plainVowelKana.contains(next) || next == "っ" || next == "ん" || next == "ー" {
+                return false
+            }
+        }
+        if a[i] == "ゃ" || a[i] == "ゅ" || a[i] == "ょ" {
+            guard i > 0, iRowKana.contains(a[i - 1]) else { return false }
+        }
+    }
+    return true
+}
+
 /// Plausible-but-wrong readings one confusion away from `reading`: voicing
 /// toggles, long-vowel add/drop, small-tsu add/drop, and yōon big/small swaps.
-/// These minimal pairs are exactly the traps learners fall for.
+/// These minimal pairs are exactly the traps learners fall for. Impossible kana
+/// shapes are filtered out so every option reads naturally.
 func phoneticTraps(_ reading: String) -> [String] {
     let chars = Array(reading)
     guard !chars.isEmpty else { return [] }
@@ -154,13 +193,18 @@ func phoneticTraps(_ reading: String) -> [String] {
             }
         }
     }
-    // 2) Long vowels: drop a vowel/長音, or lengthen with an extra う/い.
+    // 2) Long vowels: drop a vowel/長音, or lengthen only where natural
+    //    (う after o/u-row, い after e-row).
     let vowels: Set<Character> = ["あ", "い", "う", "え", "お", "ー"]
     for i in chars.indices where vowels.contains(chars[i]) {
         var c = chars; c.remove(at: i); out.insert(String(c))
     }
     for i in chars.indices {
-        var c = chars; c.insert("う", at: i + 1); out.insert(String(c))
+        if ouRowKana.contains(chars[i]) {
+            var c = chars; c.insert("う", at: i + 1); out.insert(String(c))
+        } else if eRowKana.contains(chars[i]) {
+            var c = chars; c.insert("い", at: i + 1); out.insert(String(c))
+        }
     }
     // 3) Small tsu: drop it, or insert one before an interior kana.
     if chars.contains("っ") {
@@ -181,7 +225,7 @@ func phoneticTraps(_ reading: String) -> [String] {
     }
 
     out.remove(reading)
-    return Array(out)
+    return out.filter(isPlausibleKana)
 }
 
 /// Levenshtein edit distance between two kana readings. Small distance = the

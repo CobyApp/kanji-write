@@ -28,7 +28,6 @@ public struct TestView: View {
         ZStack {
             AuroraBackground()
             content
-            if store.isFinished { ConfettiView() }
         }
         .navigationTitle(L.test[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
@@ -222,11 +221,8 @@ public struct TestView: View {
 
     private var doneCard: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Sparkles()
-                Text("🎉").font(.system(size: 52)).celebrate()
-            }
-            .frame(height: 80)
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 48)).foregroundStyle(Palette.mint)
             Text(L.nothingDue[appLanguage])
                 .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
             Text(L.seeTomorrow[appLanguage])
