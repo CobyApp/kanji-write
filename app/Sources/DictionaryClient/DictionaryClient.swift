@@ -27,6 +27,9 @@ public struct DictionaryClient: Sendable {
     public var sentencesForWord: @Sendable (_ wordID: Int, _ limit: Int) async throws -> [ExampleSentence]
     /// The jōyō kanji a word contains, ordered by their position in the surface.
     public var kanjiForWord: @Sendable (_ wordID: Int) async throws -> [Kanji]
+    /// Words containing a kanji of the given JLPT level (common first) — the pool
+    /// for the reading quiz (questions + distractor readings).
+    public var quizWords: @Sendable (_ level: String, _ limit: Int) async throws -> [WordEntry]
 }
 
 extension DictionaryClient: TestDependencyKey {

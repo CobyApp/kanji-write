@@ -143,6 +143,16 @@ public enum L {
     public static let fail = L10nText(ko: "불합격", ja: "不合格", zh: "没记住", en: "Fail")
     public static let clearWriting = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
     public static let addCells = L10nText(ko: "칸 10개 추가", ja: "10マス追加", zh: "添加10格", en: "Add 10")
+
+    // Reading quiz
+    public static let quiz = L10nText(ko: "발음 퀴즈", ja: "発音クイズ", zh: "读音测验", en: "Reading quiz")
+    public static let quizSub = L10nText(ko: "단어 읽기 맞히기", ja: "単語の読みを当てる", zh: "猜单词读音", en: "Guess word readings")
+    public static let quizPrompt = L10nText(
+        ko: "정확한 읽기를 고르세요", ja: "正しい読みを選ぼう", zh: "选择正确的读音", en: "Pick the correct reading")
+    public static let quizDone = L10nText(ko: "퀴즈 완료!", ja: "クイズ完了！", zh: "测验完成！", en: "Quiz complete!")
+    public static let quizAgain = L10nText(ko: "다시 풀기", ja: "もう一度", zh: "再来一次", en: "Play again")
+    public static let quizEmpty = L10nText(
+        ko: "출제할 단어가 없어요", ja: "出題できる単語がありません", zh: "没有可出题的单词", en: "No words to quiz")
     public static let worksheetWrite = L10nText(ko: "한자를 써보세요", ja: "漢字を書いてみよう", zh: "写一写这个汉字", en: "Write the kanji")
     public static let worksheetWord = L10nText(ko: "이 한자가 든 단어", ja: "この漢字を使う単語", zh: "含这个汉字的单词", en: "A word using it")
     public static let worksheetExample = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Example")
