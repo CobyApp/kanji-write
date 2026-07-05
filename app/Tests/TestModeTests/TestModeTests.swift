@@ -227,3 +227,42 @@ final class QuizSRSTests: XCTestCase {
         XCTAssertEqual(r.due, 100 + QuizSRS.intervals[5])
     }
 }
+
+@MainActor
+final class QuizFeatureTests: XCTestCase {
+    private func kanji(_ id: Int, _ literal: String) -> Kanji {
+        Kanji(id: id, literal: literal, strokeCount: 1, grade: 1, jlptLevel: "N5",
+              onReadings: ["オン"], kunReadings: ["くん"])
+    }
+    private func word(_ id: Int, _ surface: String, _ reading: String) -> WordEntry {
+        WordEntry(id: id, surface: surface, reading: reading, meaningEn: "m\(id)", meaningKo: "뜻\(id)")
+    }
+
+    func testTodaysStudiedKanjiProduceQuestions() async {
+        let day = 100
+        let store = TestStore(initialState: QuizFeature.State(level: "N5")) {
+            QuizFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
+            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            // A kanji studied today (lastReviewedDay == today) — this was the bug:
+            // stale in-memory state hid it; the quiz now reads the store fresh.
+            $0.reviewStore.loadRecords = {
+                [ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: day + 3, lastReviewedDay: day)]
+            }
+            $0.quizStore.load = { [] }
+            $0.quizStore.save = { _ in }
+            $0.dictionaryClient.allKanji = { [self.kanji(1, "山")] }
+            $0.dictionaryClient.allGlosses = { [1: ["ko": "메 산", "en": "mountain"]] }
+            $0.dictionaryClient.words = { _, _ in [self.word(10, "山", "やま")] }
+            $0.dictionaryClient.word = { _ in nil }
+            $0.dictionaryClient.quizWords = { _, _ in [self.word(11, "川", "かわ"), self.word(12, "水", "みず")] }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.onAppear(language: .ko))
+        await store.receive(\.loaded)
+        XCTAssertFalse(store.state.queue.isEmpty)          // today's kanji → questions
+        XCTAssertTrue(store.state.started)
+    }
+}

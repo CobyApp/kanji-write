@@ -69,6 +69,7 @@ public struct QuizFeature {
 
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.quizStore) var quizStore
+    @Dependency(\.reviewStore) var reviewStore
     @Dependency(\.date) var date
     @Dependency(\.withRandomNumberGenerator) var withRandomNumberGenerator
 
@@ -177,9 +178,15 @@ public struct QuizFeature {
         state.isLoading = true
         state.started = false
         let level = state.level
-        let kanjiIDs = state.kanjiIDs
         return .run { send in
             let today = Int(date.now.timeIntervalSince1970 / 86_400)
+            // Read the kanji SRS fresh from disk (a study session may have just
+            // written it) — kanji learned today OR due for review feed the quiz,
+            // so review is woven into the same session as new material.
+            let reviewRecords = await reviewStore.loadRecords()
+            let kanjiIDs = reviewRecords
+                .filter { $0.lastReviewedDay == today || $0.due <= today }
+                .map(\.kanjiID)
             let records = await quizStore.load()
             // Entities whose SRS review is due today (regardless of today's study).
             var dueKanji = Set<Int>(), dueWords = Set<Int>()
