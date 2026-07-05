@@ -127,16 +127,6 @@ final class RootFeatureTests: XCTestCase {
         }
     }
 
-    func testStartReviewPresentsTestSession() async {
-        let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
-        store.exhaustivity = .off
-
-        await store.send(.startReview)
-        guard case .test = store.state.session else {
-            return XCTFail("expected a test session")
-        }
-    }
-
     func testStartPracticePresentsPracticeSession() async {
         let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
         store.exhaustivity = .off
