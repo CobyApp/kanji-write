@@ -21,10 +21,6 @@ public struct QuizView: View {
         self.store = store
     }
 
-    private var sourceBinding: Binding<Bool> {
-        Binding(get: { store.useWordbook }, set: { store.send(.setWordbook($0)) })
-    }
-
     public var body: some View {
         ZStack {
             AuroraBackground()
@@ -32,16 +28,6 @@ public struct QuizView: View {
         }
         .navigationTitle(L.quiz[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Picker("", selection: sourceBinding) {
-                    Text(L.level[appLanguage]).tag(false)
-                    Text(L.wordbook[appLanguage]).tag(true)
-                }
-                .pickerStyle(.segmented)
-                .frame(maxWidth: 200)
-            }
-        }
         .task { store.send(.onAppear) }
     }
 
@@ -130,11 +116,8 @@ public struct QuizView: View {
 
     private var resultCard: some View {
         VStack(spacing: 12) {
-            ZStack {
-                Sparkles()
-                Text("🎉").font(.system(size: 52)).celebrate()
-            }
-            .frame(height: 80)
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 48)).foregroundStyle(Palette.mint)
             Text(L.quizDone[appLanguage]).font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
             Text("\(store.correctCount) / \(store.total)")
                 .font(.kawaii(30, weight: .bold)).monospacedDigit().foregroundStyle(Palette.mint)

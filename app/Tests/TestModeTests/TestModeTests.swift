@@ -187,4 +187,20 @@ final class PhoneticTrapsTests: XCTestCase {
         XCTAssertTrue(phoneticTraps("かがく").contains("かかく"))   // 化学: が→か
         XCTAssertTrue(phoneticTraps("がっこう").contains("がこう")) // drop small tsu
     }
+
+    func testTrapsAreAlwaysPronounceable() {
+        for word in ["いってつ", "こうこう", "がっこう", "しゃかい", "おおきい", "きって"] {
+            for trap in phoneticTraps(word) {
+                XCTAssertTrue(isPlausibleKana(trap), "\(trap) (from \(word)) must be pronounceable")
+            }
+        }
+    }
+
+    func testImpossibleShapesRejected() {
+        XCTAssertFalse(isPlausibleKana("ってつ"))  // leading small tsu (the bug)
+        XCTAssertFalse(isPlausibleKana("いてっ"))  // trailing small tsu
+        XCTAssertFalse(isPlausibleKana("ーあい"))  // leading chōonpu
+        XCTAssertTrue(isPlausibleKana("いってつ"))
+        XCTAssertTrue(isPlausibleKana("しゃかい"))
+    }
 }
