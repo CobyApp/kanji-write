@@ -147,9 +147,16 @@ public struct QuizFeature {
             case .next:
                 guard let item = state.queue.first else { return .none }
                 let correct = state.chosen == item.answer
-                // Record the first-attempt result (drives spaced repetition).
+                var save: Effect<Action> = .none
+                // First attempt drives spaced repetition — schedule + persist right
+                // away so review survives quitting mid-session.
                 if state.answeredOnce.insert(item.id).inserted {
                     state.firstAttempt[item.id] = correct
+                    let s = QuizSRS.schedule(box: state.records[item.id]?.box,
+                                             correct: correct, today: state.today)
+                    state.records[item.id] = QuizRecord(id: item.id, box: s.box, due: s.due)
+                    let all = Array(state.records.values)
+                    save = .run { _ in await quizStore.save(all) }
                 }
                 state.queue.removeFirst()
                 if correct {
@@ -159,17 +166,7 @@ public struct QuizFeature {
                     state.queue.append(item)   // retry later this session
                 }
                 state.chosen = nil
-                guard state.queue.isEmpty else { return .none }
-                // Session complete → schedule each item's next appearance.
-                let today = state.today
-                var records = state.records
-                for (id, firstCorrect) in state.firstAttempt {
-                    let s = QuizSRS.schedule(box: records[id]?.box, correct: firstCorrect, today: today)
-                    records[id] = QuizRecord(id: id, box: s.box, due: s.due)
-                }
-                state.records = records
-                let all = Array(records.values)
-                return .run { _ in await quizStore.save(all) }
+                return save
             }
         }
     }
