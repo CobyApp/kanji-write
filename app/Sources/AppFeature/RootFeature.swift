@@ -147,8 +147,12 @@ public struct RootFeature {
                 return .none
             case let .startQuiz(level):
                 state.sessionPath.removeAll()
-                state.session = .quiz(QuizFeature.State(
-                    level: level, wordbookWords: state.wordReview.words.elements))
+                // Kanji studied/reviewed today → quiz words that use them.
+                let today = state.review.today
+                let todaysKanji = state.review.records.elements
+                    .filter { $0.lastReviewedDay == today }
+                    .map(\.kanjiID)
+                state.session = .quiz(QuizFeature.State(level: level, kanjiIDs: todaysKanji))
                 return .none
 
             // Tapping a word / kanji while studying drills into its detail on the
