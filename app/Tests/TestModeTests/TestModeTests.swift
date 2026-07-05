@@ -173,3 +173,18 @@ final class KanaDistanceTests: XCTestCase {
         XCTAssertLessThan(kanaDistance("しゃかい", "しかい"), kanaDistance("しゃかい", "たべもの"))
     }
 }
+
+final class PhoneticTrapsTests: XCTestCase {
+    func testTrapsAreMinimalPairsNeverTheAnswer() {
+        let traps = Set(phoneticTraps("こうこう"))  // 高校
+        XCTAssertFalse(traps.contains("こうこう"))   // never the correct reading
+        XCTAssertTrue(traps.contains("ごうこう"))     // voicing (こ→ご)
+        XCTAssertTrue(traps.contains("こうこ"))       // dropped long vowel
+        XCTAssertGreaterThanOrEqual(traps.count, 3)  // enough to fill 3 options
+    }
+
+    func testVoicingAndSmallTsuTraps() {
+        XCTAssertTrue(phoneticTraps("かがく").contains("かかく"))   // 化学: が→か
+        XCTAssertTrue(phoneticTraps("がっこう").contains("がこう")) // drop small tsu
+    }
+}

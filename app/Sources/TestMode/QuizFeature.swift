@@ -101,27 +101,87 @@ public struct QuizFeature {
     }
 
     /// Builds the 4 shuffled options for the current question and clears the
-    /// previous choice. Distractors are the readings *most similar* to the
-    /// correct one (smallest kana edit distance) so near-homophones — voicing
-    /// (か/が), long vowels (こう/こ), small tsu (きって/きて) — are the traps.
+    /// previous choice. Distractors are *generated* as minimal pairs of the
+    /// correct reading — the exact things learners confuse: voicing (か/が), long
+    /// vowels (こう/こ), small tsu (きって/きて), yōon (きゃ/きや). If a reading is
+    /// too short to yield three traps, the nearest pool readings fill in.
     private func buildOptions(_ state: inout State) {
         state.chosen = nil
         guard let correct = state.current?.reading else {
             state.options = []
             return
         }
-        var candidates = Array(Set(state.readingPool)).filter { $0 != correct }
-        // Shuffle first so equal-distance readings are picked at random.
-        withRandomNumberGenerator { candidates.shuffle(using: &$0) }
-        let closest = candidates
-            .map { (reading: $0, distance: kanaDistance($0, correct)) }
-            .sorted { $0.distance < $1.distance }
-            .prefix(3)
-            .map(\.reading)
-        var options = [correct] + closest
+        var traps = phoneticTraps(correct)
+        withRandomNumberGenerator { traps.shuffle(using: &$0) }
+        var distractors = Array(traps.prefix(3))
+        if distractors.count < 3 {
+            // Fallback: nearest real readings from the pool.
+            let near = Set(state.readingPool)
+                .subtracting(distractors + [correct])
+                .map { (reading: $0, distance: kanaDistance($0, correct)) }
+                .sorted { $0.distance < $1.distance }
+                .map(\.reading)
+            distractors += near.prefix(3 - distractors.count)
+        }
+        var options = [correct] + distractors
         withRandomNumberGenerator { options.shuffle(using: &$0) }
         state.options = options
     }
+}
+
+/// Voicing groups: members are one dakuten/handakuten toggle apart.
+private let voicingGroups: [[Character]] = [
+    ["か", "が"], ["き", "ぎ"], ["く", "ぐ"], ["け", "げ"], ["こ", "ご"],
+    ["さ", "ざ"], ["し", "じ"], ["す", "ず"], ["せ", "ぜ"], ["そ", "ぞ"],
+    ["た", "だ"], ["ち", "ぢ"], ["つ", "づ"], ["て", "で"], ["と", "ど"],
+    ["は", "ば", "ぱ"], ["ひ", "び", "ぴ"], ["ふ", "ぶ", "ぷ"],
+    ["へ", "べ", "ぺ"], ["ほ", "ぼ", "ぽ"],
+]
+
+/// Plausible-but-wrong readings one confusion away from `reading`: voicing
+/// toggles, long-vowel add/drop, small-tsu add/drop, and yōon big/small swaps.
+/// These minimal pairs are exactly the traps learners fall for.
+func phoneticTraps(_ reading: String) -> [String] {
+    let chars = Array(reading)
+    guard !chars.isEmpty else { return [] }
+    var out = Set<String>()
+
+    // 1) Voicing toggles (か↔が, は↔ば↔ぱ …).
+    for i in chars.indices {
+        for group in voicingGroups where group.contains(chars[i]) {
+            for alt in group where alt != chars[i] {
+                var c = chars; c[i] = alt; out.insert(String(c))
+            }
+        }
+    }
+    // 2) Long vowels: drop a vowel/長音, or lengthen with an extra う/い.
+    let vowels: Set<Character> = ["あ", "い", "う", "え", "お", "ー"]
+    for i in chars.indices where vowels.contains(chars[i]) {
+        var c = chars; c.remove(at: i); out.insert(String(c))
+    }
+    for i in chars.indices {
+        var c = chars; c.insert("う", at: i + 1); out.insert(String(c))
+    }
+    // 3) Small tsu: drop it, or insert one before an interior kana.
+    if chars.contains("っ") {
+        for i in chars.indices where chars[i] == "っ" {
+            var c = chars; c.remove(at: i); out.insert(String(c))
+        }
+    } else if chars.count >= 2 {
+        for i in 1..<chars.count {
+            var c = chars; c.insert("っ", at: i); out.insert(String(c))
+        }
+    }
+    // 4) Yōon big/small swap (きゃ↔きや).
+    let yoon: [Character: Character] = [
+        "ゃ": "や", "ゅ": "ゆ", "ょ": "よ", "や": "ゃ", "ゆ": "ゅ", "よ": "ょ",
+    ]
+    for i in chars.indices {
+        if let alt = yoon[chars[i]] { var c = chars; c[i] = alt; out.insert(String(c)) }
+    }
+
+    out.remove(reading)
+    return Array(out)
 }
 
 /// Levenshtein edit distance between two kana readings. Small distance = the
