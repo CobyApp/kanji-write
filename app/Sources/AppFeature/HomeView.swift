@@ -204,15 +204,10 @@ struct HomeView: View {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
                      soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
-            let due = session.dueIDs.count
-            launcher(icon: "arrow.2.circlepath", title: L.review[appLanguage],
-                     subtitle: due > 0 ? L.reviewSub[appLanguage] : L.allCaughtUp[appLanguage],
-                     count: due, soft: Palette.lavenderSoft, accent: Palette.lavender,
-                     dimmed: due == 0) { if due > 0 { store.send(.startReview) } }
+            quizLauncher
             launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
                      subtitle: L.practiceSub[appLanguage], count: nil,
                      soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
-            quizLauncher
             dictionaryButton
         }
     }
@@ -269,26 +264,25 @@ struct HomeView: View {
 
     // MARK: Study-mode launchers
 
-    /// Compact (iPhone) launchers — learn + review only. Practice (free
-    /// writing) is an iPad/Apple-Pencil activity, so it's omitted here.
+    /// Compact (iPhone) launchers — learn + quiz (which folds in review). Practice
+    /// (free writing) is an iPad/Apple-Pencil activity, so it's omitted here.
     private var launchers: some View {
         VStack(spacing: 12) {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
                      soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
-            let due = session.dueIDs.count
-            launcher(icon: "arrow.2.circlepath", title: L.review[appLanguage],
-                     subtitle: due > 0 ? L.reviewSub[appLanguage] : L.allCaughtUp[appLanguage],
-                     count: due, soft: Palette.lavenderSoft, accent: Palette.lavender,
-                     dimmed: due == 0) { if due > 0 { store.send(.startReview) } }
             quizLauncher
         }
     }
 
+    /// The quiz — one place that mixes review (spaced-repetition due items) with
+    /// new questions on what was studied today. Badge shows kanji due for review.
     private var quizLauncher: some View {
-        launcher(icon: "questionmark.circle.fill", title: L.quiz[appLanguage],
-                 subtitle: L.quizSub[appLanguage], count: nil,
-                 soft: Palette.butterSoft, accent: Palette.butter) {
+        let due = session.dueIDs.count
+        return launcher(icon: "questionmark.circle.fill", title: L.quiz[appLanguage],
+                        subtitle: due > 0 ? L.reviewSub[appLanguage] : L.quizSub[appLanguage],
+                        count: due > 0 ? due : nil,
+                        soft: Palette.lavenderSoft, accent: Palette.lavender) {
             store.send(.startQuiz(level: targetLevel))
         }
     }
