@@ -4,16 +4,16 @@ import Foundation
 import SharedModels
 
 /// A multiple-choice reading quiz: show a word, pick its correct kana reading
-/// from four options. Questions come from the target JLPT level (or the saved
-/// wordbook); wrong options are drawn from other words' readings.
+/// from four options. Questions are words that use *today's studied kanji* (so
+/// review reinforces what was just learned); the number of questions scales with
+/// how many kanji were studied. Wrong options are minimal-pair traps.
 @Reducer
 public struct QuizFeature {
     @ObservableState
     public struct State: Equatable {
         public var level: String
-        public var useWordbook: Bool
-        /// Saved words (passed in by the parent) used when `useWordbook` is on.
-        public var wordbookWords: [WordEntry]
+        /// Today's studied kanji ids — the quiz draws words that use these.
+        public var kanjiIDs: [Int]
         public var questions: [WordEntry] = []
         public var readingPool: [String] = []
         public var index = 0
@@ -22,10 +22,9 @@ public struct QuizFeature {
         public var correctCount = 0
         public var isLoading = false
 
-        public init(level: String, useWordbook: Bool = false, wordbookWords: [WordEntry] = []) {
+        public init(level: String, kanjiIDs: [Int] = []) {
             self.level = level
-            self.useWordbook = useWordbook
-            self.wordbookWords = wordbookWords
+            self.kanjiIDs = kanjiIDs
         }
 
         public var current: WordEntry? {
@@ -38,8 +37,7 @@ public struct QuizFeature {
 
     public enum Action: Equatable {
         case onAppear
-        case loaded([WordEntry])
-        case setWordbook(Bool)
+        case loaded(todaysWords: [WordEntry], pool: [WordEntry])
         case chose(String)
         case next
         case restart
@@ -56,35 +54,40 @@ public struct QuizFeature {
             case .onAppear, .restart:
                 state.isLoading = true
                 let level = state.level
+                let kanjiIDs = state.kanjiIDs
                 return .run { send in
-                    let pool = (try? await dictionaryClient.quizWords(level, 400)) ?? []
-                    await send(.loaded(pool))
+                    // Words that use today's kanji (a few per kanji) → the questions.
+                    var todaysWords: [WordEntry] = []
+                    for id in kanjiIDs {
+                        todaysWords += (try? await dictionaryClient.words(id, 4)) ?? []
+                    }
+                    // A broad level pool for the distractor-reading fallback (and a
+                    // fallback question source when nothing was studied today).
+                    let pool = (try? await dictionaryClient.quizWords(level, 300)) ?? []
+                    await send(.loaded(todaysWords: todaysWords, pool: pool))
                 }
 
-            case let .loaded(pool):
+            case let .loaded(todaysWords, pool):
                 state.isLoading = false
-                // Questions: from the wordbook or the level pool — deduped, valid,
-                // shuffled, capped at 20.
-                let source = state.useWordbook ? state.wordbookWords : pool
+                // Question source: today's kanji words, or the level pool if nothing
+                // was studied today. Deduped, valid, shuffled.
+                let source = todaysWords.isEmpty ? pool : todaysWords
                 var seen = Set<Int>()
                 var qs = source.filter { word in
                     guard !word.surface.isEmpty, !word.reading.isEmpty else { return false }
                     return seen.insert(word.id).inserted
                 }
                 withRandomNumberGenerator { qs.shuffle(using: &$0) }
-                state.questions = Array(qs.prefix(20))
-                // Distractor readings: every reading in the level pool + wordbook.
-                let readings = Set((pool + state.wordbookWords).map(\.reading))
-                    .filter { !$0.isEmpty }
+                // Dynamic length: scales with today's words, kept in a sane range.
+                let cap = todaysWords.isEmpty ? 15 : min(30, max(5, qs.count))
+                state.questions = Array(qs.prefix(cap))
+                // Distractor readings pool (fallback for very short readings).
+                let readings = Set((pool + todaysWords).map(\.reading)).filter { !$0.isEmpty }
                 state.readingPool = Array(readings)
                 state.index = 0
                 state.correctCount = 0
                 buildOptions(&state)
                 return .none
-
-            case let .setWordbook(useWordbook):
-                state.useWordbook = useWordbook
-                return .send(.onAppear)
 
             case let .chose(reading):
                 guard !state.answered else { return .none }
