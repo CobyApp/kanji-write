@@ -110,4 +110,40 @@ final class QuizFeatureTests: XCTestCase {
         XCTAssertFalse(store.state.queue.isEmpty)          // today's kanji → questions
         XCTAssertTrue(store.state.started)
     }
+
+    func testWrongAnswerSchedulesReviewImmediately() async {
+        let day = 100
+        let saved = LockIsolated<[QuizRecord]>([])
+        let store = TestStore(initialState: QuizFeature.State(level: "N5")) {
+            QuizFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
+            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            $0.reviewStore.loadRecords = {
+                [ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: day + 3, lastReviewedDay: day)]
+            }
+            $0.quizStore.load = { [] }
+            $0.quizStore.save = { saved.setValue($0) }
+            $0.dictionaryClient.allKanji = { [self.kanji(1, "山")] }
+            $0.dictionaryClient.allGlosses = { [1: ["ko": "메 산", "en": "mountain"]] }
+            $0.dictionaryClient.words = { _, _ in [self.word(10, "山", "やま")] }
+            $0.dictionaryClient.word = { _ in nil }
+            $0.dictionaryClient.quizWords = { _, _ in [self.word(11, "川", "かわ"), self.word(12, "水", "みず")] }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.onAppear(language: .ko))
+        await store.receive(\.loaded)
+        let item = store.state.current!
+        let wrong = item.options.first { $0 != item.answer }!
+
+        await store.send(.chose(wrong))
+        await store.send(.next)
+
+        // The item is scheduled (box 0, due tomorrow) and saved right away — so a
+        // missed item comes back for review even if the session is abandoned.
+        let record = saved.value.first { $0.id == item.id }
+        XCTAssertEqual(record?.box, 0)
+        XCTAssertEqual(record?.due, day + 1)
+    }
 }
