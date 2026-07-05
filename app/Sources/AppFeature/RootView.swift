@@ -87,8 +87,6 @@ private func sessionView(_ store: StoreOf<RootFeature.Session>) -> some View {
     switch store.case {
     case let .worksheet(s):
         WorksheetView(store: s)
-    case let .test(s):
-        TestView(store: s)
     case let .practice(s):
         PracticeView(store: s)
     case let .quiz(s):

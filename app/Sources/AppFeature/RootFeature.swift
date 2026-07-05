@@ -27,7 +27,6 @@ public struct RootFeature {
     @Reducer(state: .equatable)
     public enum Session {
         case worksheet(WorksheetFeature)
-        case test(TestFeature)
         case practice(PracticeFeature)
         case quiz(QuizFeature)
     }
@@ -68,7 +67,6 @@ public struct RootFeature {
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case startStudy
-        case startReview
         case startPractice
         case startQuiz(level: String)
         case path(StackActionOf<Path>)
@@ -136,10 +134,6 @@ public struct RootFeature {
             case .startStudy:
                 state.sessionPath.removeAll()
                 state.session = .worksheet(WorksheetFeature.State())
-                return .none
-            case .startReview:
-                state.sessionPath.removeAll()
-                state.session = .test(TestFeature.State())
                 return .none
             case .startPractice:
                 state.sessionPath.removeAll()
