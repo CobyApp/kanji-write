@@ -241,6 +241,31 @@ extension DictionaryClient: DependencyKey {
                 }
                 return kanji.sorted { position($0.literal) < position($1.literal) }
             }
+        },
+        quizWords: { level, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [WordEntry] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT DISTINCT w.id, w.surface, w.reading_kana FROM word w
+                    JOIN word_kanji wk ON wk.word_id = w.id
+                    JOIN kanji k ON k.id = wk.kanji_id
+                    WHERE k.jlpt_level = ?
+                    ORDER BY w.is_common DESC, w.id
+                    LIMIT ?
+                    """, arguments: [level, limit])
+                return try rows.map { row in
+                    let id: Int = row["id"]
+                    func gloss(_ lang: String) throws -> String? {
+                        try String.fetchOne(
+                            db, sql: "SELECT text FROM word_gloss WHERE word_id = ? AND lang = ? LIMIT 1",
+                            arguments: [id, lang])
+                    }
+                    return WordEntry(
+                        id: id, surface: row["surface"], reading: row["reading_kana"],
+                        meaningEn: try gloss("en"), meaningKo: try gloss("ko"),
+                        meaningJa: try gloss("ja"), meaningZh: try gloss("zh"))
+                }
+            }
         }
     )
 

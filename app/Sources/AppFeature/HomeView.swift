@@ -212,6 +212,7 @@ struct HomeView: View {
             launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
                      subtitle: L.practiceSub[appLanguage], count: nil,
                      soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
+            quizLauncher
             dictionaryButton
         }
     }
@@ -280,6 +281,15 @@ struct HomeView: View {
                      subtitle: due > 0 ? L.reviewSub[appLanguage] : L.allCaughtUp[appLanguage],
                      count: due, soft: Palette.lavenderSoft, accent: Palette.lavender,
                      dimmed: due == 0) { if due > 0 { store.send(.startReview) } }
+            quizLauncher
+        }
+    }
+
+    private var quizLauncher: some View {
+        launcher(icon: "questionmark.circle.fill", title: L.quiz[appLanguage],
+                 subtitle: L.quizSub[appLanguage], count: nil,
+                 soft: Palette.butterSoft, accent: Palette.butter) {
+            store.send(.startQuiz(level: targetLevel))
         }
     }
 

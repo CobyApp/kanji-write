@@ -29,6 +29,7 @@ public struct RootFeature {
         case worksheet(WorksheetFeature)
         case test(TestFeature)
         case practice(PracticeFeature)
+        case quiz(QuizFeature)
     }
 
     @ObservableState
@@ -69,6 +70,7 @@ public struct RootFeature {
         case startStudy
         case startReview
         case startPractice
+        case startQuiz(level: String)
         case path(StackActionOf<Path>)
         case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
@@ -142,6 +144,11 @@ public struct RootFeature {
             case .startPractice:
                 state.sessionPath.removeAll()
                 state.session = .practice(PracticeFeature.State())
+                return .none
+            case let .startQuiz(level):
+                state.sessionPath.removeAll()
+                state.session = .quiz(QuizFeature.State(
+                    level: level, wordbookWords: state.wordReview.words.elements))
                 return .none
 
             // Tapping a word / kanji while studying drills into its detail on the
