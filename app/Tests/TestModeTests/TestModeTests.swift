@@ -204,3 +204,26 @@ final class PhoneticTrapsTests: XCTestCase {
         XCTAssertTrue(isPlausibleKana("しゃかい"))
     }
 }
+
+final class QuizSRSTests: XCTestCase {
+    func testCorrectAdvancesBoxAndLengthensInterval() {
+        let new = QuizSRS.schedule(box: nil, correct: true, today: 100)
+        XCTAssertEqual(new.box, 0)
+        XCTAssertEqual(new.due, 101)              // box 0 → +1 day
+        let next = QuizSRS.schedule(box: 0, correct: true, today: 100)
+        XCTAssertEqual(next.box, 1)
+        XCTAssertEqual(next.due, 103)             // box 1 → +3 days
+    }
+
+    func testWrongResetsToBoxZero() {
+        let r = QuizSRS.schedule(box: 4, correct: false, today: 100)
+        XCTAssertEqual(r.box, 0)
+        XCTAssertEqual(r.due, 101)                // seen again tomorrow
+    }
+
+    func testBoxCaps() {
+        let r = QuizSRS.schedule(box: 5, correct: true, today: 100)
+        XCTAssertEqual(r.box, 5)                  // capped
+        XCTAssertEqual(r.due, 100 + QuizSRS.intervals[5])
+    }
+}
