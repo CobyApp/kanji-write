@@ -1,49 +1,75 @@
 import ComposableArchitecture
 import DictionaryClient
 import Foundation
+import Review
 import SharedModels
 
-/// A multiple-choice reading quiz: show a word, pick its correct kana reading
-/// from four options. Questions are words that use *today's studied kanji* (so
-/// review reinforces what was just learned); the number of questions scales with
-/// how many kanji were studied. Wrong options are minimal-pair traps.
+/// The kinds of question the quiz mixes.
+public enum QuizKind: String, Equatable, Sendable {
+    case kanjiMeaning   // 한자 → 뜻
+    case wordReading    // 단어 → 읽기(かな)
+    case wordMeaning    // 단어 → 뜻
+}
+
+/// One ready-to-show question (prompt + four options, correct answer known).
+public struct QuizItem: Equatable, Identifiable, Sendable {
+    public let id: String        // "<kind>:<entityID>" — stable for SRS
+    public let kind: QuizKind
+    public let prompt: String    // kanji glyph or word surface
+    public let subtitle: String? // a hint (word meaning / reading)
+    public let answer: String
+    public let options: [String]
+}
+
+/// A learn-what-you-studied quiz. It mixes question types (kanji meaning, word
+/// reading, word meaning) over today's kanji + any items whose spaced-repetition
+/// review is due. It loops in phases — wrong answers requeue until every item is
+/// answered correctly — and records each item's first-try result to schedule its
+/// next appearance (Leitner: 1 · 3 · 7 · 14 · 30 · 60 days).
 @Reducer
 public struct QuizFeature {
     @ObservableState
     public struct State: Equatable {
         public var level: String
-        /// Today's studied kanji ids — the quiz draws words that use these.
         public var kanjiIDs: [Int]
-        public var questions: [WordEntry] = []
-        public var readingPool: [String] = []
-        public var index = 0
-        public var options: [String] = []
+        public var language: AppLanguage
+        public var today = 0
+        public var records: [String: QuizRecord] = [:]
+
+        public var queue: [QuizItem] = []          // remaining this session (mastery loop)
+        public var totalItems = 0                  // unique items this session
+        public var mastered = 0                    // items cleared (first correct)
+        public var missed: Set<String> = []        // items answered wrong ≥ once
+        public var firstAttempt: [String: Bool] = [:]
+        public var answeredOnce: Set<String> = []
         public var chosen: String?
-        public var correctCount = 0
+        public var started = false
         public var isLoading = false
 
-        public init(level: String, kanjiIDs: [Int] = []) {
+        public init(level: String, kanjiIDs: [Int] = [], language: AppLanguage = .ko) {
             self.level = level
             self.kanjiIDs = kanjiIDs
+            self.language = language
         }
 
-        public var current: WordEntry? {
-            questions.indices.contains(index) ? questions[index] : nil
-        }
-        public var isFinished: Bool { !questions.isEmpty && index >= questions.count }
+        public var current: QuizItem? { queue.first }
+        public var isFinished: Bool { started && queue.isEmpty }
         public var answered: Bool { chosen != nil }
-        public var total: Int { questions.count }
+        public var isRetry: Bool { current.map { missed.contains($0.id) } ?? false }
     }
 
     public enum Action: Equatable {
-        case onAppear
-        case loaded(todaysWords: [WordEntry], pool: [WordEntry])
+        case onAppear(language: AppLanguage)
+        case loaded(kanji: [Kanji], glosses: [Int: [String: String]],
+                    words: [WordEntry], pool: [WordEntry], records: [QuizRecord], today: Int)
         case chose(String)
         case next
         case restart
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
+    @Dependency(\.quizStore) var quizStore
+    @Dependency(\.date) var date
     @Dependency(\.withRandomNumberGenerator) var withRandomNumberGenerator
 
     public init() {}
@@ -51,84 +77,180 @@ public struct QuizFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case .onAppear, .restart:
-                state.isLoading = true
-                let level = state.level
-                let kanjiIDs = state.kanjiIDs
-                return .run { send in
-                    // Words that use today's kanji (a few per kanji) → the questions.
-                    var todaysWords: [WordEntry] = []
-                    for id in kanjiIDs {
-                        todaysWords += (try? await dictionaryClient.words(id, 4)) ?? []
-                    }
-                    // A broad level pool for the distractor-reading fallback (and a
-                    // fallback question source when nothing was studied today).
-                    let pool = (try? await dictionaryClient.quizWords(level, 300)) ?? []
-                    await send(.loaded(todaysWords: todaysWords, pool: pool))
-                }
+            case let .onAppear(language):
+                state.language = language
+                return load(state: &state)
 
-            case let .loaded(todaysWords, pool):
+            case .restart:
+                return load(state: &state)
+
+            case let .loaded(kanji, glosses, words, pool, records, today):
                 state.isLoading = false
-                // Question source: today's kanji words, or the level pool if nothing
-                // was studied today. Deduped, valid, shuffled.
-                let source = todaysWords.isEmpty ? pool : todaysWords
-                var seen = Set<Int>()
-                var qs = source.filter { word in
-                    guard !word.surface.isEmpty, !word.reading.isEmpty else { return false }
-                    return seen.insert(word.id).inserted
+                state.today = today
+                state.records = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+                let lang = state.language
+                var items: [QuizItem] = []
+                withRandomNumberGenerator { rng in
+                    let kanjiMeanings = glosses.values.compactMap { localizedText($0, lang) }
+                        .filter { !$0.isEmpty }
+                    for k in kanji {
+                        guard let answer = localizedText(glosses[k.id] ?? [:], lang), !answer.isEmpty
+                        else { continue }
+                        items.append(QuizItem(
+                            id: "kanjiMeaning:\(k.id)", kind: .kanjiMeaning, prompt: k.literal,
+                            subtitle: nil, answer: answer,
+                            options: choiceOptions(answer: answer, pool: kanjiMeanings, using: &rng)))
+                    }
+                    let readingPool = Set((words + pool).map(\.reading)).filter { !$0.isEmpty }
+                    let meaningPool = (words + pool).compactMap { wordMeaning($0, lang) }
+                        .filter { !$0.isEmpty }
+                    var seenWord = Set<Int>()
+                    for w in words where seenWord.insert(w.id).inserted && !w.surface.isEmpty {
+                        if !w.reading.isEmpty {
+                            items.append(QuizItem(
+                                id: "wordReading:\(w.id)", kind: .wordReading, prompt: w.surface,
+                                subtitle: wordMeaning(w, lang), answer: w.reading,
+                                options: readingOptions(answer: w.reading, pool: readingPool, using: &rng)))
+                        }
+                        if let answer = wordMeaning(w, lang), !answer.isEmpty {
+                            items.append(QuizItem(
+                                id: "wordMeaning:\(w.id)", kind: .wordMeaning,
+                                prompt: "\(w.surface)（\(w.reading)）", subtitle: nil, answer: answer,
+                                options: choiceOptions(answer: answer, pool: meaningPool, using: &rng)))
+                        }
+                    }
+                    // Keep only new or SRS-due items (with ≥2 options), dedup, shuffle.
+                    var seenID = Set<String>()
+                    var active = items.filter { item in
+                        guard seenID.insert(item.id).inserted, item.options.count >= 2 else { return false }
+                        if let record = state.records[item.id] { return record.due <= today }
+                        return true
+                    }
+                    active.shuffle(using: &rng)
+                    state.queue = active
                 }
-                withRandomNumberGenerator { qs.shuffle(using: &$0) }
-                // Dynamic length: scales with today's words, kept in a sane range.
-                let cap = todaysWords.isEmpty ? 15 : min(30, max(5, qs.count))
-                state.questions = Array(qs.prefix(cap))
-                // Distractor readings pool (fallback for very short readings).
-                let readings = Set((pool + todaysWords).map(\.reading)).filter { !$0.isEmpty }
-                state.readingPool = Array(readings)
-                state.index = 0
-                state.correctCount = 0
-                buildOptions(&state)
+                state.totalItems = state.queue.count
+                state.mastered = 0
+                state.missed = []
+                state.firstAttempt = [:]
+                state.answeredOnce = []
+                state.chosen = nil
+                state.started = true
                 return .none
 
-            case let .chose(reading):
-                guard !state.answered else { return .none }
-                state.chosen = reading
-                if reading == state.current?.reading { state.correctCount += 1 }
+            case let .chose(option):
+                guard state.chosen == nil else { return .none }
+                state.chosen = option
                 return .none
 
             case .next:
-                state.index += 1
-                if !state.isFinished { buildOptions(&state) }
-                return .none
+                guard let item = state.queue.first else { return .none }
+                let correct = state.chosen == item.answer
+                // Record the first-attempt result (drives spaced repetition).
+                if state.answeredOnce.insert(item.id).inserted {
+                    state.firstAttempt[item.id] = correct
+                }
+                state.queue.removeFirst()
+                if correct {
+                    state.mastered += 1
+                } else {
+                    state.missed.insert(item.id)
+                    state.queue.append(item)   // retry later this session
+                }
+                state.chosen = nil
+                guard state.queue.isEmpty else { return .none }
+                // Session complete → schedule each item's next appearance.
+                let today = state.today
+                var records = state.records
+                for (id, firstCorrect) in state.firstAttempt {
+                    let s = QuizSRS.schedule(box: records[id]?.box, correct: firstCorrect, today: today)
+                    records[id] = QuizRecord(id: id, box: s.box, due: s.due)
+                }
+                state.records = records
+                let all = Array(records.values)
+                return .run { _ in await quizStore.save(all) }
             }
         }
     }
 
-    /// Builds the 4 shuffled options for the current question and clears the
-    /// previous choice. Distractors are *generated* as minimal pairs of the
-    /// correct reading — the exact things learners confuse: voicing (か/が), long
-    /// vowels (こう/こ), small tsu (きって/きて), yōon (きゃ/きや). If a reading is
-    /// too short to yield three traps, the nearest pool readings fill in.
-    private func buildOptions(_ state: inout State) {
-        state.chosen = nil
-        guard let correct = state.current?.reading else {
-            state.options = []
-            return
+    private func load(state: inout State) -> Effect<Action> {
+        state.isLoading = true
+        state.started = false
+        let level = state.level
+        let kanjiIDs = state.kanjiIDs
+        return .run { send in
+            let today = Int(date.now.timeIntervalSince1970 / 86_400)
+            let records = await quizStore.load()
+            // Entities whose SRS review is due today (regardless of today's study).
+            var dueKanji = Set<Int>(), dueWords = Set<Int>()
+            for record in records where record.due <= today {
+                let parts = record.id.split(separator: ":")
+                guard parts.count == 2, let eid = Int(parts[1]) else { continue }
+                switch parts[0] {
+                case "kanjiMeaning": dueKanji.insert(eid)
+                case "wordReading", "wordMeaning": dueWords.insert(eid)
+                default: break
+                }
+            }
+            let allKanji = (try? await dictionaryClient.allKanji()) ?? []
+            let byID = Dictionary(allKanji.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            let contextKanji = Set(kanjiIDs).union(dueKanji).compactMap { byID[$0] }
+            let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
+            var words: [WordEntry] = []
+            for kid in kanjiIDs { words += (try? await dictionaryClient.words(kid, 4)) ?? [] }
+            for wid in dueWords { if let w = try? await dictionaryClient.word(wid) { words.append(w) } }
+            let pool = (try? await dictionaryClient.quizWords(level, 300)) ?? []
+            await send(.loaded(kanji: contextKanji, glosses: glosses, words: words,
+                               pool: pool, records: records, today: today))
         }
-        var traps = phoneticTraps(correct)
-        withRandomNumberGenerator { traps.shuffle(using: &$0) }
-        var distractors = Array(traps.prefix(3))
-        if distractors.count < 3 {
-            // Fallback: nearest real readings from the pool.
-            let near = Set(state.readingPool)
-                .subtracting(distractors + [correct])
-                .map { (reading: $0, distance: kanaDistance($0, correct)) }
-                .sorted { $0.distance < $1.distance }
-                .map(\.reading)
-            distractors += near.prefix(3 - distractors.count)
-        }
-        var options = [correct] + distractors
-        withRandomNumberGenerator { options.shuffle(using: &$0) }
-        state.options = options
+    }
+}
+
+/// Four shuffled options: the answer + three distinct distractors from `pool`.
+func choiceOptions<G: RandomNumberGenerator>(
+    answer: String, pool: [String], using rng: inout G
+) -> [String] {
+    var distractors = Array(Set(pool).subtracting([answer]))
+    distractors.shuffle(using: &rng)
+    var options = [answer] + distractors.prefix(3)
+    options.shuffle(using: &rng)
+    return options
+}
+
+/// Reading options: minimal-pair traps of `answer`, filled from `pool` if short.
+func readingOptions<G: RandomNumberGenerator>(
+    answer: String, pool: Set<String>, using rng: inout G
+) -> [String] {
+    var traps = phoneticTraps(answer)
+    traps.shuffle(using: &rng)
+    var distractors = Array(traps.prefix(3))
+    if distractors.count < 3 {
+        let near = pool.subtracting(distractors + [answer])
+            .map { (reading: $0, distance: kanaDistance($0, answer)) }
+            .sorted { $0.distance < $1.distance }
+            .map(\.reading)
+        distractors += near.prefix(3 - distractors.count)
+    }
+    var options = [answer] + distractors
+    options.shuffle(using: &rng)
+    return options
+}
+
+/// A localized meaning from a gloss map, with a deterministic fallback.
+func localizedText(_ dict: [String: String], _ language: AppLanguage) -> String? {
+    for key in [language.glossKey, "en", "ja", "ko", "zh"] {
+        if let value = dict[key], !value.isEmpty { return value }
+    }
+    return dict.values.first { !$0.isEmpty }
+}
+
+/// A word's meaning in the selected language (falling back to English).
+func wordMeaning(_ word: WordEntry, _ language: AppLanguage) -> String? {
+    switch language {
+    case .ko: word.meaningKo ?? word.meaningEn
+    case .ja: word.meaningJa ?? word.meaningEn
+    case .zh: word.meaningZh ?? word.meaningEn
+    case .en: word.meaningEn
     }
 }
 

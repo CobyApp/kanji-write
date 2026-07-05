@@ -144,15 +144,27 @@ public enum L {
     public static let clearWriting = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
     public static let addCells = L10nText(ko: "칸 10개 추가", ja: "10マス追加", zh: "添加10格", en: "Add 10")
 
-    // Reading quiz
-    public static let quiz = L10nText(ko: "발음 퀴즈", ja: "発音クイズ", zh: "读音测验", en: "Reading quiz")
-    public static let quizSub = L10nText(ko: "단어 읽기 맞히기", ja: "単語の読みを当てる", zh: "猜单词读音", en: "Guess word readings")
+    // Quiz (test what you learned)
+    public static let quiz = L10nText(ko: "퀴즈", ja: "クイズ", zh: "测验", en: "Quiz")
+    public static let quizSub = L10nText(
+        ko: "배운 내용 테스트", ja: "学んだ内容をテスト", zh: "测试所学", en: "Test what you learned")
     public static let quizPrompt = L10nText(
-        ko: "정확한 읽기를 고르세요", ja: "正しい読みを選ぼう", zh: "选择正确的读音", en: "Pick the correct reading")
+        ko: "정답을 고르세요", ja: "正しい答えを選ぼう", zh: "选择正确答案", en: "Pick the correct answer")
+    public static let quizRetry = L10nText(ko: "다시", ja: "再挑戦", zh: "再来", en: "Retry")
+    public static let quizKanjiMeaning = L10nText(
+        ko: "이 한자의 뜻은?", ja: "この漢字の意味は？", zh: "这个汉字的意思？", en: "Meaning of this kanji?")
+    public static let quizWordReading = L10nText(
+        ko: "이 단어의 읽기는?", ja: "この単語の読みは？", zh: "这个词的读音？", en: "How is this read?")
+    public static let quizWordMeaning = L10nText(
+        ko: "이 단어의 뜻은?", ja: "この単語の意味は？", zh: "这个词的意思？", en: "Meaning of this word?")
+    public static let quizFirstTry = L10nText(
+        ko: "첫 시도 정답", ja: "一発正解", zh: "首次答对", en: "First-try correct")
     public static let quizDone = L10nText(ko: "퀴즈 완료!", ja: "クイズ完了！", zh: "测验完成！", en: "Quiz complete!")
     public static let quizAgain = L10nText(ko: "다시 풀기", ja: "もう一度", zh: "再来一次", en: "Play again")
-    public static let quizEmpty = L10nText(
-        ko: "출제할 단어가 없어요", ja: "出題できる単語がありません", zh: "没有可出题的单词", en: "No words to quiz")
+    public static let quizNothingDue = L10nText(
+        ko: "복습할 내용이 없어요\n학습 후 다시 열어보세요",
+        ja: "復習する内容がありません\n学習してからまた開いてね",
+        zh: "暂无需要复习的内容\n学习后再来吧", en: "Nothing to review yet\nStudy first, then come back")
     public static let worksheetWrite = L10nText(ko: "한자를 써보세요", ja: "漢字を書いてみよう", zh: "写一写这个汉字", en: "Write the kanji")
     public static let worksheetWord = L10nText(ko: "이 한자가 든 단어", ja: "この漢字を使う単語", zh: "含这个汉字的单词", en: "A word using it")
     public static let worksheetExample = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Example")
