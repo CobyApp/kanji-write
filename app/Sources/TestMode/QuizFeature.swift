@@ -57,7 +57,7 @@ public struct QuizFeature {
                 state.isLoading = true
                 let level = state.level
                 return .run { send in
-                    let pool = (try? await dictionaryClient.quizWords(level, 200)) ?? []
+                    let pool = (try? await dictionaryClient.quizWords(level, 400)) ?? []
                     await send(.loaded(pool))
                 }
 
@@ -100,18 +100,45 @@ public struct QuizFeature {
         }
     }
 
-    /// Builds the 4 shuffled options for the current question (correct + up to 3
-    /// distinct distractor readings) and clears the previous choice.
+    /// Builds the 4 shuffled options for the current question and clears the
+    /// previous choice. Distractors are the readings *most similar* to the
+    /// correct one (smallest kana edit distance) so near-homophones — voicing
+    /// (か/が), long vowels (こう/こ), small tsu (きって/きて) — are the traps.
     private func buildOptions(_ state: inout State) {
         state.chosen = nil
         guard let correct = state.current?.reading else {
             state.options = []
             return
         }
-        var distractors = state.readingPool.filter { $0 != correct }
-        withRandomNumberGenerator { distractors.shuffle(using: &$0) }
-        var options = [correct] + distractors.prefix(3)
+        var candidates = Array(Set(state.readingPool)).filter { $0 != correct }
+        // Shuffle first so equal-distance readings are picked at random.
+        withRandomNumberGenerator { candidates.shuffle(using: &$0) }
+        let closest = candidates
+            .map { (reading: $0, distance: kanaDistance($0, correct)) }
+            .sorted { $0.distance < $1.distance }
+            .prefix(3)
+            .map(\.reading)
+        var options = [correct] + closest
         withRandomNumberGenerator { options.shuffle(using: &$0) }
         state.options = options
     }
+}
+
+/// Levenshtein edit distance between two kana readings. Small distance = the
+/// readings differ by only a mora / voicing / length — i.e. confusingly close.
+func kanaDistance(_ a: String, _ b: String) -> Int {
+    let s = Array(a), t = Array(b)
+    if s.isEmpty { return t.count }
+    if t.isEmpty { return s.count }
+    var prev = Array(0...t.count)
+    var curr = [Int](repeating: 0, count: t.count + 1)
+    for i in 1...s.count {
+        curr[0] = i
+        for j in 1...t.count {
+            let cost = s[i - 1] == t[j - 1] ? 0 : 1
+            curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
+        }
+        swap(&prev, &curr)
+    }
+    return prev[t.count]
 }

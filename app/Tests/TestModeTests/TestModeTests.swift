@@ -158,3 +158,18 @@ final class TestFeatureReducerTests: XCTestCase {
         XCTAssertEqual(store.state.index, 0)
     }
 }
+
+final class KanaDistanceTests: XCTestCase {
+    func testDistanceCapturesNearHomophones() {
+        XCTAssertEqual(kanaDistance("やま", "やま"), 0)
+        XCTAssertEqual(kanaDistance("か", "が"), 1)          // voicing
+        XCTAssertEqual(kanaDistance("こう", "こ"), 1)         // long vowel
+        XCTAssertEqual(kanaDistance("きって", "きて"), 1)      // small tsu
+        XCTAssertEqual(kanaDistance("", "あい"), 2)
+    }
+
+    func testNearIsCloserThanFar() {
+        // A near-homophone scores lower (more confusing) than an unrelated word.
+        XCTAssertLessThan(kanaDistance("しゃかい", "しかい"), kanaDistance("しゃかい", "たべもの"))
+    }
+}
