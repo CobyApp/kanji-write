@@ -13,7 +13,6 @@ struct HomeView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("newPerDay") private var newPerDay = 7
-    @AppStorage("planStartTS") private var planStartTS: Double = 0
     @AppStorage("planEndTS") private var planEndTS: Double = 0
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showPlan = false
@@ -30,10 +29,7 @@ struct HomeView: View {
                       today: store.review.today, newPerDay: newPerDay)
     }
 
-    // Plan: level + start/goal dates → daily goal.
-    private var startDate: Date {
-        planStartTS > 0 ? Date(timeIntervalSince1970: planStartTS) : Date()
-    }
+    // Plan: level + goal date → daily goal (based on days left from today).
     private var endDate: Date {
         planEndTS > 0 ? Date(timeIntervalSince1970: planEndTS) : Date().addingTimeInterval(60 * 86_400)
     }
@@ -92,7 +88,6 @@ struct HomeView: View {
             }
         }
         .onChange(of: targetLevel) { _, _ in syncPerDay() }
-        .onChange(of: planStartTS) { _, _ in syncPerDay() }
         .onChange(of: planEndTS) { _, _ in syncPerDay() }
         .task {
             syncPerDay()  // keep the active per-day (goal chip / session) equal to the plan
@@ -251,13 +246,9 @@ struct HomeView: View {
                 ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
             }
             .pickerStyle(.segmented)
-            DatePicker(L.planStart[appLanguage], selection: Binding(
-                get: { startDate }, set: { planStartTS = $0.timeIntervalSince1970 }),
-                displayedComponents: .date)
-                .font(.kawaii(15))
             DatePicker(L.planEnd[appLanguage], selection: Binding(
                 get: { endDate }, set: { planEndTS = $0.timeIntervalSince1970 }),
-                in: startDate..., displayedComponents: .date)
+                in: Date()..., displayedComponents: .date)
                 .font(.kawaii(15))
             HStack {
                 Text(L.perDayGoal[appLanguage])
