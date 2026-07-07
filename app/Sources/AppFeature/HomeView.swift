@@ -37,11 +37,19 @@ struct HomeView: View {
     private var endDate: Date {
         planEndTS > 0 ? Date(timeIntervalSince1970: planEndTS) : Date().addingTimeInterval(60 * 86_400)
     }
-    private var planDays: Int {
-        max(1, Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1)
+    /// Days left from *today* to the goal date (≥1). Using the remaining time —
+    /// not the original start→end span — makes the daily target adaptive: it
+    /// rises as the deadline nears or if you fall behind, and the estimate stays
+    /// honest. Clamped to 1 once the goal date has passed (finish today).
+    private var daysLeft: Int {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let goal = cal.startOfDay(for: endDate)
+        return max(1, cal.dateComponents([.day], from: today, to: goal).day ?? 1)
     }
+    /// New kanji/day needed to finish the level's remaining kanji by the goal date.
     private var plannedPerDay: Int {
-        max(1, Int((Double(max(1, levelTotal - learnedInLevel)) / Double(planDays)).rounded(.up)))
+        max(1, Int((Double(max(1, levelTotal - learnedInLevel)) / Double(daysLeft)).rounded(.up)))
     }
     private func syncPerDay() { newPerDay = min(50, plannedPerDay) }
 
