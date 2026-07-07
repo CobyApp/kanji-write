@@ -89,7 +89,15 @@ struct HomeView: View {
         }
         .onChange(of: targetLevel) { _, _ in syncPerDay() }
         .onChange(of: planEndTS) { _, _ in syncPerDay() }
+        // The kanji set loads asynchronously; recompute the daily goal once it
+        // arrives (on first launch it's empty when the view first appears).
+        .onChange(of: levelTotal) { _, _ in syncPerDay() }
         .task {
+            // First launch: pin a default goal date (~2 months out) so it's fixed
+            // rather than sliding forward every day.
+            if planEndTS == 0 {
+                planEndTS = Date().addingTimeInterval(60 * 86_400).timeIntervalSince1970
+            }
             syncPerDay()  // keep the active per-day (goal chip / session) equal to the plan
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
