@@ -51,7 +51,7 @@ public struct StrokeOrderPlayer: View {
         _progress = State(initialValue: Double(paths.count))
     }
 
-    private var duration: Double { max(0.8, Double(paths.count) * 0.5) }
+    private var duration: Double { max(1.2, Double(paths.count) * 0.9) }
 
     private func play() {
         progress = 0
