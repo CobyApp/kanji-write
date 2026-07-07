@@ -108,12 +108,26 @@ public struct WorksheetView: View {
     private func writeCard(_ kanji: Kanji) -> some View {
         // A big, centered glyph — iPhone has no tracing grid, so give it room.
         let glyphSize: CGFloat = sizeClass == .compact ? 260 : 220
-        return VStack(spacing: 16) {
+        return VStack(spacing: 14) {
             if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
-                Text(meaning)
-                    .font(.kawaii(22, weight: .bold, language: appLanguage))
-                    .foregroundStyle(Palette.ink)
-                    .multilineTextAlignment(.center)
+                HStack(spacing: 8) {
+                    Text(meaning)
+                        .font(.kawaii(22, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.ink)
+                        .multilineTextAlignment(.center)
+                    SpeakButton(kanji.literal)
+                }
+            }
+            // 音読み / 訓読み — the readings, so learning isn't just meaning + shape.
+            if !kanji.onReadings.isEmpty || !kanji.kunReadings.isEmpty {
+                VStack(spacing: 5) {
+                    if !kanji.onReadings.isEmpty {
+                        readingRow(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                    }
+                    if !kanji.kunReadings.isEmpty {
+                        readingRow(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
+                    }
+                }
             }
             // Animated stroke order (how it's written).
             if store.strokePaths.isEmpty {
@@ -125,6 +139,18 @@ public struct WorksheetView: View {
         }
         .frame(maxWidth: .infinity)
         .roundedCard()
+    }
+
+    /// A centered 音/訓 reading row with a colored label chip.
+    private func readingRow(_ label: String, _ readings: [String], _ accent: Color) -> some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(.kawaii(12, weight: .bold)).foregroundStyle(.white)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(accent).clipShape(Capsule())
+            Text(readings.joined(separator: "、"))
+                .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
+        }
     }
 
     // MARK: 2) One word using the kanji
