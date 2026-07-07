@@ -211,6 +211,7 @@ public struct AuroraBackground: View {
                 colors: colors)
         }
         .ignoresSafeArea()
+        .allowsHitTesting(false)  // purely decorative — never intercept taps
     }
 }
 
