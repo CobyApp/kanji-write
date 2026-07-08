@@ -168,7 +168,7 @@ public struct WorksheetView: View {
                         // kanji) without leaving the study session.
                         Button { store.send(.wordTapped(word)) } label: {
                             VStack(alignment: .leading, spacing: 4) {
-                                RubyWord(word.surface, reading: word.reading, size: 20)
+                                RubyWord(word.surface, reading: word.reading, size: 22)
                                 if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
                                     Text(meaning)
                                         .font(.kawaii(14, language: appLanguage))
@@ -199,7 +199,7 @@ public struct WorksheetView: View {
                 ForEach(store.sentences) { sentence in
                     HStack(alignment: .top, spacing: 8) {
                         VStack(alignment: .leading, spacing: 2) {
-                            RubyText(sentence.textJa, size: 18)
+                            RubyText(sentence.textJa, size: 20)
                             if let translation = localizedTranslation(sentence.translations, appLanguage),
                                !translation.isEmpty {
                                 Text(translation)
