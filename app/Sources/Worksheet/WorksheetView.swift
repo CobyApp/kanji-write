@@ -91,7 +91,7 @@ public struct WorksheetView: View {
                     var t = Transaction(); t.disablesAnimations = true
                     withTransaction(t) { card = 0 }
                 }
-                advanceButton
+                navButtons
             }
             .padding(16)
         }
@@ -289,24 +289,40 @@ public struct WorksheetView: View {
 
     // MARK: Advance (Next / Done)
 
-    private var advanceButton: some View {
-        // On the last card, finishing the deck advances to the next kanji (or
-        // completes); otherwise it flips to the next card. Swiping does the same.
-        let lastCard = card >= 3
-        let finishing = lastCard && store.isLast
-        let label = finishing ? L.done[appLanguage] : L.next[appLanguage]
-        let colors = finishing ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink]
-        return Button {
-            if lastCard { advance() } else { withAnimation { card += 1 } }
-        } label: {
-            Text(label)
-                .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
-                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+    private func goBack() { if card > 0 { withAnimation { card -= 1 } } }
+    private func goNext() { if card >= 3 { advance() } else { withAnimation { card += 1 } } }
+
+    /// 이전 · 다음 controls. Also bound to the ← / → keys (iPad/Mac keyboard).
+    private var navButtons: some View {
+        let finishing = card >= 3 && store.isLast
+        let nextLabel = finishing ? L.done[appLanguage] : L.next[appLanguage]
+        let nextColors = finishing ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink]
+        return HStack(spacing: 12) {
+            Button(action: goBack) {
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left").font(.system(size: 13, weight: .bold))
+                    Text(L.prev[appLanguage]).font(.kawaii(16, weight: .bold))
+                }
+                .foregroundStyle(card == 0 ? Palette.inkSoft : Palette.pink)
+                .frame(width: 110).padding(.vertical, 14)
+                .background(Palette.pinkSoft.opacity(card == 0 ? 0.4 : 1))
                 .clipShape(Capsule())
-                .shadow(color: colors[0].opacity(0.4), radius: 10, y: 5)
+            }
+            .buttonStyle(.bouncy)
+            .disabled(card == 0)
+            .keyboardShortcut(.leftArrow, modifiers: [])
+
+            Button(action: goNext) {
+                Text(nextLabel)
+                    .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(LinearGradient(colors: nextColors, startPoint: .leading, endPoint: .trailing))
+                    .clipShape(Capsule())
+                    .shadow(color: nextColors[0].opacity(0.4), radius: 10, y: 5)
+            }
+            .buttonStyle(.bouncy)
+            .keyboardShortcut(.rightArrow, modifiers: [])
         }
-        .buttonStyle(.bouncy)
     }
 
     // MARK: Finished / empty
