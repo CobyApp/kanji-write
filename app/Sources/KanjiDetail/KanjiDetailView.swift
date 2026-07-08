@@ -131,8 +131,7 @@ public struct KanjiDetailView: View {
             ForEach(store.sentences) { sentence in
                 HStack(alignment: .top, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(sentence.textJa)
-                            .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                        RubyText(sentence.textJa, size: 17)
                         if let translation = localizedTranslation(sentence.translations, appLanguage) {
                             Text(translation).font(.kawaii(14, language: appLanguage))
                                 .foregroundStyle(Palette.inkSoft)
