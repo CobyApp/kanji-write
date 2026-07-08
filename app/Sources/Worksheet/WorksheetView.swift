@@ -43,9 +43,17 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// Which card of the current kanji is showing (0…3). Card 4 is a sentinel
+    /// that means "swiped past the last card" → advance to the next kanji.
+    @State private var card = 0
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
+    }
+
+    private func advance() {
+        store.send(store.isLast ? .doneTapped : .nextTapped)
+        card = 0
     }
 
     public var body: some View {
@@ -67,69 +75,97 @@ public struct WorksheetView: View {
         } else if store.queue.isEmpty {
             emptyCard
         } else if let kanji = store.current {
-            ScrollView {
-                VStack(spacing: 16) {
-                    progressCard.popIn(delay: 0.02)
-                    writeCard(kanji).popIn(delay: 0.09)
-                    wordCard.popIn(delay: 0.16)
-                    exampleCard.popIn(delay: 0.23)
-                    advanceButton.popIn(delay: 0.30)
+            VStack(spacing: 12) {
+                deckHeader
+                TabView(selection: $card) {
+                    cardShell { meaningCard(kanji) }.tag(0)
+                    cardShell { strokeCard(kanji) }.tag(1)
+                    cardShell { wordCard }.tag(2)
+                    cardShell { exampleCard }.tag(3)
+                    Color.clear.tag(4)  // swipe past the last card → next kanji
                 }
-                .padding(16)
-                // Re-run the entrance animation each time the card advances.
-                .id(store.index)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.easeInOut(duration: 0.25), value: card)
+                .onChange(of: card) { _, v in if v >= 4 { advance() } }
+                .onChange(of: store.index) { _, _ in card = 0 }
+                advanceButton
             }
+            .padding(16)
         }
     }
 
-    // MARK: Progress
+    // MARK: Deck header (kanji counter + per-kanji card progress)
 
-    private var progressCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                SectionHeader(L.toLearn[appLanguage], accent: Palette.butter)
-                Spacer()
+    private var deckHeader: some View {
+        VStack(spacing: 8) {
+            HStack {
                 Text("\(min(store.index + 1, store.queue.count)) / \(store.queue.count)")
-                    .font(.kawaii(15, weight: .bold)).monospacedDigit()
+                    .font(.kawaii(14, weight: .bold)).monospacedDigit()
                     .foregroundStyle(Palette.inkSoft)
+                Spacer()
+                Text("\(targetLevel) · \(newPerDay)/\(L.daysUnit[appLanguage])")
+                    .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             }
-            // Plan summary: level · N/day · remaining · ~days to finish.
-            Text("\(targetLevel) · \(newPerDay)/\(L.daysUnit[appLanguage]) · "
-                + "\(store.remaining) \(L.left[appLanguage]) · "
-                + "~\(daysToFinish(remaining: store.remaining, perDay: newPerDay))\(L.daysUnit[appLanguage])")
-                .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+            HStack(spacing: 6) {
+                ForEach(0..<4, id: \.self) { i in
+                    Capsule()
+                        .fill(i <= min(card, 3) ? Palette.pink : Palette.pinkSoft)
+                        .frame(height: 5)
+                }
+            }
         }
-        .roundedCard()
     }
 
-    // MARK: 1) Learn the kanji — meaning + animated stroke order (no writing here;
-    // writing practice lives in the 연습 screen).
+    /// Each card: a title + its content in a scrollable rounded card that fills
+    /// the page (so long content still scrolls within the card).
+    private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
+        GeometryReader { geo in
+            ScrollView {
+                body()
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geo.size.height, alignment: .center)
+            }
+        }
+    }
 
-    private func writeCard(_ kanji: Kanji) -> some View {
-        // A big, centered glyph — iPhone has no tracing grid, so give it room.
-        let glyphSize: CGFloat = sizeClass == .compact ? 260 : 220
-        return VStack(spacing: 14) {
+    private func cardTitle(_ text: String, _ accent: Color) -> some View {
+        HStack { SectionHeader(text, accent: accent); Spacer() }
+    }
+
+    // MARK: Card 1 — meaning + readings (뜻·읽기)
+
+    private func meaningCard(_ kanji: Kanji) -> some View {
+        let glyphSize: CGFloat = sizeClass == .compact ? 150 : 180
+        return VStack(spacing: 16) {
+            PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
+                       size: glyphSize, fontSize: glyphSize * 0.62)
             if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                 HStack(spacing: 8) {
                     Text(meaning)
-                        .font(.kawaii(22, weight: .bold, language: appLanguage))
-                        .foregroundStyle(Palette.ink)
-                        .multilineTextAlignment(.center)
+                        .font(.kawaii(24, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
                     SpeakButton(kanji.literal)
                 }
             }
-            // 音読み / 訓読み — the readings, so learning isn't just meaning + shape.
-            if !kanji.onReadings.isEmpty || !kanji.kunReadings.isEmpty {
-                VStack(spacing: 5) {
-                    if !kanji.onReadings.isEmpty {
-                        readingRow(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
-                    }
-                    if !kanji.kunReadings.isEmpty {
-                        readingRow(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
-                    }
+            VStack(spacing: 8) {
+                if !kanji.onReadings.isEmpty {
+                    readingRow(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                }
+                if !kanji.kunReadings.isEmpty {
+                    readingRow(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
                 }
             }
-            // Animated stroke order (how it's written).
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 12)
+        .roundedCard()
+    }
+
+    // MARK: Card 2 — stroke order (획순)
+
+    private func strokeCard(_ kanji: Kanji) -> some View {
+        let glyphSize: CGFloat = sizeClass == .compact ? 240 : 220
+        return VStack(spacing: 12) {
+            cardTitle(L.strokeOrder[appLanguage], Palette.mint)
             if store.strokePaths.isEmpty {
                 PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
                            size: glyphSize, fontSize: glyphSize * 0.62)
@@ -137,7 +173,7 @@ public struct WorksheetView: View {
                 StrokeOrderPlayer(paths: store.strokePaths, size: glyphSize)
             }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity).padding(.vertical, 8)
         .roundedCard()
     }
 
@@ -219,17 +255,21 @@ public struct WorksheetView: View {
     // MARK: Advance (Next / Done)
 
     private var advanceButton: some View {
-        Button {
-            store.send(store.isLast ? .doneTapped : .nextTapped)
+        // On the last card, finishing the deck advances to the next kanji (or
+        // completes); otherwise it flips to the next card. Swiping does the same.
+        let lastCard = card >= 3
+        let finishing = lastCard && store.isLast
+        let label = finishing ? L.done[appLanguage] : L.next[appLanguage]
+        let colors = finishing ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink]
+        return Button {
+            if lastCard { advance() } else { withAnimation { card += 1 } }
         } label: {
-            Text(store.isLast ? L.done[appLanguage] : L.next[appLanguage])
+            Text(label)
                 .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(
-                    LinearGradient(colors: store.isLast ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink],
-                                   startPoint: .leading, endPoint: .trailing))
+                .background(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
                 .clipShape(Capsule())
-                .shadow(color: (store.isLast ? Palette.mint : Palette.butter).opacity(0.4), radius: 10, y: 5)
+                .shadow(color: colors[0].opacity(0.4), radius: 10, y: 5)
         }
         .buttonStyle(.bouncy)
     }
