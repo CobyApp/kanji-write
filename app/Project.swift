@@ -295,10 +295,9 @@ let project = Project(
                 .target(name: "AppFeature"),
                 .target(name: "DesignSystem"),
                 .target(name: "KanjiWidget"),
-                // NOTE: the KanjiWatch app is embedded on machines that have the
-                // watchOS platform installed. Add `.target(name: "KanjiWatch")`
-                // here to bundle it into the iPhone app. (Left out by default so
-                // the iOS/Catalyst build doesn't require the watchOS SDK.)
+                // Embed the Apple Watch app on iOS/iPadOS only — Mac Catalyst
+                // can't contain a watchOS app.
+                .target(name: "KanjiWatch", condition: .when([.ios])),
                 .external(name: "ComposableArchitecture"),
             ],
             settings: .settings(base: [
@@ -344,7 +343,14 @@ let project = Project(
             sources: ["Sources/KanjiWatch/**"],
             dependencies: [
                 .target(name: "SharedModels"),
-            ]
+            ],
+            settings: .settings(base: [
+                // Skip code signing for local/simulator builds so no development
+                // team or provisioning profile is needed (the dev cert here is
+                // revoked). Re-enable signing + a team to deploy to a real watch.
+                "CODE_SIGNING_ALLOWED": "NO",
+                "CODE_SIGNING_REQUIRED": "NO",
+            ])
         ),
         .target(
             name: "KanjiListFeatureTests",
