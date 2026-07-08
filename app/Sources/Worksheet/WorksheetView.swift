@@ -128,53 +128,79 @@ public struct WorksheetView: View {
         }
     }
 
-    private func cardTitle(_ text: String, _ accent: Color) -> some View {
-        HStack { SectionHeader(text, accent: accent); Spacer() }
+    /// Shared card chrome: an icon+title header in the card's accent, content
+    /// below, on a big rounded elevated panel. Gives every card one identity.
+    private func studyCard<C: View>(
+        _ title: String, _ icon: String, _ accent: Color,
+        @ViewBuilder content: () -> C
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(accent).clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                Text(title).font(.kawaii(17, weight: .bold, language: appLanguage))
+                    .foregroundStyle(Palette.ink)
+                Spacer(minLength: 0)
+            }
+            content()
+        }
+        .padding(22)
+        .frame(maxWidth: .infinity)
+        .background(Palette.card)
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous)
+            .stroke(accent.opacity(0.28), lineWidth: 1.5))
+        .shadow(color: accent.opacity(0.18), radius: 18, x: 0, y: 8)
     }
 
     // MARK: Card 1 — meaning + readings (뜻·읽기)
 
     private func meaningCard(_ kanji: Kanji) -> some View {
-        let glyphSize: CGFloat = sizeClass == .compact ? 150 : 180
-        return VStack(spacing: 16) {
-            PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
-                       size: glyphSize, fontSize: glyphSize * 0.62)
-            if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
-                HStack(spacing: 8) {
-                    Text(meaning)
-                        .font(.kawaii(24, weight: .bold, language: appLanguage))
-                        .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
-                    SpeakButton(kanji.literal)
+        let glyphSize: CGFloat = sizeClass == .compact ? 150 : 172
+        return studyCard(L.readings[appLanguage], "textformat.size.larger", Palette.pink) {
+            VStack(spacing: 16) {
+                PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
+                           size: glyphSize, fontSize: glyphSize * 0.62)
+                    .breathe(1.03)
+                if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
+                    HStack(spacing: 8) {
+                        Text(meaning)
+                            .font(.kawaii(26, weight: .bold, language: appLanguage))
+                            .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
+                        SpeakButton(kanji.literal)
+                    }
+                }
+                VStack(spacing: 8) {
+                    if !kanji.onReadings.isEmpty {
+                        readingRow(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                    }
+                    if !kanji.kunReadings.isEmpty {
+                        readingRow(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
+                    }
                 }
             }
-            VStack(spacing: 8) {
-                if !kanji.onReadings.isEmpty {
-                    readingRow(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
-                }
-                if !kanji.kunReadings.isEmpty {
-                    readingRow(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
-                }
-            }
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 12)
-        .roundedCard()
     }
 
     // MARK: Card 2 — stroke order (획순)
 
     private func strokeCard(_ kanji: Kanji) -> some View {
-        let glyphSize: CGFloat = sizeClass == .compact ? 240 : 220
-        return VStack(spacing: 12) {
-            cardTitle(L.strokeOrder[appLanguage], Palette.mint)
-            if store.strokePaths.isEmpty {
-                PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
-                           size: glyphSize, fontSize: glyphSize * 0.62)
-            } else {
-                StrokeOrderPlayer(paths: store.strokePaths, size: glyphSize)
+        let glyphSize: CGFloat = sizeClass == .compact ? 230 : 210
+        return studyCard(L.strokeOrder[appLanguage], "scribble.variable", Palette.mint) {
+            Group {
+                if store.strokePaths.isEmpty {
+                    PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
+                               size: glyphSize, fontSize: glyphSize * 0.62)
+                } else {
+                    // Auto-plays when this (the 2nd) card becomes the visible page.
+                    StrokeOrderPlayer(paths: store.strokePaths, size: glyphSize, isActive: card == 1)
+                }
             }
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 8)
-        .roundedCard()
     }
 
     /// A centered 音/訓 reading row with a colored label chip.
@@ -193,63 +219,69 @@ public struct WorksheetView: View {
 
     @ViewBuilder
     private var wordCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(L.worksheetWord[appLanguage], accent: Palette.lavender)
+        studyCard(L.worksheetWord[appLanguage], "character.book.closed", Palette.lavender) {
             if store.words.isEmpty {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             } else {
-                ForEach(store.words) { word in
-                    HStack(spacing: 8) {
-                        // Tap a word to drill into its detail (and from there, its
-                        // kanji) without leaving the study session.
+                VStack(spacing: 12) {
+                    ForEach(store.words) { word in
                         Button { store.send(.wordTapped(word)) } label: {
-                            VStack(alignment: .leading, spacing: 4) {
-                                RubyWord(word.surface, reading: word.reading, size: 22)
-                                if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
-                                    Text(meaning)
-                                        .font(.kawaii(14, language: appLanguage))
-                                        .foregroundStyle(Palette.ink)
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    RubyWord(word.surface, reading: word.reading, size: 22)
+                                    if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
+                                        Text(meaning)
+                                            .font(.kawaii(14, language: appLanguage))
+                                            .foregroundStyle(Palette.inkSoft)
+                                    }
                                 }
+                                Spacer(minLength: 0)
+                                SpeakButton(word.surface)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.inkSoft)
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                            .background(Palette.lavenderSoft.opacity(0.5))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
-                        SpeakButton(word.surface)
+                        .buttonStyle(.bouncy)
                     }
                 }
             }
         }
-        .roundedCard()
     }
 
-    // MARK: 3) Example sentences
+    // MARK: Card 4 — example sentences (예문)
 
     @ViewBuilder
     private var exampleCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(L.worksheetExample[appLanguage], accent: Palette.sky)
+        studyCard(L.worksheetExample[appLanguage], "text.quote", Palette.sky) {
             if store.sentences.isEmpty {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             } else {
-                ForEach(store.sentences) { sentence in
-                    HStack(alignment: .top, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            RubyText(sentence.textJa, size: 20)
-                            if let translation = localizedTranslation(sentence.translations, appLanguage),
-                               !translation.isEmpty {
-                                Text(translation)
-                                    .font(.kawaii(14, language: appLanguage))
-                                    .foregroundStyle(Palette.inkSoft)
+                VStack(spacing: 12) {
+                    ForEach(store.sentences) { sentence in
+                        HStack(alignment: .top, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                RubyText(sentence.textJa, size: 20)
+                                if let translation = localizedTranslation(sentence.translations, appLanguage),
+                                   !translation.isEmpty {
+                                    Text(translation)
+                                        .font(.kawaii(14, language: appLanguage))
+                                        .foregroundStyle(Palette.inkSoft)
+                                }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            SpeakButton(sentence.textJa)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        SpeakButton(sentence.textJa)
+                        .padding(14)
+                        .background(Palette.skySoft.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                 }
             }
         }
-        .roundedCard()
     }
 
     // MARK: Advance (Next / Done)

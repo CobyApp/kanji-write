@@ -41,13 +41,18 @@ private struct StrokesShape: Shape {
 public struct StrokeOrderPlayer: View {
     private let paths: [String]
     private let size: CGFloat
+    private let isActive: Bool
     @State private var progress: Double
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
 
-    public init(paths: [String], size: CGFloat = 200) {
+    /// `isActive` gates the auto-play: pass `false` while the player is off-screen
+    /// (e.g. an unselected page in a card deck) and flip it to `true` when it
+    /// becomes visible to replay the animation from the start.
+    public init(paths: [String], size: CGFloat = 200, isActive: Bool = true) {
         self.paths = paths
         self.size = size
-        // Start on the full glyph; auto-plays from 0 on appear.
+        self.isActive = isActive
+        // Start on the full glyph; auto-plays from 0 when active.
         _progress = State(initialValue: Double(paths.count))
     }
 
@@ -81,6 +86,7 @@ public struct StrokeOrderPlayer: View {
             }
             .buttonStyle(.plain)
         }
-        .onAppear(perform: play)
+        .onAppear { if isActive { play() } }
+        .onChange(of: isActive) { _, active in if active { play() } }
     }
 }
