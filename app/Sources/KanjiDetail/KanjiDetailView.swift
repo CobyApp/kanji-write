@@ -102,7 +102,7 @@ public struct KanjiDetailView: View {
                     Button { store.send(.wordTapped(word)) } label: {
                         HStack(spacing: 10) {
                             VStack(alignment: .leading, spacing: 3) {
-                                RubyWord(word.surface, reading: word.reading, size: 17)
+                                RubyWord(word.surface, reading: word.reading, size: 18)
                                 if let meaning = wordMeaning(word, appLanguage) {
                                     Text(meaning).font(.kawaii(13, language: appLanguage))
                                         .foregroundStyle(Palette.inkSoft)
@@ -130,7 +130,7 @@ public struct KanjiDetailView: View {
             ForEach(store.sentences) { sentence in
                 HStack(alignment: .top, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
-                        RubyText(sentence.textJa, size: 17)
+                        RubyText(sentence.textJa, size: 18)
                         if let translation = localizedTranslation(sentence.translations, appLanguage) {
                             Text(translation).font(.kawaii(14, language: appLanguage))
                                 .foregroundStyle(Palette.inkSoft)

@@ -92,7 +92,7 @@ public struct RubyText: View {
                     // A zero-opacity placeholder keeps every base glyph on the same
                     // baseline whether or not it has a reading above it.
                     Text(token.reading ?? " ")
-                        .font(.kawaii(size * 0.48)).foregroundStyle(Palette.inkSoft)
+                        .font(.kawaii(size * 0.62, weight: .bold)).foregroundStyle(Palette.pink)
                         .opacity(token.reading == nil ? 0 : 1)
                     Text(token.base)
                         .font(.kawaii(size, weight: .bold)).foregroundStyle(color)
@@ -118,10 +118,10 @@ public struct RubyWord: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 2) {
             if !reading.isEmpty, reading != surface {
                 Text(reading)
-                    .font(.kawaii(size * 0.5)).foregroundStyle(Palette.inkSoft)
+                    .font(.kawaii(size * 0.62, weight: .bold)).foregroundStyle(Palette.pink)
             }
             Text(surface)
                 .font(.kawaii(size, weight: .bold)).foregroundStyle(Palette.ink)
