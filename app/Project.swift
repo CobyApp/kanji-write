@@ -293,9 +293,38 @@ let project = Project(
             dependencies: [
                 .target(name: "AppFeature"),
                 .target(name: "DesignSystem"),
+                .target(name: "KanjiWidget"),
                 .external(name: "ComposableArchitecture"),
             ],
-            settings: .settings(base: ["ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon"])
+            settings: .settings(base: [
+                "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+                // App Group only on iOS/iPadOS (widget data sharing). Mac Catalyst
+                // signs "to run locally", which can't carry the App Group
+                // entitlement, so skip it there.
+                "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": "Sources/KanjiApp/KanjiApp.entitlements",
+                "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": "Sources/KanjiApp/KanjiApp.entitlements",
+            ])
+        ),
+        .target(
+            name: "KanjiWidget",
+            destinations: appDestinations,
+            product: .appExtension,
+            bundleId: "com.cobyapp.kanjiwrite.widget",
+            deploymentTargets: iOS,
+            infoPlist: .extendingDefault(with: [
+                "NSExtension": [
+                    "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
+                ],
+            ]),
+            sources: ["Sources/KanjiWidget/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+                .target(name: "DesignSystem"),
+            ],
+            settings: .settings(base: [
+                "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": "Sources/KanjiWidget/KanjiWidget.entitlements",
+                "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": "Sources/KanjiWidget/KanjiWidget.entitlements",
+            ])
         ),
         .target(
             name: "KanjiListFeatureTests",
