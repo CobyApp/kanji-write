@@ -3,6 +3,7 @@ import DesignSystem
 import Review
 import SharedModels
 import SwiftUI
+import WidgetKit
 
 /// The single Home dashboard — every feature on one scrolling screen: progress
 /// ring, study plan (level + date range → daily goal), the three study-mode
@@ -64,6 +65,23 @@ struct HomeView: View {
     private var goalFraction: Double { newPerDay > 0 ? min(Double(doneToday) / Double(newPerDay), 1) : 0 }
     private var remaining: Int { remainingNew(order: levelOrder, records: store.review.records.elements) }
 
+    /// The next never-seen kanji in the level (what the widget/watch previews).
+    private var nextKanji: Kanji? {
+        let tracked = Set(store.review.records.ids)
+        return levelOrder.first { !tracked.contains($0.id) }
+    }
+
+    /// Publish a compact snapshot to the shared App Group and refresh widgets.
+    private func writeSnapshot() {
+        let next = nextKanji
+        let meaning = next.flatMap { kanjiGloss(store.review.glosses[$0.id] ?? [:], appLanguage) } ?? ""
+        StudySnapshotStore.save(StudySnapshot(
+            level: targetLevel, dailyGoal: newPerDay, doneToday: doneToday, streak: streak,
+            remaining: remaining, learned: learnedInLevel, total: levelTotal,
+            nextGlyph: next?.literal ?? "", nextMeaning: meaning, language: appLanguage.rawValue))
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     var body: some View {
         ZStack {
             AuroraBackground()
@@ -91,7 +109,12 @@ struct HomeView: View {
         .task {
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
+            writeSnapshot()
         }
+        .onChange(of: newPerDay) { _, _ in writeSnapshot() }
+        .onChange(of: targetLevel) { _, _ in writeSnapshot() }
+        .onChange(of: levelTotal) { _, _ in writeSnapshot() }
+        .onChange(of: store.review.records.count) { _, _ in writeSnapshot() }
         .sheet(isPresented: $showPlan) {
             NavigationStack {
                 ScrollView { planEditor.padding(20) }
