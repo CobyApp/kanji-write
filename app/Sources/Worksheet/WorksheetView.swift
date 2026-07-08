@@ -43,9 +43,10 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// Which card of the current kanji is showing (0…3). Card 4 is a sentinel
-    /// that means "swiped past the last card" → advance to the next kanji.
+    /// Which card of the current kanji is showing (0…3).
     @State private var card = 0
+    /// Holds keyboard focus on the deck so ←/→ arrow keys drive prev/next.
+    @FocusState private var deckFocused: Bool
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -94,6 +95,13 @@ public struct WorksheetView: View {
                 navButtons
             }
             .padding(16)
+            // Hardware-keyboard navigation (iPad / Mac): ← previous, → next.
+            .focusable()
+            .focused($deckFocused)
+            .focusEffectDisabled()
+            .onKeyPress(.leftArrow) { goBack(); return .handled }
+            .onKeyPress(.rightArrow) { goNext(); return .handled }
+            .onAppear { deckFocused = true }
         }
     }
 
@@ -310,7 +318,6 @@ public struct WorksheetView: View {
             }
             .buttonStyle(.bouncy)
             .disabled(card == 0)
-            .keyboardShortcut(.leftArrow, modifiers: [])
 
             Button(action: goNext) {
                 Text(nextLabel)
@@ -321,7 +328,6 @@ public struct WorksheetView: View {
                     .shadow(color: nextColors[0].opacity(0.4), radius: 10, y: 5)
             }
             .buttonStyle(.bouncy)
-            .keyboardShortcut(.rightArrow, modifiers: [])
         }
     }
 
