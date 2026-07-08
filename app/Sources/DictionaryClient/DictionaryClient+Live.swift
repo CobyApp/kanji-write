@@ -162,6 +162,26 @@ extension DictionaryClient: DependencyKey {
                 }
             }
         },
+        antonyms: { kanjiID, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [AntonymPair] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT DISTINCT wa.surface AS prompt, wa.reading_kana AS reading,
+                                    wb.surface AS answer
+                    FROM word_kanji wk
+                    JOIN relation r ON r.word_id_a = wk.word_id AND r.type = 'antonym'
+                    JOIN word wa ON wa.id = r.word_id_a
+                    JOIN word wb ON wb.id = r.word_id_b
+                    WHERE wk.kanji_id = ?
+                    ORDER BY wa.surface
+                    LIMIT ?
+                    """, arguments: [kanjiID, limit])
+                return rows.map { row in
+                    AntonymPair(promptSurface: row["prompt"], promptReading: row["reading"],
+                                answerSurface: row["answer"])
+                }
+            }
+        },
         word: { wordID in
             let queue = try openBundledDatabase()
             return try await queue.read { db -> WordEntry? in

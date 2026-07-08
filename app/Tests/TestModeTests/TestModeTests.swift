@@ -101,6 +101,7 @@ final class QuizFeatureTests: XCTestCase {
             $0.dictionaryClient.allGlosses = { [1: ["ko": "메 산", "en": "mountain"]] }
             $0.dictionaryClient.words = { _, _ in [self.word(10, "山", "やま")] }
             $0.dictionaryClient.word = { _ in nil }
+            $0.dictionaryClient.antonyms = { _, _ in [] }
             $0.dictionaryClient.quizWords = { _, _ in [self.word(11, "川", "かわ"), self.word(12, "水", "みず")] }
         }
         store.exhaustivity = .off
@@ -109,6 +110,40 @@ final class QuizFeatureTests: XCTestCase {
         await store.receive(\.loaded)
         XCTAssertFalse(store.state.queue.isEmpty)          // today's kanji → questions
         XCTAssertTrue(store.state.started)
+    }
+
+    func testOneQuestionPerKanji() async {
+        let day = 100
+        let store = TestStore(initialState: QuizFeature.State(level: "N5")) {
+            QuizFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
+            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            // Five kanji studied today.
+            $0.reviewStore.loadRecords = {
+                (1...5).map {
+                    ReviewRecord(kanjiID: $0, stability: 5, difficulty: 5, due: day + 3, lastReviewedDay: day)
+                }
+            }
+            $0.quizStore.load = { [] }
+            $0.quizStore.save = { _ in }
+            $0.dictionaryClient.allKanji = { (1...5).map { self.kanji($0, "K\($0)") } }
+            $0.dictionaryClient.allGlosses = {
+                Dictionary(uniqueKeysWithValues: (1...5).map { ($0, ["ko": "뜻\($0)", "en": "m\($0)"]) })
+            }
+            $0.dictionaryClient.words = { id, _ in [self.word(id * 10, "語\(id)", "ご\(id)")] }
+            $0.dictionaryClient.word = { _ in nil }
+            $0.dictionaryClient.antonyms = { _, _ in [] }
+            $0.dictionaryClient.quizWords = { _, _ in (6...20).map { self.word($0, "W\($0)", "わ\($0)") } }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.onAppear(language: .ko))
+        await store.receive(\.loaded)
+
+        // Exactly one question per studied kanji — no more cramming.
+        XCTAssertEqual(store.state.queue.count, 5)
+        XCTAssertEqual(store.state.totalItems, 5)
     }
 
     func testWrongAnswerSchedulesReviewImmediately() async {
@@ -128,6 +163,7 @@ final class QuizFeatureTests: XCTestCase {
             $0.dictionaryClient.allGlosses = { [1: ["ko": "메 산", "en": "mountain"]] }
             $0.dictionaryClient.words = { _, _ in [self.word(10, "山", "やま")] }
             $0.dictionaryClient.word = { _ in nil }
+            $0.dictionaryClient.antonyms = { _, _ in [] }
             $0.dictionaryClient.quizWords = { _, _ in [self.word(11, "川", "かわ"), self.word(12, "水", "みず")] }
         }
         store.exhaustivity = .off

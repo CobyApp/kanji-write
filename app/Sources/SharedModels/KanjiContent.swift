@@ -48,3 +48,18 @@ public struct RelationEntry: Equatable, Identifiable, Sendable {
         self.type = type
     }
 }
+
+/// An antonym pair anchored to a kanji: a word that contains the kanji
+/// (`prompt`) and its opposite (`answer`). Powers the "pick the antonym" quiz.
+public struct AntonymPair: Equatable, Identifiable, Sendable {
+    public var id: String { "\(promptSurface):\(answerSurface)" }
+    public let promptSurface: String
+    public let promptReading: String
+    public let answerSurface: String
+
+    public init(promptSurface: String, promptReading: String, answerSurface: String) {
+        self.promptSurface = promptSurface
+        self.promptReading = promptReading
+        self.answerSurface = answerSurface
+    }
+}

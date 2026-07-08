@@ -19,6 +19,9 @@ public struct DictionaryClient: Sendable {
     public var words: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [WordEntry]
     public var sentences: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [ExampleSentence]
     public var relations: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [RelationEntry]
+    /// Antonym pairs whose prompt word contains the given kanji — for the
+    /// "pick the antonym" quiz (prompt word + reading + its opposite).
+    public var antonyms: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [AntonymPair]
 
     // Word-centric reads (for the word detail screen).
     /// A single word by id (surface, reading, 4-language meanings).

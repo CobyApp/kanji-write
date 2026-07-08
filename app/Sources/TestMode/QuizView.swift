@@ -64,7 +64,8 @@ public struct QuizView: View {
             Text(promptLabel(item.kind))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             Text(item.prompt)
-                .font(.kawaii(item.kind == .kanjiMeaning ? 60 : 40, weight: .bold))
+                .font(.kawaii(item.kind == .kanjiMeaning || item.kind == .kanjiReading ? 60 : 40,
+                              weight: .bold))
                 .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
             if let subtitle = item.subtitle, !subtitle.isEmpty {
                 Text(subtitle)
@@ -78,8 +79,10 @@ public struct QuizView: View {
     private func promptLabel(_ kind: QuizKind) -> String {
         switch kind {
         case .kanjiMeaning: L.quizKanjiMeaning[appLanguage]
+        case .kanjiReading: L.quizKanjiReading[appLanguage]
         case .wordReading: L.quizWordReading[appLanguage]
         case .wordMeaning: L.quizWordMeaning[appLanguage]
+        case .antonym: L.quizAntonym[appLanguage]
         }
     }
 
@@ -89,7 +92,8 @@ public struct QuizView: View {
                 Button { store.send(.chose(option)) } label: {
                     HStack {
                         Text(option)
-                            .font(.kawaii(item.kind == .wordReading ? 22 : 18, weight: .bold,
+                            .font(.kawaii(item.kind == .wordReading || item.kind == .kanjiReading ? 22 : 18,
+                                          weight: .bold,
                                           language: item.kind == .wordMeaning ? appLanguage : .ja))
                             .foregroundStyle(optionText(option, item))
                             .multilineTextAlignment(.leading)
