@@ -98,6 +98,10 @@ struct HomeView: View {
                 .frame(maxWidth: sizeClass == .compact ? 560 : 900)
                 .frame(maxWidth: .infinity)
             }
+            // The plan editor is an in-app overlay, NOT a sheet: buttons inside
+            // Mac Catalyst modal presentations are unreliable, while plain buttons
+            // in the normal hierarchy (like the home launchers) always respond.
+            if showPlan { planOverlay.zIndex(1) }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -117,40 +121,47 @@ struct HomeView: View {
         .onChange(of: targetLevel) { _, _ in writeSnapshot() }
         .onChange(of: levelTotal) { _, _ in writeSnapshot() }
         .onChange(of: store.review.records.count) { _, _ in writeSnapshot() }
-        .sheet(isPresented: $showPlan) {
-            NavigationStack {
-                ScrollView {
-                    VStack(spacing: 20) {
-                        planEditor
-                        // An in-content Done button, so the sheet is always
-                        // dismissable even where the nav-bar button is flaky
-                        // (Mac Catalyst detent sheets).
-                        Button { showPlan = false } label: {
-                            Text(L.done[appLanguage])
-                                .font(.kawaii(16, weight: .bold))
-                                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                                .background(Palette.accent, in: .rect(cornerRadius: 16))
-                                .foregroundStyle(.white)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(20)
+    }
+
+    private func closePlan() { withAnimation(.easeOut(duration: 0.18)) { showPlan = false } }
+
+    /// The plan editor as a centered in-app card over a dimmed backdrop. Tapping
+    /// the backdrop, the ✕, or 완료 all close it — all plain buttons that respond
+    /// reliably on Mac Catalyst (unlike modal-sheet buttons).
+    private var planOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.28)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { closePlan() }
+            VStack(spacing: 16) {
+                planEditor
+                Button { closePlan() } label: {
+                    Text(L.done[appLanguage])
+                        .font(.kawaii(16, weight: .bold))
+                        .frame(maxWidth: .infinity).padding(.vertical, 14)
+                        .background(Palette.accent, in: .rect(cornerRadius: 16))
+                        .foregroundStyle(.white)
                 }
-                .background(Palette.background)
-                .navigationTitle(L.studyPlan[appLanguage])
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    // Semantic placement → a reliable native button on iOS,
-                    // iPad and Mac Catalyst (unlike bare .topBarTrailing).
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(L.close[appLanguage]) { showPlan = false }
-                    }
-                }
+                .buttonStyle(.plain)
             }
-            .presentationDetents([.medium, .large])
-            .tint(Palette.accent)
-            .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
+            .padding(18)
+            .background(Palette.background, in: .rect(cornerRadius: 26))
+            .overlay(alignment: .topTrailing) {
+                Button { closePlan() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.inkSoft)
+                        .frame(width: 32, height: 32)
+                        .background(Palette.card, in: .circle)
+                }
+                .buttonStyle(.plain)
+                .padding(12)
+            }
+            .frame(maxWidth: 460)
+            .padding(24)
+            .shadow(color: .black.opacity(0.18), radius: 26, y: 10)
         }
+        .transition(.opacity)
     }
 
     // MARK: Greeting + ring
@@ -260,7 +271,7 @@ struct HomeView: View {
 
     /// A slim home entry that opens the plan editor sheet.
     private var planButton: some View {
-        Button { showPlan = true } label: {
+        Button { withAnimation(.easeOut(duration: 0.18)) { showPlan = true } } label: {
             HStack(spacing: 12) {
                 Image(systemName: "target")
                     .font(.system(size: 20, weight: .semibold)).foregroundStyle(Palette.sky)
