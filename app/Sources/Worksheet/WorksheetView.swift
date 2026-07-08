@@ -61,7 +61,11 @@ public struct WorksheetView: View {
     public var body: some View {
         ZStack {
             AuroraBackground()
+            // Cap the width like the home screen so cards aren't over-wide on
+            // iPad / Mac; centered.
             content
+                .frame(maxWidth: sizeClass == .compact ? 560 : 900)
+                .frame(maxWidth: .infinity)
         }
         .navigationTitle(L.study[appLanguage])
         .navigationBarTitleDisplayMode(.inline)

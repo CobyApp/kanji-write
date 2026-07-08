@@ -119,15 +119,33 @@ struct HomeView: View {
         .onChange(of: store.review.records.count) { _, _ in writeSnapshot() }
         .sheet(isPresented: $showPlan) {
             NavigationStack {
-                ScrollView { planEditor.padding(20) }
-                    .background(Palette.background)
-                    .navigationTitle(L.studyPlan[appLanguage])
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(L.close[appLanguage]) { showPlan = false }
+                ScrollView {
+                    VStack(spacing: 20) {
+                        planEditor
+                        // An in-content Done button, so the sheet is always
+                        // dismissable even where the nav-bar button is flaky
+                        // (Mac Catalyst detent sheets).
+                        Button { showPlan = false } label: {
+                            Text(L.done[appLanguage])
+                                .font(.kawaii(16, weight: .bold))
+                                .frame(maxWidth: .infinity).padding(.vertical, 14)
+                                .background(Palette.accent, in: .rect(cornerRadius: 16))
+                                .foregroundStyle(.white)
                         }
+                        .buttonStyle(.plain)
                     }
+                    .padding(20)
+                }
+                .background(Palette.background)
+                .navigationTitle(L.studyPlan[appLanguage])
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    // Semantic placement → a reliable native button on iOS,
+                    // iPad and Mac Catalyst (unlike bare .topBarTrailing).
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(L.close[appLanguage]) { showPlan = false }
+                    }
+                }
             }
             .presentationDetents([.medium, .large])
             .tint(Palette.accent)

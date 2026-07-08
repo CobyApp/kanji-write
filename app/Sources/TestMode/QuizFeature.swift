@@ -106,18 +106,27 @@ public struct QuizFeature {
                     let meaningPool = (words + pool).compactMap { wordMeaning($0, lang) }
                         .filter { !$0.isEmpty }
                     var seenWord = Set<Int>()
+                    var wordIdx = 0
                     for w in words where seenWord.insert(w.id).inserted && !w.surface.isEmpty {
-                        if !w.reading.isEmpty {
-                            items.append(QuizItem(
-                                id: "wordReading:\(w.id)", kind: .wordReading, prompt: w.surface,
-                                subtitle: wordMeaning(w, lang), answer: w.reading,
-                                options: readingOptions(answer: w.reading, pool: readingPool, using: &rng)))
-                        }
-                        if let answer = wordMeaning(w, lang), !answer.isEmpty {
-                            items.append(QuizItem(
+                        // At most one word question per word (words are fetched one
+                        // per kanji), so each kanji contributes ~2 questions total:
+                        // its meaning + one word drill. Alternate reading / meaning
+                        // across words so both kinds stay in rotation, falling back
+                        // to whichever is available.
+                        let reading = w.reading.isEmpty ? nil : QuizItem(
+                            id: "wordReading:\(w.id)", kind: .wordReading, prompt: w.surface,
+                            subtitle: wordMeaning(w, lang), answer: w.reading,
+                            options: readingOptions(answer: w.reading, pool: readingPool, using: &rng))
+                        let meaning = wordMeaning(w, lang).flatMap { answer -> QuizItem? in
+                            answer.isEmpty ? nil : QuizItem(
                                 id: "wordMeaning:\(w.id)", kind: .wordMeaning,
                                 prompt: "\(w.surface)（\(w.reading)）", subtitle: nil, answer: answer,
-                                options: choiceOptions(answer: answer, pool: meaningPool, using: &rng)))
+                                options: choiceOptions(answer: answer, pool: meaningPool, using: &rng))
+                        }
+                        let prefersReading = wordIdx % 2 == 0
+                        if let picked = prefersReading ? (reading ?? meaning) : (meaning ?? reading) {
+                            items.append(picked)
+                            wordIdx += 1
                         }
                     }
                     // Keep only new or SRS-due items (with ≥2 options), dedup, shuffle.
@@ -200,8 +209,10 @@ public struct QuizFeature {
             let byID = Dictionary(allKanji.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
             let contextKanji = Set(kanjiIDs).union(dueKanji).compactMap { byID[$0] }
             let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
+            // One representative word per kanji → one word question per kanji, so
+            // the quiz stays at ~2 questions per kanji (meaning + one word drill).
             var words: [WordEntry] = []
-            for kid in kanjiIDs { words += (try? await dictionaryClient.words(kid, 4)) ?? [] }
+            for kid in kanjiIDs { words += (try? await dictionaryClient.words(kid, 1)) ?? [] }
             for wid in dueWords { if let w = try? await dictionaryClient.word(wid) { words.append(w) } }
             let pool = (try? await dictionaryClient.quizWords(level, 300)) ?? []
             await send(.loaded(kanji: contextKanji, glosses: glosses, words: words,
