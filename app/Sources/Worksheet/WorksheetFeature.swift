@@ -21,6 +21,15 @@ public func buildWorksheetQueue(
 /// the stroke-order guide, see one word that uses it, and one example sentence.
 /// Finishing schedules an initial FSRS record for every kanji learned so it
 /// enters the review cycle.
+/// A kanji's prefetched study content (words, example sentences, stroke guide,
+/// meanings), so a card can render instantly without an async fetch.
+public struct CardContent: Equatable, Sendable {
+    public var words: [WordEntry]
+    public var sentences: [ExampleSentence]
+    public var strokePaths: [String]
+    public var glosses: [String: String]
+}
+
 @Reducer
 public struct WorksheetFeature {
     @ObservableState
@@ -38,17 +47,22 @@ public struct WorksheetFeature {
         /// Target JLPT level for the plan (from `@AppStorage("targetLevel")`); new
         /// kanji are drawn only from this level. nil = all levels.
         public var targetLevel: String? = "N5"
-        /// Words that use the current kanji (a few, in commonness order).
-        public var words: [WordEntry] = []
-        /// Example sentences for the current kanji (a few).
-        public var sentences: [ExampleSentence] = []
-        /// KanjiVG stroke-order guide (path `d` strings) for the current kanji.
-        public var strokePaths: [String] = []
-        /// Raw gloss map (lang code → meaning) for the current kanji; the view
-        /// resolves the display meaning per app-language with a fallback.
-        public var glosses: [String: String] = [:]
+        /// All queue kanji's card content, prefetched up front and keyed by kanji
+        /// id — so swiping to the next kanji shows its words/sentences/strokes/
+        /// meaning instantly, with no load flicker.
+        public var content: [Int: CardContent] = [:]
         /// Bumped whenever the write canvas should reset to a blank page.
         public var clearToken = 0
+
+        private var currentContent: CardContent? { current.flatMap { content[$0.id] } }
+        /// Words that use the current kanji (a few, in commonness order).
+        public var words: [WordEntry] { currentContent?.words ?? [] }
+        /// Example sentences for the current kanji (a few).
+        public var sentences: [ExampleSentence] { currentContent?.sentences ?? [] }
+        /// KanjiVG stroke-order guide (path `d` strings) for the current kanji.
+        public var strokePaths: [String] { currentContent?.strokePaths ?? [] }
+        /// Raw gloss map (lang code → meaning) for the current kanji.
+        public var glosses: [String: String] { currentContent?.glosses ?? [:] }
         /// Never-seen kanji remaining in the target level (for the finish estimate).
         public var remaining = 0
         public var isLoading = false
@@ -71,9 +85,7 @@ public struct WorksheetFeature {
     public enum Action: Equatable {
         case onAppear(newPerDay: Int, level: String?)
         case loaded([ReviewRecord], [Kanji], Int)
-        case cardContentLoaded(
-            words: [WordEntry], sentences: [ExampleSentence], strokePaths: [String],
-            glosses: [String: String])
+        case contentLoaded([Int: CardContent])  // all queue kanji, prefetched
         case nextTapped
         case doneTapped
         case kanjiTapped(Kanji)   // delegate → parent drills into the kanji detail
@@ -103,7 +115,6 @@ public struct WorksheetFeature {
 
             case let .loaded(records, kanji, today):
                 state.isLoading = false
-                state.hasLoaded = true
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.today = today
                 state.queue = buildWorksheetQueue(
@@ -112,24 +123,24 @@ public struct WorksheetFeature {
                 state.remaining = remainingNew(
                     order: studyOrder(kanji, level: state.targetLevel), records: records)
                 state.index = 0
-                return loadCardContent(state: &state)
+                // Nothing to study → mark loaded (shows the empty state). Otherwise
+                // prefetch every queue kanji's content before revealing the deck.
+                if state.queue.isEmpty {
+                    state.hasLoaded = true
+                    return .none
+                }
+                return prefetch(state.queue)
 
-            case let .cardContentLoaded(words, sentences, strokePaths, glosses):
-                state.words = words
-                state.sentences = sentences
-                state.strokePaths = strokePaths
-                state.glosses = glosses
+            case let .contentLoaded(content):
+                state.content = content
+                state.hasLoaded = true
                 return .none
 
             case .nextTapped:
                 guard !state.isLast else { return .none }
                 state.index += 1
-                state.words = []
-                state.sentences = []
-                state.strokePaths = []
-                state.glosses = [:]
                 state.clearToken += 1
-                return loadCardContent(state: &state)
+                return .none  // content is already prefetched — instant, no flicker
 
             case .doneTapped:
                 let today = state.today
@@ -154,22 +165,22 @@ public struct WorksheetFeature {
         }
     }
 
-    /// Loads the first word, first example sentence, and stroke-order guide for
-    /// the current kanji. All are optional/non-critical: on any failure the
-    /// worksheet still shows the glyph + write canvas.
-    private func loadCardContent(state: inout State) -> Effect<Action> {
-        guard let kanji = state.current else { return .none }
-        let id = kanji.id
-        return .run { send in
-            async let wordsTask = try? await dictionaryClient.words(id, 4)
-            async let sentencesTask = try? await dictionaryClient.sentences(id, 3)
-            async let glossesTask = try? await dictionaryClient.glosses(id)
-            let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
-            let words = await wordsTask ?? []
-            let sentences = await sentencesTask ?? []
-            let glosses = await glossesTask ?? [:]
-            await send(.cardContentLoaded(
-                words: words, sentences: sentences, strokePaths: paths, glosses: glosses))
+    /// Prefetches words / sentences / stroke guide / meanings for every kanji in
+    /// today's queue at once, so advancing cards is instant (no load flicker).
+    private func prefetch(_ queue: [Kanji]) -> Effect<Action> {
+        .run { send in
+            var result: [Int: CardContent] = [:]
+            for kanji in queue {
+                let id = kanji.id
+                async let wordsTask = try? await dictionaryClient.words(id, 4)
+                async let sentencesTask = try? await dictionaryClient.sentences(id, 3)
+                async let glossesTask = try? await dictionaryClient.glosses(id)
+                let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
+                result[id] = CardContent(
+                    words: await wordsTask ?? [], sentences: await sentencesTask ?? [],
+                    strokePaths: paths, glosses: await glossesTask ?? [:])
+            }
+            await send(.contentLoaded(result))
         }
     }
 }
