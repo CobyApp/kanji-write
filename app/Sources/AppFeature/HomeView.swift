@@ -75,11 +75,13 @@ struct HomeView: View {
     private func writeSnapshot() {
         let next = nextKanji
         let meaning = next.flatMap { kanjiGloss(store.review.glosses[$0.id] ?? [:], appLanguage) } ?? ""
-        StudySnapshotStore.save(StudySnapshot(
+        let snapshot = StudySnapshot(
             level: targetLevel, dailyGoal: newPerDay, doneToday: doneToday, streak: streak,
             remaining: remaining, learned: learnedInLevel, total: levelTotal,
-            nextGlyph: next?.literal ?? "", nextMeaning: meaning, language: appLanguage.rawValue))
+            nextGlyph: next?.literal ?? "", nextMeaning: meaning, language: appLanguage.rawValue)
+        StudySnapshotStore.save(snapshot)          // → home-screen widget (App Group)
         WidgetCenter.shared.reloadAllTimelines()
+        PhoneWatchSync.shared.send(snapshot)       // → Apple Watch (no-op on Catalyst)
     }
 
     var body: some View {

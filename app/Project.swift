@@ -27,10 +27,11 @@ let project = Project(
     targets: [
         .target(
             name: "SharedModels",
-            destinations: appDestinations,
+            // Also builds for watchOS so the Watch app can share the snapshot model.
+            destinations: [.iPhone, .iPad, .macCatalyst, .appleWatch],
             product: .staticFramework,
             bundleId: "com.cobyapp.kanjiwrite.sharedmodels",
-            deploymentTargets: iOS,
+            deploymentTargets: .multiplatform(iOS: "26.0", watchOS: "11.0"),
             sources: ["Sources/SharedModels/**"]
         ),
         .target(
@@ -294,6 +295,10 @@ let project = Project(
                 .target(name: "AppFeature"),
                 .target(name: "DesignSystem"),
                 .target(name: "KanjiWidget"),
+                // NOTE: the KanjiWatch app is embedded on machines that have the
+                // watchOS platform installed. Add `.target(name: "KanjiWatch")`
+                // here to bundle it into the iPhone app. (Left out by default so
+                // the iOS/Catalyst build doesn't require the watchOS SDK.)
                 .external(name: "ComposableArchitecture"),
             ],
             settings: .settings(base: [
@@ -325,6 +330,21 @@ let project = Project(
                 "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": "Sources/KanjiWidget/KanjiWidget.entitlements",
                 "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": "Sources/KanjiWidget/KanjiWidget.entitlements",
             ])
+        ),
+        .target(
+            name: "KanjiWatch",
+            destinations: [.appleWatch],
+            product: .app,
+            bundleId: "com.cobyapp.kanjiwrite.watchkitapp",
+            deploymentTargets: .watchOS("11.0"),
+            infoPlist: .extendingDefault(with: [
+                "WKApplication": true,
+                "WKCompanionAppBundleIdentifier": "com.cobyapp.kanjiwrite",
+            ]),
+            sources: ["Sources/KanjiWatch/**"],
+            dependencies: [
+                .target(name: "SharedModels"),
+            ]
         ),
         .target(
             name: "KanjiListFeatureTests",
