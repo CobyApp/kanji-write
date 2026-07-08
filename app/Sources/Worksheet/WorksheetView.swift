@@ -52,8 +52,9 @@ public struct WorksheetView: View {
     }
 
     private func advance() {
+        // Advancing changes store.index, which resets `card` to 0 without
+        // animation (see the .onChange in `content`).
         store.send(store.isLast ? .doneTapped : .nextTapped)
-        card = 0
     }
 
     public var body: some View {
@@ -82,12 +83,14 @@ public struct WorksheetView: View {
                     cardShell { strokeCard(kanji) }.tag(1)
                     cardShell { wordCard }.tag(2)
                     cardShell { exampleCard }.tag(3)
-                    Color.clear.tag(4)  // swipe past the last card → next kanji
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.easeInOut(duration: 0.25), value: card)
-                .onChange(of: card) { _, v in if v >= 4 { advance() } }
-                .onChange(of: store.index) { _, _ in card = 0 }
+                // Reset to the first card on a new kanji WITHOUT animating (avoids a
+                // long multi-page slide-back).
+                .onChange(of: store.index) { _, _ in
+                    var t = Transaction(); t.disablesAnimations = true
+                    withTransaction(t) { card = 0 }
+                }
                 advanceButton
             }
             .padding(16)
