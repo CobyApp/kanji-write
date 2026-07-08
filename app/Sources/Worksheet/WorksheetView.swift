@@ -167,13 +167,8 @@ public struct WorksheetView: View {
                         // Tap a word to drill into its detail (and from there, its
                         // kanji) without leaving the study session.
                         Button { store.send(.wordTapped(word)) } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                                    Text(word.surface)
-                                        .font(.kawaii(20, weight: .bold)).foregroundStyle(Palette.ink)
-                                    Text("（\(word.reading)）")
-                                        .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
-                                }
+                            VStack(alignment: .leading, spacing: 4) {
+                                RubyWord(word.surface, reading: word.reading, size: 20)
                                 if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
                                     Text(meaning)
                                         .font(.kawaii(14, language: appLanguage))

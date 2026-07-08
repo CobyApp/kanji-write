@@ -103,6 +103,32 @@ public struct RubyText: View {
     }
 }
 
+/// A word shown with its known reading as ruby above the whole surface (group
+/// ruby). Falls back to just the surface when the reading is empty or identical
+/// (kana-only words).
+public struct RubyWord: View {
+    let surface: String
+    let reading: String
+    let size: CGFloat
+
+    public init(_ surface: String, reading: String, size: CGFloat = 20) {
+        self.surface = surface
+        self.reading = reading
+        self.size = size
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if !reading.isEmpty, reading != surface {
+                Text(reading)
+                    .font(.kawaii(size * 0.5)).foregroundStyle(Palette.inkSoft)
+            }
+            Text(surface)
+                .font(.kawaii(size, weight: .bold)).foregroundStyle(Palette.ink)
+        }
+    }
+}
+
 /// A minimal wrapping layout — lays children left-to-right, wrapping to a new
 /// line when the row is full. Used to flow ruby word-cells.
 struct RubyFlow: Layout {

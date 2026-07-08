@@ -101,9 +101,8 @@ public struct KanjiDetailView: View {
                 HStack(spacing: 8) {
                     Button { store.send(.wordTapped(word)) } label: {
                         HStack(spacing: 10) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("\(word.surface)（\(word.reading)）")
-                                    .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
+                            VStack(alignment: .leading, spacing: 3) {
+                                RubyWord(word.surface, reading: word.reading, size: 17)
                                 if let meaning = wordMeaning(word, appLanguage) {
                                     Text(meaning).font(.kawaii(13, language: appLanguage))
                                         .foregroundStyle(Palette.inkSoft)
