@@ -62,13 +62,13 @@ final class WorksheetFeatureReducerTests: XCTestCase {
 
         await store.send(.onAppear(newPerDay: 7, level: nil))
         await store.receive(\.loaded)
-        await store.receive(\.cardContentLoaded)
+        await store.receive(\.contentLoaded)
 
         XCTAssertEqual(store.state.queue.map(\.id), [1, 2])
         XCTAssertFalse(store.state.isLast)
 
+        // Content is prefetched for the whole queue, so advancing is instant.
         await store.send(.nextTapped) { $0.index = 1 }
-        await store.receive(\.cardContentLoaded)
         XCTAssertTrue(store.state.isLast)
     }
 
@@ -90,7 +90,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
 
         await store.send(.onAppear(newPerDay: 7, level: nil))
         await store.receive(\.loaded)
-        await store.receive(\.cardContentLoaded)
+        await store.receive(\.contentLoaded)
 
         await store.send(.doneTapped) { $0.isFinished = true }
 
@@ -125,7 +125,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
 
         await store.send(.onAppear(newPerDay: 7, level: nil))
         await store.receive(\.loaded)
-        await store.receive(\.cardContentLoaded)
+        await store.receive(\.contentLoaded)
 
         // Only kanji 1 is in today's queue (2 is already seen).
         XCTAssertEqual(store.state.queue.map(\.id), [1])
