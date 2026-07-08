@@ -158,6 +158,10 @@ public enum L {
         ko: "이 단어의 읽기는?", ja: "この単語の読みは？", zh: "这个词的读音？", en: "How is this read?")
     public static let quizWordMeaning = L10nText(
         ko: "이 단어의 뜻은?", ja: "この単語の意味は？", zh: "这个词的意思？", en: "Meaning of this word?")
+    public static let quizKanjiReading = L10nText(
+        ko: "이 한자의 음독은?", ja: "この漢字の音読みは？", zh: "这个汉字的音读？", en: "On'yomi of this kanji?")
+    public static let quizAntonym = L10nText(
+        ko: "반대말을 고르세요", ja: "反対語を選ぼう", zh: "选择反义词", en: "Pick the antonym")
     public static let quizFirstTry = L10nText(
         ko: "첫 시도 정답", ja: "一発正解", zh: "首次答对", en: "First-try correct")
     public static let quizDone = L10nText(ko: "퀴즈 완료!", ja: "クイズ完了！", zh: "测验完成！", en: "Quiz complete!")
