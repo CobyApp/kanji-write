@@ -14,6 +14,9 @@ struct HomeView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("newPerDay") private var newPerDay = 7
     @AppStorage("planEndTS") private var planEndTS: Double = 0
+    /// false = plan by goal date (daily count derived); true = plan by a fixed
+    /// daily count (goal date derived).
+    @AppStorage("planByCount") private var planByCount = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showPlan = false
 
@@ -47,7 +50,22 @@ struct HomeView: View {
     private var plannedPerDay: Int {
         max(1, Int((Double(max(1, levelTotal - learnedInLevel)) / Double(daysLeft)).rounded(.up)))
     }
-    private func syncPerDay() { newPerDay = min(50, plannedPerDay) }
+    /// In date mode, derive the daily count from the goal date. In count mode the
+    /// user sets `newPerDay` directly, so leave it untouched.
+    private func syncPerDay() {
+        guard !planByCount else { return }
+        newPerDay = min(50, plannedPerDay)
+    }
+
+    /// Count mode: how many days to finish at the chosen daily count, and the
+    /// resulting projected finish date.
+    private var projectedFinishDays: Int {
+        daysToFinish(remaining: max(0, levelTotal - learnedInLevel), perDay: newPerDay)
+    }
+    private var projectedEndDate: Date {
+        Calendar.current.date(byAdding: .day, value: projectedFinishDays,
+                              to: Calendar.current.startOfDay(for: Date())) ?? Date()
+    }
 
     private var bookmarkedKanji: [Kanji] {
         let ids = Set(store.bookmarkedIDs)
@@ -89,6 +107,7 @@ struct HomeView: View {
         }
         .onChange(of: targetLevel) { _, _ in syncPerDay() }
         .onChange(of: planEndTS) { _, _ in syncPerDay() }
+        .onChange(of: planByCount) { _, _ in syncPerDay() }
         // The kanji set loads asynchronously; recompute the daily goal once it
         // arrives (on first launch it's empty when the view first appears).
         .onChange(of: levelTotal) { _, _ in syncPerDay() }
@@ -246,7 +265,8 @@ struct HomeView: View {
         .buttonStyle(.bouncy)
     }
 
-    /// The full plan editor, shown inside the plan sheet.
+    /// The full plan editor, shown inside the plan sheet. Two modes: set the goal
+    /// date (daily count derived) or set the daily count (finish date derived).
     private var planEditor: some View {
         VStack(alignment: .leading, spacing: 14) {
             SectionHeader(L.studyPlan[appLanguage], accent: Palette.sky)
@@ -254,19 +274,44 @@ struct HomeView: View {
                 ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
             }
             .pickerStyle(.segmented)
-            DatePicker(L.planEnd[appLanguage], selection: Binding(
-                get: { endDate }, set: { planEndTS = $0.timeIntervalSince1970 }),
-                in: Date()..., displayedComponents: .date)
-                .font(.kawaii(15))
-            HStack {
-                Text(L.perDayGoal[appLanguage])
-                    .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
-                Spacer()
-                Text("\(newPerDay)\(L.perDayUnit[appLanguage])")
-                    .font(.kawaii(22, weight: .bold)).foregroundStyle(Palette.pink)
+
+            // Mode switch: 목표일 기준 vs 하루 개수 기준.
+            Picker("", selection: $planByCount) {
+                Text(L.planByDate[appLanguage]).tag(false)
+                Text(L.planByCount[appLanguage]).tag(true)
+            }
+            .pickerStyle(.segmented)
+
+            if planByCount {
+                // Set the daily count; show the projected finish date.
+                Stepper(value: $newPerDay, in: 1...50) {
+                    HStack {
+                        Text(L.perDayGoal[appLanguage])
+                            .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                        Spacer()
+                        Text("\(newPerDay)\(L.perDayUnit[appLanguage])")
+                            .font(.kawaii(22, weight: .bold)).foregroundStyle(Palette.pink)
+                    }
+                }
+                planReadout(L.finishBy[appLanguage], projectedEndDate.formatted(.dateTime.year().month().day()))
+            } else {
+                // Set the goal date; show the derived daily count.
+                DatePicker(L.planEnd[appLanguage], selection: Binding(
+                    get: { endDate }, set: { planEndTS = $0.timeIntervalSince1970 }),
+                    in: Date()..., displayedComponents: .date)
+                    .font(.kawaii(15))
+                planReadout(L.perDayGoal[appLanguage], "\(newPerDay)\(L.perDayUnit[appLanguage])")
             }
         }
         .cardBackground()
+    }
+
+    private func planReadout(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+            Spacer()
+            Text(value).font(.kawaii(20, weight: .bold)).foregroundStyle(Palette.pink)
+        }
     }
 
     // MARK: Study-mode launchers

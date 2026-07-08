@@ -200,6 +200,10 @@ public enum L {
     public static let planEnd = L10nText(ko: "목표일", ja: "目標日", zh: "目标日期", en: "Goal")
     public static let perDayGoal = L10nText(ko: "하루 목표", ja: "1日の目標", zh: "每日目标", en: "Daily goal")
     public static let perDayUnit = L10nText(ko: "자", ja: "字", zh: "字", en: "/day")
+    // Plan mode: set by goal date, or by fixed daily count.
+    public static let planByDate = L10nText(ko: "목표일", ja: "目標日", zh: "目标日", en: "By date")
+    public static let planByCount = L10nText(ko: "하루 개수", ja: "1日の数", zh: "每日数", en: "By count")
+    public static let finishBy = L10nText(ko: "완료 예정", ja: "完了予定", zh: "预计完成", en: "Finish by")
 
     // Streak + today's goal
     public static let streak = L10nText(ko: "연속", ja: "連続", zh: "连续", en: "Streak")
