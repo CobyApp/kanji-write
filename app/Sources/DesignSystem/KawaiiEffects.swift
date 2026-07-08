@@ -31,8 +31,6 @@ public struct ProgressRing<Center: View>: View {
     let center: Center
 
     @State private var animated = false
-    @State private var glow = false
-    @State private var sweep = false
 
     public init(
         progress: Double, size: CGFloat = 150, lineWidth: CGFloat = 16,
@@ -54,50 +52,34 @@ public struct ProgressRing<Center: View>: View {
         ZStack {
             Circle()
                 .stroke(Palette.pinkSoft, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-            // Soft breathing glow behind the arc.
+            // Soft static glow behind the arc.
             Circle()
                 .trim(from: 0, to: animated ? progress : 0)
                 .stroke(gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .blur(radius: 9)
-                .opacity(glow ? 0.85 : 0.35)
+                .opacity(0.55)
             Circle()
                 .trim(from: 0, to: animated ? progress : 0)
                 .stroke(gradient, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-            // A light sweep traveling around the ring, masked to the filled arc.
-            Circle()
-                .stroke(
-                    AngularGradient(colors: [.clear, .white.opacity(0.85), .clear], center: .center),
-                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(sweep ? 360 : 0))
-                .mask(
-                    Circle()
-                        .trim(from: 0, to: animated ? progress : 0)
-                        .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                )
             center
         }
         .frame(width: size, height: size)
         .onAppear {
+            // One-shot fill-in only — no perpetual sweep/glow redraws.
             withAnimation(.spring(response: 1.0, dampingFraction: 0.72).delay(0.15)) {
                 animated = true
-            }
-            withAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true)) {
-                glow = true
-            }
-            withAnimation(.linear(duration: 2.6).repeatForever(autoreverses: false)) {
-                sweep = true
             }
         }
     }
 }
 
-/// Softly drifting pastel blobs, used as a lively decorative backdrop behind
-/// card content. Non-interactive and safe-area ignoring.
+/// Soft pastel blobs, a decorative backdrop behind card content. Static: the
+/// former drift animation redrew five large blurred circles every frame,
+/// compounding the aurora's main-thread cost. Non-interactive, safe-area
+/// ignoring.
 public struct FloatingBlobs: View {
-    @State private var drift = false
     public init() {}
 
     private struct Blob: Identifiable {
@@ -106,15 +88,14 @@ public struct FloatingBlobs: View {
         let diameter: CGFloat
         let x: CGFloat
         let y: CGFloat
-        let up: Bool
     }
 
     private let blobs: [Blob] = [
-        Blob(color: Palette.pinkSoft, diameter: 240, x: 0.12, y: 0.10, up: true),
-        Blob(color: Palette.mintSoft, diameter: 190, x: 0.88, y: 0.22, up: false),
-        Blob(color: Palette.lavenderSoft, diameter: 220, x: 0.80, y: 0.82, up: true),
-        Blob(color: Palette.butterSoft, diameter: 160, x: 0.18, y: 0.88, up: false),
-        Blob(color: Palette.skySoft, diameter: 130, x: 0.5, y: 0.5, up: true),
+        Blob(color: Palette.pinkSoft, diameter: 240, x: 0.12, y: 0.10),
+        Blob(color: Palette.mintSoft, diameter: 190, x: 0.88, y: 0.22),
+        Blob(color: Palette.lavenderSoft, diameter: 220, x: 0.80, y: 0.82),
+        Blob(color: Palette.butterSoft, diameter: 160, x: 0.18, y: 0.88),
+        Blob(color: Palette.skySoft, diameter: 130, x: 0.5, y: 0.5),
     ]
 
     public var body: some View {
@@ -126,19 +107,12 @@ public struct FloatingBlobs: View {
                         .frame(width: blob.diameter, height: blob.diameter)
                         .blur(radius: 42)
                         .opacity(0.55)
-                        .position(
-                            x: geo.size.width * blob.x,
-                            y: geo.size.height * blob.y + (drift == blob.up ? -20 : 20))
+                        .position(x: geo.size.width * blob.x, y: geo.size.height * blob.y)
                 }
             }
         }
         .allowsHitTesting(false)
         .ignoresSafeArea()
-        .onAppear {
-            withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) {
-                drift.toggle()
-            }
-        }
     }
 }
 
@@ -183,8 +157,11 @@ extension View {
     public func breathe(_ amount: CGFloat = 1.04) -> some View { modifier(Breathe(amount: amount)) }
 }
 
-/// A softly shifting pastel mesh-gradient backdrop (candy aurora). The interior
-/// control points drift continuously for a living, dreamy background.
+/// A soft pastel mesh-gradient backdrop (candy aurora). Rendered statically: a
+/// per-frame `TimelineView(.animation)` redraw of a full-screen mesh kept the
+/// main thread busy on every screen (worst on Mac), which made buttons feel
+/// laggy and dropped taps. A still gradient looks nearly identical and costs
+/// nothing to keep on screen.
 public struct AuroraBackground: View {
     public init() {}
 
@@ -195,21 +172,14 @@ public struct AuroraBackground: View {
     ]
 
     public var body: some View {
-        TimelineView(.animation) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            let ax = Float(sin(t * 0.5)) * 0.08
-            let ay = Float(cos(t * 0.42) ) * 0.08
-            let bx = Float(cos(t * 0.37)) * 0.07
-            let by = Float(sin(t * 0.6)) * 0.07
-            MeshGradient(
-                width: 3, height: 3,
-                points: [
-                    .init(0, 0), .init(0.5 + bx, 0), .init(1, 0),
-                    .init(0, 0.5 + ay), .init(0.5 + ax, 0.5 + ay), .init(1, 0.5 - by),
-                    .init(0, 1), .init(0.5 - bx, 1), .init(1, 1),
-                ],
-                colors: colors)
-        }
+        MeshGradient(
+            width: 3, height: 3,
+            points: [
+                .init(0, 0), .init(0.52, 0), .init(1, 0),
+                .init(0, 0.46), .init(0.56, 0.52), .init(1, 0.44),
+                .init(0, 1), .init(0.48, 1), .init(1, 1),
+            ],
+            colors: colors)
         .ignoresSafeArea()
         .allowsHitTesting(false)  // purely decorative — never intercept taps
     }
