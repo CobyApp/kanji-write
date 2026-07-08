@@ -23,41 +23,64 @@ public struct RootView: View {
         self.store = store
     }
 
-    private var settingsShown: Binding<Bool> {
-        Binding(get: { store.showSettings }, set: { store.send(.setShowSettings($0)) })
-    }
-
     public var body: some View {
-        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
-            HomeView(store: store)
-        } destination: { store in
-            pathDestination(store)
+        ZStack {
+            NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+                HomeView(store: store)
+            } destination: { store in
+                pathDestination(store)
+            }
+
+            // Study / quiz / practice and settings are presented as full-screen
+            // in-app overlays rather than a .fullScreenCover / .sheet: buttons
+            // inside Mac Catalyst modal presentations are unreliable, so their
+            // close buttons could fail. Plain buttons in the normal hierarchy
+            // (like these) always respond.
+            if let sessionStore = store.scope(state: \.session, action: \.session.presented) {
+                SessionCover(store: store, sessionStore: sessionStore)
+                    .transition(.opacity)
+                    .zIndex(2)
+            }
+            if store.showSettings {
+                settingsOverlay
+                    .transition(.opacity)
+                    .zIndex(3)
+            }
         }
+        .animation(.easeOut(duration: 0.2), value: store.session != nil)
+        .animation(.easeOut(duration: 0.2), value: store.showSettings)
         .tint(Palette.accent)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
         .task { store.send(.onAppear) }
-        .fullScreenCover(
-            item: $store.scope(state: \.session, action: \.session)
-        ) { sessionStore in
-            SessionCover(store: store, sessionStore: sessionStore)
-        }
-        .sheet(isPresented: settingsShown) {
-            NavigationStack {
-                ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
-                    .toolbar {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button(L.close[appLanguage]) { store.send(.setShowSettings(false)) }
+    }
+
+    /// Settings as a full-screen overlay with a plain in-content close button.
+    private var settingsOverlay: some View {
+        ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
+            .safeAreaInset(edge: .top) {
+                ZStack {
+                    Text(L.settings[appLanguage])
+                        .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
+                    HStack {
+                        Spacer()
+                        Button { store.send(.setShowSettings(false)) } label: {
+                            Text(L.close[appLanguage])
+                                .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.accent)
                         }
+                        .buttonStyle(.plain)
                     }
+                }
+                .padding(.horizontal, 18).padding(.vertical, 12)
+                .background(Palette.background)
             }
-            .tint(Palette.accent)
-            .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
-        }
+            .background(Palette.background.ignoresSafeArea())
     }
 }
 
 /// The full-screen study session: the mode view inside its own NavigationStack
-/// with a single ✕ that returns to Home. No sidebar/tabs while studying.
+/// with a single ✕ that returns to Home. The ✕ is a plain in-content button (via
+/// a top safe-area inset), not a toolbar item — toolbar buttons are unreliable
+/// on Mac Catalyst. No sidebar/tabs while studying.
 private struct SessionCover: View {
     @Bindable var store: StoreOf<RootFeature>
     let sessionStore: StoreOf<RootFeature.Session>
@@ -66,19 +89,28 @@ private struct SessionCover: View {
     var body: some View {
         NavigationStack(path: $store.scope(state: \.sessionPath, action: \.sessionPath)) {
             sessionView(sessionStore)
-                .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
+                .toolbar(.hidden, for: .navigationBar)
+                .safeAreaInset(edge: .top) {
+                    HStack {
                         Button { store.send(.session(.dismiss)) } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(Palette.inkSoft)
+                                .frame(width: 38, height: 38)
+                                .background(Palette.card, in: .circle)
+                                .shadow(color: .black.opacity(0.06), radius: 5, y: 2)
                         }
+                        .buttonStyle(.plain)
                         .accessibilityLabel(L.close[appLanguage])
+                        Spacer()
                     }
+                    .padding(.horizontal, 14).padding(.top, 6).padding(.bottom, 2)
                 }
         } destination: { store in
             pathDestination(store)
         }
         .tint(Palette.accent)
+        .background(Palette.background.ignoresSafeArea())
     }
 }
 
