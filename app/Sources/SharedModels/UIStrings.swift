@@ -137,6 +137,7 @@ public enum L {
     public static let practice = L10nText(ko: "연습", ja: "練習", zh: "练习", en: "Practice")
     public static let test = L10nText(ko: "시험", ja: "テスト", zh: "测验", en: "Test")
     public static let next = L10nText(ko: "다음", ja: "次へ", zh: "下一个", en: "Next")
+    public static let prev = L10nText(ko: "이전", ja: "前へ", zh: "上一个", en: "Back")
     public static let done = L10nText(ko: "완료", ja: "完了", zh: "完成", en: "Done")
     public static let showAnswer = L10nText(ko: "정답 보기", ja: "答えを見る", zh: "看答案", en: "Show answer")
     public static let pass = L10nText(ko: "합격", ja: "合格", zh: "通过", en: "Pass")
