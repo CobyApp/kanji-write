@@ -204,8 +204,7 @@ public struct WorksheetView: View {
                 ForEach(store.sentences) { sentence in
                     HStack(alignment: .top, spacing: 8) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(sentence.textJa)
-                                .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
+                            RubyText(sentence.textJa, size: 18)
                             if let translation = localizedTranslation(sentence.translations, appLanguage),
                                !translation.isEmpty {
                                 Text(translation)
