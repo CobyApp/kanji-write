@@ -172,7 +172,9 @@ public struct WorksheetFeature {
             var result: [Int: CardContent] = [:]
             for kanji in queue {
                 let id = kanji.id
-                async let wordsTask = try? await dictionaryClient.words(id, 4)
+                // Fetch a wider set so both the on'yomi and kun'yomi example
+                // groups have words to show.
+                async let wordsTask = try? await dictionaryClient.words(id, 8)
                 async let sentencesTask = try? await dictionaryClient.sentences(id, 3)
                 async let glossesTask = try? await dictionaryClient.glosses(id)
                 let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []

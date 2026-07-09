@@ -171,6 +171,12 @@ public enum L {
         ja: "復習する内容がありません\n学習してからまた開いてね",
         zh: "暂无需要复习的内容\n学习后再来吧", en: "Nothing to review yet\nStudy first, then come back")
     public static let worksheetWrite = L10nText(ko: "한자를 써보세요", ja: "漢字を書いてみよう", zh: "写一写这个汉字", en: "Write the kanji")
+    public static let worksheetOnWords = L10nText(
+        ko: "음독으로 읽는 단어", ja: "音読みの単語", zh: "音读的词", en: "On'yomi words")
+    public static let worksheetKunWords = L10nText(
+        ko: "훈독으로 읽는 단어", ja: "訓読みの単語", zh: "训读的词", en: "Kun'yomi words")
+    public static let worksheetOtherWords = L10nText(
+        ko: "그 외 단어", ja: "その他の単語", zh: "其他词", en: "Other words")
     public static let worksheetWord = L10nText(ko: "이 한자가 든 단어", ja: "この漢字を使う単語", zh: "含这个汉字的单词", en: "A word using it")
     public static let worksheetExample = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Example")
     public static let testPrompt = L10nText(ko: "뜻을 보고 한자를 써보세요", ja: "意味を見て漢字を書こう", zh: "根据意思写汉字", en: "Write the kanji for this meaning")

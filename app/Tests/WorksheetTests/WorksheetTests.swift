@@ -10,6 +10,33 @@ private func k(_ id: Int, literal: String = "x", strokes: Int = 1, level: String
           onReadings: ["オン"], kunReadings: ["くん"])
 }
 
+final class ReadingClassifierTests: XCTestCase {
+    // 生: on セイ/ショウ, kun い.きる / なま / き …
+    private let sei = Kanji(id: 1, literal: "生", strokeCount: 5, grade: 1, jlptLevel: "N5",
+                            onReadings: ["セイ", "ショウ"], kunReadings: ["い.きる", "なま", "き"])
+    // 山: on サン, kun やま
+    private let yama = Kanji(id: 2, literal: "山", strokeCount: 3, grade: 1, jlptLevel: "N5",
+                             onReadings: ["サン"], kunReadings: ["やま"])
+
+    private func w(_ surface: String, _ reading: String) -> WordEntry {
+        WordEntry(id: 1, surface: surface, reading: reading, meaningEn: "m")
+    }
+
+    func testCompoundClassifiesAsOn() {
+        XCTAssertEqual(classifyReading(word: w("学生", "がくせい"), kanji: sei), .on)   // セイ
+        XCTAssertEqual(classifyReading(word: w("富士山", "ふじさん"), kanji: yama), .on) // サン
+    }
+
+    func testNativeWordClassifiesAsKun() {
+        XCTAssertEqual(classifyReading(word: w("生", "なま"), kanji: sei), .kun)   // なま
+        XCTAssertEqual(classifyReading(word: w("山", "やま"), kanji: yama), .kun)  // やま
+    }
+
+    func testUnmatchedReadingIsNil() {
+        XCTAssertNil(classifyReading(word: w("外", "そと"), kanji: yama))  // neither サン nor やま
+    }
+}
+
 final class WorksheetQueueTests: XCTestCase {
     func testQueueHoldsOnlyNeverSeenKanjiInStudyOrder() {
         // kanji 1 already has a record → seen; the rest are new. studyOrder sorts

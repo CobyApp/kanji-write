@@ -283,7 +283,7 @@ public struct WorksheetView: View {
         }
     }
 
-    // MARK: 2) One word using the kanji
+    // MARK: 2) Example words, grouped by the reading they use (음독 / 훈독)
 
     @ViewBuilder
     private var wordCard: some View {
@@ -291,33 +291,60 @@ public struct WorksheetView: View {
             if store.words.isEmpty {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             } else {
-                VStack(spacing: 12) {
-                    ForEach(store.words) { word in
-                        Button { store.send(.wordTapped(word)) } label: {
-                            HStack(spacing: 8) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    RubyWord(word.surface, reading: word.reading, size: 22)
-                                    if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
-                                        Text(meaning)
-                                            .font(.kawaii(14, language: appLanguage))
-                                            .foregroundStyle(Palette.inkSoft)
-                                    }
-                                }
-                                Spacer(minLength: 0)
-                                SpeakButton(word.surface)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                            }
-                            .padding(14)
-                            .background(Palette.lavenderSoft.opacity(0.5))
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.bouncy)
-                    }
+                // Group the example words by which reading they use, so each
+                // on'yomi / kun'yomi is illustrated with real words.
+                let kanji = store.current
+                let byKind = Dictionary(grouping: store.words) { word in
+                    kanji.flatMap { classifyReading(word: word, kanji: $0) }
+                }
+                VStack(alignment: .leading, spacing: 16) {
+                    wordGroup(L.worksheetOnWords[appLanguage], Palette.sky, byKind[.on] ?? [])
+                    wordGroup(L.worksheetKunWords[appLanguage], Palette.mint, byKind[.kun] ?? [])
+                    wordGroup(L.worksheetOtherWords[appLanguage], Palette.lavender, byKind[nil] ?? [])
                 }
             }
         }
+    }
+
+    /// A labelled group of example words (shown only when non-empty), capped so
+    /// the card stays readable.
+    @ViewBuilder
+    private func wordGroup(_ title: String, _ accent: Color, _ words: [WordEntry]) -> some View {
+        if !words.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Circle().fill(accent).frame(width: 8, height: 8)
+                    Text(title)
+                        .font(.kawaii(13, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.inkSoft)
+                }
+                ForEach(words.prefix(4)) { word in wordRow(word, accent) }
+            }
+        }
+    }
+
+    private func wordRow(_ word: WordEntry, _ accent: Color) -> some View {
+        Button { store.send(.wordTapped(word)) } label: {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    RubyWord(word.surface, reading: word.reading, size: 22)
+                    if let meaning = wordMeaning(word, appLanguage), !meaning.isEmpty {
+                        Text(meaning)
+                            .font(.kawaii(14, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
+                    }
+                }
+                Spacer(minLength: 0)
+                SpeakButton(word.surface)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.inkSoft)
+            }
+            .padding(14)
+            .background(accent.opacity(0.14))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.bouncy)
     }
 
     // MARK: Card 4 — example sentences (예문)
