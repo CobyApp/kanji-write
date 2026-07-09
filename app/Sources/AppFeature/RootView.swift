@@ -18,7 +18,6 @@ import WritingCanvas
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("japaneseFont") private var japaneseFontRaw = JapaneseFont.default.rawValue
 
     public init(store: StoreOf<RootFeature>) {
         self.store = store
@@ -52,7 +51,6 @@ public struct RootView: View {
         .animation(.easeOut(duration: 0.2), value: store.showSettings)
         .tint(Palette.accent)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
-        .japaneseFont(JapaneseFont(rawValue: japaneseFontRaw) ?? .default)
         .task { store.send(.onAppear) }
     }
 
@@ -152,6 +150,7 @@ private struct DictionaryPathView: View {
     @Bindable var store: StoreOf<DictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dismiss) private var dismiss
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
@@ -191,9 +190,17 @@ private struct DictionaryPathView: View {
                 }
             }
         }
-        .navigationTitle(L.kanjiDictionary[appLanguage])
-        .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: searchBinding, prompt: L.searchPrompt[appLanguage])
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            VStack(spacing: 10) {
+                NavHeader(title: L.kanjiDictionary[appLanguage]) { dismiss() }
+                SearchField(text: searchBinding, placeholder: L.searchPrompt[appLanguage])
+                    .padding(.horizontal, 16)
+                    .readableWidth(sizeClass)
+            }
+            .padding(.bottom, 6)
+            .background(Palette.background)
+        }
     }
 }
 
@@ -205,6 +212,7 @@ private struct WordDictionaryView: View {
     @Bindable var store: StoreOf<WordDictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dismiss) private var dismiss
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
@@ -230,9 +238,17 @@ private struct WordDictionaryView: View {
                 }
             }
         }
-        .navigationTitle(L.wordDictionary[appLanguage])
-        .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: searchBinding, prompt: L.wordSearchPrompt[appLanguage])
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            VStack(spacing: 10) {
+                NavHeader(title: L.wordDictionary[appLanguage]) { dismiss() }
+                SearchField(text: searchBinding, placeholder: L.wordSearchPrompt[appLanguage])
+                    .padding(.horizontal, 16)
+                    .readableWidth(sizeClass)
+            }
+            .padding(.bottom, 6)
+            .background(Palette.background)
+        }
         .task { store.send(.onAppear) }
     }
 
@@ -290,6 +306,20 @@ struct KanjiCardList: View {
     let onSelect: (Kanji) -> Void
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.japaneseFont) private var jpFont
+
+    /// A 음/훈 reading line with a colored label chip.
+    private func kanjiReadingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
+        HStack(alignment: .top, spacing: 6) {
+            Text(label)
+                .font(.kawaii(10, weight: .bold)).foregroundStyle(.white)
+                .padding(.horizontal, 6).padding(.vertical, 1)
+                .background(accent).clipShape(Capsule())
+            Text(readings.prefix(6).joined(separator: "、"))
+                .font(.kawaiiJP(13, weight: .semibold, font: jpFont)).foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.leading)
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -298,24 +328,37 @@ struct KanjiCardList: View {
                 LazyVStack(spacing: 10) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
                         let tint = Palette.tint(index)
-                        let meaning = kanjiGloss(glosses[kanji.id] ?? [:], appLanguage)
-                        let readings = (kanji.onReadings + kanji.kunReadings).joined(separator: "、")
                         Button { onSelect(kanji) } label: {
                             HStack(spacing: 14) {
                                 PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
-                                           size: 48, fontSize: 26)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    if let meaning, !meaning.isEmpty {
-                                        Text(meaning)
-                                            .font(.kawaii(15, weight: .bold, language: appLanguage))
-                                            .foregroundStyle(Palette.ink)
+                                           size: 56, fontSize: 30)
+                                VStack(alignment: .leading, spacing: 5) {
+                                    HStack(spacing: 8) {
+                                        if let meaning = kanjiGloss(glosses[kanji.id] ?? [:], appLanguage),
+                                           !meaning.isEmpty {
+                                            Text(meaning)
+                                                .font(.kawaii(15, weight: .bold, language: appLanguage))
+                                                .foregroundStyle(Palette.ink)
+                                        }
+                                        if let level = kanji.jlptLevel {
+                                            Text(level).font(.kawaii(11, weight: .bold))
+                                                .foregroundStyle(Palette.inkSoft)
+                                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                                .background(Palette.background).clipShape(Capsule())
+                                        }
+                                        Text("\(kanji.strokeCount)\(L.strokesUnit[appLanguage])")
+                                            .font(.kawaii(11)).foregroundStyle(Palette.inkSoft)
                                     }
-                                    if !readings.isEmpty {
-                                        Text(readings)
-                                            .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                                    if !kanji.onReadings.isEmpty {
+                                        kanjiReadingLine(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                                    }
+                                    if !kanji.kunReadings.isEmpty {
+                                        kanjiReadingLine(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
                                     }
                                 }
-                                Spacer()
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.inkSoft)
                             }
                             .roundedCard()
                         }

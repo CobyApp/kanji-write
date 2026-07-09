@@ -29,27 +29,38 @@ private func isBold(_ weight: Font.Weight) -> Bool {
     weight == .bold || weight == .heavy || weight == .black || weight == .semibold
 }
 
+/// The neutral Latin/Japanese base face (Zen Maru Gothic).
+private func baseFace(_ size: CGFloat, _ weight: Font.Weight) -> Font {
+    .custom(isBold(weight) ? "ZenMaruGothic-Bold" : "ZenMaruGothic-Regular", size: size)
+}
+
+/// The current UI language, read from the same store as `@AppStorage("appLanguage")`.
+private func uiLanguage() -> AppLanguage {
+    AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .ko
+}
+
 extension Font {
-    /// The app's base rounded type — Latin, numbers, UI chrome. Fixed (Zen Maru
-    /// Gothic); not affected by the Japanese-font setting.
+    /// The app's UI type — automatically the current app language's face (Korean
+    /// → Jua, Chinese → ZCOOL, else the base) so all interface text, including
+    /// numbers, is one consistent font per language.
     public static func kawaii(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        Fonts.register()
-        return .custom(isBold(weight) ? "ZenMaruGothic-Bold" : "ZenMaruGothic-Regular", size: size)
+        kawaii(size, weight: weight, language: uiLanguage())
     }
 
-    /// Language-aware font: Korean → Jua, Chinese → ZCOOL KuaiLe, otherwise the
-    /// base face. Use for text whose script depends on the app language.
+    /// Explicit-language font: Korean → Jua, Chinese → ZCOOL KuaiLe, otherwise
+    /// the base face.
     public static func kawaii(_ size: CGFloat, weight: Font.Weight = .regular,
                               language: AppLanguage) -> Font {
         Fonts.register()
         switch language {
         case .ko: return .custom("Jua-Regular", size: size)
         case .zh: return .custom("ZCOOLKuaiLe-Regular", size: size)
-        case .ja, .en: return kawaii(size, weight: weight)
+        case .ja, .en: return baseFace(size, weight)
         }
     }
 
-    /// The user-selected Japanese face — for kanji / Japanese words / sentences.
+    /// The Japanese face for kanji / words / sentences — 교과서체 (Klee One),
+    /// which matches the KanjiVG stroke-order guide.
     public static func kawaiiJP(_ size: CGFloat, weight: Font.Weight = .regular,
                                 font: JapaneseFont) -> Font {
         Fonts.register()
