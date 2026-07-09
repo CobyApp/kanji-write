@@ -97,20 +97,19 @@ struct HomeView: View {
                 .padding(.bottom, 40)
                 .readableWidth(sizeClass)
             }
-            // The plan editor is an in-app overlay, NOT a sheet: buttons inside
-            // Mac Catalyst modal presentations are unreliable, while plain buttons
-            // in the normal hierarchy (like the home launchers) always respond.
+            // Settings opens from a round button in the top-right corner — the
+            // same CircleButton style as every close ✕ (in-content, so it always
+            // responds on Mac Catalyst).
+            CircleButton("gearshape") { store.send(.setShowSettings(true)) }
+                .accessibilityLabel(L.settings[appLanguage])
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .padding(.top, 8)
+                .padding(.trailing, 16)
+            // The plan editor is a full-screen in-app overlay (same style as
+            // settings). In-content buttons respond reliably on Mac Catalyst.
             if showPlan { planOverlay.zIndex(1) }
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { store.send(.setShowSettings(true)) } label: {
-                    Image(systemName: "gearshape")
-                }
-                .accessibilityLabel(L.settings[appLanguage])
-            }
-        }
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
@@ -124,42 +123,19 @@ struct HomeView: View {
 
     private func closePlan() { withAnimation(.easeOut(duration: 0.18)) { showPlan = false } }
 
-    /// The plan editor as a centered in-app card over a dimmed backdrop. Tapping
-    /// the backdrop, the ✕, or 완료 all close it — all plain buttons that respond
-    /// reliably on Mac Catalyst (unlike modal-sheet buttons).
+    /// The study-plan editor as a full-screen overlay with the shared header
+    /// (✕ top-left + title) — the same presentation as settings.
     private var planOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.28)
-                .ignoresSafeArea()
-                .contentShape(Rectangle())
-                .onTapGesture { closePlan() }
-            VStack(spacing: 16) {
-                planEditor
-                Button { closePlan() } label: {
-                    Text(L.done[appLanguage])
-                        .font(.kawaii(16, weight: .bold))
-                        .frame(maxWidth: .infinity).padding(.vertical, 14)
-                        .background(Palette.accent, in: .rect(cornerRadius: 16))
-                        .foregroundStyle(.white)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(18)
-            .background(Palette.background, in: .rect(cornerRadius: 26))
-            .overlay(alignment: .topTrailing) {
-                Button { closePlan() } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                        .frame(width: 32, height: 32)
-                        .background(Palette.card, in: .circle)
-                }
-                .buttonStyle(.plain)
-                .padding(12)
-            }
-            .frame(maxWidth: 460)
-            .padding(24)
-            .shadow(color: .black.opacity(0.18), radius: 26, y: 10)
+        ScrollView {
+            planEditor
+                .padding(20)
+                .readableWidth(sizeClass)
         }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .top) {
+            OverlayHeader(title: L.studyPlan[appLanguage]) { closePlan() }
+        }
+        .background(Palette.background.ignoresSafeArea())
         .transition(.opacity)
     }
 
