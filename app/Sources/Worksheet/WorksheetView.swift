@@ -221,7 +221,8 @@ public struct WorksheetView: View {
         let glyphSize: CGFloat = sizeClass == .compact ? 150 : 172
         return studyCard(L.readings[appLanguage], "textformat.size.larger", Palette.pink) {
             VStack(spacing: 16) {
-                glyphTile(kanji, size: glyphSize)
+                PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
+                           size: glyphSize, fontSize: glyphSize * 0.62)
                     .breathe(1.03)
                 if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                     HStack(spacing: 8) {
@@ -242,32 +243,6 @@ public struct WorksheetView: View {
             }
             .frame(maxWidth: .infinity)
         }
-    }
-
-    /// The kanji on a pink pastel tile. Drawn from the KanjiVG stroke paths (the
-    /// same source as the stroke-order guide) so the displayed glyph matches what
-    /// the learner traces — falling back to the font only when no guide exists.
-    private func glyphTile(_ kanji: Kanji, size: CGFloat) -> some View {
-        let corner = min(22, size * 0.3)
-        return ZStack {
-            LinearGradient(colors: [Palette.pinkSoft.opacity(0.65), Palette.pinkSoft],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-            LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .top, endPoint: .center)
-            if store.strokePaths.isEmpty {
-                Text(kanji.literal)
-                    .font(.kawaiiJP(size * 0.62, weight: .bold, font: jpFont)).japaneseGlyphs()
-                    .foregroundStyle(Palette.ink)
-            } else {
-                GuideStrokes(paths: store.strokePaths, color: Palette.ink,
-                             lineWidth: max(4, size * 0.038))
-                    .padding(size * 0.16)
-            }
-        }
-        .frame(width: size, height: size)
-        .overlay(RoundedRectangle(cornerRadius: corner, style: .continuous)
-            .stroke(Palette.pink.opacity(0.4), lineWidth: 1.5))
-        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
-        .shadow(color: Palette.pink.opacity(0.28), radius: size * 0.09, y: size * 0.045)
     }
 
     // MARK: Card 2 — stroke order (획순)
