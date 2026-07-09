@@ -92,9 +92,9 @@ struct HomeView: View {
                 Group {
                     if sizeClass == .compact { compactLayout } else { padPortraitLayout }
                 }
-                .padding(.horizontal, sizeClass == .compact ? 18 : 26)
-                .padding(.top, 8)
-                .padding(.bottom, 40)
+                .padding(.horizontal, sizeClass == .compact ? 22 : 34)
+                .padding(.top, 22)
+                .padding(.bottom, 56)
                 .readableWidth(sizeClass)
             }
             // Settings opens from a round button aligned to the top-right of the
@@ -106,11 +106,11 @@ struct HomeView: View {
                     CircleButton("gearshape") { store.send(.setShowSettings(true)) }
                         .accessibilityLabel(L.settings[appLanguage])
                 }
-                .padding(.horizontal, sizeClass == .compact ? 18 : 26)
+                .padding(.horizontal, sizeClass == .compact ? 22 : 34)
                 .readableWidth(sizeClass)
                 Spacer()
             }
-            .padding(.top, 8)
+            .padding(.top, 22)
             // The plan editor is a full-screen in-app overlay (same style as
             // settings). In-content buttons respond reliably on Mac Catalyst.
             if showPlan { planOverlay.zIndex(1) }
@@ -173,10 +173,10 @@ struct HomeView: View {
     /// iPhone: a single column mirroring the iPad flow — ring centered on top,
     /// the streak/goal chips in a row beneath it, then plan and launchers.
     @ViewBuilder private var compactLayout: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 22) {
             greeting.popIn(delay: 0.02)
             ring(168).popIn(delay: 0.08)
-            HStack(spacing: 12) { streakChip; goalChip }.popIn(delay: 0.12)
+            HStack(spacing: 14) { streakChip; goalChip }.popIn(delay: 0.12)
             planButton.popIn(delay: 0.16)
             launchers.popIn(delay: 0.22)
             dictionaryButton.popIn(delay: 0.28)
@@ -188,10 +188,10 @@ struct HomeView: View {
     /// iPad portrait: a centered column — ring + stats on top, plan below full
     /// width, launchers in a 2-up grid. (Taller than it is wide, so no side panes.)
     @ViewBuilder private var padPortraitLayout: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 28) {
             greeting.popIn(delay: 0.02)
             ring(200).popIn(delay: 0.08)
-            HStack(spacing: 14) { streakChip; goalChip }.popIn(delay: 0.12)
+            HStack(spacing: 16) { streakChip; goalChip }.popIn(delay: 0.12)
             planButton.popIn(delay: 0.16)
             launchersGrid.popIn(delay: 0.22)
             bookmarksSection.popIn(delay: 0.30)
@@ -206,7 +206,7 @@ struct HomeView: View {
                 .contentTransition(.numericText()).animation(.snappy, value: streak)
             Text(L.streak[appLanguage]).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 14)
+        .frame(maxWidth: .infinity).padding(.vertical, 18)
         .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: Palette.ink.opacity(0.05), radius: 5, y: 2)
     }
@@ -229,15 +229,15 @@ struct HomeView: View {
                 .animation(.spring(response: 0.6, dampingFraction: 0.8), value: goalFraction)
             Text(L.todayGoal[appLanguage]).font(.kawaii(12)).foregroundStyle(Palette.inkSoft)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 12)
+        .frame(maxWidth: .infinity).padding(.vertical, 16)
         .background(Palette.card).clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: Palette.ink.opacity(0.05), radius: 5, y: 2)
     }
 
     /// The four launchers as a 2-column grid (iPad).
     private var launchersGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
-                  spacing: 12) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)],
+                  spacing: 14) {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
                      soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
@@ -314,7 +314,7 @@ struct HomeView: View {
     /// Compact (iPhone) launchers — learn + quiz (which folds in review). Practice
     /// (free writing) is an iPad/Apple-Pencil activity, so it's omitted here.
     private var launchers: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
                      soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
@@ -375,7 +375,7 @@ struct HomeView: View {
                         .font(.system(size: 15, weight: .bold)).foregroundStyle(accent)
                 }
             }
-            .padding(16)
+            .padding(18)
             .frame(maxWidth: .infinity)
             .background(
                 LinearGradient(colors: [soft, soft.opacity(0.72)],
