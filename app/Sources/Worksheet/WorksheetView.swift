@@ -274,15 +274,12 @@ public struct WorksheetView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
                         .fill(Palette.background)
-                    if store.strokePaths.isEmpty {
-                        // No guide available → show the glyph faintly to trace.
-                        Text(kanji.literal)
-                            .font(.system(size: side * 0.6, weight: .light))
-                            .japaneseGlyphs()
-                            .foregroundStyle(Palette.ink.opacity(0.12))
-                    } else {
-                        GuideStrokes(paths: store.strokePaths).padding(18)
-                    }
+                    // Trace a faint glyph in the selected Japanese font, so what
+                    // you trace matches the kanji shown everywhere else.
+                    Text(kanji.literal)
+                        .font(.kawaiiJP(side * 0.66, weight: .bold, font: jpFont))
+                        .japaneseGlyphs()
+                        .foregroundStyle(Palette.ink.opacity(0.14))
                     PencilCanvasView(drawing: $writeDrawing).padding(8)
                 }
                 .frame(width: side, height: side)
@@ -503,24 +500,3 @@ public struct WorksheetView: View {
     }
 }
 
-/// Renders a kanji from its KanjiVG stroke paths (109x109 viewBox) scaled to fit
-/// its square. Used both as the faint write-canvas guide and as the reading
-/// card's glyph, so the displayed character always matches the stroke-order
-/// form (rather than the font's own glyph design).
-private struct GuideStrokes: View {
-    private static let viewBoxSize: CGFloat = 109.0
-    let paths: [String]
-    var color: Color = Palette.mint.opacity(0.35)
-    var lineWidth: CGFloat = 3
-
-    var body: some View {
-        GeometryReader { geo in
-            let scale = min(geo.size.width, geo.size.height) / Self.viewBoxSize
-            ForEach(Array(paths.enumerated()), id: \.offset) { _, d in
-                SVGPath.path(from: SVGPath.parse(d))
-                    .applying(CGAffineTransform(scaleX: scale, y: scale))
-                    .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-            }
-        }
-    }
-}

@@ -70,7 +70,7 @@ public struct ReminderView: View {
                     let selected = font.rawValue == japaneseFontRaw
                     Button { japaneseFontRaw = font.rawValue } label: {
                         HStack(spacing: 12) {
-                            Text(font.label)
+                            Text(font.label[appLanguage])
                                 .font(.kawaii(15, weight: .semibold, language: appLanguage))
                                 .foregroundStyle(Palette.ink)
                             Spacer(minLength: 8)
