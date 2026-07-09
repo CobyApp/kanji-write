@@ -208,7 +208,10 @@ public struct WorksheetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous)
             .stroke(accent.opacity(0.28), lineWidth: 1.5))
-        .shadow(color: accent.opacity(0.18), radius: 18, x: 0, y: 8)
+        // A wide symmetric ambient halo (radiates on every side) plus a faint
+        // grounding shadow — soft all around, not a hard band below.
+        .shadow(color: accent.opacity(0.10), radius: 30, x: 0, y: 0)
+        .shadow(color: accent.opacity(0.09), radius: 16, x: 0, y: 7)
     }
 
     // MARK: Card 1 — meaning + readings (뜻·읽기)
