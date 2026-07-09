@@ -19,7 +19,8 @@ public struct WordDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header.popIn(delay: 0.02)
                     if !store.kanji.isEmpty { kanjiSection.popIn(delay: 0.10) }
-                    tracingSection.popIn(delay: 0.16)
+                    // Writing practice is an Apple-Pencil activity → iPad only.
+                    if Platform.isPad { tracingSection.popIn(delay: 0.16) }
                     if !store.sentences.isEmpty { sentencesSection.popIn(delay: 0.22) }
                 }
                 .padding(16)
@@ -57,27 +58,57 @@ public struct WordDetailView: View {
     }
 
     private var kanjiSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.kanji[appLanguage], accent: Palette.mint)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(Array(store.kanji.enumerated()), id: \.element.id) { index, kanji in
-                        let tint = Palette.tint(index)
-                        Button { store.send(.kanjiTapped(kanji)) } label: {
-                            VStack(spacing: 4) {
-                                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
-                                           size: 56, fontSize: 32)
-                                Text(kanji.onReadings.first ?? kanji.kunReadings.first ?? "")
-                                    .font(.kawaii(11)).foregroundStyle(Palette.inkSoft)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.vertical, 2)
+            ForEach(Array(store.kanji.enumerated()), id: \.element.id) { index, kanji in
+                kanjiRow(kanji, tint: Palette.tint(index))
             }
         }
         .roundedCard()
+    }
+
+    /// A rich per-kanji row: glyph + meaning + 음/훈 readings, tap → kanji detail.
+    private func kanjiRow(_ kanji: Kanji, tint: (soft: Color, accent: Color)) -> some View {
+        Button { store.send(.kanjiTapped(kanji)) } label: {
+            HStack(spacing: 14) {
+                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent, size: 58, fontSize: 33)
+                VStack(alignment: .leading, spacing: 5) {
+                    if let meaning = localizedGloss(store.glossesByID[kanji.id] ?? [:], appLanguage),
+                       !meaning.isEmpty {
+                        Text(meaning)
+                            .font(.kawaii(16, weight: .bold, language: appLanguage))
+                            .foregroundStyle(Palette.ink).multilineTextAlignment(.leading)
+                    }
+                    if !kanji.onReadings.isEmpty {
+                        readingLine(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                    }
+                    if !kanji.kunReadings.isEmpty {
+                        readingLine(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.inkSoft)
+            }
+            .padding(12)
+            .background(tint.soft.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    /// A 음/훈 reading line with a colored label chip.
+    private func readingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
+        HStack(alignment: .top, spacing: 6) {
+            Text(label)
+                .font(.kawaii(11, weight: .bold)).foregroundStyle(.white)
+                .padding(.horizontal, 7).padding(.vertical, 2)
+                .background(accent).clipShape(Capsule())
+            Text(readings.prefix(5).joined(separator: "、"))
+                .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.leading)
+        }
     }
 
     /// One tracing cell per character of the word (kanji show their stroke guide;
