@@ -96,6 +96,7 @@ public struct RubyText: View {
                         .opacity(token.reading == nil ? 0 : 1)
                     Text(token.base)
                         .font(.kawaii(size, weight: .bold)).foregroundStyle(color)
+                        .japaneseGlyphs()
                 }
                 .fixedSize()
             }
@@ -125,6 +126,7 @@ public struct RubyWord: View {
             }
             Text(surface)
                 .font(.kawaii(size, weight: .bold)).foregroundStyle(Palette.ink)
+                .japaneseGlyphs()
         }
     }
 }

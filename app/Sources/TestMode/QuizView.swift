@@ -67,6 +67,7 @@ public struct QuizView: View {
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             Text(item.prompt)
                 .font(.kawaii(promptSize(item.kind), weight: .bold))
+                .japaneseGlyphs()
                 .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
             if let subtitle = item.subtitle, !subtitle.isEmpty {
                 Text(subtitle)
@@ -108,6 +109,7 @@ public struct QuizView: View {
                             .font(.kawaii(item.kind == .wordReading || item.kind == .kanjiReading ? 22 : 18,
                                           weight: .bold,
                                           language: item.kind == .wordMeaning ? appLanguage : .ja))
+                            .japaneseGlyphs()
                             .foregroundStyle(optionText(option, item))
                             .multilineTextAlignment(.leading)
                         Spacer()

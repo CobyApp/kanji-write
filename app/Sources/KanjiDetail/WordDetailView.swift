@@ -43,7 +43,7 @@ public struct WordDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(store.word.surface)
-                    .font(.kawaii(34, weight: .bold)).foregroundStyle(Palette.ink)
+                    .font(.kawaii(34, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                 SpeakButton(store.word.surface)
             }
             Text(store.word.reading)
@@ -139,7 +139,7 @@ public struct WordDetailView: View {
                 HStack(alignment: .top, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(sentence.textJa)
-                            .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                            .font(.kawaii(16)).japaneseGlyphs().foregroundStyle(Palette.ink)
                         if let translation = localizedTranslation(sentence.translations, appLanguage) {
                             Text(translation).font(.kawaii(14, language: appLanguage))
                                 .foregroundStyle(Palette.inkSoft)
