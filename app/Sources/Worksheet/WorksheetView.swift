@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import DesignSystem
+import PencilKit
 import Review
 import SharedModels
 import SwiftUI
@@ -43,10 +44,18 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// Which card of the current kanji is showing (0…3).
+    /// Which card of the current kanji is showing (0…`lastCard`).
     @State private var card = 0
+    /// The learner's tracing on the write card (iPad only). Cleared per kanji.
+    @State private var writeDrawing = PKDrawing()
     /// Holds keyboard focus on the deck so ←/→ arrow keys drive prev/next.
     @FocusState private var deckFocused: Bool
+
+    /// The write card (trace over the stroke guide) is an Apple-Pencil activity,
+    /// so it's only part of the deck on iPad.
+    private var showWrite: Bool { Platform.isPad }
+    /// Index of the last card in the deck: 4 with the write card, else 3.
+    private var lastCard: Int { showWrite ? 4 : 3 }
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -86,15 +95,19 @@ public struct WorksheetView: View {
                 TabView(selection: $card) {
                     cardShell { meaningCard(kanji) }.tag(0)
                     cardShell { strokeCard(kanji) }.tag(1)
-                    cardShell { wordCard }.tag(2)
-                    cardShell { exampleCard }.tag(3)
+                    if showWrite {
+                        cardShell { writeCard(kanji) }.tag(2)
+                    }
+                    cardShell { wordCard }.tag(showWrite ? 3 : 2)
+                    cardShell { exampleCard }.tag(showWrite ? 4 : 3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 // Reset to the first card on a new kanji WITHOUT animating (avoids a
-                // long multi-page slide-back).
+                // long multi-page slide-back), and clear the previous tracing.
                 .onChange(of: store.index) { _, _ in
                     var t = Transaction(); t.disablesAnimations = true
                     withTransaction(t) { card = 0 }
+                    writeDrawing = PKDrawing()
                 }
                 navButtons
             }
@@ -122,9 +135,9 @@ public struct WorksheetView: View {
                     .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             }
             HStack(spacing: 6) {
-                ForEach(0..<4, id: \.self) { i in
+                ForEach(0..<(lastCard + 1), id: \.self) { i in
                     Capsule()
-                        .fill(i <= min(card, 3) ? Palette.pink : Palette.pinkSoft)
+                        .fill(i <= min(card, lastCard) ? Palette.pink : Palette.pinkSoft)
                         .frame(height: 5)
                 }
             }
@@ -218,6 +231,46 @@ public struct WorksheetView: View {
         }
     }
 
+    // MARK: Card 3 — write it yourself (iPad only, 써보기)
+
+    /// A tracing canvas over the faint stroke guide, so the learner writes the
+    /// kanji themselves during study. iPad only (Apple Pencil / finger).
+    private func writeCard(_ kanji: Kanji) -> some View {
+        let side: CGFloat = sizeClass == .compact ? 260 : 320
+        return studyCard(L.worksheetWrite[appLanguage], "hand.draw", Palette.butter) {
+            VStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Palette.background)
+                    if store.strokePaths.isEmpty {
+                        // No guide available → show the glyph faintly to trace.
+                        Text(kanji.literal)
+                            .font(.system(size: side * 0.6, weight: .light))
+                            .foregroundStyle(Palette.ink.opacity(0.12))
+                    } else {
+                        GuideStrokes(paths: store.strokePaths).padding(18)
+                    }
+                    PencilCanvasView(drawing: $writeDrawing).padding(8)
+                }
+                .frame(width: side, height: side)
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(Palette.butter.opacity(0.35), lineWidth: 1.5))
+                Button { writeDrawing = PKDrawing() } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 13, weight: .bold))
+                        Text(L.clear[appLanguage]).font(.kawaii(14, weight: .bold))
+                    }
+                    .foregroundStyle(Palette.butter)
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+                    .background(Palette.butterSoft).clipShape(Capsule())
+                }
+                .buttonStyle(.bouncy)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
     /// A centered 音/訓 reading row with a colored label chip.
     private func readingRow(_ label: String, _ readings: [String], _ accent: Color) -> some View {
         HStack(spacing: 8) {
@@ -302,11 +355,11 @@ public struct WorksheetView: View {
     // MARK: Advance (Next / Done)
 
     private func goBack() { if card > 0 { withAnimation { card -= 1 } } }
-    private func goNext() { if card >= 3 { advance() } else { withAnimation { card += 1 } } }
+    private func goNext() { if card >= lastCard { advance() } else { withAnimation { card += 1 } } }
 
     /// 이전 · 다음 controls. Also bound to the ← / → keys (iPad/Mac keyboard).
     private var navButtons: some View {
-        let finishing = card >= 3 && store.isLast
+        let finishing = card >= lastCard && store.isLast
         let nextLabel = finishing ? L.done[appLanguage] : L.next[appLanguage]
         let nextColors = finishing ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink]
         return HStack(spacing: 12) {

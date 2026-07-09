@@ -260,9 +260,12 @@ struct HomeView: View {
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
                      soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
             quizLauncher
-            launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
-                     subtitle: L.practiceSub[appLanguage], count: nil,
-                     soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
+            // Free handwriting is an Apple-Pencil activity → iPad only.
+            if Platform.isPad {
+                launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
+                         subtitle: L.practiceSub[appLanguage], count: nil,
+                         soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
+            }
             dictionaryButton
         }
     }
