@@ -15,14 +15,14 @@ public enum JapaneseFont: String, CaseIterable, Sendable, Identifiable {
 
     public var id: String { rawValue }
 
-    /// Korean label shown in the settings picker.
-    public var label: String {
+    /// Localized label shown in the settings picker.
+    public var label: L10nText {
         switch self {
-        case .klee: "교과서체"
-        case .zenMaru: "둥근 고딕"
-        case .yomogi: "손글씨"
-        case .hachiMaruPop: "몽글몽글"
-        case .mochiyPop: "통통 팝"
+        case .klee: L10nText(ko: "교과서체", ja: "教科書体", zh: "教科书体", en: "Textbook")
+        case .zenMaru: L10nText(ko: "둥근 고딕", ja: "丸ゴシック", zh: "圆体", en: "Rounded")
+        case .yomogi: L10nText(ko: "손글씨", ja: "手書き", zh: "手写体", en: "Handwriting")
+        case .hachiMaruPop: L10nText(ko: "몽글몽글", ja: "まるもじ", zh: "圆润", en: "Bubbly")
+        case .mochiyPop: L10nText(ko: "통통 팝", ja: "ポップ", zh: "胖胖", en: "Pop")
         }
     }
 
