@@ -199,7 +199,8 @@ struct HomeView: View {
             planButton.popIn(delay: 0.16)
             launchers.popIn(delay: 0.22)
             dictionaryButton.popIn(delay: 0.28)
-            bookmarksSection.popIn(delay: 0.34)
+            wordDictionaryButton.popIn(delay: 0.32)
+            bookmarksSection.popIn(delay: 0.38)
         }
     }
 
@@ -267,6 +268,7 @@ struct HomeView: View {
                          soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
             }
             dictionaryButton
+            wordDictionaryButton
         }
     }
 
@@ -352,9 +354,15 @@ struct HomeView: View {
     }
 
     private var dictionaryButton: some View {
-        launcher(icon: "character.book.closed", title: L.dictionary[appLanguage],
+        launcher(icon: "character.book.closed", title: L.kanjiDictionary[appLanguage],
                  subtitle: L.searchPrompt[appLanguage], count: nil,
                  soft: Palette.skySoft, accent: Palette.sky) { store.send(.openDictionary) }
+    }
+
+    private var wordDictionaryButton: some View {
+        launcher(icon: "text.book.closed", title: L.wordDictionary[appLanguage],
+                 subtitle: L.wordSearchPrompt[appLanguage], count: nil,
+                 soft: Palette.lavenderSoft, accent: Palette.lavender) { store.send(.openWordDictionary) }
     }
 
     private func launcher(

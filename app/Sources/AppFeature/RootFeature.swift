@@ -21,6 +21,7 @@ public struct RootFeature {
         case word(WordDetailFeature)
         case writing(KanjiWritingFeature)
         case dictionary(DictionaryFeature)
+        case wordDictionary(WordDictionaryFeature)
     }
 
     /// A full-screen study session launched from Home.
@@ -64,6 +65,7 @@ public struct RootFeature {
         case kanjiSelected(Kanji)
         case levelSelected(KanjiLevel)
         case openDictionary
+        case openWordDictionary
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case startStudy
@@ -106,6 +108,15 @@ public struct RootFeature {
             case .openDictionary:
                 state.path.append(.dictionary(DictionaryFeature.State(
                     kanji: state.review.kanji.elements, glosses: state.review.glosses)))
+                return .none
+
+            case .openWordDictionary:
+                state.path.append(.wordDictionary(WordDictionaryFeature.State()))
+                return .none
+
+            // Word dictionary → drill into a selected word's detail.
+            case let .path(.element(id: _, action: .wordDictionary(.wordSelected(word)))):
+                state.path.append(.word(WordDetailFeature.State(word: word)))
                 return .none
 
             case .bookmarksAppeared:

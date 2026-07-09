@@ -142,6 +142,18 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
         KanjiWritingView(store: s)
     case let .dictionary(s):
         DictionaryPathView(store: s)
+    case let .wordDictionary(s):
+        WordDictionaryView(store: s)
+    }
+}
+
+/// The localized meaning of a word, falling back to English.
+func wordMeaningText(_ word: WordEntry, _ language: AppLanguage) -> String? {
+    switch language {
+    case .ko: word.meaningKo ?? word.meaningEn
+    case .ja: word.meaningJa ?? word.meaningEn
+    case .zh: word.meaningZh ?? word.meaningEn
+    case .en: word.meaningEn
     }
 }
 
@@ -190,9 +202,80 @@ private struct DictionaryPathView: View {
                 }
             }
         }
-        .navigationTitle(L.dictionary[appLanguage])
+        .navigationTitle(L.kanjiDictionary[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: searchBinding, prompt: L.searchPrompt[appLanguage])
+    }
+}
+
+// MARK: - Word dictionary (opened from Home)
+
+/// The 단어사전 browse: a level picker listing that level's words (common first),
+/// or a full-word search. Selecting a word delegates up to push its detail.
+private struct WordDictionaryView: View {
+    @Bindable var store: StoreOf<WordDictionaryFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+
+    private var searchBinding: Binding<String> {
+        Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
+    }
+    private var levelBinding: Binding<String> {
+        Binding(get: { store.level }, set: { store.send(.levelSelected($0)) })
+    }
+
+    var body: some View {
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            if store.isSearching {
+                wordList(store.searchResults)
+            } else {
+                VStack(spacing: 12) {
+                    Picker("", selection: levelBinding) {
+                        ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16).padding(.top, 12)
+                    wordList(store.words)
+                }
+            }
+        }
+        .navigationTitle(L.wordDictionary[appLanguage])
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: searchBinding, prompt: L.wordSearchPrompt[appLanguage])
+        .task { store.send(.onAppear) }
+    }
+
+    @ViewBuilder
+    private func wordList(_ words: [WordEntry]) -> some View {
+        ScrollView {
+            LazyVStack(spacing: 10) {
+                ForEach(words) { word in
+                    Button { store.send(.wordSelected(word)) } label: {
+                        HStack(spacing: 14) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                RubyWord(word.surface, reading: word.reading, size: 22)
+                                if let meaning = wordMeaningText(word, appLanguage), !meaning.isEmpty {
+                                    Text(meaning).font(.kawaii(14, language: appLanguage))
+                                        .foregroundStyle(Palette.inkSoft)
+                                }
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Palette.inkSoft)
+                        }
+                        .roundedCard()
+                    }
+                    .buttonStyle(.bouncy)
+                }
+                if words.isEmpty {
+                    Text(L.noWordsFound[appLanguage])
+                        .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
+                }
+            }
+            .padding(16)
+        }
+        .scrollIndicators(.hidden)
     }
 }
 
