@@ -2,18 +2,20 @@ import CoreText
 import SharedModels
 import SwiftUI
 
-// Cute, embeddable OFL fonts bundled with the app. Latin / UI is Zen Maru
-// Gothic, Korean is Jua, Chinese is ZCOOL KuaiLe — all fixed. Japanese text
-// (kanji / words / sentences) uses one of five user-selectable faces (see
-// `JapaneseFont`). The TTFs ship in this module's resource bundle and are
-// registered once with Core Text at first use (framework-bundled fonts can't
-// use Info.plist UIAppFonts).
+// Cute, embeddable OFL fonts bundled with the app, applied per script:
+//   • Zen Maru Gothic — Latin / UI base
+//   • Jua — Korean
+//   • ZCOOL KuaiLe — Simplified Chinese
+//   • Klee One — Japanese kanji / words / sentences (교과서체, matches the
+//     KanjiVG stroke-order guide)
+// The TTFs ship in this module's resource bundle and are registered once with
+// Core Text at first use (framework-bundled fonts can't use Info.plist UIAppFonts).
 
 public enum Fonts {
     private static let registerOnce: Void = {
         let files = [
-            "ZenMaruGothic-Regular", "ZenMaruGothic-Bold", "Jua-Regular", "ZCOOLKuaiLe-Regular",
-            "KleeOne-Regular", "Yomogi-Regular", "HachiMaruPop-Regular", "MochiyPopOne-Regular",
+            "ZenMaruGothic-Regular", "ZenMaruGothic-Bold", "Jua-Regular",
+            "ZCOOLKuaiLe-Regular", "KleeOne-Regular",
         ]
         for file in files {
             guard let url = Bundle.module.url(forResource: file, withExtension: "ttf") else { continue }
@@ -60,32 +62,9 @@ extension Font {
     }
 
     /// The Japanese face for kanji / words / sentences — 교과서체 (Klee One),
-    /// which matches the KanjiVG stroke-order guide.
-    public static func kawaiiJP(_ size: CGFloat, weight: Font.Weight = .regular,
-                                font: JapaneseFont) -> Font {
+    /// which matches the KanjiVG stroke-order guide. Single weight.
+    public static func kawaiiJP(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         Fonts.register()
-        return .custom(isBold(weight) ? font.boldPSName : font.regularPSName, size: size)
-    }
-}
-
-// MARK: - Japanese-font environment
-
-private struct JapaneseFontKey: EnvironmentKey {
-    static let defaultValue: JapaneseFont = .default
-}
-
-extension EnvironmentValues {
-    /// The Japanese face for kanji / words / sentences, set once near the root
-    /// from the user setting so every component renders Japanese consistently.
-    public var japaneseFont: JapaneseFont {
-        get { self[JapaneseFontKey.self] }
-        set { self[JapaneseFontKey.self] = newValue }
-    }
-}
-
-extension View {
-    /// Propagates the selected Japanese face to all descendants.
-    public func japaneseFont(_ font: JapaneseFont) -> some View {
-        environment(\.japaneseFont, font)
+        return .custom("KleeOne-Regular", size: size)
     }
 }

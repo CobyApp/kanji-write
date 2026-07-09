@@ -306,7 +306,6 @@ struct KanjiCardList: View {
     let onSelect: (Kanji) -> Void
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.japaneseFont) private var jpFont
 
     /// A 음/훈 reading line with a colored label chip.
     private func kanjiReadingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
@@ -316,7 +315,7 @@ struct KanjiCardList: View {
                 .padding(.horizontal, 6).padding(.vertical, 1)
                 .background(accent).clipShape(Capsule())
             Text(readings.prefix(6).joined(separator: "、"))
-                .font(.kawaiiJP(13, weight: .semibold, font: jpFont)).foregroundStyle(Palette.ink)
+                .font(.kawaiiJP(13, weight: .semibold)).foregroundStyle(Palette.ink)
                 .multilineTextAlignment(.leading)
         }
     }

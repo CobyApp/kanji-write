@@ -7,7 +7,6 @@ public struct QuizView: View {
     @Bindable public var store: StoreOf<QuizFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.japaneseFont) private var jpFont
 
     public init(store: StoreOf<QuizFeature>) {
         self.store = store
@@ -67,7 +66,7 @@ public struct QuizView: View {
             Text(promptLabel(item.kind))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             Text(item.prompt)
-                .font(.kawaiiJP(promptSize(item.kind), weight: .bold, font: jpFont))
+                .font(.kawaiiJP(promptSize(item.kind), weight: .bold))
                 .japaneseGlyphs()
                 .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
             if let subtitle = item.subtitle, !subtitle.isEmpty {
@@ -95,7 +94,7 @@ public struct QuizView: View {
         let size: CGFloat = (kind == .wordReading || kind == .kanjiReading) ? 22 : 18
         switch kind {
         case .kanjiMeaning, .wordMeaning: return .kawaii(size, weight: .bold, language: appLanguage)
-        default: return .kawaiiJP(size, weight: .bold, font: jpFont)
+        default: return .kawaiiJP(size, weight: .bold)
         }
     }
 
