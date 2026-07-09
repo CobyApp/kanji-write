@@ -56,24 +56,14 @@ public struct RootView: View {
         .task { store.send(.onAppear) }
     }
 
-    /// Settings as a full-screen overlay with a plain in-content close button.
+    /// Settings as a full-screen overlay with the shared header (✕ top-left +
+    /// title) — the same presentation as the study-plan overlay.
     private var settingsOverlay: some View {
         ReminderView(store: store.scope(state: \.reminder, action: \.reminder))
             .safeAreaInset(edge: .top) {
-                ZStack {
-                    Text(L.settings[appLanguage])
-                        .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
-                    HStack {
-                        Spacer()
-                        Button { store.send(.setShowSettings(false)) } label: {
-                            Text(L.close[appLanguage])
-                                .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.accent)
-                        }
-                        .buttonStyle(.plain)
-                    }
+                OverlayHeader(title: L.settings[appLanguage]) {
+                    store.send(.setShowSettings(false))
                 }
-                .padding(.horizontal, 18).padding(.vertical, 12)
-                .background(Palette.background)
             }
             .background(Palette.background.ignoresSafeArea())
     }
@@ -94,16 +84,8 @@ private struct SessionCover: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .safeAreaInset(edge: .top) {
                     HStack {
-                        Button { store.send(.session(.dismiss)) } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundStyle(Palette.inkSoft)
-                                .frame(width: 38, height: 38)
-                                .background(Palette.card, in: .circle)
-                                .shadow(color: .black.opacity(0.06), radius: 5, y: 2)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(L.close[appLanguage])
+                        CircleButton("xmark") { store.send(.session(.dismiss)) }
+                            .accessibilityLabel(L.close[appLanguage])
                         Spacer()
                     }
                     .padding(.horizontal, 14).padding(.top, 6).padding(.bottom, 2)
