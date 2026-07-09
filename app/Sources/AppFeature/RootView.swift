@@ -18,6 +18,7 @@ import WritingCanvas
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("japaneseFont") private var japaneseFontRaw = JapaneseFont.zenMaru.rawValue
 
     public init(store: StoreOf<RootFeature>) {
         self.store = store
@@ -51,6 +52,7 @@ public struct RootView: View {
         .animation(.easeOut(duration: 0.2), value: store.showSettings)
         .tint(Palette.accent)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
+        .japaneseFont(JapaneseFont(rawValue: japaneseFontRaw) ?? .zenMaru)
         .task { store.send(.onAppear) }
     }
 

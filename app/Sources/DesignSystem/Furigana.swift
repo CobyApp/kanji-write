@@ -75,6 +75,7 @@ extension String {
 /// Example text with furigana rendered as ruby (small kana above each kanji
 /// word). Wraps across lines. Kana/punctuation runs show no ruby.
 public struct RubyText: View {
+    @Environment(\.japaneseFont) private var jpFont
     let text: String
     let size: CGFloat
     let color: Color
@@ -95,7 +96,7 @@ public struct RubyText: View {
                         .font(.kawaii(size * 0.62, weight: .bold)).foregroundStyle(Palette.pink)
                         .opacity(token.reading == nil ? 0 : 1)
                     Text(token.base)
-                        .font(.kawaii(size, weight: .bold)).foregroundStyle(color)
+                        .font(.kawaiiJP(size, weight: .bold, font: jpFont)).foregroundStyle(color)
                         .japaneseGlyphs()
                 }
                 .fixedSize()
@@ -108,6 +109,7 @@ public struct RubyText: View {
 /// ruby). Falls back to just the surface when the reading is empty or identical
 /// (kana-only words).
 public struct RubyWord: View {
+    @Environment(\.japaneseFont) private var jpFont
     let surface: String
     let reading: String
     let size: CGFloat
@@ -125,7 +127,7 @@ public struct RubyWord: View {
                     .font(.kawaii(size * 0.62, weight: .bold)).foregroundStyle(Palette.pink)
             }
             Text(surface)
-                .font(.kawaii(size, weight: .bold)).foregroundStyle(Palette.ink)
+                .font(.kawaiiJP(size, weight: .bold, font: jpFont)).foregroundStyle(Palette.ink)
                 .japaneseGlyphs()
         }
     }

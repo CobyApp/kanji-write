@@ -44,6 +44,7 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.japaneseFont) private var jpFont
     /// Which card of the current kanji is showing (0…`lastCard`).
     @State private var card = 0
     /// The learner's tracing on the write card (iPad only). Cleared per kanji.
@@ -254,7 +255,7 @@ public struct WorksheetView: View {
             LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .top, endPoint: .center)
             if store.strokePaths.isEmpty {
                 Text(kanji.literal)
-                    .font(.kawaii(size * 0.62, weight: .bold)).japaneseGlyphs()
+                    .font(.kawaiiJP(size * 0.62, weight: .bold, font: jpFont)).japaneseGlyphs()
                     .foregroundStyle(Palette.ink)
             } else {
                 GuideStrokes(paths: store.strokePaths, color: Palette.ink,
@@ -336,7 +337,7 @@ public struct WorksheetView: View {
                 .padding(.horizontal, 8).padding(.vertical, 3)
                 .background(accent).clipShape(Capsule())
             Text(readings.joined(separator: "、"))
-                .font(.kawaii(16, weight: .semibold)).foregroundStyle(Palette.ink)
+                .font(.kawaiiJP(16, weight: .semibold, font: jpFont)).foregroundStyle(Palette.ink)
         }
     }
 
