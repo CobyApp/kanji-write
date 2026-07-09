@@ -8,6 +8,7 @@ public struct WordDetailView: View {
     @Bindable public var store: StoreOf<WordDetailFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.japaneseFont) private var jpFont
 
     public init(store: StoreOf<WordDetailFeature>) {
         self.store = store
@@ -43,7 +44,8 @@ public struct WordDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(store.word.surface)
-                    .font(.kawaii(34, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .font(.kawaiiJP(34, weight: .bold, font: jpFont)).japaneseGlyphs()
+                    .foregroundStyle(Palette.ink)
                 SpeakButton(store.word.surface)
             }
             Text(store.word.reading)
@@ -139,7 +141,7 @@ public struct WordDetailView: View {
                 HStack(alignment: .top, spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(sentence.textJa)
-                            .font(.kawaii(16)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                            .font(.kawaiiJP(16, font: jpFont)).japaneseGlyphs().foregroundStyle(Palette.ink)
                         if let translation = localizedTranslation(sentence.translations, appLanguage) {
                             Text(translation).font(.kawaii(14, language: appLanguage))
                                 .foregroundStyle(Palette.inkSoft)
