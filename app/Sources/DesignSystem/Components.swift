@@ -51,7 +51,6 @@ public struct CandyChip: View {
 
 /// A rounded pastel tile holding a single large kanji glyph.
 public struct PastelTile: View {
-    @Environment(\.japaneseFont) private var jpFont
     let glyph: String
     let soft: Color
     let accent: Color
@@ -72,7 +71,7 @@ public struct PastelTile: View {
     public var body: some View {
         let corner = min(22, size * 0.3)
         return Text(glyph)
-            .font(.kawaiiJP(fontSize, weight: .bold, font: jpFont))
+            .font(.kawaiiJP(fontSize, weight: .bold))
             .japaneseGlyphs()
             .foregroundStyle(Palette.ink)
             .frame(width: size, height: size)

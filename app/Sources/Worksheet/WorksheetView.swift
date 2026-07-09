@@ -44,7 +44,6 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @Environment(\.japaneseFont) private var jpFont
     /// Which card of the current kanji is showing (0…`lastCard`).
     @State private var card = 0
     /// The learner's tracing on the write card (iPad only). Cleared per kanji.
@@ -277,7 +276,7 @@ public struct WorksheetView: View {
                     // Trace a faint glyph in the selected Japanese font, so what
                     // you trace matches the kanji shown everywhere else.
                     Text(kanji.literal)
-                        .font(.kawaiiJP(side * 0.66, weight: .bold, font: jpFont))
+                        .font(.kawaiiJP(side * 0.66, weight: .bold))
                         .japaneseGlyphs()
                         .foregroundStyle(Palette.ink.opacity(0.14))
                     PencilCanvasView(drawing: $writeDrawing).padding(8)
@@ -309,7 +308,7 @@ public struct WorksheetView: View {
                 .padding(.horizontal, 8).padding(.vertical, 3)
                 .background(accent).clipShape(Capsule())
             Text(readings.joined(separator: "、"))
-                .font(.kawaiiJP(16, weight: .semibold, font: jpFont)).foregroundStyle(Palette.ink)
+                .font(.kawaiiJP(16, weight: .semibold)).foregroundStyle(Palette.ink)
         }
     }
 
