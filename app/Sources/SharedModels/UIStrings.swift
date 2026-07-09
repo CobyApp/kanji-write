@@ -169,6 +169,10 @@ public enum L {
         ko: "이 한자의 음독은?", ja: "この漢字の音読みは？", zh: "这个汉字的音读？", en: "On'yomi of this kanji?")
     public static let quizAntonym = L10nText(
         ko: "반대말을 고르세요", ja: "反対語を選ぼう", zh: "选择反义词", en: "Pick the antonym")
+    public static let quizOrthography = L10nText(
+        ko: "한자 표기를 고르세요", ja: "正しい漢字は？", zh: "选择正确的汉字写法", en: "Pick the kanji spelling")
+    public static let quizCloze = L10nText(
+        ko: "빈칸에 들어갈 말은?", ja: "空欄に入る言葉は？", zh: "选择填入空格的词", en: "Fill in the blank")
     public static let quizFirstTry = L10nText(
         ko: "첫 시도 정답", ja: "一発正解", zh: "首次答对", en: "First-try correct")
     public static let quizDone = L10nText(ko: "퀴즈 완료!", ja: "クイズ完了！", zh: "测验完成！", en: "Quiz complete!")
