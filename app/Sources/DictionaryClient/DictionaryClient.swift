@@ -36,6 +36,9 @@ public struct DictionaryClient: Sendable {
     /// Words containing a kanji of the given JLPT level (common first) — the pool
     /// for the reading quiz (questions + distractor readings).
     public var quizWords: @Sendable (_ level: String, _ limit: Int) async throws -> [WordEntry]
+    /// Free-text word search over surface / reading / meaning (any language) —
+    /// for the word dictionary. Common words first.
+    public var searchWords: @Sendable (_ query: String, _ limit: Int) async throws -> [WordEntry]
 }
 
 extension DictionaryClient: TestDependencyKey {

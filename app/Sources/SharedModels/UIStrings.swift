@@ -35,6 +35,13 @@ public enum L {
     public static let browse = L10nText(ko: "목록", ja: "一覧", zh: "列表", en: "Browse")
     public static let today = L10nText(ko: "오늘", ja: "今日", zh: "今天", en: "Today")
     public static let dictionary = L10nText(ko: "사전", ja: "辞書", zh: "词典", en: "Dictionary")
+    public static let kanjiDictionary = L10nText(ko: "한자사전", ja: "漢字辞書", zh: "汉字词典", en: "Kanji dictionary")
+    public static let wordDictionary = L10nText(ko: "단어사전", ja: "単語辞書", zh: "单词词典", en: "Word dictionary")
+    public static let wordSearchPrompt = L10nText(
+        ko: "단어·읽기·뜻으로 검색", ja: "単語・読み・意味で検索", zh: "按单词·读音·意思搜索",
+        en: "Search words, readings, meanings")
+    public static let noWordsFound = L10nText(
+        ko: "단어를 찾을 수 없어요", ja: "単語が見つかりません", zh: "找不到单词", en: "No words found")
     public static let startStudy = L10nText(ko: "학습 시작", ja: "学習を始める", zh: "开始学习", en: "Start studying")
     public static let startPractice = L10nText(ko: "연습하기", ja: "練習する", zh: "去练习", en: "Practice")
     public static let close = L10nText(ko: "닫기", ja: "閉じる", zh: "关闭", en: "Close")
