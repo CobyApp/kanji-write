@@ -220,8 +220,7 @@ public struct WorksheetView: View {
         let glyphSize: CGFloat = sizeClass == .compact ? 150 : 172
         return studyCard(L.readings[appLanguage], "textformat.size.larger", Palette.pink) {
             VStack(spacing: 16) {
-                PastelTile(kanji.literal, soft: Palette.pinkSoft, accent: Palette.pink,
-                           size: glyphSize, fontSize: glyphSize * 0.62)
+                glyphTile(kanji, size: glyphSize)
                     .breathe(1.03)
                 if let meaning = localizedGloss(store.glosses, appLanguage), !meaning.isEmpty {
                     HStack(spacing: 8) {
@@ -242,6 +241,32 @@ public struct WorksheetView: View {
             }
             .frame(maxWidth: .infinity)
         }
+    }
+
+    /// The kanji on a pink pastel tile. Drawn from the KanjiVG stroke paths (the
+    /// same source as the stroke-order guide) so the displayed glyph matches what
+    /// the learner traces — falling back to the font only when no guide exists.
+    private func glyphTile(_ kanji: Kanji, size: CGFloat) -> some View {
+        let corner = min(22, size * 0.3)
+        return ZStack {
+            LinearGradient(colors: [Palette.pinkSoft.opacity(0.65), Palette.pinkSoft],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .top, endPoint: .center)
+            if store.strokePaths.isEmpty {
+                Text(kanji.literal)
+                    .font(.kawaii(size * 0.62, weight: .bold)).japaneseGlyphs()
+                    .foregroundStyle(Palette.ink)
+            } else {
+                GuideStrokes(paths: store.strokePaths, color: Palette.ink,
+                             lineWidth: max(4, size * 0.038))
+                    .padding(size * 0.16)
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay(RoundedRectangle(cornerRadius: corner, style: .continuous)
+            .stroke(Palette.pink.opacity(0.4), lineWidth: 1.5))
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .shadow(color: Palette.pink.opacity(0.28), radius: size * 0.09, y: size * 0.045)
     }
 
     // MARK: Card 2 — stroke order (획순)
@@ -502,11 +527,15 @@ public struct WorksheetView: View {
     }
 }
 
-/// Renders the KanjiVG stroke guide (109x109 viewBox) scaled to fit its square,
-/// shown faintly behind the write canvas.
+/// Renders a kanji from its KanjiVG stroke paths (109x109 viewBox) scaled to fit
+/// its square. Used both as the faint write-canvas guide and as the reading
+/// card's glyph, so the displayed character always matches the stroke-order
+/// form (rather than the font's own glyph design).
 private struct GuideStrokes: View {
     private static let viewBoxSize: CGFloat = 109.0
     let paths: [String]
+    var color: Color = Palette.mint.opacity(0.35)
+    var lineWidth: CGFloat = 3
 
     var body: some View {
         GeometryReader { geo in
@@ -514,7 +543,7 @@ private struct GuideStrokes: View {
             ForEach(Array(paths.enumerated()), id: \.offset) { _, d in
                 SVGPath.path(from: SVGPath.parse(d))
                     .applying(CGAffineTransform(scaleX: scale, y: scale))
-                    .stroke(Palette.mint.opacity(0.35), lineWidth: 3)
+                    .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
             }
         }
     }
