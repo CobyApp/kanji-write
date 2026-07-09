@@ -28,6 +28,72 @@ public struct CircleButton: View {
     }
 }
 
+/// The shared top bar for a pushed screen (dictionaries): a centered title with
+/// a back button on the left, capped to the content width.
+public struct NavHeader<Trailing: View>: View {
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private let title: String
+    private let onBack: () -> Void
+    private let trailing: Trailing
+
+    public init(title: String, onBack: @escaping () -> Void,
+                @ViewBuilder trailing: () -> Trailing = { EmptyView() }) {
+        self.title = title
+        self.onBack = onBack
+        self.trailing = trailing()
+    }
+
+    public var body: some View {
+        ZStack {
+            Text(title)
+                .font(.kawaii(17, weight: .bold, language: appLanguage))
+                .foregroundStyle(Palette.ink)
+            HStack {
+                CircleButton("chevron.left", size: 34, action: onBack)
+                Spacer()
+                trailing
+            }
+        }
+        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 4)
+        .readableWidth(sizeClass)
+    }
+}
+
+/// A rounded search field — used in the dictionaries so search sits within the
+/// capped content width (not the full-width system search bar).
+public struct SearchField: View {
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Binding private var text: String
+    private let placeholder: String
+
+    public init(text: Binding<String>, placeholder: String) {
+        self._text = text
+        self.placeholder = placeholder
+    }
+
+    public var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+            TextField(placeholder, text: $text)
+                .font(.kawaii(15, language: appLanguage))
+                .textFieldStyle(.plain)
+                .autocorrectionDisabled()
+            if !text.isEmpty {
+                Button { text = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15)).foregroundStyle(Palette.inkSoft.opacity(0.5))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .background(Palette.card).clipShape(Capsule())
+        .overlay(Capsule().stroke(Palette.ink.opacity(0.06), lineWidth: 1))
+    }
+}
+
 /// The shared top bar for every full-screen popup (study plan, settings): a
 /// centered title with the close ✕ on the left — one consistent layout.
 public struct OverlayHeader: View {

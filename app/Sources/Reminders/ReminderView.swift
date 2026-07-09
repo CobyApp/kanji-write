@@ -8,7 +8,6 @@ public struct ReminderView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
-    @AppStorage("japaneseFont") private var japaneseFontRaw = JapaneseFont.default.rawValue
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showResetConfirm = false
 
@@ -22,7 +21,6 @@ public struct ReminderView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     languageCard
-                    fontCard
                     reminderCard
                     resetCard
                 }
@@ -58,36 +56,6 @@ public struct ReminderView: View {
                 }
             }
             .pickerStyle(.segmented)
-        }
-        .roundedCard()
-    }
-
-    private var fontCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(L.japaneseFont[appLanguage], accent: Palette.mint)
-            VStack(spacing: 8) {
-                ForEach(JapaneseFont.allCases) { font in
-                    let selected = font.rawValue == japaneseFontRaw
-                    Button { japaneseFontRaw = font.rawValue } label: {
-                        HStack(spacing: 12) {
-                            Text(font.label[appLanguage])
-                                .font(.kawaii(15, weight: .semibold, language: appLanguage))
-                                .foregroundStyle(Palette.ink)
-                            Spacer(minLength: 8)
-                            Text("明日 学生")
-                                .font(.kawaiiJP(20, weight: .bold, font: font))
-                                .foregroundStyle(Palette.inkSoft)
-                            Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(selected ? Palette.mint : Palette.inkSoft.opacity(0.35))
-                        }
-                        .padding(.horizontal, 14).padding(.vertical, 12)
-                        .background(selected ? Palette.mintSoft.opacity(0.6) : Palette.card)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
         }
         .roundedCard()
     }
