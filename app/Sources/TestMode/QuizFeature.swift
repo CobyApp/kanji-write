@@ -4,13 +4,28 @@ import Foundation
 import Review
 import SharedModels
 
-/// The kinds of question the quiz mixes.
+/// The kinds of question the quiz mixes (JLPT 文字・語彙 styles).
 public enum QuizKind: String, Equatable, Sendable {
     case kanjiMeaning   // 한자 → 뜻
     case kanjiReading   // 한자 → 음독(オン)
-    case wordReading    // 단어 → 읽기(かな)
+    case wordReading    // 단어 → 읽기(かな)          — JLPT 漢字読み
+    case orthography    // 읽기(かな) → 한자 표기      — JLPT 表記
     case wordMeaning    // 단어 → 뜻
+    case cloze          // 빈칸 채우기 (예문)          — JLPT 文脈規定
     case antonym        // 단어 → 반대말
+}
+
+/// A fill-in-the-blank prompt: an example sentence with the target word replaced
+/// by a blank, plus the answer (the word's surface) and an optional translation.
+public struct ClozePrompt: Equatable, Sendable {
+    public let blanked: String
+    public let answer: String
+    public let hint: String?
+    public init(blanked: String, answer: String, hint: String?) {
+        self.blanked = blanked
+        self.answer = answer
+        self.hint = hint
+    }
 }
 
 /// One ready-to-show question (prompt + four options, correct answer known).
@@ -64,6 +79,7 @@ public struct QuizFeature {
         case onAppear(language: AppLanguage)
         case loaded(kanji: [Kanji], glosses: [Int: [String: String]],
                     wordByKanji: [Int: WordEntry], antonymByKanji: [Int: AntonymPair],
+                    clozeByKanji: [Int: ClozePrompt],
                     dueWords: [WordEntry], pool: [WordEntry], onPool: [String],
                     records: [QuizRecord], today: Int)
         case chose(String)
@@ -89,7 +105,7 @@ public struct QuizFeature {
             case .restart:
                 return load(state: &state)
 
-            case let .loaded(kanji, glosses, wordByKanji, antonymByKanji, dueWords, pool, onPool, records, today):
+            case let .loaded(kanji, glosses, wordByKanji, antonymByKanji, clozeByKanji, dueWords, pool, onPool, records, today):
                 state.isLoading = false
                 state.today = today
                 state.records = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
@@ -129,6 +145,27 @@ public struct QuizFeature {
                                 id: "wordReading:\(w.id)", kind: .wordReading, prompt: w.surface,
                                 subtitle: wordMeaning(w, lang), answer: w.reading,
                                 options: readingOptions(answer: w.reading, pool: readingPool, using: &rng))
+                        case .orthography:
+                            // Reading → pick the kanji spelling; distractors are other surfaces.
+                            guard let w = wordByKanji[k.id], !w.surface.isEmpty, !w.reading.isEmpty
+                            else { return nil }
+                            let distractors = surfacePool.filter { $0 != w.surface }.shuffled(using: &rng)
+                            var options = [w.surface] + distractors.prefix(3)
+                            options.shuffle(using: &rng)
+                            guard options.count >= 2 else { return nil }
+                            return QuizItem(
+                                id: "orthography:\(k.id)", kind: .orthography, prompt: w.reading,
+                                subtitle: wordMeaning(w, lang), answer: w.surface, options: options)
+                        case .cloze:
+                            // Fill the blank in a real example sentence with the word.
+                            guard let cz = clozeByKanji[k.id], !cz.answer.isEmpty else { return nil }
+                            let distractors = surfacePool.filter { $0 != cz.answer }.shuffled(using: &rng)
+                            var options = [cz.answer] + distractors.prefix(3)
+                            options.shuffle(using: &rng)
+                            guard options.count >= 2 else { return nil }
+                            return QuizItem(
+                                id: "cloze:\(k.id)", kind: .cloze, prompt: cz.blanked,
+                                subtitle: cz.hint, answer: cz.answer, options: options)
                         case .wordMeaning:
                             guard let w = wordByKanji[k.id], !w.surface.isEmpty,
                                   let answer = wordMeaning(w, lang), !answer.isEmpty else { return nil }
@@ -163,7 +200,10 @@ public struct QuizFeature {
                     // session mixes meaning / word-reading / on'yomi / antonym /
                     // word-meaning, falling back to the next kind when the preferred
                     // one has no (active) data for that kanji.
-                    let order: [QuizKind] = [.kanjiMeaning, .wordReading, .kanjiReading, .antonym, .wordMeaning]
+                    let order: [QuizKind] = [
+                        .kanjiMeaning, .wordReading, .cloze, .kanjiReading,
+                        .orthography, .antonym, .wordMeaning,
+                    ]
                     for (i, k) in kanji.enumerated() {
                         for offset in 0..<order.count {
                             if let item = build(order[(i + offset) % order.count], k), isActive(item) {
@@ -239,6 +279,7 @@ public struct QuizFeature {
         state.isLoading = true
         state.started = false
         let level = state.level
+        let lang = state.language
         return .run { send in
             let today = Int(date.now.timeIntervalSince1970 / 86_400)
             // Read the kanji SRS fresh from disk (a study session may have just
@@ -255,7 +296,8 @@ public struct QuizFeature {
                 let parts = record.id.split(separator: ":")
                 guard parts.count == 2, let eid = Int(parts[1]) else { continue }
                 switch parts[0] {
-                case "kanjiMeaning", "kanjiReading", "antonym": dueKanji.insert(eid)
+                case "kanjiMeaning", "kanjiReading", "antonym", "cloze", "orthography":
+                    dueKanji.insert(eid)
                 case "wordReading", "wordMeaning": dueWords.insert(eid)
                 default: break
                 }
@@ -270,16 +312,29 @@ public struct QuizFeature {
             // asks a single, varied question per kanji.
             var wordByKanji: [Int: WordEntry] = [:]
             var antonymByKanji: [Int: AntonymPair] = [:]
+            var clozeByKanji: [Int: ClozePrompt] = [:]
             for k in contextKanji {
-                if let w = (try? await dictionaryClient.words(k.id, 1))?.first { wordByKanji[k.id] = w }
+                let word = (try? await dictionaryClient.words(k.id, 1))?.first
+                if let w = word { wordByKanji[k.id] = w }
                 if let a = (try? await dictionaryClient.antonyms(k.id, 4))?.first { antonymByKanji[k.id] = a }
+                // Cloze: find an example sentence containing the word verbatim,
+                // then blank the word out.
+                if let w = word, !w.surface.isEmpty,
+                   let sentences = try? await dictionaryClient.sentencesForWord(w.id, 4),
+                   let s = sentences.first(where: { $0.textJa.contains(w.surface) }) {
+                    clozeByKanji[k.id] = ClozePrompt(
+                        blanked: s.textJa.replacingOccurrences(of: w.surface, with: "＿＿"),
+                        answer: w.surface,
+                        hint: localizedText(s.translations, lang))
+                }
             }
             // Due review words (surfaced by id) → keep spaced-repetition coverage.
             var dueWordEntries: [WordEntry] = []
             for wid in dueWords { if let w = try? await dictionaryClient.word(wid) { dueWordEntries.append(w) } }
             let pool = (try? await dictionaryClient.quizWords(level, 300)) ?? []
             await send(.loaded(kanji: contextKanji, glosses: glosses, wordByKanji: wordByKanji,
-                               antonymByKanji: antonymByKanji, dueWords: dueWordEntries, pool: pool,
+                               antonymByKanji: antonymByKanji, clozeByKanji: clozeByKanji,
+                               dueWords: dueWordEntries, pool: pool,
                                onPool: onPool, records: records, today: today))
         }
     }

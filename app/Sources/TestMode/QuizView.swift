@@ -64,8 +64,7 @@ public struct QuizView: View {
             Text(promptLabel(item.kind))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             Text(item.prompt)
-                .font(.kawaii(item.kind == .kanjiMeaning || item.kind == .kanjiReading ? 60 : 40,
-                              weight: .bold))
+                .font(.kawaii(promptSize(item.kind), weight: .bold))
                 .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
             if let subtitle = item.subtitle, !subtitle.isEmpty {
                 Text(subtitle)
@@ -76,12 +75,24 @@ public struct QuizView: View {
         .roundedCard()
     }
 
+    /// Big single glyph for kanji prompts; small wrapping text for the cloze
+    /// sentence; medium for words / readings.
+    private func promptSize(_ kind: QuizKind) -> CGFloat {
+        switch kind {
+        case .kanjiMeaning, .kanjiReading: 60
+        case .cloze: 24
+        default: 40
+        }
+    }
+
     private func promptLabel(_ kind: QuizKind) -> String {
         switch kind {
         case .kanjiMeaning: L.quizKanjiMeaning[appLanguage]
         case .kanjiReading: L.quizKanjiReading[appLanguage]
         case .wordReading: L.quizWordReading[appLanguage]
+        case .orthography: L.quizOrthography[appLanguage]
         case .wordMeaning: L.quizWordMeaning[appLanguage]
+        case .cloze: L.quizCloze[appLanguage]
         case .antonym: L.quizAntonym[appLanguage]
         }
     }

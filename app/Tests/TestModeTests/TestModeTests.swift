@@ -102,6 +102,7 @@ final class QuizFeatureTests: XCTestCase {
             $0.dictionaryClient.words = { _, _ in [self.word(10, "山", "やま")] }
             $0.dictionaryClient.word = { _ in nil }
             $0.dictionaryClient.antonyms = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
             $0.dictionaryClient.quizWords = { _, _ in [self.word(11, "川", "かわ"), self.word(12, "水", "みず")] }
         }
         store.exhaustivity = .off
@@ -134,6 +135,7 @@ final class QuizFeatureTests: XCTestCase {
             $0.dictionaryClient.words = { id, _ in [self.word(id * 10, "語\(id)", "ご\(id)")] }
             $0.dictionaryClient.word = { _ in nil }
             $0.dictionaryClient.antonyms = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
             $0.dictionaryClient.quizWords = { _, _ in (6...20).map { self.word($0, "W\($0)", "わ\($0)") } }
         }
         store.exhaustivity = .off
@@ -164,6 +166,7 @@ final class QuizFeatureTests: XCTestCase {
             $0.dictionaryClient.words = { _, _ in [self.word(10, "山", "やま")] }
             $0.dictionaryClient.word = { _ in nil }
             $0.dictionaryClient.antonyms = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
             $0.dictionaryClient.quizWords = { _, _ in [self.word(11, "川", "かわ"), self.word(12, "水", "みず")] }
         }
         store.exhaustivity = .off
