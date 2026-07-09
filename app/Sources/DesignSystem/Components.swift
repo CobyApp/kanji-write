@@ -72,6 +72,7 @@ public struct PastelTile: View {
         let corner = min(22, size * 0.3)
         return Text(glyph)
             .font(.kawaii(fontSize, weight: .bold))
+            .japaneseGlyphs()
             .foregroundStyle(Palette.ink)
             .frame(width: size, height: size)
             .background {

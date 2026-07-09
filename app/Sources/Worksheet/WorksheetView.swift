@@ -274,6 +274,7 @@ public struct WorksheetView: View {
                         // No guide available → show the glyph faintly to trace.
                         Text(kanji.literal)
                             .font(.system(size: side * 0.6, weight: .light))
+                            .japaneseGlyphs()
                             .foregroundStyle(Palette.ink.opacity(0.12))
                     } else {
                         GuideStrokes(paths: store.strokePaths).padding(18)
