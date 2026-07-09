@@ -158,11 +158,17 @@ public struct WorksheetView: View {
         }
     }
 
-    /// Centers a card in the available space. No internal scrolling — content is
-    /// kept short enough to fit (lists are capped).
+    /// Centers a card, and lets long content (e.g. the word card) scroll — with
+    /// the scroll indicator hidden so it stays clean.
     private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
-        body()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        GeometryReader { geo in
+            ScrollView {
+                body()
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geo.size.height, alignment: .center)
+            }
+            .scrollIndicators(.hidden)
+        }
     }
 
     /// Shared card chrome: an icon+title header in the card's accent, content
@@ -327,7 +333,7 @@ public struct WorksheetView: View {
                         .font(.kawaii(13, weight: .bold, language: appLanguage))
                         .foregroundStyle(Palette.inkSoft)
                 }
-                ForEach(words.prefix(3)) { word in wordRow(word, accent) }
+                ForEach(words.prefix(4)) { word in wordRow(word, accent) }
             }
         }
     }
@@ -365,7 +371,7 @@ public struct WorksheetView: View {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             } else {
                 VStack(spacing: 12) {
-                    ForEach(store.sentences.prefix(2)) { sentence in
+                    ForEach(store.sentences) { sentence in
                         HStack(alignment: .top, spacing: 8) {
                             VStack(alignment: .leading, spacing: 4) {
                                 RubyText(sentence.textJa, size: 20)
