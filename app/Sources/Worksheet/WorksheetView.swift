@@ -92,18 +92,19 @@ public struct WorksheetView: View {
         } else if let kanji = store.current {
             VStack(spacing: 12) {
                 deckHeader
-                TabView(selection: $card) {
-                    cardShell { meaningCard(kanji) }.tag(0)
-                    cardShell { strokeCard(kanji) }.tag(1)
-                    if showWrite {
-                        cardShell { writeCard(kanji) }.tag(2)
-                    }
-                    cardShell { wordCard }.tag(showWrite ? 3 : 2)
-                    cardShell { exampleCard }.tag(showWrite ? 4 : 3)
+                // One card at a time (prev·next / arrow keys drive it — no swipe,
+                // which also frees the write canvas from a page-swipe conflict).
+                // Cards cross-fade + pop instead of sliding.
+                ZStack {
+                    cardShell { currentCard(kanji) }
+                        .id(card)
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.90).combined(with: .opacity),
+                            removal: .scale(scale: 1.04).combined(with: .opacity)))
                 }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                // Reset to the first card on a new kanji WITHOUT animating (avoids a
-                // long multi-page slide-back), and clear the previous tracing.
+                .animation(.spring(response: 0.34, dampingFraction: 0.82), value: card)
+                // Reset to the first card on a new kanji WITHOUT animating, and
+                // clear the previous tracing.
                 .onChange(of: store.index) { _, _ in
                     var t = Transaction(); t.disablesAnimations = true
                     withTransaction(t) { card = 0 }
@@ -144,16 +145,24 @@ public struct WorksheetView: View {
         }
     }
 
-    /// Each card: a title + its content in a scrollable rounded card that fills
-    /// the page (so long content still scrolls within the card).
-    private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
-        GeometryReader { geo in
-            ScrollView {
-                body()
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: geo.size.height, alignment: .center)
-            }
+    /// The card for the current step. Card indices: 0 meaning, 1 stroke, then
+    /// (iPad only) 2 write; word and example follow, shifted by the write card.
+    @ViewBuilder
+    private func currentCard(_ kanji: Kanji) -> some View {
+        switch card {
+        case 0: meaningCard(kanji)
+        case 1: strokeCard(kanji)
+        case 2: if showWrite { writeCard(kanji) } else { wordCard }
+        case 3: if showWrite { wordCard } else { exampleCard }
+        default: exampleCard
         }
+    }
+
+    /// Centers a card in the available space. No internal scrolling — content is
+    /// kept short enough to fit (lists are capped).
+    private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
+        body()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     /// Shared card chrome: an icon+title header in the card's accent, content
@@ -318,7 +327,7 @@ public struct WorksheetView: View {
                         .font(.kawaii(13, weight: .bold, language: appLanguage))
                         .foregroundStyle(Palette.inkSoft)
                 }
-                ForEach(words.prefix(4)) { word in wordRow(word, accent) }
+                ForEach(words.prefix(3)) { word in wordRow(word, accent) }
             }
         }
     }
@@ -356,7 +365,7 @@ public struct WorksheetView: View {
                 Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
             } else {
                 VStack(spacing: 12) {
-                    ForEach(store.sentences) { sentence in
+                    ForEach(store.sentences.prefix(2)) { sentence in
                         HStack(alignment: .top, spacing: 8) {
                             VStack(alignment: .leading, spacing: 4) {
                                 RubyText(sentence.textJa, size: 20)
