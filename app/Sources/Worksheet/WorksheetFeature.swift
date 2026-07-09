@@ -28,6 +28,7 @@ public struct CardContent: Equatable, Sendable {
     public var sentences: [ExampleSentence]
     public var strokePaths: [String]
     public var glosses: [String: String]
+    public var verbs: [WordEntry] = []
 }
 
 @Reducer
@@ -63,6 +64,8 @@ public struct WorksheetFeature {
         public var strokePaths: [String] { currentContent?.strokePaths ?? [] }
         /// Raw gloss map (lang code → meaning) for the current kanji.
         public var glosses: [String: String] { currentContent?.glosses ?? [:] }
+        /// Verbs formed with the current kanji (for the 활용 card).
+        public var verbs: [WordEntry] { currentContent?.verbs ?? [] }
         /// Never-seen kanji remaining in the target level (for the finish estimate).
         public var remaining = 0
         public var isLoading = false
@@ -177,10 +180,12 @@ public struct WorksheetFeature {
                 async let wordsTask = try? await dictionaryClient.words(id, 8)
                 async let sentencesTask = try? await dictionaryClient.sentences(id, 3)
                 async let glossesTask = try? await dictionaryClient.glosses(id)
+                async let verbsTask = try? await dictionaryClient.verbs(id, 6)
                 let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
                 result[id] = CardContent(
                     words: await wordsTask ?? [], sentences: await sentencesTask ?? [],
-                    strokePaths: paths, glosses: await glossesTask ?? [:])
+                    strokePaths: paths, glosses: await glossesTask ?? [:],
+                    verbs: await verbsTask ?? [])
             }
             await send(.contentLoaded(result))
         }
