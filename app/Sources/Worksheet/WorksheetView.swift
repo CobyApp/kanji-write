@@ -54,8 +54,22 @@ public struct WorksheetView: View {
     /// The write card (trace over the stroke guide) is an Apple-Pencil activity,
     /// so it's only part of the deck on iPad.
     private var showWrite: Bool { Platform.isPad }
-    /// Index of the last card in the deck: 4 with the write card, else 3.
-    private var lastCard: Int { showWrite ? 4 : 3 }
+
+    /// The kinds of study card, in deck order.
+    private enum Step: Equatable { case meaning, stroke, write, word, verbs, example }
+
+    /// The deck for the current kanji: meaning → stroke → (iPad) write → words →
+    /// (if any) verbs → example. Cards that have no content are skipped.
+    private var steps: [Step] {
+        var s: [Step] = [.meaning, .stroke]
+        if showWrite { s.append(.write) }
+        s.append(.word)
+        if !store.verbs.isEmpty { s.append(.verbs) }
+        s.append(.example)
+        return s
+    }
+    /// Index of the last card in the deck.
+    private var lastCard: Int { max(0, steps.count - 1) }
 
     public init(store: StoreOf<WorksheetFeature>) {
         self.store = store
@@ -136,7 +150,7 @@ public struct WorksheetView: View {
                     .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             }
             HStack(spacing: 6) {
-                ForEach(0..<(lastCard + 1), id: \.self) { i in
+                ForEach(0..<steps.count, id: \.self) { i in
                     Capsule()
                         .fill(i <= min(card, lastCard) ? Palette.pink : Palette.pinkSoft)
                         .frame(height: 5)
@@ -145,16 +159,16 @@ public struct WorksheetView: View {
         }
     }
 
-    /// The card for the current step. Card indices: 0 meaning, 1 stroke, then
-    /// (iPad only) 2 write; word and example follow, shifted by the write card.
+    /// The card for the current step (from the dynamic `steps` deck).
     @ViewBuilder
     private func currentCard(_ kanji: Kanji) -> some View {
-        switch card {
-        case 0: meaningCard(kanji)
-        case 1: strokeCard(kanji)
-        case 2: if showWrite { writeCard(kanji) } else { wordCard }
-        case 3: if showWrite { wordCard } else { exampleCard }
-        default: exampleCard
+        switch steps[min(card, lastCard)] {
+        case .meaning: meaningCard(kanji)
+        case .stroke: strokeCard(kanji)
+        case .write: writeCard(kanji)
+        case .word: wordCard
+        case .verbs: verbsCard
+        case .example: exampleCard
         }
     }
 
@@ -360,6 +374,20 @@ public struct WorksheetView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.bouncy)
+    }
+
+    // MARK: Conjugation — verbs formed with the kanji (활용)
+
+    /// The verbs built from this kanji (e.g. 開く 열리다 / 開ける 열다), so the
+    /// learner sees how the same kanji inflects across different verbs. Shown
+    /// only when the kanji actually forms verbs (see `steps`).
+    @ViewBuilder
+    private var verbsCard: some View {
+        studyCard(L.worksheetVerbs[appLanguage], "arrow.triangle.branch", Palette.butter) {
+            VStack(spacing: 12) {
+                ForEach(store.verbs) { verb in wordRow(verb, Palette.butter) }
+            }
+        }
     }
 
     // MARK: Card 4 — example sentences (예문)

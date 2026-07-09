@@ -17,6 +17,9 @@ public struct DictionaryClient: Sendable {
     /// screens that show each kanji's meaning without an N+1 per-row fetch.
     public var allGlosses: @Sendable () async throws -> [Int: [String: String]]
     public var words: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [WordEntry]
+    /// Verbs formed with a kanji (surface ends in kana okurigana, reading ends
+    /// in a う-row mora) — for the study "활용" card (e.g. 開く / 開ける).
+    public var verbs: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [WordEntry]
     public var sentences: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [ExampleSentence]
     public var relations: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [RelationEntry]
     /// Antonym pairs whose prompt word contains the given kanji — for the
