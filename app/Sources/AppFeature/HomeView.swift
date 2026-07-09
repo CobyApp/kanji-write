@@ -97,14 +97,20 @@ struct HomeView: View {
                 .padding(.bottom, 40)
                 .readableWidth(sizeClass)
             }
-            // Settings opens from a round button in the top-right corner — the
-            // same CircleButton style as every close ✕ (in-content, so it always
-            // responds on Mac Catalyst).
-            CircleButton("gearshape") { store.send(.setShowSettings(true)) }
-                .accessibilityLabel(L.settings[appLanguage])
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
-                .padding(.top, 8)
-                .padding(.trailing, 16)
+            // Settings opens from a round button aligned to the top-right of the
+            // capped content (not the screen edge). Same CircleButton style as
+            // every close ✕; in-content so it responds on Mac Catalyst.
+            VStack {
+                HStack {
+                    Spacer()
+                    CircleButton("gearshape") { store.send(.setShowSettings(true)) }
+                        .accessibilityLabel(L.settings[appLanguage])
+                }
+                .padding(.horizontal, sizeClass == .compact ? 18 : 26)
+                .readableWidth(sizeClass)
+                Spacer()
+            }
+            .padding(.top, 8)
             // The plan editor is a full-screen in-app overlay (same style as
             // settings). In-content buttons respond reliably on Mac Catalyst.
             if showPlan { planOverlay.zIndex(1) }

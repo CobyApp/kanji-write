@@ -32,6 +32,7 @@ public struct CircleButton: View {
 /// centered title with the close ✕ on the left — one consistent layout.
 public struct OverlayHeader: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
     private let title: String
     private let onClose: () -> Void
 
@@ -50,9 +51,12 @@ public struct OverlayHeader: View {
                 Spacer()
             }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 6)
+        // Keep the ✕ / title aligned to the capped content width, not the screen
+        // edge, so they line up with the body on wide iPad / Mac windows.
+        .readableWidth(sizeClass)
         .background(Palette.background)
     }
 }

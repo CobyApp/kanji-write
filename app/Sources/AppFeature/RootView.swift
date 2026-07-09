@@ -77,6 +77,7 @@ private struct SessionCover: View {
     @Bindable var store: StoreOf<RootFeature>
     let sessionStore: StoreOf<RootFeature.Session>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         NavigationStack(path: $store.scope(state: \.sessionPath, action: \.sessionPath)) {
@@ -88,7 +89,9 @@ private struct SessionCover: View {
                             .accessibilityLabel(L.close[appLanguage])
                         Spacer()
                     }
-                    .padding(.horizontal, 14).padding(.top, 6).padding(.bottom, 2)
+                    .padding(.horizontal, 16)
+                    .readableWidth(sizeClass)
+                    .padding(.top, 6).padding(.bottom, 2)
                 }
         } destination: { store in
             pathDestination(store)
