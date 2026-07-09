@@ -360,9 +360,11 @@ struct HomeView: View {
     }
 
     private var wordDictionaryButton: some View {
+        // Butter so each launcher owns a distinct hue (pink · lavender · mint ·
+        // sky · butter) — no two tiles share a color.
         launcher(icon: "text.book.closed", title: L.wordDictionary[appLanguage],
                  subtitle: L.wordSearchPrompt[appLanguage], count: nil,
-                 soft: Palette.lavenderSoft, accent: Palette.lavender) { store.send(.openWordDictionary) }
+                 soft: Palette.butterSoft, accent: Palette.butter) { store.send(.openWordDictionary) }
     }
 
     private func launcher(
