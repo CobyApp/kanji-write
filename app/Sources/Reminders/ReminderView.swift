@@ -8,6 +8,7 @@ public struct ReminderView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showResetConfirm = false
 
     public init(store: StoreOf<ReminderFeature>) {
@@ -24,6 +25,7 @@ public struct ReminderView: View {
                     resetCard
                 }
                 .padding(16)
+                .readableWidth(sizeClass)
             }
         }
         .navigationTitle(L.settings[appLanguage])

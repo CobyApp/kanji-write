@@ -87,8 +87,7 @@ public struct WorksheetView: View {
             // Cap the width like the home screen so cards aren't over-wide on
             // iPad / Mac; centered.
             content
-                .frame(maxWidth: sizeClass == .compact ? 560 : 900)
-                .frame(maxWidth: .infinity)
+                .readableWidth(sizeClass)
         }
         .navigationTitle(L.study[appLanguage])
         .navigationBarTitleDisplayMode(.inline)

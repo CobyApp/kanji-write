@@ -95,8 +95,7 @@ struct HomeView: View {
                 .padding(.horizontal, sizeClass == .compact ? 18 : 26)
                 .padding(.top, 8)
                 .padding(.bottom, 40)
-                .frame(maxWidth: sizeClass == .compact ? 560 : 900)
-                .frame(maxWidth: .infinity)
+                .readableWidth(sizeClass)
             }
             // The plan editor is an in-app overlay, NOT a sheet: buttons inside
             // Mac Catalyst modal presentations are unreliable, while plain buttons

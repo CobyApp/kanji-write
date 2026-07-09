@@ -6,6 +6,7 @@ import SwiftUI
 public struct QuizView: View {
     @Bindable public var store: StoreOf<QuizFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<QuizFeature>) {
         self.store = store
@@ -34,6 +35,7 @@ public struct QuizView: View {
                     if store.answered { nextButton }
                 }
                 .padding(16)
+                .readableWidth(sizeClass)
                 .animation(.spring(response: 0.3, dampingFraction: 0.85), value: store.answered)
                 .animation(.easeInOut, value: store.current?.id)
             }
