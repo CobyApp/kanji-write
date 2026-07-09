@@ -164,6 +164,7 @@ func wordMeaningText(_ word: WordEntry, _ language: AppLanguage) -> String? {
 private struct DictionaryPathView: View {
     @Bindable var store: StoreOf<DictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
@@ -199,6 +200,7 @@ private struct DictionaryPathView: View {
                         }
                     }
                     .padding(16)
+                    .readableWidth(sizeClass)
                 }
             }
         }
@@ -215,6 +217,7 @@ private struct DictionaryPathView: View {
 private struct WordDictionaryView: View {
     @Bindable var store: StoreOf<WordDictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
@@ -235,6 +238,7 @@ private struct WordDictionaryView: View {
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 16).padding(.top, 12)
+                    .readableWidth(sizeClass)
                     wordList(store.words)
                 }
             }
@@ -274,6 +278,7 @@ private struct WordDictionaryView: View {
                 }
             }
             .padding(16)
+            .readableWidth(sizeClass)
         }
         .scrollIndicators(.hidden)
     }
@@ -297,6 +302,7 @@ struct KanjiCardList: View {
     var glosses: [Int: [String: String]] = [:]
     let onSelect: (Kanji) -> Void
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         ZStack {
@@ -335,6 +341,7 @@ struct KanjiCardList: View {
                     }
                 }
                 .padding(16)
+                .readableWidth(sizeClass)
             }
         }
     }

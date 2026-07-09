@@ -7,6 +7,7 @@ import WritingCanvas
 public struct WordDetailView: View {
     @Bindable public var store: StoreOf<WordDetailFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<WordDetailFeature>) {
         self.store = store
@@ -24,6 +25,7 @@ public struct WordDetailView: View {
                     if !store.sentences.isEmpty { sentencesSection.popIn(delay: 0.22) }
                 }
                 .padding(16)
+                .readableWidth(sizeClass)
             }
         }
         .navigationTitle(store.word.surface)

@@ -42,6 +42,7 @@ public struct PracticeView: View {
                     }
                 }
                 .padding(16)
+                .readableWidth(sizeClass)
             }
         }
         .navigationTitle(L.practice[appLanguage])

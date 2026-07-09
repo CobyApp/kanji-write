@@ -7,6 +7,7 @@ import WritingCanvas
 public struct KanjiDetailView: View {
     @Bindable public var store: StoreOf<KanjiDetailFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<KanjiDetailFeature>) {
         self.store = store
@@ -25,6 +26,7 @@ public struct KanjiDetailView: View {
                     if !store.relations.isEmpty { relationsSection.popIn(delay: 0.34) }
                 }
                 .padding(16)
+                .readableWidth(sizeClass)
             }
         }
         .navigationTitle(store.kanji.literal)
