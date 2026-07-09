@@ -8,7 +8,7 @@ public struct ReminderView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
-    @AppStorage("japaneseFont") private var japaneseFontRaw = JapaneseFont.zenMaru.rawValue
+    @AppStorage("japaneseFont") private var japaneseFontRaw = JapaneseFont.default.rawValue
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showResetConfirm = false
 

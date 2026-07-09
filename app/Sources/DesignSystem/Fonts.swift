@@ -60,7 +60,7 @@ extension Font {
 // MARK: - Japanese-font environment
 
 private struct JapaneseFontKey: EnvironmentKey {
-    static let defaultValue: JapaneseFont = .zenMaru
+    static let defaultValue: JapaneseFont = .default
 }
 
 extension EnvironmentValues {
