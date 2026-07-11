@@ -34,10 +34,11 @@ private struct TraceCell: View {
                     .minimumScaleFactor(0.01)
                     .lineLimit(1)
                     .foregroundStyle(Palette.ink.opacity(0.2))
-                    .padding(4)
-                    // CJK glyphs sit small inside their line box; scale up a touch
-                    // (the cell clips) so the character fills the cell, balanced.
-                    .scaleEffect(1.18)
+                    // Generous inset so the faint guide glyph sits well inside the
+                    // cell — a tight scale used to push complex kanji past the
+                    // rounded border/guide lines and read as overflow.
+                    .padding(12)
+                    .scaleEffect(1.0)
             }
             PencilCanvasView(drawing: $drawing)
         }
