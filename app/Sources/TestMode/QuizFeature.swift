@@ -4,51 +4,38 @@ import Foundation
 import Review
 import SharedModels
 
-/// The kinds of question the quiz mixes (JLPT 文字・語彙 styles).
-public enum QuizKind: String, Equatable, Sendable {
-    case kanjiMeaning   // 한자 → 뜻
-    case kanjiReading   // 한자 → 음독(オン)
-    case wordReading    // 단어 → 읽기(かな)          — JLPT 漢字読み
-    case orthography    // 읽기(かな) → 한자 표기      — JLPT 表記
-    case wordMeaning    // 단어 → 뜻
-    case cloze          // 빈칸 채우기 (예문)          — JLPT 文脈規定
-    case antonym        // 단어 → 반대말
-}
+/// One ready-to-show question, adapted from a pre-authored `JLPTQuestion`. The
+/// `id` embeds the kanji so a due review question can be re-fetched by its kanji.
+public struct QuizItem: Equatable, Identifiable, Sendable {
+    public let id: String        // "q:<kanjiID>:<questionID>" — stable for SRS
+    public let kanjiID: Int
+    public let kind: String      // "reading" | "orthography" | "context"
+    public let prompt: String
+    public let options: [String]
+    public let answer: String    // the correct option's text
+    public let explanation: String?
 
-/// A fill-in-the-blank prompt: an example sentence with the target word replaced
-/// by a blank, plus the answer (the word's surface) and an optional translation.
-public struct ClozePrompt: Equatable, Sendable {
-    public let blanked: String
-    public let answer: String
-    public let hint: String?
-    public init(blanked: String, answer: String, hint: String?) {
-        self.blanked = blanked
-        self.answer = answer
-        self.hint = hint
+    init(_ q: JLPTQuestion) {
+        self.id = "q:\(q.kanjiID):\(q.id)"
+        self.kanjiID = q.kanjiID
+        self.kind = q.kind
+        self.prompt = q.prompt
+        self.options = q.options
+        self.answer = q.options.indices.contains(q.answer) ? q.options[q.answer] : (q.options.first ?? "")
+        self.explanation = q.explanation
     }
 }
 
-/// One ready-to-show question (prompt + four options, correct answer known).
-public struct QuizItem: Equatable, Identifiable, Sendable {
-    public let id: String        // "<kind>:<entityID>" — stable for SRS
-    public let kind: QuizKind
-    public let prompt: String    // kanji glyph or word surface
-    public let subtitle: String? // a hint (word meaning / reading)
-    public let answer: String
-    public let options: [String]
-}
-
-/// A learn-what-you-studied quiz. It mixes question types (kanji meaning, word
-/// reading, word meaning) over today's kanji + any items whose spaced-repetition
-/// review is due. It loops in phases — wrong answers requeue until every item is
-/// answered correctly — and records each item's first-try result to schedule its
-/// next appearance (Leitner: 1 · 3 · 7 · 14 · 30 · 60 days).
+/// A learn-what-you-studied quiz built from the offline JLPT question bank. It
+/// serves questions for today's studied kanji (new material) woven together with
+/// any questions whose spaced-repetition review is due. Wrong answers requeue
+/// until every item is cleared (mastery loop), and each item's first-try result
+/// schedules its next appearance (Leitner: 1 · 3 · 7 · 14 · 30 · 60 days).
 @Reducer
 public struct QuizFeature {
     @ObservableState
     public struct State: Equatable {
         public var level: String
-        public var kanjiIDs: [Int]
         public var language: AppLanguage
         public var today = 0
         public var records: [String: QuizRecord] = [:]
@@ -63,25 +50,21 @@ public struct QuizFeature {
         public var started = false
         public var isLoading = false
 
-        public init(level: String, kanjiIDs: [Int] = [], language: AppLanguage = .ko) {
+        public init(level: String, language: AppLanguage = .ko) {
             self.level = level
-            self.kanjiIDs = kanjiIDs
             self.language = language
         }
 
         public var current: QuizItem? { queue.first }
         public var isFinished: Bool { started && queue.isEmpty }
         public var answered: Bool { chosen != nil }
+        public var isCorrect: Bool { chosen == current?.answer }
         public var isRetry: Bool { current.map { missed.contains($0.id) } ?? false }
     }
 
     public enum Action: Equatable {
         case onAppear(language: AppLanguage)
-        case loaded(kanji: [Kanji], glosses: [Int: [String: String]],
-                    wordByKanji: [Int: WordEntry], antonymByKanji: [Int: AntonymPair],
-                    clozeByKanji: [Int: ClozePrompt],
-                    dueWords: [WordEntry], pool: [WordEntry], onPool: [String],
-                    records: [QuizRecord], today: Int)
+        case loaded(questions: [JLPTQuestion], studied: [Int], records: [QuizRecord], today: Int)
         case chose(String)
         case next
         case restart
@@ -105,136 +88,31 @@ public struct QuizFeature {
             case .restart:
                 return load(state: &state)
 
-            case let .loaded(kanji, glosses, wordByKanji, antonymByKanji, clozeByKanji, dueWords, pool, onPool, records, today):
+            case let .loaded(questions, studied, records, today):
                 state.isLoading = false
                 state.today = today
                 state.records = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-                let lang = state.language
+                let studiedSet = Set(studied)
                 var items: [QuizItem] = []
                 withRandomNumberGenerator { rng in
-                    let kanjiMeaningPool = glosses.values.compactMap { localizedText($0, lang) }
-                        .filter { !$0.isEmpty }
-                    let readingPool = Set(pool.map(\.reading)).filter { !$0.isEmpty }
-                    let meaningPool = pool.compactMap { wordMeaning($0, lang) }.filter { !$0.isEmpty }
-                    let surfacePool = Array(Set(pool.map(\.surface)).filter { !$0.isEmpty })
-                    let onDistractPool = onPool.filter { !$0.isEmpty }
-
-                    // Build one question of a given kind for a kanji, or nil when
-                    // that kind has no usable data for it.
-                    func build(_ kind: QuizKind, _ k: Kanji) -> QuizItem? {
-                        switch kind {
-                        case .kanjiMeaning:
-                            guard let answer = localizedText(glosses[k.id] ?? [:], lang), !answer.isEmpty
-                            else { return nil }
-                            return QuizItem(
-                                id: "kanjiMeaning:\(k.id)", kind: .kanjiMeaning, prompt: k.literal,
-                                subtitle: nil, answer: answer,
-                                options: choiceOptions(answer: answer, pool: kanjiMeaningPool, using: &rng))
-                        case .kanjiReading:
-                            // On'yomi (clean katakana) → distractors are other kanji's on'yomi.
-                            guard let answer = k.onReadings.first(where: { !$0.isEmpty }) else { return nil }
-                            let options = choiceOptions(answer: answer, pool: onDistractPool, using: &rng)
-                            guard options.count >= 2 else { return nil }
-                            return QuizItem(
-                                id: "kanjiReading:\(k.id)", kind: .kanjiReading, prompt: k.literal,
-                                subtitle: nil, answer: answer, options: options)
-                        case .wordReading:
-                            guard let w = wordByKanji[k.id], !w.surface.isEmpty, !w.reading.isEmpty
-                            else { return nil }
-                            return QuizItem(
-                                id: "wordReading:\(w.id)", kind: .wordReading, prompt: w.surface,
-                                subtitle: wordMeaning(w, lang), answer: w.reading,
-                                options: readingOptions(answer: w.reading, pool: readingPool, using: &rng))
-                        case .orthography:
-                            // Reading → pick the kanji spelling; distractors are other surfaces.
-                            guard let w = wordByKanji[k.id], !w.surface.isEmpty, !w.reading.isEmpty
-                            else { return nil }
-                            let distractors = surfacePool.filter { $0 != w.surface }.shuffled(using: &rng)
-                            var options = [w.surface] + distractors.prefix(3)
-                            options.shuffle(using: &rng)
-                            guard options.count >= 2 else { return nil }
-                            return QuizItem(
-                                id: "orthography:\(k.id)", kind: .orthography, prompt: w.reading,
-                                subtitle: wordMeaning(w, lang), answer: w.surface, options: options)
-                        case .cloze:
-                            // Fill the blank in a real example sentence with the word.
-                            guard let cz = clozeByKanji[k.id], !cz.answer.isEmpty else { return nil }
-                            let distractors = surfacePool.filter { $0 != cz.answer }.shuffled(using: &rng)
-                            var options = [cz.answer] + distractors.prefix(3)
-                            options.shuffle(using: &rng)
-                            guard options.count >= 2 else { return nil }
-                            return QuizItem(
-                                id: "cloze:\(k.id)", kind: .cloze, prompt: cz.blanked,
-                                subtitle: cz.hint, answer: cz.answer, options: options)
-                        case .wordMeaning:
-                            guard let w = wordByKanji[k.id], !w.surface.isEmpty,
-                                  let answer = wordMeaning(w, lang), !answer.isEmpty else { return nil }
-                            return QuizItem(
-                                id: "wordMeaning:\(w.id)", kind: .wordMeaning,
-                                prompt: "\(w.surface)（\(w.reading)）", subtitle: nil, answer: answer,
-                                options: choiceOptions(answer: answer, pool: meaningPool, using: &rng))
-                        case .antonym:
-                            guard let pair = antonymByKanji[k.id], !pair.answerSurface.isEmpty
-                            else { return nil }
-                            let distractors = surfacePool
-                                .filter { $0 != pair.answerSurface && $0 != pair.promptSurface }
-                                .shuffled(using: &rng)
-                            var options = [pair.answerSurface] + distractors.prefix(3)
-                            options.shuffle(using: &rng)
-                            guard options.count >= 2 else { return nil }
-                            return QuizItem(
-                                id: "antonym:\(k.id)", kind: .antonym,
-                                prompt: "\(pair.promptSurface)（\(pair.promptReading)）", subtitle: nil,
-                                answer: pair.answerSurface, options: options)
+                    var seen = Set<String>()
+                    var newPerKanji: [Int: Int] = [:]
+                    for q in questions {
+                        let item = QuizItem(q)
+                        guard item.options.count >= 2, seen.insert(item.id).inserted else { continue }
+                        if let record = state.records[item.id] {
+                            // Already scheduled — resurface only when review is due.
+                            if record.due <= today { items.append(item) }
+                        } else if studiedSet.contains(q.kanjiID) {
+                            // New question — at most 2 per today's studied kanji.
+                            let count = newPerKanji[q.kanjiID, default: 0]
+                            if count < 2 { newPerKanji[q.kanjiID] = count + 1; items.append(item) }
                         }
                     }
-
-                    // Keep an item only if it's new or its SRS review is due.
-                    func isActive(_ item: QuizItem) -> Bool {
-                        guard item.options.count >= 2 else { return false }
-                        if let record = state.records[item.id] { return record.due <= today }
-                        return true
-                    }
-
-                    // One question per kanji — rotate the kind by index so the
-                    // session mixes meaning / word-reading / on'yomi / antonym /
-                    // word-meaning, falling back to the next kind when the preferred
-                    // one has no (active) data for that kanji.
-                    let order: [QuizKind] = [
-                        .kanjiMeaning, .wordReading, .cloze, .kanjiReading,
-                        .orthography, .antonym, .wordMeaning,
-                    ]
-                    for (i, k) in kanji.enumerated() {
-                        for offset in 0..<order.count {
-                            if let item = build(order[(i + offset) % order.count], k), isActive(item) {
-                                items.append(item)
-                                break
-                            }
-                        }
-                    }
-                    // Due review word items (both reading + meaning; the filter
-                    // below keeps whichever is actually scheduled).
-                    for w in dueWords where !w.surface.isEmpty {
-                        if !w.reading.isEmpty {
-                            items.append(QuizItem(
-                                id: "wordReading:\(w.id)", kind: .wordReading, prompt: w.surface,
-                                subtitle: wordMeaning(w, lang), answer: w.reading,
-                                options: readingOptions(answer: w.reading, pool: readingPool, using: &rng)))
-                        }
-                        if let answer = wordMeaning(w, lang), !answer.isEmpty {
-                            items.append(QuizItem(
-                                id: "wordMeaning:\(w.id)", kind: .wordMeaning,
-                                prompt: "\(w.surface)（\(w.reading)）", subtitle: nil, answer: answer,
-                                options: choiceOptions(answer: answer, pool: meaningPool, using: &rng)))
-                        }
-                    }
-                    // Dedup, keep new-or-due, shuffle.
-                    var seenID = Set<String>()
-                    var active = items.filter { seenID.insert($0.id).inserted && isActive($0) }
-                    active.shuffle(using: &rng)
-                    state.queue = active
+                    items.shuffle(using: &rng)
                 }
-                state.totalItems = state.queue.count
+                state.queue = items
+                state.totalItems = items.count
                 state.mastered = 0
                 state.missed = []
                 state.firstAttempt = [:]
@@ -278,230 +156,28 @@ public struct QuizFeature {
     private func load(state: inout State) -> Effect<Action> {
         state.isLoading = true
         state.started = false
-        let level = state.level
-        let lang = state.language
         return .run { send in
             let today = Int(date.now.timeIntervalSince1970 / 86_400)
             // Read the kanji SRS fresh from disk (a study session may have just
-            // written it) — kanji learned today OR due for review feed the quiz,
-            // so review is woven into the same session as new material.
+            // written it) — kanji studied today OR due for review are the new
+            // material; review questions are woven in from the quiz SRS below.
             let reviewRecords = await reviewStore.loadRecords()
-            let kanjiIDs = reviewRecords
+            let studied = reviewRecords
                 .filter { $0.lastReviewedDay == today || $0.due <= today }
                 .map(\.kanjiID)
             let records = await quizStore.load()
-            // Entities whose SRS review is due today (regardless of today's study).
-            var dueKanji = Set<Int>(), dueWords = Set<Int>()
+            // Kanji referenced by any due quiz record → re-fetch their questions so
+            // the specific due question can be resurfaced ("q:<kanjiID>:<qid>").
+            var dueKanji = Set<Int>()
             for record in records where record.due <= today {
                 let parts = record.id.split(separator: ":")
-                guard parts.count == 2, let eid = Int(parts[1]) else { continue }
-                switch parts[0] {
-                case "kanjiMeaning", "kanjiReading", "antonym", "cloze", "orthography":
-                    dueKanji.insert(eid)
-                case "wordReading", "wordMeaning": dueWords.insert(eid)
-                default: break
-                }
+                if parts.count == 3, parts[0] == "q", let kid = Int(parts[1]) { dueKanji.insert(kid) }
             }
-            let allKanji = (try? await dictionaryClient.allKanji()) ?? []
-            let byID = Dictionary(allKanji.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-            let contextKanji = Set(kanjiIDs).union(dueKanji).compactMap { byID[$0] }
-            let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
-            // On'yomi distractor pool (clean katakana across all kanji).
-            let onPool = allKanji.flatMap(\.onReadings)
-            // One representative word + one antonym per context kanji — the quiz
-            // asks a single, varied question per kanji.
-            var wordByKanji: [Int: WordEntry] = [:]
-            var antonymByKanji: [Int: AntonymPair] = [:]
-            var clozeByKanji: [Int: ClozePrompt] = [:]
-            for k in contextKanji {
-                let word = (try? await dictionaryClient.words(k.id, 1))?.first
-                if let w = word { wordByKanji[k.id] = w }
-                if let a = (try? await dictionaryClient.antonyms(k.id, 4))?.first { antonymByKanji[k.id] = a }
-                // Cloze: find an example sentence containing the word verbatim,
-                // then blank the word out.
-                if let w = word, !w.surface.isEmpty,
-                   let sentences = try? await dictionaryClient.sentencesForWord(w.id, 4),
-                   let s = sentences.first(where: { $0.textJa.contains(w.surface) }) {
-                    clozeByKanji[k.id] = ClozePrompt(
-                        blanked: s.textJa.replacingOccurrences(of: w.surface, with: "＿＿"),
-                        answer: w.surface,
-                        hint: localizedText(s.translations, lang))
-                }
-            }
-            // Due review words (surfaced by id) → keep spaced-repetition coverage.
-            var dueWordEntries: [WordEntry] = []
-            for wid in dueWords { if let w = try? await dictionaryClient.word(wid) { dueWordEntries.append(w) } }
-            let pool = (try? await dictionaryClient.quizWords(level, 300)) ?? []
-            await send(.loaded(kanji: contextKanji, glosses: glosses, wordByKanji: wordByKanji,
-                               antonymByKanji: antonymByKanji, clozeByKanji: clozeByKanji,
-                               dueWords: dueWordEntries, pool: pool,
-                               onPool: onPool, records: records, today: today))
+            let contextKanji = Array(Set(studied).union(dueKanji))
+            // Pull every question for the context kanji; the reducer filters to
+            // new-or-due and caps new questions per kanji.
+            let questions = (try? await dictionaryClient.jlptQuestions(contextKanji, 99)) ?? []
+            await send(.loaded(questions: questions, studied: studied, records: records, today: today))
         }
     }
-}
-
-/// Four shuffled options: the answer + three distinct distractors from `pool`.
-func choiceOptions<G: RandomNumberGenerator>(
-    answer: String, pool: [String], using rng: inout G
-) -> [String] {
-    var distractors = Array(Set(pool).subtracting([answer]))
-    distractors.shuffle(using: &rng)
-    var options = [answer] + distractors.prefix(3)
-    options.shuffle(using: &rng)
-    return options
-}
-
-/// Reading options: minimal-pair traps of `answer`, filled from `pool` if short.
-func readingOptions<G: RandomNumberGenerator>(
-    answer: String, pool: Set<String>, using rng: inout G
-) -> [String] {
-    var traps = phoneticTraps(answer)
-    traps.shuffle(using: &rng)
-    var distractors = Array(traps.prefix(3))
-    if distractors.count < 3 {
-        let near = pool.subtracting(distractors + [answer])
-            .map { (reading: $0, distance: kanaDistance($0, answer)) }
-            .sorted { $0.distance < $1.distance }
-            .map(\.reading)
-        distractors += near.prefix(3 - distractors.count)
-    }
-    var options = [answer] + distractors
-    options.shuffle(using: &rng)
-    return options
-}
-
-/// A localized meaning from a gloss map, with a deterministic fallback.
-func localizedText(_ dict: [String: String], _ language: AppLanguage) -> String? {
-    for key in [language.glossKey, "en", "ja", "ko", "zh"] {
-        if let value = dict[key], !value.isEmpty { return value }
-    }
-    return dict.values.first { !$0.isEmpty }
-}
-
-/// A word's meaning in the selected language (falling back to English).
-func wordMeaning(_ word: WordEntry, _ language: AppLanguage) -> String? {
-    switch language {
-    case .ko: word.meaningKo ?? word.meaningEn
-    case .ja: word.meaningJa ?? word.meaningEn
-    case .zh: word.meaningZh ?? word.meaningEn
-    case .en: word.meaningEn
-    }
-}
-
-/// Voicing groups: members are one dakuten/handakuten toggle apart.
-private let voicingGroups: [[Character]] = [
-    ["か", "が"], ["き", "ぎ"], ["く", "ぐ"], ["け", "げ"], ["こ", "ご"],
-    ["さ", "ざ"], ["し", "じ"], ["す", "ず"], ["せ", "ぜ"], ["そ", "ぞ"],
-    ["た", "だ"], ["ち", "ぢ"], ["つ", "づ"], ["て", "で"], ["と", "ど"],
-    ["は", "ば", "ぱ"], ["ひ", "び", "ぴ"], ["ふ", "ぶ", "ぷ"],
-    ["へ", "べ", "ぺ"], ["ほ", "ぼ", "ぽ"],
-]
-
-private let iRowKana: Set<Character> = [
-    "い", "き", "し", "ち", "に", "ひ", "み", "り", "ぎ", "じ", "ぢ", "び", "ぴ",
-]
-/// Kana that a long-vowel う naturally follows (o-row and u-row).
-private let ouRowKana: Set<Character> = [
-    "う", "く", "す", "つ", "ぬ", "ふ", "む", "ゆ", "る", "ぐ", "ず", "づ", "ぶ", "ぷ",
-    "お", "こ", "そ", "と", "の", "ほ", "も", "よ", "ろ", "ご", "ぞ", "ど", "ぼ", "ぽ", "ょ",
-]
-/// Kana that a long-vowel い naturally follows (e-row).
-private let eRowKana: Set<Character> = [
-    "え", "け", "せ", "て", "ね", "へ", "め", "れ", "げ", "ぜ", "で", "べ", "ぺ",
-]
-private let smallLeadingKana: Set<Character> = [
-    "っ", "ゃ", "ゅ", "ょ", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ", "ー",
-]
-private let plainVowelKana: Set<Character> = ["あ", "い", "う", "え", "お"]
-
-/// Whether a kana string is a pronounceable reading — rejects impossible shapes
-/// (leading っ/ー/small kana, trailing っ, っ before a vowel, orphan yōon).
-func isPlausibleKana(_ s: String) -> Bool {
-    let a = Array(s)
-    guard let first = a.first, !smallLeadingKana.contains(first) else { return false }
-    guard a.last != "っ" else { return false }
-    for i in a.indices {
-        if a[i] == "っ" {
-            guard i + 1 < a.count else { return false }
-            let next = a[i + 1]
-            if plainVowelKana.contains(next) || next == "っ" || next == "ん" || next == "ー" {
-                return false
-            }
-        }
-        if a[i] == "ゃ" || a[i] == "ゅ" || a[i] == "ょ" {
-            guard i > 0, iRowKana.contains(a[i - 1]) else { return false }
-        }
-    }
-    return true
-}
-
-/// Plausible-but-wrong readings one confusion away from `reading`: voicing
-/// toggles, long-vowel add/drop, small-tsu add/drop, and yōon big/small swaps.
-/// These minimal pairs are exactly the traps learners fall for. Impossible kana
-/// shapes are filtered out so every option reads naturally.
-func phoneticTraps(_ reading: String) -> [String] {
-    let chars = Array(reading)
-    guard !chars.isEmpty else { return [] }
-    var out = Set<String>()
-
-    // 1) Voicing toggles (か↔が, は↔ば↔ぱ …).
-    for i in chars.indices {
-        for group in voicingGroups where group.contains(chars[i]) {
-            for alt in group where alt != chars[i] {
-                var c = chars; c[i] = alt; out.insert(String(c))
-            }
-        }
-    }
-    // 2) Long vowels: drop a vowel/長音, or lengthen only where natural
-    //    (う after o/u-row, い after e-row).
-    let vowels: Set<Character> = ["あ", "い", "う", "え", "お", "ー"]
-    for i in chars.indices where vowels.contains(chars[i]) {
-        var c = chars; c.remove(at: i); out.insert(String(c))
-    }
-    for i in chars.indices {
-        if ouRowKana.contains(chars[i]) {
-            var c = chars; c.insert("う", at: i + 1); out.insert(String(c))
-        } else if eRowKana.contains(chars[i]) {
-            var c = chars; c.insert("い", at: i + 1); out.insert(String(c))
-        }
-    }
-    // 3) Small tsu: drop it, or insert one before an interior kana.
-    if chars.contains("っ") {
-        for i in chars.indices where chars[i] == "っ" {
-            var c = chars; c.remove(at: i); out.insert(String(c))
-        }
-    } else if chars.count >= 2 {
-        for i in 1..<chars.count {
-            var c = chars; c.insert("っ", at: i); out.insert(String(c))
-        }
-    }
-    // 4) Yōon big/small swap (きゃ↔きや).
-    let yoon: [Character: Character] = [
-        "ゃ": "や", "ゅ": "ゆ", "ょ": "よ", "や": "ゃ", "ゆ": "ゅ", "よ": "ょ",
-    ]
-    for i in chars.indices {
-        if let alt = yoon[chars[i]] { var c = chars; c[i] = alt; out.insert(String(c)) }
-    }
-
-    out.remove(reading)
-    return out.filter(isPlausibleKana)
-}
-
-/// Levenshtein edit distance between two kana readings. Small distance = the
-/// readings differ by only a mora / voicing / length — i.e. confusingly close.
-func kanaDistance(_ a: String, _ b: String) -> Int {
-    let s = Array(a), t = Array(b)
-    if s.isEmpty { return t.count }
-    if t.isEmpty { return s.count }
-    var prev = Array(0...t.count)
-    var curr = [Int](repeating: 0, count: t.count + 1)
-    for i in 1...s.count {
-        curr[0] = i
-        for j in 1...t.count {
-            let cost = s[i - 1] == t[j - 1] ? 0 : 1
-            curr[j] = min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost)
-        }
-        swap(&prev, &curr)
-    }
-    return prev[t.count]
 }

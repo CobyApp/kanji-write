@@ -100,4 +100,18 @@ CREATE TABLE relation (
 
 CREATE INDEX idx_relation_a ON relation(word_id_a);
 CREATE INDEX idx_relation_b ON relation(word_id_b);
+
+CREATE TABLE jlpt_question (
+    id          INTEGER PRIMARY KEY,
+    kanji_id    INTEGER NOT NULL REFERENCES kanji(id),
+    level       TEXT    NOT NULL,   -- 'N5'..'N1' (denormalized from kanji)
+    kind        TEXT    NOT NULL,   -- 'reading' | 'orthography' | 'context'
+    prompt      TEXT    NOT NULL,   -- the JLPT-style Japanese stem
+    options     TEXT    NOT NULL,   -- JSON array of option strings
+    answer      INTEGER NOT NULL,   -- 0-based index of the correct option
+    explanation TEXT,               -- native-language 해설
+    UNIQUE(kanji_id, kind, prompt)
+);
+
+CREATE INDEX idx_jlpt_question_kanji ON jlpt_question(kanji_id);
 """

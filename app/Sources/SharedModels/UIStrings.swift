@@ -176,6 +176,8 @@ public enum L {
         ko: "빈칸에 들어갈 말은?", ja: "空欄に入る言葉は？", zh: "选择填入空格的词", en: "Fill in the blank")
     public static let quizFirstTry = L10nText(
         ko: "첫 시도 정답", ja: "一発正解", zh: "首次答对", en: "First-try correct")
+    public static let quizCorrect = L10nText(ko: "정답!", ja: "正解！", zh: "答对了！", en: "Correct!")
+    public static let quizWrong = L10nText(ko: "오답", ja: "不正解", zh: "答错了", en: "Incorrect")
     public static let quizDone = L10nText(ko: "퀴즈 완료!", ja: "クイズ完了！", zh: "测验完成！", en: "Quiz complete!")
     public static let quizAgain = L10nText(ko: "다시 풀기", ja: "もう一度", zh: "再来一次", en: "Play again")
     public static let quizNothingDue = L10nText(

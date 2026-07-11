@@ -339,6 +339,38 @@ extension DictionaryClient: DependencyKey {
                         meaningJa: try gloss("ja"), meaningZh: try gloss("zh"))
                 }
             }
+        },
+        jlptQuestions: { kanjiIDs, perKanji in
+            guard !kanjiIDs.isEmpty else { return [] }
+            let queue = try openBundledDatabase()
+            let placeholders = kanjiIDs.map { _ in "?" }.joined(separator: ",")
+            return try await queue.read { db -> [JLPTQuestion] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, kanji_id, level, kind, prompt, options, answer, explanation
+                    FROM jlpt_question
+                    WHERE kanji_id IN (\(placeholders))
+                    ORDER BY kanji_id, id
+                    """, arguments: StatementArguments(kanjiIDs))
+                // Reconstruct options (stored as a JSON array of strings) and cap
+                // the number of questions kept per kanji.
+                var perKanjiCount: [Int: Int] = [:]
+                var out: [JLPTQuestion] = []
+                for row in rows {
+                    let kid: Int = row["kanji_id"]
+                    let kept = perKanjiCount[kid, default: 0]
+                    guard kept < perKanji else { continue }
+                    let optionsJSON: String = row["options"]
+                    guard let data = optionsJSON.data(using: .utf8),
+                          let options = try? JSONDecoder().decode([String].self, from: data),
+                          options.count >= 2 else { continue }
+                    perKanjiCount[kid] = kept + 1
+                    out.append(JLPTQuestion(
+                        id: row["id"], kanjiID: kid, level: row["level"], kind: row["kind"],
+                        prompt: row["prompt"], options: options, answer: row["answer"],
+                        explanation: row["explanation"]))
+                }
+                return out
+            }
         }
     )
 

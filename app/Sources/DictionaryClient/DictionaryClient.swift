@@ -39,6 +39,9 @@ public struct DictionaryClient: Sendable {
     /// Free-text word search over surface / reading / meaning (any language) —
     /// for the word dictionary. Common words first.
     public var searchWords: @Sendable (_ query: String, _ limit: Int) async throws -> [WordEntry]
+    /// Pre-authored JLPT questions for a set of kanji (the day's studied + due
+    /// kanji), capped per kanji — the source for the quiz.
+    public var jlptQuestions: @Sendable (_ kanjiIDs: [Int], _ perKanji: Int) async throws -> [JLPTQuestion]
 }
 
 extension DictionaryClient: TestDependencyKey {
