@@ -110,6 +110,7 @@ CREATE TABLE jlpt_question (
     options     TEXT    NOT NULL,   -- JSON array of option strings
     answer      INTEGER NOT NULL,   -- 0-based index of the correct option
     explanation TEXT,               -- native-language 해설
+    focus       TEXT,               -- substring of prompt to underline (target word)
     UNIQUE(kanji_id, kind, prompt)
 );
 

@@ -468,8 +468,16 @@ public struct WorksheetView: View {
                 .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
             Text(L.seeTomorrow[appLanguage])
                 .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+            Button { store.send(.closeTapped) } label: {
+                Text(L.done[appLanguage])
+                    .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Palette.accent).clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 32)
+        .frame(maxWidth: .infinity).padding(.vertical, 32).padding(.horizontal, 20)
         .roundedCard()
         .padding(16)
     }

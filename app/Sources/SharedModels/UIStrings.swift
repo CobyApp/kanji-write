@@ -163,7 +163,7 @@ public enum L {
     public static let quizKanjiMeaning = L10nText(
         ko: "이 한자의 뜻은?", ja: "この漢字の意味は？", zh: "这个汉字的意思？", en: "Meaning of this kanji?")
     public static let quizWordReading = L10nText(
-        ko: "이 단어의 읽기는?", ja: "この単語の読みは？", zh: "这个词的读音？", en: "How is this read?")
+        ko: "밑줄 친 단어의 읽기는?", ja: "＿＿の読み方は？", zh: "下划线词的读音？", en: "Reading of the underlined word?")
     public static let quizWordMeaning = L10nText(
         ko: "이 단어의 뜻은?", ja: "この単語の意味は？", zh: "这个词的意思？", en: "Meaning of this word?")
     public static let quizKanjiReading = L10nText(
@@ -171,7 +171,7 @@ public enum L {
     public static let quizAntonym = L10nText(
         ko: "반대말을 고르세요", ja: "反対語を選ぼう", zh: "选择反义词", en: "Pick the antonym")
     public static let quizOrthography = L10nText(
-        ko: "한자 표기를 고르세요", ja: "正しい漢字は？", zh: "选择正确的汉字写法", en: "Pick the kanji spelling")
+        ko: "밑줄 친 말을 한자로?", ja: "＿＿を漢字で書くと？", zh: "下划线词的汉字写法？", en: "Kanji for the underlined word?")
     public static let quizCloze = L10nText(
         ko: "빈칸에 들어갈 말은?", ja: "空欄に入る言葉は？", zh: "选择填入空格的词", en: "Fill in the blank")
     public static let quizFirstTry = L10nText(

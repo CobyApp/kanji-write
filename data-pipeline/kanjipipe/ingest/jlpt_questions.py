@@ -34,6 +34,9 @@ def parse_jlpt_questions(path: str | Path) -> list[JlptQuestion]:
             if len(options) < 2 or not isinstance(answer, int) or not (0 <= answer < len(options)):
                 continue
             explanation = obj.get("explanation")
+            focus = obj.get("focus")
+            # A focus must be a real substring of the prompt to underline it.
+            focus = focus if isinstance(focus, str) and focus and focus in prompt else None
             entries.append(JlptQuestion(
                 literal=literal,
                 level=str(obj.get("level") or ""),
@@ -42,5 +45,6 @@ def parse_jlpt_questions(path: str | Path) -> list[JlptQuestion]:
                 options=options,
                 answer=answer,
                 explanation=explanation.strip() if isinstance(explanation, str) and explanation.strip() else None,
+                focus=focus,
             ))
     return entries

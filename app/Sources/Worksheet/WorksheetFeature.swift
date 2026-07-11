@@ -91,6 +91,7 @@ public struct WorksheetFeature {
         case contentLoaded([Int: CardContent])  // all queue kanji, prefetched
         case nextTapped
         case doneTapped
+        case closeTapped          // delegate → parent dismisses the session
         case kanjiTapped(Kanji)   // delegate → parent drills into the kanji detail
         case wordTapped(WordEntry) // delegate → parent drills into the word detail
     }
@@ -162,8 +163,8 @@ public struct WorksheetFeature {
                 let all = Array(state.records)
                 return .run { _ in await reviewStore.saveRecords(all) }
 
-            case .kanjiTapped, .wordTapped:
-                return .none  // handled by the parent (in-session navigation)
+            case .closeTapped, .kanjiTapped, .wordTapped:
+                return .none  // handled by the parent (dismiss / in-session nav)
             }
         }
     }

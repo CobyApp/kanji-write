@@ -243,10 +243,10 @@ def load_jlpt_questions(conn: sqlite3.Connection, questions: list["JlptQuestion"
             continue
         conn.execute(
             "INSERT OR IGNORE INTO jlpt_question "
-            "(kanji_id, level, kind, prompt, options, answer, explanation) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "(kanji_id, level, kind, prompt, options, answer, explanation, focus) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (kanji_id, q.level, q.kind, q.prompt,
-             _json.dumps(q.options, ensure_ascii=False), q.answer, q.explanation),
+             _json.dumps(q.options, ensure_ascii=False), q.answer, q.explanation, q.focus),
         )
     conn.commit()
 
