@@ -181,8 +181,8 @@ struct HomeView: View {
             planButton.popIn(delay: 0.16)
             launchers.popIn(delay: 0.22)
             dictionaryButton.popIn(delay: 0.28)
-            wordDictionaryButton.popIn(delay: 0.32)
-            wordbookButton.popIn(delay: 0.38)
+            HStack(spacing: 14) { wordDictionaryButton; wordbookButton }
+                .popIn(delay: 0.34)
         }
     }
 
@@ -195,7 +195,6 @@ struct HomeView: View {
             HStack(spacing: 16) { streakChip; goalChip }.popIn(delay: 0.12)
             planButton.popIn(delay: 0.16)
             launchersGrid.popIn(delay: 0.22)
-            wordbookButton.popIn(delay: 0.30)
         }
     }
 
@@ -251,6 +250,7 @@ struct HomeView: View {
             }
             dictionaryButton
             wordDictionaryButton
+            wordbookButton
         }
     }
 
