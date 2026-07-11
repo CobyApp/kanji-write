@@ -1,0 +1,46 @@
+"""Parse the LLM-generated JLPT question bank JSONL.
+
+Each line: {literal, level, kind, prompt, options:[...], answer:int, explanation}.
+Lines that are malformed or fail basic validity (need 4 options and an in-range
+answer) are skipped rather than aborting the whole build.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from kanjipipe.models import JlptQuestion
+
+
+def parse_jlpt_questions(path: str | Path) -> list[JlptQuestion]:
+    entries: list[JlptQuestion] = []
+    with open(path, encoding="utf-8") as handle:
+        for line_number, raw in enumerate(handle, start=1):
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError as error:
+                print(f"jlpt_questions: skipping malformed line {line_number}: {error}")
+                continue
+            literal = obj.get("literal")
+            prompt = obj.get("prompt")
+            options = obj.get("options")
+            answer = obj.get("answer")
+            if not literal or not prompt or not isinstance(options, list):
+                continue
+            options = [o for o in options if isinstance(o, str) and o.strip()]
+            if len(options) < 2 or not isinstance(answer, int) or not (0 <= answer < len(options)):
+                continue
+            explanation = obj.get("explanation")
+            entries.append(JlptQuestion(
+                literal=literal,
+                level=str(obj.get("level") or ""),
+                kind=str(obj.get("kind") or "context"),
+                prompt=prompt,
+                options=options,
+                answer=answer,
+                explanation=explanation.strip() if isinstance(explanation, str) and explanation.strip() else None,
+            ))
+    return entries

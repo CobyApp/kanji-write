@@ -49,6 +49,34 @@ public struct RelationEntry: Equatable, Identifiable, Sendable {
     }
 }
 
+/// A pre-authored JLPT 文字・語彙 question about a kanji: a Japanese prompt, four
+/// options, the index of the correct one, and a native-language explanation
+/// (해설). Generated offline into the bundled DB — no runtime distractor building.
+public struct JLPTQuestion: Equatable, Identifiable, Sendable {
+    public let id: Int
+    public let kanjiID: Int
+    public let level: String
+    public let kind: String      // "reading" | "orthography" | "context"
+    public let prompt: String
+    public let options: [String]
+    public let answer: Int       // index into `options`
+    public let explanation: String?
+
+    public init(
+        id: Int, kanjiID: Int, level: String, kind: String,
+        prompt: String, options: [String], answer: Int, explanation: String?
+    ) {
+        self.id = id
+        self.kanjiID = kanjiID
+        self.level = level
+        self.kind = kind
+        self.prompt = prompt
+        self.options = options
+        self.answer = answer
+        self.explanation = explanation
+    }
+}
+
 /// An antonym pair anchored to a kanji: a word that contains the kanji
 /// (`prompt`) and its opposite (`answer`). Powers the "pick the antonym" quiz.
 public struct AntonymPair: Equatable, Identifiable, Sendable {

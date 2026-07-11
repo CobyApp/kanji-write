@@ -56,3 +56,14 @@ class LlmGloss:
     ko: str | None = None
     ja: str | None = None
     zh: str | None = None
+
+
+@dataclass
+class JlptQuestion:
+    literal: str          # the kanji this question is about (join key)
+    level: str            # 'N5'..'N1'
+    kind: str             # 'reading' | 'orthography' | 'context'
+    prompt: str
+    options: list[str]
+    answer: int           # 0-based index into options
+    explanation: str | None = None

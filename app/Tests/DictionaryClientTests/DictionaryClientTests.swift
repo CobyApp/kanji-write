@@ -20,6 +20,24 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertEqual(yama.radicalGlyph, "山")
     }
 
+    func testLiveReadsJLPTQuestionsForKanji() async throws {
+        let client = DictionaryClient.liveValue
+        let all = try await client.allKanji()
+        let yama = try XCTUnwrap(all.first { $0.literal == "山" })
+
+        // The offline JLPT question bank covers every N5–N1 kanji; each question
+        // has 4 options and an in-range answer index.
+        let questions = try await client.jlptQuestions([yama.id], 2)
+        XCTAssertFalse(questions.isEmpty)
+        XCTAssertLessThanOrEqual(questions.count, 2)      // per-kanji cap honored
+        for q in questions {
+            XCTAssertEqual(q.kanjiID, yama.id)
+            XCTAssertEqual(q.options.count, 4)
+            XCTAssertTrue(q.options.indices.contains(q.answer))
+            XCTAssertFalse(q.prompt.isEmpty)
+        }
+    }
+
     func testLiveReadsStrokeOrderForKanji() async throws {
         let client = DictionaryClient.liveValue
         let all = try await client.allKanji()

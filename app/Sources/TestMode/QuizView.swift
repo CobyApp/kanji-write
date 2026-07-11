@@ -32,7 +32,7 @@ public struct QuizView: View {
                     progress
                     questionCard(item)
                     options(item)
-                    if store.answered { nextButton }
+                    if store.answered { explanationCard(item); nextButton }
                 }
                 .padding(16)
                 .readableWidth(sizeClass)
@@ -62,52 +62,41 @@ public struct QuizView: View {
     }
 
     private func questionCard(_ item: QuizItem) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             Text(promptLabel(item.kind))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             Text(item.prompt)
-                .font(.kawaiiJP(promptSize(item.kind), weight: .bold))
+                .font(.kawaiiJP(promptSize(item.prompt), weight: .bold))
                 .japaneseGlyphs()
                 .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
-            if let subtitle = item.subtitle, !subtitle.isEmpty {
-                Text(subtitle)
-                    .font(.kawaii(15, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-            }
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 22)
+        .frame(maxWidth: .infinity).padding(.vertical, 22).padding(.horizontal, 12)
         .roundedCard()
     }
 
-    /// Big single glyph for kanji prompts; small wrapping text for the cloze
-    /// sentence; medium for words / readings.
-    private func promptSize(_ kind: QuizKind) -> CGFloat {
-        switch kind {
-        case .kanjiMeaning, .kanjiReading: 60
-        case .cloze: 24
-        default: 40
+    /// Short stems (a single word/reading) get big type; full sentences wrap at a
+    /// smaller size so they stay on screen.
+    private func promptSize(_ prompt: String) -> CGFloat {
+        switch prompt.count {
+        case 0...3: 44
+        case 4...10: 30
+        default: 22
         }
     }
 
-    /// Meaning options render in the app-language face; reading / surface options
-    /// render in the selected Japanese face.
-    private func optionFont(_ kind: QuizKind) -> Font {
-        let size: CGFloat = (kind == .wordReading || kind == .kanjiReading) ? 22 : 18
+    private func promptLabel(_ kind: String) -> String {
         switch kind {
-        case .kanjiMeaning, .wordMeaning: return .kawaii(size, weight: .bold, language: appLanguage)
-        default: return .kawaiiJP(size, weight: .bold)
+        case "reading": L.quizWordReading[appLanguage]
+        case "orthography": L.quizOrthography[appLanguage]
+        default: L.quizCloze[appLanguage]
         }
     }
 
-    private func promptLabel(_ kind: QuizKind) -> String {
-        switch kind {
-        case .kanjiMeaning: L.quizKanjiMeaning[appLanguage]
-        case .kanjiReading: L.quizKanjiReading[appLanguage]
-        case .wordReading: L.quizWordReading[appLanguage]
-        case .orthography: L.quizOrthography[appLanguage]
-        case .wordMeaning: L.quizWordMeaning[appLanguage]
-        case .cloze: L.quizCloze[appLanguage]
-        case .antonym: L.quizAntonym[appLanguage]
-        }
+    /// Reading options render in the Japanese face; everything else too (options
+    /// are Japanese words/readings from the bank).
+    private func optionFont(_ item: QuizItem) -> Font {
+        .kawaiiJP(item.kind == "reading" ? 22 : 19, weight: .bold)
     }
 
     private func options(_ item: QuizItem) -> some View {
@@ -116,7 +105,7 @@ public struct QuizView: View {
                 Button { store.send(.chose(option)) } label: {
                     HStack {
                         Text(option)
-                            .font(optionFont(item.kind))
+                            .font(optionFont(item))
                             .japaneseGlyphs()
                             .foregroundStyle(optionText(option, item))
                             .multilineTextAlignment(.leading)
@@ -138,6 +127,28 @@ public struct QuizView: View {
                 .disabled(store.answered)
             }
         }
+    }
+
+    /// The 해설 shown once answered — correct/wrong banner + the authored reason.
+    @ViewBuilder
+    private func explanationCard(_ item: QuizItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: store.isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(store.isCorrect ? Palette.mint : Palette.pink)
+                Text(store.isCorrect ? L.quizCorrect[appLanguage] : L.quizWrong[appLanguage])
+                    .font(.kawaii(15, weight: .bold))
+                    .foregroundStyle(store.isCorrect ? Palette.mint : Palette.pink)
+            }
+            if let explanation = item.explanation, !explanation.isEmpty {
+                Text(explanation)
+                    .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .roundedCard()
     }
 
     private var nextButton: some View {

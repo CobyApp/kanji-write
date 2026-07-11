@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from kanjipipe.models import Kanji, LlmGloss, Relation, Sentence, Word
+from kanjipipe.models import JlptQuestion, Kanji, LlmGloss, Relation, Sentence, Word
 
 
 def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
@@ -227,6 +227,27 @@ def load_sentence_glosses(
                         (sentence_id, lang, text),
                     )
                     existing.add((sentence_id, lang))
+    conn.commit()
+
+
+def load_jlpt_questions(conn: sqlite3.Connection, questions: list["JlptQuestion"]) -> None:
+    import json as _json
+
+    kanji_id_by_literal = {
+        literal: kanji_id
+        for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")
+    }
+    for q in questions:
+        kanji_id = kanji_id_by_literal.get(q.literal)
+        if kanji_id is None:
+            continue
+        conn.execute(
+            "INSERT OR IGNORE INTO jlpt_question "
+            "(kanji_id, level, kind, prompt, options, answer, explanation) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (kanji_id, q.level, q.kind, q.prompt,
+             _json.dumps(q.options, ensure_ascii=False), q.answer, q.explanation),
+        )
     conn.commit()
 
 

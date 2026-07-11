@@ -33,3 +33,8 @@ app/Tuist/.build/
 !data-pipeline/sources/word_glosses_ko.jsonl
 !data-pipeline/sources/word_glosses_jazh.jsonl
 !data-pipeline/sources/sentence_glosses.jsonl
+# Agent-authored JLPT question bank (curated output) — keep it
+!data-pipeline/sources/jlpt_questions.jsonl
+
+# Local scratch (question-generation batches, temp scripts) — never commit
+scratch/
