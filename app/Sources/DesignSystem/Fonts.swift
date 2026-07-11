@@ -68,3 +68,16 @@ extension Font {
         return .custom("KleeOne-Regular", size: size)
     }
 }
+
+extension View {
+    /// Optically center a single Klee One kanji inside a square box.
+    ///
+    /// Klee One ships without USE_TYPO_METRICS, so SwiftUI lays a glyph out in the
+    /// tall hhea line box (asc 1160 / desc −288). That line box's center sits about
+    /// 0.096em *above* the ink center of a typical kanji, so a glyph centered by
+    /// its line box reads noticeably low. Nudging it up by ~0.09em lands the ink
+    /// in the true center of the tile / trace / guide box.
+    public func opticalKanjiCenter(_ fontSize: CGFloat) -> some View {
+        offset(y: -fontSize * 0.09)
+    }
+}
