@@ -31,6 +31,7 @@ public struct WordReviewFeature {
         case onAppear
         case loaded([ReviewRecord], [WordEntry], Int)
         case grade(wordID: Int, grade: Grade)
+        case remove(wordID: Int)    // drop a word from the wordbook
         case wordTapped(WordEntry)  // delegate → parent pushes the word detail
     }
 
@@ -83,6 +84,11 @@ public struct WordReviewFeature {
                         lastReviewedDay: today, lapses: grade == .again ? 1 : 0, reps: 1)
                 }
                 state.records[id: wordID] = updated
+                let all = Array(state.records)
+                return .run { _ in await wordReviewStore.saveRecords(all) }
+            case let .remove(wordID):
+                state.records.remove(id: wordID)
+                state.words.remove(id: wordID)
                 let all = Array(state.records)
                 return .run { _ in await wordReviewStore.saveRecords(all) }
             case .wordTapped:

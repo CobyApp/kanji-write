@@ -114,6 +114,7 @@ struct HomeView: View {
             // The plan editor is a full-screen in-app overlay (same style as
             // settings). In-content buttons respond reliably on Mac Catalyst.
             if showPlan { planOverlay.zIndex(1) }
+            if store.showWordbook { wordbookOverlay.zIndex(1) }
         }
         .toolbar(.hidden, for: .navigationBar)
         .task {
@@ -181,7 +182,7 @@ struct HomeView: View {
             launchers.popIn(delay: 0.22)
             dictionaryButton.popIn(delay: 0.28)
             wordDictionaryButton.popIn(delay: 0.32)
-            bookmarksSection.popIn(delay: 0.38)
+            wordbookButton.popIn(delay: 0.38)
         }
     }
 
@@ -194,7 +195,7 @@ struct HomeView: View {
             HStack(spacing: 16) { streakChip; goalChip }.popIn(delay: 0.12)
             planButton.popIn(delay: 0.16)
             launchersGrid.popIn(delay: 0.22)
-            bookmarksSection.popIn(delay: 0.30)
+            wordbookButton.popIn(delay: 0.30)
         }
     }
 
@@ -348,6 +349,18 @@ struct HomeView: View {
                  soft: Palette.butterSoft, accent: Palette.butter) { store.send(.openWordDictionary) }
     }
 
+    /// The 단어장 (saved collection) — opens the bulk-manage overlay for the
+    /// bookmarked kanji + saved words. Count badge = total saved items.
+    private var wordbookButton: some View {
+        let total = bookmarkedKanji.count + store.wordReview.words.count
+        return launcher(icon: "bookmark.fill", title: L.wordbook[appLanguage],
+                        subtitle: "\(L.kanji[appLanguage]) \(bookmarkedKanji.count) · \(L.words[appLanguage]) \(store.wordReview.words.count)",
+                        count: total > 0 ? total : nil,
+                        soft: Palette.lavenderSoft, accent: Palette.lavender) {
+            store.send(.setShowWordbook(true))
+        }
+    }
+
     private func launcher(
         icon: String, title: String, subtitle: String, count: Int?,
         soft: Color, accent: Color, dimmed: Bool = false, action: @escaping () -> Void
@@ -388,28 +401,78 @@ struct HomeView: View {
         .buttonStyle(.bouncy)
     }
 
-    // MARK: Bookmarks preview
+    // MARK: 단어장 (bulk manage saved kanji + words)
 
-    @ViewBuilder private var bookmarksSection: some View {
-        if !bookmarkedKanji.isEmpty || !store.wordReview.words.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                SectionHeader(L.bookmarks[appLanguage], accent: Palette.butter)
-                if !bookmarkedKanji.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(Array(bookmarkedKanji.enumerated()), id: \.element.id) { i, kanji in
-                                let tint = Palette.tint(i)
-                                Button { store.send(.kanjiSelected(kanji)) } label: {
-                                    PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
-                                               size: 52, fontSize: 28)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
+    private func closeWordbook() { store.send(.setShowWordbook(false)) }
+
+    /// The 단어장 as a full-screen overlay (same presentation as plan/settings):
+    /// saved kanji and words, each openable and removable in one place.
+    private var wordbookOverlay: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                if bookmarkedKanji.isEmpty && store.wordReview.words.isEmpty {
+                    emptyWordbook
+                } else {
+                    if !bookmarkedKanji.isEmpty { savedKanjiSection }
+                    if !store.wordReview.words.isEmpty { savedWordsSection }
+                }
+            }
+            .padding(20)
+            .readableWidth(sizeClass)
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .top) {
+            OverlayHeader(title: L.wordbook[appLanguage]) { closeWordbook() }
+        }
+        .background(Palette.background.ignoresSafeArea())
+        .transition(.opacity)
+    }
+
+    private var emptyWordbook: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "bookmark")
+                .font(.system(size: 40, weight: .light)).foregroundStyle(Palette.inkSoft)
+            Text(L.wordbookEmpty[appLanguage])
+                .font(.kawaii(16, weight: .semibold, language: appLanguage)).foregroundStyle(Palette.ink)
+            Text(L.wordbookEmptyHint[appLanguage])
+                .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 60)
+    }
+
+    private var savedKanjiSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(L.kanji[appLanguage], accent: Palette.pink)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 12)], spacing: 12) {
+                ForEach(Array(bookmarkedKanji.enumerated()), id: \.element.id) { i, kanji in
+                    let tint = Palette.tint(i)
+                    Button {
+                        closeWordbook()
+                        store.send(.kanjiSelected(kanji))
+                    } label: {
+                        PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
+                                   size: 60, fontSize: 32)
+                    }
+                    .buttonStyle(.plain)
+                    .overlay(alignment: .topTrailing) {
+                        removeBadge { store.send(.removeBookmarkedKanji(kanji.id)) }
                     }
                 }
-                ForEach(store.wordReview.words.elements) { word in
-                    Button { store.send(.wordReview(.wordTapped(word))) } label: {
+            }
+        }
+        .cardBackground()
+    }
+
+    private var savedWordsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(L.words[appLanguage], accent: Palette.lavender)
+            ForEach(store.wordReview.words.elements) { word in
+                HStack(spacing: 8) {
+                    Button {
+                        closeWordbook()
+                        store.send(.wordReview(.wordTapped(word)))
+                    } label: {
                         HStack {
                             Text("\(word.surface)（\(word.reading)）")
                                 .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.ink)
@@ -420,10 +483,28 @@ struct HomeView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    Button { store.send(.wordReview(.remove(wordID: word.id))) } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(Palette.pink)
+                    }
+                    .buttonStyle(.plain)
                 }
+                .padding(.vertical, 2)
             }
-            .cardBackground()
         }
+        .cardBackground()
+    }
+
+    /// A small ✕ badge overlaid on a saved tile to remove it.
+    private func removeBadge(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(.white, Palette.pink)
+                .background(Circle().fill(.white).padding(3))
+        }
+        .buttonStyle(.plain)
+        .offset(x: 6, y: -6)
     }
 }
 

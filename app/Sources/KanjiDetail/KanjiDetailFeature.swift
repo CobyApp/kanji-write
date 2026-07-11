@@ -26,6 +26,7 @@ public struct KanjiDetailFeature {
         case bookmarkLoaded(Bool)
         case writeTapped
         case wordTapped(WordEntry)  // delegate → parent pushes the word detail
+        case relationTapped(String) // an antonym/related surface → resolve → word
         case addToReview
         case markedAddedToReview
         case toggleBookmark
@@ -86,6 +87,14 @@ public struct KanjiDetailFeature {
                 }
             case .writeTapped, .wordTapped:
                 return .none  // handled by the parent (navigation)
+            case let .relationTapped(surface):
+                // A related/antonym word is stored only as a surface string; look
+                // it up and, if found, hand it to the parent as a normal word tap.
+                return .run { send in
+                    if let word = try? await dictionaryClient.searchWords(surface, 1).first {
+                        await send(.wordTapped(word))
+                    }
+                }
             case .addToReview:
                 let kanjiID = state.kanji.id
                 let today = Int(date.now.timeIntervalSince1970 / 86_400)

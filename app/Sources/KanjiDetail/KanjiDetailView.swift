@@ -32,16 +32,12 @@ public struct KanjiDetailView: View {
         .navigationTitle(store.kanji.literal)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            // A single 단어장(보관함) toggle — the kanji joins the same collection
+            // the Home 단어장 manages. (Review/write practice moved out of here.)
             Button { store.send(.toggleBookmark) } label: {
-                Image(systemName: store.isBookmarked ? "star.fill" : "star")
-                    .foregroundStyle(store.isBookmarked ? Palette.butter : Palette.inkSoft)
+                Label(store.isBookmarked ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage],
+                      systemImage: store.isBookmarked ? "bookmark.fill" : "bookmark")
             }
-            .accessibilityLabel(L.bookmark[appLanguage])
-            Button(store.addedToReview ? L.addedToReview[appLanguage] : L.addToReview[appLanguage]) {
-                store.send(.addToReview)
-            }
-            .disabled(store.addedToReview)
-            Button(L.practiceWriting[appLanguage]) { store.send(.writeTapped) }
         }
         .task { store.send(.onAppear) }
     }
@@ -153,15 +149,33 @@ public struct KanjiDetailView: View {
             SectionHeader(L.related[appLanguage], accent: Palette.sky)
             if !antonyms.isEmpty {
                 Text(L.antonym[appLanguage]).font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                Text(antonyms.joined(separator: "、"))
-                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                relationChips(antonyms, tint: Palette.pink)
             }
             if !related.isEmpty {
                 Text(L.relatedWords[appLanguage]).font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                Text(related.joined(separator: "、"))
-                    .font(.kawaii(16)).foregroundStyle(Palette.ink)
+                relationChips(related, tint: Palette.sky)
             }
         }
         .roundedCard()
+    }
+
+    /// Tappable word chips — each resolves to its word detail (kanji↔word nav).
+    private func relationChips(_ surfaces: [String], tint: Color) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(surfaces, id: \.self) { surface in
+                    Button { store.send(.relationTapped(surface)) } label: {
+                        Text(surface)
+                            .font(.kawaiiJP(16, weight: .semibold)).japaneseGlyphs()
+                            .foregroundStyle(Palette.ink)
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .background(tint.opacity(0.16))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.bouncy)
+                }
+            }
+            .padding(.vertical, 1)
+        }
     }
 }

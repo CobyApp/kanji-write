@@ -44,6 +44,8 @@ public struct RootFeature {
 
         // Settings sheet presented from the Home toolbar.
         public var showSettings = false
+        // 단어장 관리 overlay presented from the Home 단어장 launcher.
+        public var showWordbook = false
         // Bookmarked kanji ids (loaded on Home appear).
         public var bookmarkedIDs: [Int] = []
         public var path = StackState<Path.State>()
@@ -62,6 +64,8 @@ public struct RootFeature {
         case wordReview(WordReviewFeature.Action)
         case reminder(ReminderFeature.Action)
         case setShowSettings(Bool)
+        case setShowWordbook(Bool)
+        case removeBookmarkedKanji(Int)
         case kanjiSelected(Kanji)
         case levelSelected(KanjiLevel)
         case openDictionary
@@ -92,6 +96,17 @@ public struct RootFeature {
             case let .setShowSettings(show):
                 state.showSettings = show
                 return .none
+
+            case let .setShowWordbook(show):
+                state.showWordbook = show
+                // Refresh the saved words each time it opens (words may have been
+                // added from a detail screen since last time).
+                return show ? .send(.wordReview(.onAppear)) : .none
+
+            case let .removeBookmarkedKanji(id):
+                state.bookmarkedIDs.removeAll { $0 == id }
+                let ids = state.bookmarkedIDs
+                return .run { _ in await kanjiBookmarkStore.save(ids) }
 
             case let .kanjiSelected(kanji):
                 state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
