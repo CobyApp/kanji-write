@@ -61,10 +61,12 @@ public struct JLPTQuestion: Equatable, Identifiable, Sendable {
     public let options: [String]
     public let answer: Int       // index into `options`
     public let explanation: String?
+    public let focus: String?    // substring of `prompt` to underline (target word)
 
     public init(
         id: Int, kanjiID: Int, level: String, kind: String,
-        prompt: String, options: [String], answer: Int, explanation: String?
+        prompt: String, options: [String], answer: Int, explanation: String?,
+        focus: String? = nil
     ) {
         self.id = id
         self.kanjiID = kanjiID
@@ -74,6 +76,7 @@ public struct JLPTQuestion: Equatable, Identifiable, Sendable {
         self.options = options
         self.answer = answer
         self.explanation = explanation
+        self.focus = focus
     }
 }
 

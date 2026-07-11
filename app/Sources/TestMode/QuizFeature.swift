@@ -14,6 +14,7 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
     public let options: [String]
     public let answer: String    // the correct option's text
     public let explanation: String?
+    public let focus: String?    // substring of prompt to underline (target word)
 
     init(_ q: JLPTQuestion) {
         self.id = "q:\(q.kanjiID):\(q.id)"
@@ -23,6 +24,7 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
         self.options = q.options
         self.answer = q.options.indices.contains(q.answer) ? q.options[q.answer] : (q.options.first ?? "")
         self.explanation = q.explanation
+        self.focus = q.focus
     }
 }
 

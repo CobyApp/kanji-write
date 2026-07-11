@@ -67,3 +67,4 @@ class JlptQuestion:
     options: list[str]
     answer: int           # 0-based index into options
     explanation: str | None = None
+    focus: str | None = None   # substring of prompt to underline (target word)

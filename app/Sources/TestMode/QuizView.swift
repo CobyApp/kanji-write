@@ -65,7 +65,7 @@ public struct QuizView: View {
         VStack(spacing: 10) {
             Text(promptLabel(item.kind))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
-            Text(item.prompt)
+            promptText(item)
                 .font(.kawaiiJP(promptSize(item.prompt), weight: .bold))
                 .japaneseGlyphs()
                 .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
@@ -73,6 +73,18 @@ public struct QuizView: View {
         }
         .frame(maxWidth: .infinity).padding(.vertical, 22).padding(.horizontal, 12)
         .roundedCard()
+    }
+
+    /// The prompt with its target word (`focus`) underlined and accented, so it's
+    /// unmistakable which word the question is about (e.g. the word to read).
+    private func promptText(_ item: QuizItem) -> Text {
+        guard let focus = item.focus, !focus.isEmpty else { return Text(item.prompt) }
+        var attributed = AttributedString(item.prompt)
+        if let range = attributed.range(of: focus) {
+            attributed[range].underlineStyle = .single
+            attributed[range].foregroundColor = Palette.pink
+        }
+        return Text(attributed)
     }
 
     /// Short stems (a single word/reading) get big type; full sentences wrap at a

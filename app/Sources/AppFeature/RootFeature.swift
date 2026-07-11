@@ -173,6 +173,10 @@ public struct RootFeature {
 
             // Tapping a word / kanji while studying drills into its detail on the
             // in-session stack (stays inside the full-screen session).
+            case .session(.presented(.worksheet(.closeTapped))):
+                state.sessionPath.removeAll()
+                state.session = nil
+                return .none
             case let .session(.presented(.worksheet(.wordTapped(word)))):
                 state.sessionPath.append(.word(WordDetailFeature.State(word: word)))
                 return .none
