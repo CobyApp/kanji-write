@@ -23,6 +23,13 @@ let project = Project(
         // aborts during libxpc initialization before app code runs. Disabling
         // it falls back to a single-binary debug build that launches normally.
         "ENABLE_DEBUG_DYLIB": "NO",
+        // Sign every target — app, widget, and watch — with the same developer
+        // account and automatically-managed profiles. Without a project-wide
+        // team the embedded widget/watch binaries get a different signature than
+        // the parent app ("Embedded binary is not signed with the same
+        // certificate…") and the install fails.
+        "DEVELOPMENT_TEAM": "3Y8YH8GWMM",
+        "CODE_SIGN_STYLE": "Automatic",
     ]),
     targets: [
         .target(
@@ -283,6 +290,8 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite",
             deploymentTargets: iOS,
             infoPlist: .extendingDefault(with: [
+                // Home-screen name: マイカンジ (mykanji).
+                "CFBundleDisplayName": "マイカンジ",
                 "UILaunchScreen": ["UIColorName": ""],
                 // Portrait-only on both iPhone and iPad — the whole UI is designed
                 // as a single portrait column.
@@ -337,20 +346,17 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.watchkitapp",
             deploymentTargets: .watchOS("11.0"),
             infoPlist: .extendingDefault(with: [
+                "CFBundleDisplayName": "マイカンジ",
                 "WKApplication": true,
                 "WKCompanionAppBundleIdentifier": "com.cobyapp.kanjiwrite",
             ]),
             sources: ["Sources/KanjiWatch/**"],
             dependencies: [
                 .target(name: "SharedModels"),
-            ],
-            settings: .settings(base: [
-                // Skip code signing for local/simulator builds so no development
-                // team or provisioning profile is needed (the dev cert here is
-                // revoked). Re-enable signing + a team to deploy to a real watch.
-                "CODE_SIGNING_ALLOWED": "NO",
-                "CODE_SIGNING_REQUIRED": "NO",
-            ])
+            ]
+            // Signs with the project-wide DEVELOPMENT_TEAM so the embedded watch
+            // app matches the parent app's certificate (required to install on a
+            // device).
         ),
         .target(
             name: "KanjiListFeatureTests",
