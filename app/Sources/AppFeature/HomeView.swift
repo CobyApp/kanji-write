@@ -181,8 +181,10 @@ struct HomeView: View {
             planButton.popIn(delay: 0.16)
             launchers.popIn(delay: 0.22)
             dictionaryButton.popIn(delay: 0.28)
-            HStack(spacing: 14) { wordDictionaryButton; wordbookButton }
-                .popIn(delay: 0.34)
+            // iPhone is a single narrow column — each launcher gets its own full
+            // row (side-by-side cards would be cramped).
+            wordDictionaryButton.popIn(delay: 0.32)
+            wordbookButton.popIn(delay: 0.38)
         }
     }
 
