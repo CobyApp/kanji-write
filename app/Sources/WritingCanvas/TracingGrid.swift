@@ -27,18 +27,21 @@ private struct TraceCell: View {
                 .stroke(Palette.pinkSoft, style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
             }
             // The single faint character to trace over. Hidden when the guide is
-            // off (free writing / a blank practice cell).
+            // off (free writing / a blank practice cell). Sized to ~72% of the
+            // cell (a generous inset so it never touches the border/guide lines)
+            // and optically centered so the kanji sits dead-center in the box.
             if showGuide {
-                Text(glyph)
-                    .font(.kawaii(500))
-                    .minimumScaleFactor(0.01)
-                    .lineLimit(1)
-                    .foregroundStyle(Palette.ink.opacity(0.2))
-                    // Generous inset so the faint guide glyph sits well inside the
-                    // cell — a tight scale used to push complex kanji past the
-                    // rounded border/guide lines and read as overflow.
-                    .padding(12)
-                    .scaleEffect(1.0)
+                GeometryReader { geo in
+                    let side = min(geo.size.width, geo.size.height)
+                    let glyphSize = side * 0.72
+                    Text(glyph)
+                        .font(.kawaiiJP(glyphSize, weight: .regular))
+                        .japaneseGlyphs()
+                        .lineLimit(1)
+                        .foregroundStyle(Palette.ink.opacity(0.2))
+                        .opticalKanjiCenter(glyphSize)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                }
             }
             PencilCanvasView(drawing: $drawing)
         }

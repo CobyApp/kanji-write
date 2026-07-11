@@ -74,6 +74,7 @@ public struct PastelTile: View {
             .font(.kawaiiJP(fontSize, weight: .bold))
             .japaneseGlyphs()
             .foregroundStyle(Palette.ink)
+            .opticalKanjiCenter(fontSize)
             .frame(width: size, height: size)
             .background {
                 ZStack {
