@@ -33,7 +33,7 @@ final class QuizFeatureTests: XCTestCase {
         JLPTQuestion(
             id: id, kanjiID: kanji, level: "N5", kind: "reading",
             prompt: "問題\(id)", options: ["あ\(id)", "い\(id)", "う\(id)", "え\(id)"],
-            answer: answer, explanation: "해설\(id)")
+            answer: answer, explanations: ["ko": "해설\(id)"])
     }
 
     func testTodaysStudiedKanjiProduceQuestions() async {
