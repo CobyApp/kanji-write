@@ -116,9 +116,8 @@ private func sessionView(_ store: StoreOf<RootFeature.Session>) -> some View {
 func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
     switch store.case {
     case let .kanjiList(s):
-        KanjiCardList(items: s.kanji, glosses: s.glosses, onSelect: { s.send(.kanjiTapped($0)) })
-            .navigationTitle(s.title)
-            .navigationBarTitleDisplayMode(.inline)
+        KanjiListPathView(title: s.title, items: s.kanji, glosses: s.glosses,
+                          onSelect: { s.send(.kanjiTapped($0)) })
     case let .kanji(s):
         KanjiDetailView(store: s)
     case let .word(s):
@@ -129,6 +128,25 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
         DictionaryPathView(store: s)
     case let .wordDictionary(s):
         WordDictionaryView(store: s)
+    }
+}
+
+/// A pushed level's kanji list (from the 사전 or a level tap) with the shared
+/// custom back header — matches every other pushed screen (no system back bar).
+private struct KanjiListPathView: View {
+    let title: String
+    let items: [Kanji]
+    var glosses: [Int: [String: String]] = [:]
+    let onSelect: (Kanji) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        KanjiCardList(items: items, glosses: glosses, onSelect: onSelect)
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top) {
+                NavHeader(title: title) { dismiss() }
+                    .background(Palette.background)
+            }
     }
 }
 
@@ -307,62 +325,17 @@ struct KanjiCardList: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
 
-    /// A 음/훈 reading line with a colored label chip.
-    private func kanjiReadingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Text(label)
-                .font(.kawaii(10, weight: .bold)).foregroundStyle(.white)
-                .padding(.horizontal, 6).padding(.vertical, 1)
-                .background(accent).clipShape(Capsule())
-            Text(readings.prefix(6).joined(separator: "、"))
-                .font(.kawaiiJP(13, weight: .semibold)).foregroundStyle(Palette.ink)
-                .multilineTextAlignment(.leading)
-        }
-    }
-
     var body: some View {
         ZStack {
             Palette.background.ignoresSafeArea()
             ScrollView {
                 LazyVStack(spacing: 10) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
-                        let tint = Palette.tint(index)
-                        Button { onSelect(kanji) } label: {
-                            HStack(spacing: 14) {
-                                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
-                                           size: 56, fontSize: 30)
-                                VStack(alignment: .leading, spacing: 5) {
-                                    HStack(spacing: 8) {
-                                        if let meaning = kanjiGloss(glosses[kanji.id] ?? [:], appLanguage),
-                                           !meaning.isEmpty {
-                                            Text(meaning)
-                                                .font(.kawaii(15, weight: .bold, language: appLanguage))
-                                                .foregroundStyle(Palette.ink)
-                                        }
-                                        if let level = kanji.jlptLevel {
-                                            Text(level).font(.kawaii(11, weight: .bold))
-                                                .foregroundStyle(Palette.inkSoft)
-                                                .padding(.horizontal, 6).padding(.vertical, 1)
-                                                .background(Palette.background).clipShape(Capsule())
-                                        }
-                                        Text("\(kanji.strokeCount)\(L.strokesUnit[appLanguage])")
-                                            .font(.kawaii(11)).foregroundStyle(Palette.inkSoft)
-                                    }
-                                    if !kanji.onReadings.isEmpty {
-                                        kanjiReadingLine(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
-                                    }
-                                    if !kanji.kunReadings.isEmpty {
-                                        kanjiReadingLine(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
-                                    }
-                                }
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                            }
-                            .roundedCard()
-                        }
-                        .buttonStyle(.bouncy)
-                        .popIn(delay: min(Double(index), 6) * 0.04)
+                        KanjiListRow(kanji: kanji,
+                                     meaning: kanjiGloss(glosses[kanji.id] ?? [:], appLanguage),
+                                     tint: Palette.tint(index),
+                                     language: appLanguage) { onSelect(kanji) }
+                            .popIn(delay: min(Double(index), 6) * 0.04)
                     }
                     if items.isEmpty {
                         Text(L.noKanjiFound[appLanguage])
