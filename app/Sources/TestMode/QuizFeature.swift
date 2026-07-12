@@ -20,11 +20,28 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
         self.id = "q:\(q.kanjiID):\(q.id)"
         self.kanjiID = q.kanjiID
         self.kind = q.kind
-        self.prompt = q.prompt
         self.options = q.options
         self.answer = q.options.indices.contains(q.answer) ? q.options[q.answer] : (q.options.first ?? "")
         self.explanation = q.explanation
-        self.focus = q.focus
+        // Some prompts wrap the target word in <u>…</u>. Strip the tags for
+        // display and use the wrapped text as the underline target (falling back
+        // to the focus column when there are no tags).
+        let (cleaned, underlined) = QuizItem.parseUnderline(q.prompt)
+        self.prompt = cleaned
+        self.focus = underlined ?? q.focus
+    }
+
+    /// Returns the prompt with any `<u>…</u>` tags removed, and the first wrapped
+    /// substring (nil if the prompt has no tags).
+    static func parseUnderline(_ raw: String) -> (clean: String, target: String?) {
+        guard let open = raw.range(of: "<u>"), let close = raw.range(of: "</u>"),
+              open.upperBound <= close.lowerBound else {
+            return (raw, nil)
+        }
+        let target = String(raw[open.upperBound..<close.lowerBound])
+        let clean = raw.replacingOccurrences(of: "<u>", with: "")
+            .replacingOccurrences(of: "</u>", with: "")
+        return (clean, target.isEmpty ? nil : target)
     }
 }
 
@@ -43,6 +60,7 @@ public struct QuizFeature {
         public var records: [String: QuizRecord] = [:]
 
         public var queue: [QuizItem] = []          // remaining this session (mastery loop)
+        public var sessionItems: [QuizItem] = []   // the full set this session, for 다시 풀기
         public var totalItems = 0                  // unique items this session
         public var mastered = 0                    // items cleared (first correct)
         public var missed: Set<String> = []        // items answered wrong ≥ once
@@ -51,6 +69,9 @@ public struct QuizFeature {
         public var chosen: String?
         public var started = false
         public var isLoading = false
+        // True during a 다시 풀기 replay: the mastery loop still runs, but first
+        // attempts don't reschedule/persist SRS (scheduling happened on pass 1).
+        public var isReplay = false
 
         public init(level: String, language: AppLanguage = .ko) {
             self.level = level
@@ -58,7 +79,9 @@ public struct QuizFeature {
         }
 
         public var current: QuizItem? { queue.first }
-        public var isFinished: Bool { started && queue.isEmpty }
+        // Finished only when there was actually something to solve — an empty
+        // session (nothing due/new) shows the "nothing to review" card instead.
+        public var isFinished: Bool { started && totalItems > 0 && queue.isEmpty }
         public var answered: Bool { chosen != nil }
         public var isCorrect: Bool { chosen == current?.answer }
         public var isRetry: Bool { current.map { missed.contains($0.id) } ?? false }
@@ -88,7 +111,17 @@ public struct QuizFeature {
                 return load(state: &state)
 
             case .restart:
-                return load(state: &state)
+                // 다시 풀기 replays the same set as a fresh practice pass (no
+                // re-query, so it never collapses to 0/0 once items are scheduled).
+                state.queue = state.sessionItems
+                state.mastered = 0
+                state.missed = []
+                state.firstAttempt = [:]
+                state.answeredOnce = []
+                state.chosen = nil
+                state.started = true
+                state.isReplay = true
+                return .none
 
             case let .loaded(questions, studied, records, today, order):
                 state.isLoading = false
@@ -119,7 +152,9 @@ public struct QuizFeature {
                     return a.id < b.id
                 }
                 state.queue = items
+                state.sessionItems = items
                 state.totalItems = items.count
+                state.isReplay = false
                 state.mastered = 0
                 state.missed = []
                 state.firstAttempt = [:]
@@ -138,14 +173,17 @@ public struct QuizFeature {
                 let correct = state.chosen == item.answer
                 var save: Effect<Action> = .none
                 // First attempt drives spaced repetition — schedule + persist right
-                // away so review survives quitting mid-session.
+                // away so review survives quitting mid-session. Replays don't
+                // reschedule (scheduling already happened on the first pass).
                 if state.answeredOnce.insert(item.id).inserted {
                     state.firstAttempt[item.id] = correct
-                    let s = QuizSRS.schedule(box: state.records[item.id]?.box,
-                                             correct: correct, today: state.today)
-                    state.records[item.id] = QuizRecord(id: item.id, box: s.box, due: s.due)
-                    let all = Array(state.records.values)
-                    save = .run { _ in await quizStore.save(all) }
+                    if !state.isReplay {
+                        let s = QuizSRS.schedule(box: state.records[item.id]?.box,
+                                                 correct: correct, today: state.today)
+                        state.records[item.id] = QuizRecord(id: item.id, box: s.box, due: s.due)
+                        let all = Array(state.records.values)
+                        save = .run { _ in await quizStore.save(all) }
+                    }
                 }
                 state.queue.removeFirst()
                 if correct {
