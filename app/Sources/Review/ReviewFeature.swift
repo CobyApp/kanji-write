@@ -18,6 +18,8 @@ public struct ReviewFeature {
     public enum Action: Equatable {
         case onAppear
         case loaded([ReviewRecord], [Kanji], Int, [Int: [String: String]])
+        case reloadRecords   // re-read SRS records from disk (after a study session)
+        case recordsReloaded([ReviewRecord], Int)
         case grade(kanjiID: Int, grade: Grade)
         case kanjiTapped(Kanji)
     }
@@ -47,6 +49,18 @@ public struct ReviewFeature {
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.kanji = IdentifiedArray(uniqueElements: kanji)
                 state.glosses = glosses
+                state.today = today
+                return .none
+
+            // Re-read records from disk (kanji/glosses are static) so home
+            // progress reflects a just-finished study/quiz session.
+            case .reloadRecords:
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
+                return .run { send in
+                    await send(.recordsReloaded(await reviewStore.loadRecords(), today))
+                }
+            case let .recordsReloaded(records, today):
+                state.records = IdentifiedArray(uniqueElements: records)
                 state.today = today
                 return .none
             case let .grade(kanjiID, grade):

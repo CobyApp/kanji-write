@@ -176,7 +176,8 @@ public struct RootFeature {
             case .session(.presented(.worksheet(.closeTapped))):
                 state.sessionPath.removeAll()
                 state.session = nil
-                return .none
+                // Refresh home progress with what was just learned.
+                return .send(.review(.reloadRecords))
             case let .session(.presented(.worksheet(.wordTapped(word)))):
                 state.sessionPath.append(.word(WordDetailFeature.State(word: word)))
                 return .none
@@ -185,7 +186,9 @@ public struct RootFeature {
                 return .none
             case .session(.dismiss):
                 state.sessionPath.removeAll()
-                return .none
+                // A study / quiz session may have updated SRS records — refresh
+                // home progress so it doesn't need an app restart.
+                return .send(.review(.reloadRecords))
 
             // In-session drilling (word → kanji → writing), mirroring the
             // dictionary stack.
