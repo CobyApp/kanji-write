@@ -30,6 +30,20 @@ final class QuizSRSTests: XCTestCase {
     }
 }
 
+final class QuizItemUnderlineTests: XCTestCase {
+    func testStripsUnderlineTagsAndExtractsTarget() {
+        let (clean, target) = QuizItem.parseUnderline("バナナの<u>かわ</u>で足がすべった。")
+        XCTAssertEqual(clean, "バナナのかわで足がすべった。")   // tags removed from display
+        XCTAssertEqual(target, "かわ")                          // wrapped text is the underline target
+    }
+
+    func testNoTagsLeavesPromptUntouched() {
+        let (clean, target) = QuizItem.parseUnderline("学生です")
+        XCTAssertEqual(clean, "学生です")
+        XCTAssertNil(target)
+    }
+}
+
 @MainActor
 final class QuizFeatureTests: XCTestCase {
     private func question(_ id: Int, kanji: Int, answer: Int = 0) -> JLPTQuestion {
