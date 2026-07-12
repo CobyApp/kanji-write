@@ -56,14 +56,25 @@ public struct WorksheetView: View {
     private var showWrite: Bool { Platform.isPad }
 
     /// The kinds of study card, in deck order.
-    private enum Step: Equatable { case meaning, stroke, write, word, verbs, example }
+    private enum Step: Equatable { case meaning, stroke, write, onWords, kunWords, otherWords, verbs, example }
 
-    /// The deck for the current kanji: meaning → stroke → (iPad) write → words →
-    /// (if any) verbs → example. Cards that have no content are skipped.
+    /// Example words split by the reading they use, so each becomes its own card.
+    private func wordGroups(_ kanji: Kanji) -> (on: [WordEntry], kun: [WordEntry], other: [WordEntry]) {
+        let g = Dictionary(grouping: store.words) { classifyReading(word: $0, kanji: kanji) }
+        return (g[.on] ?? [], g[.kun] ?? [], g[nil] ?? [])
+    }
+
+    /// The deck for the current kanji: meaning → stroke → (iPad) write → 음독/훈독/
+    /// 그외 word cards (each only if it has words) → (if any) verbs → example.
     private var steps: [Step] {
         var s: [Step] = [.meaning, .stroke]
         if showWrite { s.append(.write) }
-        s.append(.word)
+        if let k = store.current {
+            let g = wordGroups(k)
+            if !g.on.isEmpty { s.append(.onWords) }
+            if !g.kun.isEmpty { s.append(.kunWords) }
+            if !g.other.isEmpty { s.append(.otherWords) }
+        }
         if !store.verbs.isEmpty { s.append(.verbs) }
         s.append(.example)
         return s
@@ -165,23 +176,22 @@ public struct WorksheetView: View {
         case .meaning: meaningCard(kanji)
         case .stroke: strokeCard(kanji)
         case .write: writeCard(kanji)
-        case .word: wordCard
+        case .onWords:
+            wordGroupCard(L.worksheetOnWords[appLanguage], Palette.sky, wordGroups(kanji).on)
+        case .kunWords:
+            wordGroupCard(L.worksheetKunWords[appLanguage], Palette.mint, wordGroups(kanji).kun)
+        case .otherWords:
+            wordGroupCard(L.worksheetOtherWords[appLanguage], Palette.lavender, wordGroups(kanji).other)
         case .verbs: verbsCard
         case .example: exampleCard
         }
     }
 
-    /// Centers a card, and lets long content (e.g. the word card) scroll — with
-    /// the scroll indicator hidden so it stays clean.
+    /// Centers a card in the available space. No scrolling — each card's content
+    /// is kept short enough to fit (lists are split across cards and capped).
     private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
-        GeometryReader { geo in
-            ScrollView {
-                body()
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: geo.size.height, alignment: .center)
-            }
-            .scrollIndicators(.hidden)
-        }
+        body()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
     /// Shared card chrome: an icon+title header in the card's accent, content
@@ -312,42 +322,14 @@ public struct WorksheetView: View {
         }
     }
 
-    // MARK: 2) Example words, grouped by the reading they use (음독 / 훈독)
+    // MARK: 2) Example words — one card per reading (음독 / 훈독 / 그외)
 
-    @ViewBuilder
-    private var wordCard: some View {
-        studyCard(L.worksheetWord[appLanguage], "character.book.closed", Palette.lavender) {
-            if store.words.isEmpty {
-                Text("…").font(.kawaii(16)).foregroundStyle(Palette.inkSoft)
-            } else {
-                // Group the example words by which reading they use, so each
-                // on'yomi / kun'yomi is illustrated with real words.
-                let kanji = store.current
-                let byKind = Dictionary(grouping: store.words) { word in
-                    kanji.flatMap { classifyReading(word: word, kanji: $0) }
-                }
-                VStack(alignment: .leading, spacing: 16) {
-                    wordGroup(L.worksheetOnWords[appLanguage], Palette.sky, byKind[.on] ?? [])
-                    wordGroup(L.worksheetKunWords[appLanguage], Palette.mint, byKind[.kun] ?? [])
-                    wordGroup(L.worksheetOtherWords[appLanguage], Palette.lavender, byKind[nil] ?? [])
-                }
-            }
-        }
-    }
-
-    /// A labelled group of example words (shown only when non-empty), capped so
-    /// the card stays readable.
-    @ViewBuilder
-    private func wordGroup(_ title: String, _ accent: Color, _ words: [WordEntry]) -> some View {
-        if !words.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    Circle().fill(accent).frame(width: 8, height: 8)
-                    Text(title)
-                        .font(.kawaii(13, weight: .bold, language: appLanguage))
-                        .foregroundStyle(Palette.inkSoft)
-                }
-                ForEach(words.prefix(4)) { word in wordRow(word, accent) }
+    /// A card of example words that all use the kanji with the same reading kind.
+    /// Capped so it fits without scrolling.
+    private func wordGroupCard(_ title: String, _ accent: Color, _ words: [WordEntry]) -> some View {
+        studyCard(title, "character.book.closed", accent) {
+            VStack(spacing: 12) {
+                ForEach(words.prefix(5)) { word in wordRow(word, accent) }
             }
         }
     }
@@ -385,7 +367,7 @@ public struct WorksheetView: View {
     private var verbsCard: some View {
         studyCard(L.worksheetVerbs[appLanguage], "arrow.triangle.branch", Palette.butter) {
             VStack(spacing: 12) {
-                ForEach(store.verbs) { verb in wordRow(verb, Palette.butter) }
+                ForEach(store.verbs.prefix(5)) { verb in wordRow(verb, Palette.butter) }
             }
         }
     }
