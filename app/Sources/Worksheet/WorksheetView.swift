@@ -56,7 +56,7 @@ public struct WorksheetView: View {
     private var showWrite: Bool { Platform.isPad }
 
     /// The kinds of study card, in deck order.
-    private enum Step: Equatable { case meaning, stroke, write, onWords, kunWords, otherWords, verbs, example }
+    private enum Step: Equatable { case meaning, stroke, write, onWords, kunWords, otherWords, verbs, example, quiz }
 
     /// Example words split by the reading they use, so each becomes its own card.
     private func wordGroups(_ kanji: Kanji) -> (on: [WordEntry], kun: [WordEntry], other: [WordEntry]) {
@@ -77,7 +77,54 @@ public struct WorksheetView: View {
         }
         if !store.verbs.isEmpty { s.append(.verbs) }
         s.append(.example)
+        // Close each kanji with a quick recall quiz (when there's enough material
+        // to build one) so the meaning / word sticks before moving on.
+        if let k = store.current, studyQuiz(k) != nil { s.append(.quiz) }
         return s
+    }
+
+    // MARK: Mixed-in recall quiz
+
+    /// Builds the current kanji's mini-quiz, or nil if there aren't enough
+    /// distractors. Odd-position kanji quiz one of their words (memorize related
+    /// vocabulary); the rest quiz the kanji's own meaning. Deterministic per
+    /// kanji so options don't reshuffle across re-renders.
+    private func studyQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
+        var rng = SeededRNG(seed: UInt64(bitPattern: Int64(kanji.id)))
+        let kanjiMeanings = store.queue
+            .compactMap { store.content[$0.id]?.glosses }
+            .compactMap { localizedGloss($0, appLanguage) }.filter { !$0.isEmpty }
+        let vocabMeanings = store.queue
+            .flatMap { store.content[$0.id]?.words ?? [] }
+            .compactMap { wordMeaning($0, appLanguage) }.filter { !$0.isEmpty }
+
+        // Word-meaning quiz for odd-position kanji that actually have a word.
+        if store.index % 2 == 1, let word = store.words.first,
+           let answer = wordMeaning(word, appLanguage), !answer.isEmpty {
+            let options = quizOptions(answer: answer, pool: vocabMeanings, rng: &rng)
+            if options.count >= 2 {
+                return StudyQuizSpec(
+                    glyph: kanji.literal, wordSurface: word.surface, wordReading: word.reading,
+                    prompt: L.studyQuizWordMeaning[appLanguage], options: options, answer: answer)
+            }
+        }
+        // Meaning quiz (default and fallback).
+        guard let answer = localizedGloss(store.glosses, appLanguage), !answer.isEmpty else { return nil }
+        let options = quizOptions(answer: answer, pool: kanjiMeanings, rng: &rng)
+        guard options.count >= 2 else { return nil }
+        return StudyQuizSpec(
+            glyph: kanji.literal, wordSurface: nil, wordReading: nil,
+            prompt: L.studyQuizMeaning[appLanguage], options: options, answer: answer)
+    }
+
+    /// The answer plus up to 3 distinct distractors from `pool`, shuffled with a
+    /// stable seed. Sorted before shuffling so the base order is deterministic.
+    private func quizOptions(answer: String, pool: [String], rng: inout SeededRNG) -> [String] {
+        var distractors = Array(Set(pool.filter { $0 != answer })).sorted()
+        distractors.shuffle(using: &rng)
+        var options = Array(distractors.prefix(3)) + [answer]
+        options.shuffle(using: &rng)
+        return options
     }
     /// Index of the last card in the deck.
     private var lastCard: Int { max(0, steps.count - 1) }
@@ -184,6 +231,8 @@ public struct WorksheetView: View {
             wordGroupCard(L.worksheetOtherWords[appLanguage], Palette.lavender, wordGroups(kanji).other)
         case .verbs: verbsCard
         case .example: exampleCard
+        case .quiz:
+            if let spec = studyQuiz(kanji) { StudyQuizCard(spec: spec, language: appLanguage) }
         }
     }
 
