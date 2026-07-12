@@ -35,7 +35,10 @@ extension ReviewStore: DependencyKey {
 }
 
 extension ReviewStore: TestDependencyKey {
-    public static let testValue = ReviewStore()
+    // A safe empty store: reads yield no records, writes are no-ops. Lets
+    // features that reload records on navigation (e.g. RootFeature refreshing
+    // home progress on session end) run in tests without stubbing.
+    public static let testValue = ReviewStore(loadRecords: { [] }, saveRecords: { _ in })
 }
 
 extension DependencyValues {
@@ -50,7 +53,7 @@ extension DependencyValues {
 public enum WordReviewStoreKey: DependencyKey {
     public static let liveValue = ReviewStore.directory(
         URL.applicationSupportDirectory, file: "word_reviews.json")
-    public static let testValue = ReviewStore()
+    public static let testValue = ReviewStore(loadRecords: { [] }, saveRecords: { _ in })
 }
 
 extension DependencyValues {
