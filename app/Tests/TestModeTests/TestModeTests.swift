@@ -6,12 +6,15 @@ import XCTest
 
 final class QuizSRSTests: XCTestCase {
     func testCorrectAdvancesBoxAndLengthensInterval() {
+        // A first-try correct on a brand-new item jumps to box 1 (3 days), so a
+        // confident answer isn't scheduled the same as a miss (box 0, tomorrow).
         let new = QuizSRS.schedule(box: nil, correct: true, today: 100)
-        XCTAssertEqual(new.box, 0)
-        XCTAssertEqual(new.due, 101)              // box 0 → +1 day
-        let next = QuizSRS.schedule(box: 0, correct: true, today: 100)
-        XCTAssertEqual(next.box, 1)
-        XCTAssertEqual(next.due, 103)             // box 1 → +3 days
+        XCTAssertEqual(new.box, 1)
+        XCTAssertEqual(new.due, 103)              // box 1 → +3 days
+        // Each further correct advances one more box.
+        let next = QuizSRS.schedule(box: 1, correct: true, today: 100)
+        XCTAssertEqual(next.box, 2)
+        XCTAssertEqual(next.due, 107)             // box 2 → +7 days
     }
 
     func testWrongResetsToBoxZero() {

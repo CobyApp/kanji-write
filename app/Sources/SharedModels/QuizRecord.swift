@@ -22,8 +22,20 @@ public enum QuizSRS {
     public static let intervals = [1, 3, 7, 14, 30, 60]
 
     /// The box/due after answering, given the current box (nil = brand new).
+    ///
+    /// - Correct advances one box. A brand-new item answered right on the first
+    ///   try jumps straight to box 1 (3 days) rather than box 0 (tomorrow), so a
+    ///   confident first answer isn't treated the same as a miss.
+    /// - Wrong resets to box 0 (due tomorrow), keeping shaky items in daily
+    ///   rotation until they stick.
     public static func schedule(box currentBox: Int?, correct: Bool, today: Int) -> (box: Int, due: Int) {
-        let box = correct ? min((currentBox ?? -1) + 1, intervals.count - 1) : 0
+        let box: Int
+        if correct {
+            // New (nil) + correct → box 1; otherwise one box further.
+            box = min((currentBox ?? 0) + 1, intervals.count - 1)
+        } else {
+            box = 0
+        }
         return (box, today + intervals[box])
     }
 }
