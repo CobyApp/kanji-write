@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import DesignSystem
 import PencilKit
 import SharedModels
 import SwiftUI
@@ -26,6 +27,7 @@ public struct KanjiWritingView: View {
     @Bindable public var store: StoreOf<KanjiWritingFeature>
     @State private var drawing = PKDrawing()
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.dismiss) private var dismiss
 
     public init(store: StoreOf<KanjiWritingFeature>) {
         self.store = store
@@ -58,27 +60,52 @@ public struct KanjiWritingView: View {
             }
         }
         .padding()
-        .navigationTitle(store.kanji.literal)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            Button(store.showGuide ? L.hideGuide[appLanguage] : L.showGuide[appLanguage]) {
-                store.send(.toggleGuide)
-            }
-            Button(L.clear[appLanguage]) { drawing = PKDrawing() }
-            Button(L.grade[appLanguage]) {
-                if let data = rasterizedDrawingData() {
-                    store.send(.recognize(data))
-                }
-            }
-            .disabled(drawing.strokes.isEmpty)
-            Button(L.save[appLanguage]) { store.send(.saveDrawing(drawing.dataRepresentation())) }
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            NavHeader(title: store.kanji.literal) { dismiss() }
+                .background(Palette.background)
         }
+        .safeAreaInset(edge: .bottom) { actionBar }
         .task { store.send(.onAppear) }
         .onChange(of: store.savedDrawingData) { _, data in
             if let data, let restored = try? PKDrawing(data: data) {
                 drawing = restored
             }
         }
+    }
+
+    /// The writing actions, moved off the (now-hidden) system toolbar into an
+    /// in-content bottom bar so the back button can be the shared custom header.
+    private var actionBar: some View {
+        HStack(spacing: 10) {
+            actionButton(store.showGuide ? L.hideGuide[appLanguage] : L.showGuide[appLanguage]) {
+                store.send(.toggleGuide)
+            }
+            actionButton(L.clear[appLanguage]) { drawing = PKDrawing() }
+            actionButton(L.grade[appLanguage]) {
+                if let data = rasterizedDrawingData() { store.send(.recognize(data)) }
+            }
+            .disabled(drawing.strokes.isEmpty)
+            actionButton(L.save[appLanguage], filled: true) {
+                store.send(.saveDrawing(drawing.dataRepresentation()))
+            }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(Palette.background)
+    }
+
+    private func actionButton(_ title: String, filled: Bool = false,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.kawaii(14, weight: .bold))
+                .foregroundStyle(filled ? .white : Palette.ink)
+                .frame(maxWidth: .infinity).padding(.vertical, 11)
+                .background(filled ? Palette.accent : Palette.card)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Palette.ink.opacity(filled ? 0 : 0.08), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     /// Rasterizes the current drawing to PNG data for Vision recognition.

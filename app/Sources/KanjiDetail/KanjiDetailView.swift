@@ -8,6 +8,7 @@ public struct KanjiDetailView: View {
     @Bindable public var store: StoreOf<KanjiDetailFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dismiss) private var dismiss
 
     public init(store: StoreOf<KanjiDetailFeature>) {
         self.store = store
@@ -29,15 +30,17 @@ public struct KanjiDetailView: View {
                 .readableWidth(sizeClass)
             }
         }
-        .navigationTitle(store.kanji.literal)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
             // A single 단어장(보관함) toggle — the kanji joins the same collection
             // the Home 단어장 manages. (Review/write practice moved out of here.)
-            Button { store.send(.toggleBookmark) } label: {
-                Label(store.isBookmarked ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage],
-                      systemImage: store.isBookmarked ? "bookmark.fill" : "bookmark")
+            NavHeader(title: store.kanji.literal, onBack: { dismiss() }) {
+                CircleButton(store.isBookmarked ? "bookmark.fill" : "bookmark", size: 34) {
+                    store.send(.toggleBookmark)
+                }
+                .accessibilityLabel(store.isBookmarked ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage])
             }
+            .background(Palette.background)
         }
         .task { store.send(.onAppear) }
     }
