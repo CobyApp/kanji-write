@@ -66,7 +66,8 @@ public struct QuizFeature {
 
     public enum Action: Equatable {
         case onAppear(language: AppLanguage)
-        case loaded(questions: [JLPTQuestion], studied: [Int], records: [QuizRecord], today: Int)
+        case loaded(questions: [JLPTQuestion], studied: [Int], records: [QuizRecord],
+                    today: Int, order: [Int: Int])
         case chose(String)
         case next
         case restart
@@ -76,7 +77,6 @@ public struct QuizFeature {
     @Dependency(\.quizStore) var quizStore
     @Dependency(\.reviewStore) var reviewStore
     @Dependency(\.date) var date
-    @Dependency(\.withRandomNumberGenerator) var withRandomNumberGenerator
 
     public init() {}
 
@@ -90,28 +90,33 @@ public struct QuizFeature {
             case .restart:
                 return load(state: &state)
 
-            case let .loaded(questions, studied, records, today):
+            case let .loaded(questions, studied, records, today, order):
                 state.isLoading = false
                 state.today = today
                 state.records = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
                 let studiedSet = Set(studied)
                 var items: [QuizItem] = []
-                withRandomNumberGenerator { rng in
-                    var seen = Set<String>()
-                    var newPerKanji: [Int: Int] = [:]
-                    for q in questions {
-                        let item = QuizItem(q)
-                        guard item.options.count >= 2, seen.insert(item.id).inserted else { continue }
-                        if let record = state.records[item.id] {
-                            // Already scheduled — resurface only when review is due.
-                            if record.due <= today { items.append(item) }
-                        } else if studiedSet.contains(q.kanjiID) {
-                            // New question — at most 2 per today's studied kanji.
-                            let count = newPerKanji[q.kanjiID, default: 0]
-                            if count < 2 { newPerKanji[q.kanjiID] = count + 1; items.append(item) }
-                        }
+                var seen = Set<String>()
+                var newPerKanji: [Int: Int] = [:]
+                for q in questions {
+                    let item = QuizItem(q)
+                    guard item.options.count >= 2, seen.insert(item.id).inserted else { continue }
+                    if let record = state.records[item.id] {
+                        // Already scheduled — resurface only when review is due.
+                        if record.due <= today { items.append(item) }
+                    } else if studiedSet.contains(q.kanjiID) {
+                        // New question — at most 2 per today's studied kanji.
+                        let count = newPerKanji[q.kanjiID, default: 0]
+                        if count < 2 { newPerKanji[q.kanjiID] = count + 1; items.append(item) }
                     }
-                    items.shuffle(using: &rng)
+                }
+                // Serve questions in the order the kanji were learned (study order:
+                // JLPT level → strokes → id), grouping a kanji's questions together.
+                items.sort { a, b in
+                    let ra = order[a.kanjiID] ?? Int.max
+                    let rb = order[b.kanjiID] ?? Int.max
+                    if ra != rb { return ra < rb }
+                    return a.id < b.id
                 }
                 state.queue = items
                 state.totalItems = items.count
@@ -175,11 +180,20 @@ public struct QuizFeature {
                 let parts = record.id.split(separator: ":")
                 if parts.count == 3, parts[0] == "q", let kid = Int(parts[1]) { dueKanji.insert(kid) }
             }
-            let contextKanji = Array(Set(studied).union(dueKanji))
+            let contextSet = Set(studied).union(dueKanji)
+            let contextKanji = Array(contextSet)
             // Pull every question for the context kanji; the reducer filters to
             // new-or-due and caps new questions per kanji.
             let questions = (try? await dictionaryClient.jlptQuestions(contextKanji, 99)) ?? []
-            await send(.loaded(questions: questions, studied: studied, records: records, today: today))
+            // Rank each context kanji by its position in the study curriculum so
+            // the reducer can serve questions in learned order.
+            let allKanji = (try? await dictionaryClient.allKanji()) ?? []
+            var order: [Int: Int] = [:]
+            for (index, kanji) in studyOrder(allKanji).enumerated() where contextSet.contains(kanji.id) {
+                order[kanji.id] = index
+            }
+            await send(.loaded(questions: questions, studied: studied, records: records,
+                               today: today, order: order))
         }
     }
 }

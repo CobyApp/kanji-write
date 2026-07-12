@@ -44,9 +44,18 @@ public struct QuizView: View {
         }
     }
 
+    /// "총 12문제" — the total number of questions to solve this session.
+    private var totalCountLabel: String {
+        "\(L.quizTotalPrefix[appLanguage])\(store.totalItems)\(L.quizCountUnit[appLanguage])"
+    }
+
     private var progress: some View {
         HStack(spacing: 8) {
             SectionHeader(L.quizPrompt[appLanguage], accent: Palette.lavender)
+            Text(totalCountLabel)
+                .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.lavender)
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(Palette.lavenderSoft).clipShape(Capsule())
             if store.isRetry {
                 Text(L.quizRetry[appLanguage])
                     .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.pink)
