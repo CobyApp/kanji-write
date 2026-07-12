@@ -8,6 +8,7 @@ public struct WordDetailView: View {
     @Bindable public var store: StoreOf<WordDetailFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dismiss) private var dismiss
 
     public init(store: StoreOf<WordDetailFeature>) {
         self.store = store
@@ -28,13 +29,16 @@ public struct WordDetailView: View {
                 .readableWidth(sizeClass)
             }
         }
-        .navigationTitle(store.word.surface)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            Button(store.addedToWordbook ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage]) {
-                store.send(.addToWordbook)
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            NavHeader(title: store.word.surface, onBack: { dismiss() }) {
+                CircleButton(store.addedToWordbook ? "bookmark.fill" : "bookmark", size: 34) {
+                    store.send(.addToWordbook)
+                }
+                .accessibilityLabel(store.addedToWordbook ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage])
+                .disabled(store.addedToWordbook)
             }
-            .disabled(store.addedToWordbook)
+            .background(Palette.background)
         }
         .task { store.send(.onAppear) }
     }
@@ -61,56 +65,15 @@ public struct WordDetailView: View {
     }
 
     private var kanjiSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             SectionHeader(L.kanji[appLanguage], accent: Palette.mint)
+            // Identical row to a 한자사전 entry (white card) so the two match.
             ForEach(Array(store.kanji.enumerated()), id: \.element.id) { index, kanji in
-                kanjiRow(kanji, tint: Palette.tint(index))
+                KanjiListRow(kanji: kanji,
+                             meaning: localizedGloss(store.glossesByID[kanji.id] ?? [:], appLanguage),
+                             tint: Palette.tint(index),
+                             language: appLanguage) { store.send(.kanjiTapped(kanji)) }
             }
-        }
-        .roundedCard()
-    }
-
-    /// A rich per-kanji row: glyph + meaning + 음/훈 readings, tap → kanji detail.
-    private func kanjiRow(_ kanji: Kanji, tint: (soft: Color, accent: Color)) -> some View {
-        Button { store.send(.kanjiTapped(kanji)) } label: {
-            HStack(spacing: 14) {
-                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent, size: 58, fontSize: 33)
-                VStack(alignment: .leading, spacing: 5) {
-                    if let meaning = localizedGloss(store.glossesByID[kanji.id] ?? [:], appLanguage),
-                       !meaning.isEmpty {
-                        Text(meaning)
-                            .font(.kawaii(16, weight: .bold, language: appLanguage))
-                            .foregroundStyle(Palette.ink).multilineTextAlignment(.leading)
-                    }
-                    if !kanji.onReadings.isEmpty {
-                        readingLine(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
-                    }
-                    if !kanji.kunReadings.isEmpty {
-                        readingLine(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.inkSoft)
-            }
-            .padding(12)
-            .background(tint.soft.opacity(0.4))
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.bouncy)
-    }
-
-    /// A 음/훈 reading line with a colored label chip.
-    private func readingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
-        HStack(alignment: .top, spacing: 6) {
-            Text(label)
-                .font(.kawaii(11, weight: .bold)).foregroundStyle(.white)
-                .padding(.horizontal, 7).padding(.vertical, 2)
-                .background(accent).clipShape(Capsule())
-            Text(readings.prefix(5).joined(separator: "、"))
-                .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.ink)
-                .multilineTextAlignment(.leading)
         }
     }
 
