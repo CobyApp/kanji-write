@@ -180,6 +180,9 @@ public enum L {
     public static let quizWrong = L10nText(ko: "오답", ja: "不正解", zh: "答错了", en: "Incorrect")
     public static let quizDone = L10nText(ko: "퀴즈 완료!", ja: "クイズ完了！", zh: "测验完成！", en: "Quiz complete!")
     public static let quizAgain = L10nText(ko: "다시 풀기", ja: "もう一度", zh: "再来一次", en: "Play again")
+    // Total number of questions in this quiz session, shown as prefix + count + unit.
+    public static let quizTotalPrefix = L10nText(ko: "총 ", ja: "全", zh: "共", en: "")
+    public static let quizCountUnit = L10nText(ko: "문제", ja: "問", zh: "题", en: " questions")
     public static let quizNothingDue = L10nText(
         ko: "복습할 내용이 없어요\n학습 후 다시 열어보세요",
         ja: "復習する内容がありません\n学習してからまた開いてね",
