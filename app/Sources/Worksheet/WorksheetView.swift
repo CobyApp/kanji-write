@@ -55,8 +55,9 @@ public struct WorksheetView: View {
     /// so it's only part of the deck on iPad.
     private var showWrite: Bool { Platform.isPad }
 
-    /// The kinds of study card, in deck order.
-    private enum Step: Equatable { case meaning, stroke, write, onWords, kunWords, otherWords, verbs, example, quiz }
+    /// The kinds of study card, in deck order. `quiz(i)` is the i-th recall quiz
+    /// for the current kanji.
+    private enum Step: Equatable { case meaning, stroke, write, onWords, kunWords, otherWords, verbs, example, quiz(Int) }
 
     /// Example words split by the reading they use, so each becomes its own card.
     private func wordGroups(_ kanji: Kanji) -> (on: [WordEntry], kun: [WordEntry], other: [WordEntry]) {
@@ -77,50 +78,114 @@ public struct WorksheetView: View {
         }
         if !store.verbs.isEmpty { s.append(.verbs) }
         s.append(.example)
-        // Close each kanji with a quick recall quiz (when there's enough material
-        // to build one) so the meaning / word sticks before moving on.
-        if let k = store.current, studyQuiz(k) != nil { s.append(.quiz) }
+        // Close each kanji with quick recall quizzes (one about the kanji itself,
+        // one about a related word) so meaning / readings / vocabulary stick.
+        if let k = store.current {
+            for i in studyQuizzes(k).indices { s.append(.quiz(i)) }
+        }
         return s
     }
 
-    // MARK: Mixed-in recall quiz
+    // MARK: Mixed-in recall quizzes
 
-    /// Builds the current kanji's mini-quiz, or nil if there aren't enough
-    /// distractors. Odd-position kanji quiz one of their words (memorize related
-    /// vocabulary); the rest quiz the kanji's own meaning. Deterministic per
-    /// kanji so options don't reshuffle across re-renders.
-    private func studyQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
-        var rng = SeededRNG(seed: UInt64(bitPattern: Int64(kanji.id)))
-        let kanjiMeanings = store.queue
-            .compactMap { store.content[$0.id]?.glosses }
-            .compactMap { localizedGloss($0, appLanguage) }.filter { !$0.isEmpty }
-        let vocabMeanings = store.queue
-            .flatMap { store.content[$0.id]?.words ?? [] }
-            .compactMap { wordMeaning($0, appLanguage) }.filter { !$0.isEmpty }
+    /// The current kanji's recall quizzes: up to two — one about the kanji itself
+    /// (meaning / 음독 / 훈독) and one about a related word (뜻 / 읽기). Rotating
+    /// the facet by kanji id gives variety across a session so every aspect gets
+    /// exercised. Empty when there isn't enough material for even one.
+    private func studyQuizzes(_ kanji: Kanji) -> [StudyQuizSpec] {
+        [kanjiFacetQuiz(kanji), wordFacetQuiz(kanji)].compactMap { $0 }
+    }
 
-        // Word-meaning quiz for odd-position kanji that actually have a word.
-        if store.index % 2 == 1, let word = store.words.first,
-           let answer = wordMeaning(word, appLanguage), !answer.isEmpty {
-            let options = quizOptions(answer: answer, pool: vocabMeanings, rng: &rng)
+    /// A quiz on the kanji itself: its meaning, 음독, or 훈독 — whichever facets
+    /// have data and enough distractors, rotated by kanji id.
+    private func kanjiFacetQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
+        var rng = SeededRNG(seed: seed(kanji, salt: 1))
+        var candidates: [StudyQuizSpec] = []
+
+        // Meaning (options are localized meaning text).
+        if let answer = localizedGloss(store.glosses, appLanguage), !answer.isEmpty {
+            let pool = store.queue
+                .compactMap { store.content[$0.id]?.glosses }
+                .compactMap { localizedGloss($0, appLanguage) }
+            let options = quizOptions(answer: answer, pool: pool, rng: &rng)
             if options.count >= 2 {
-                return StudyQuizSpec(
-                    glyph: kanji.literal, wordSurface: word.surface, wordReading: word.reading,
-                    prompt: L.studyQuizWordMeaning[appLanguage], options: options, answer: answer)
+                candidates.append(StudyQuizSpec(
+                    subject: .kanji(kanji.literal), prompt: L.studyQuizMeaning[appLanguage],
+                    options: options, answer: answer, japaneseOptions: false))
             }
         }
-        // Meaning quiz (default and fallback).
-        guard let answer = localizedGloss(store.glosses, appLanguage), !answer.isEmpty else { return nil }
-        let options = quizOptions(answer: answer, pool: kanjiMeanings, rng: &rng)
-        guard options.count >= 2 else { return nil }
-        return StudyQuizSpec(
-            glyph: kanji.literal, wordSurface: nil, wordReading: nil,
-            prompt: L.studyQuizMeaning[appLanguage], options: options, answer: answer)
+        // 음독 (on) — options are the whole on-reading set of session kanji.
+        let on = kanji.onReadings.joined(separator: "、")
+        if !on.isEmpty {
+            let pool = store.queue.map { $0.onReadings.joined(separator: "、") }
+            let options = quizOptions(answer: on, pool: pool, rng: &rng)
+            if options.count >= 2 {
+                candidates.append(StudyQuizSpec(
+                    subject: .kanji(kanji.literal), prompt: L.studyQuizOn[appLanguage],
+                    options: options, answer: on, japaneseOptions: true))
+            }
+        }
+        // 훈독 (kun).
+        let kun = kanji.kunReadings.joined(separator: "、")
+        if !kun.isEmpty {
+            let pool = store.queue.map { $0.kunReadings.joined(separator: "、") }
+            let options = quizOptions(answer: kun, pool: pool, rng: &rng)
+            if options.count >= 2 {
+                candidates.append(StudyQuizSpec(
+                    subject: .kanji(kanji.literal), prompt: L.studyQuizKun[appLanguage],
+                    options: options, answer: kun, japaneseOptions: true))
+            }
+        }
+        return pick(candidates, kanji)
+    }
+
+    /// A quiz on a related word: its meaning or its reading, rotated by kanji id.
+    private func wordFacetQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
+        guard let word = store.words.first else { return nil }
+        var rng = SeededRNG(seed: seed(kanji, salt: 2))
+        let allWords = store.queue.flatMap { store.content[$0.id]?.words ?? [] }
+        var candidates: [StudyQuizSpec] = []
+
+        // Word meaning (localized options).
+        if let answer = wordMeaning(word, appLanguage), !answer.isEmpty {
+            let pool = allWords.compactMap { wordMeaning($0, appLanguage) }
+            let options = quizOptions(answer: answer, pool: pool, rng: &rng)
+            if options.count >= 2 {
+                candidates.append(StudyQuizSpec(
+                    subject: .word(word.surface, reading: word.reading),
+                    prompt: L.studyQuizWordMeaning[appLanguage],
+                    options: options, answer: answer, japaneseOptions: false))
+            }
+        }
+        // Word reading (hide the reading in the subject; options are kana).
+        if !word.reading.isEmpty {
+            let pool = allWords.map(\.reading)
+            let options = quizOptions(answer: word.reading, pool: pool, rng: &rng)
+            if options.count >= 2 {
+                candidates.append(StudyQuizSpec(
+                    subject: .word(word.surface, reading: nil),
+                    prompt: L.studyQuizWordReading[appLanguage],
+                    options: options, answer: word.reading, japaneseOptions: true))
+            }
+        }
+        return pick(candidates, kanji)
+    }
+
+    /// Deterministically pick one candidate facet for this kanji (rotates the
+    /// facet across kanji so a session covers meaning / on / kun / word variety).
+    private func pick(_ candidates: [StudyQuizSpec], _ kanji: Kanji) -> StudyQuizSpec? {
+        guard !candidates.isEmpty else { return nil }
+        return candidates[abs(kanji.id) % candidates.count]
+    }
+
+    private func seed(_ kanji: Kanji, salt: UInt64) -> UInt64 {
+        UInt64(bitPattern: Int64(kanji.id)) &* 0x9E3779B1 &+ salt
     }
 
     /// The answer plus up to 3 distinct distractors from `pool`, shuffled with a
     /// stable seed. Sorted before shuffling so the base order is deterministic.
     private func quizOptions(answer: String, pool: [String], rng: inout SeededRNG) -> [String] {
-        var distractors = Array(Set(pool.filter { $0 != answer })).sorted()
+        var distractors = Array(Set(pool.filter { $0 != answer && !$0.isEmpty })).sorted()
         distractors.shuffle(using: &rng)
         var options = Array(distractors.prefix(3)) + [answer]
         options.shuffle(using: &rng)
@@ -231,8 +296,9 @@ public struct WorksheetView: View {
             wordGroupCard(L.worksheetOtherWords[appLanguage], Palette.lavender, wordGroups(kanji).other)
         case .verbs: verbsCard
         case .example: exampleCard
-        case .quiz:
-            if let spec = studyQuiz(kanji) { StudyQuizCard(spec: spec, language: appLanguage) }
+        case let .quiz(i):
+            let quizzes = studyQuizzes(kanji)
+            if quizzes.indices.contains(i) { StudyQuizCard(spec: quizzes[i], language: appLanguage) }
         }
     }
 

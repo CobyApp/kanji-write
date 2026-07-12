@@ -2,10 +2,11 @@ import DesignSystem
 import SharedModels
 import SwiftUI
 
-/// One quick multiple-choice recall check mixed into the study deck: the learner
-/// picks the meaning of the kanji (or one of its words) before moving on, so the
-/// material sticks. Selection state resets each time the card is shown (the deck
-/// re-creates it via `.id`), so revisiting re-quizzes.
+/// One quick multiple-choice recall check mixed into the study deck. It quizzes
+/// a single facet of the current kanji — its meaning, 음독(on) / 훈독(kun)
+/// reading, or a related word's meaning / reading — so the material sticks.
+/// Selection state resets each time the card is shown (the deck re-creates it
+/// via `.id`), so revisiting re-quizzes.
 struct StudyQuizCard: View {
     let spec: StudyQuizSpec
     let language: AppLanguage
@@ -41,20 +42,34 @@ struct StudyQuizCard: View {
         }
     }
 
-    /// The thing being asked about: a kanji glyph, or a word (surface + reading).
+    /// The thing being asked about: a kanji glyph, or a word (with furigana,
+    /// unless the reading is the answer — then it's hidden).
     @ViewBuilder private var subject: some View {
         VStack(spacing: 12) {
-            if let surface = spec.wordSurface {
-                RubyWord(surface, reading: spec.wordReading ?? "", size: 30)
-            } else {
-                Text(spec.glyph)
+            switch spec.subject {
+            case let .kanji(glyph):
+                Text(glyph)
                     .font(.kawaiiJP(76, weight: .bold)).japaneseGlyphs()
                     .foregroundStyle(Palette.ink)
+            case let .word(surface, reading):
+                if let reading, !reading.isEmpty {
+                    RubyWord(surface, reading: reading, size: 30)
+                } else {
+                    Text(surface)
+                        .font(.kawaiiJP(40, weight: .bold)).japaneseGlyphs()
+                        .foregroundStyle(Palette.ink)
+                }
             }
             Text(spec.prompt)
                 .font(.kawaii(15, language: language)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func optionFont() -> Font {
+        // Japanese answers (readings / words) render in the Japanese face; meaning
+        // answers use the app-language face.
+        spec.japaneseOptions ? .kawaiiJP(17, weight: .bold) : .kawaii(16, weight: .bold, language: language)
     }
 
     private var options: some View {
@@ -63,7 +78,7 @@ struct StudyQuizCard: View {
                 Button { if choice == nil { choice = option } } label: {
                     HStack {
                         Text(option)
-                            .font(.kawaii(16, weight: .bold, language: language))
+                            .font(optionFont()).japaneseGlyphs()
                             .foregroundStyle(optionText(option)).multilineTextAlignment(.leading)
                         Spacer(minLength: 0)
                         if choice != nil, option == spec.answer {
@@ -106,14 +121,19 @@ struct StudyQuizCard: View {
     }
 }
 
-/// A study mini-quiz: the subject to show plus its options and correct answer.
+/// A study mini-quiz: what to show, the prompt, the options and the answer.
 struct StudyQuizSpec: Equatable {
-    var glyph: String
-    var wordSurface: String?
-    var wordReading: String?
+    /// What the learner is shown and asked about.
+    enum Subject: Equatable {
+        case kanji(String)                       // a kanji glyph
+        case word(String, reading: String?)      // a word; reading hidden when it's the answer
+    }
+    var subject: Subject
     var prompt: String
     var options: [String]
     var answer: String
+    /// Options are Japanese text (readings / words) → render in the Japanese face.
+    var japaneseOptions: Bool
 }
 
 /// A deterministic RNG so a kanji's quiz options keep a stable order across the
