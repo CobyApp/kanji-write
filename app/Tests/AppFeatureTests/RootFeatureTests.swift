@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 import KanjiDetail
 import KanjiListFeature
 import Practice
@@ -140,7 +141,12 @@ final class RootFeatureTests: XCTestCase {
     func testDismissingSessionClearsIt() async {
         var initial = RootFeature.State()
         initial.session = .worksheet(WorksheetFeature.State())
-        let store = TestStore(initialState: initial) { RootFeature() }
+        let store = TestStore(initialState: initial) {
+            RootFeature()
+        } withDependencies: {
+            // Session end reloads records, which stamps `today` off the date clock.
+            $0.date = .constant(Date(timeIntervalSince1970: 0))
+        }
         store.exhaustivity = .off
 
         await store.send(.session(.dismiss))
@@ -183,7 +189,11 @@ final class RootFeatureTests: XCTestCase {
         var initial = RootFeature.State()
         initial.session = .worksheet(WorksheetFeature.State())
         initial.sessionPath = StackState([.word(WordDetailFeature.State(word: .yamamichi))])
-        let store = TestStore(initialState: initial) { RootFeature() }
+        let store = TestStore(initialState: initial) {
+            RootFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: 0))
+        }
         store.exhaustivity = .off
 
         await store.send(.session(.dismiss))
