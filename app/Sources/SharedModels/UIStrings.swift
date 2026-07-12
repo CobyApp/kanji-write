@@ -203,10 +203,14 @@ public enum L {
     public static let worksheetQuiz = L10nText(ko: "확인 퀴즈", ja: "確認クイズ", zh: "小测验", en: "Quick check")
     public static let studyQuizMeaning = L10nText(
         ko: "이 한자의 뜻은?", ja: "この漢字の意味は？", zh: "这个汉字的意思是？", en: "What does this kanji mean?")
-    public static let studyQuizReading = L10nText(
-        ko: "이 한자의 읽기는?", ja: "この漢字の読みは？", zh: "这个汉字怎么读？", en: "How is this kanji read?")
+    public static let studyQuizOn = L10nText(
+        ko: "이 한자의 음독은?", ja: "この漢字の音読みは？", zh: "这个汉字的音读？", en: "On'yomi of this kanji?")
+    public static let studyQuizKun = L10nText(
+        ko: "이 한자의 훈독은?", ja: "この漢字の訓読みは？", zh: "这个汉字的训读？", en: "Kun'yomi of this kanji?")
     public static let studyQuizWordMeaning = L10nText(
         ko: "이 단어의 뜻은?", ja: "この単語の意味は？", zh: "这个词的意思是？", en: "What does this word mean?")
+    public static let studyQuizWordReading = L10nText(
+        ko: "이 단어의 읽기는?", ja: "この単語の読み方は？", zh: "这个词怎么读？", en: "How is this word read?")
     public static let testPrompt = L10nText(ko: "뜻을 보고 한자를 써보세요", ja: "意味を見て漢字を書こう", zh: "根据意思写汉字", en: "Write the kanji for this meaning")
     public static let practicePrompt = L10nText(ko: "반복해서 써보며 익히세요", ja: "繰り返し書いて覚えよう", zh: "反复书写来记住", en: "Write it repeatedly to memorize")
     public static let pickToPractice = L10nText(ko: "연습할 한자를 고르세요", ja: "練習する漢字を選ぼう", zh: "选择要练习的汉字", en: "Pick a kanji to practice")
