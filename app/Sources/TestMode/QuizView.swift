@@ -91,14 +91,17 @@ public struct QuizView: View {
 
     /// The prompt with its target word (`focus`) underlined and accented, so it's
     /// unmistakable which word the question is about (e.g. the word to read).
+    /// Split into before/target/after Texts so the underline reliably spans the
+    /// whole target (every kanji), not just its first glyph.
     private func promptText(_ item: QuizItem) -> Text {
-        guard let focus = item.focus, !focus.isEmpty else { return Text(item.prompt) }
-        var attributed = AttributedString(item.prompt)
-        if let range = attributed.range(of: focus) {
-            attributed[range].underlineStyle = .single
-            attributed[range].foregroundColor = Palette.pink
-        }
-        return Text(attributed)
+        guard let focus = item.focus, !focus.isEmpty,
+              let range = item.prompt.range(of: focus) else { return Text(item.prompt) }
+        let before = String(item.prompt[..<range.lowerBound])
+        let target = String(item.prompt[range])
+        let after = String(item.prompt[range.upperBound...])
+        return Text(before)
+            + Text(target).underline().foregroundColor(Palette.pink)
+            + Text(after)
     }
 
     /// Short stems (a single word/reading) get big type; full sentences wrap at a
