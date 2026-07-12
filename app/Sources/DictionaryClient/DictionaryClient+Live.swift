@@ -346,7 +346,7 @@ extension DictionaryClient: DependencyKey {
             let placeholders = kanjiIDs.map { _ in "?" }.joined(separator: ",")
             return try await queue.read { db -> [JLPTQuestion] in
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT id, kanji_id, level, kind, prompt, options, answer, explanation, focus
+                    SELECT id, kanji_id, level, kind, prompt, options, answer, explanations, focus
                     FROM jlpt_question
                     WHERE kanji_id IN (\(placeholders))
                     ORDER BY kanji_id, id
@@ -364,10 +364,16 @@ extension DictionaryClient: DependencyKey {
                           let options = try? JSONDecoder().decode([String].self, from: data),
                           options.count >= 2 else { continue }
                     perKanjiCount[kid] = kept + 1
+                    // Explanations are a JSON object (lang → 해설).
+                    var explanations: [String: String] = [:]
+                    if let ex: String = row["explanations"], let d = ex.data(using: .utf8),
+                       let map = try? JSONDecoder().decode([String: String].self, from: d) {
+                        explanations = map
+                    }
                     out.append(JLPTQuestion(
                         id: row["id"], kanjiID: kid, level: row["level"], kind: row["kind"],
                         prompt: row["prompt"], options: options, answer: row["answer"],
-                        explanation: row["explanation"], focus: row["focus"]))
+                        explanations: explanations, focus: row["focus"]))
                 }
                 return out
             }

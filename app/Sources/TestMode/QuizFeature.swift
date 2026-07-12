@@ -16,15 +16,23 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
     public let explanation: String?
     public let focus: String?    // substring of prompt to underline (target word)
 
-    init(_ q: JLPTQuestion) {
+    init(_ q: JLPTQuestion, language: AppLanguage) {
         self.id = "q:\(q.kanjiID):\(q.id)"
         self.kanjiID = q.kanjiID
         self.kind = q.kind
         self.prompt = q.prompt
         self.options = q.options
         self.answer = q.options.indices.contains(q.answer) ? q.options[q.answer] : (q.options.first ?? "")
-        self.explanation = q.explanation
+        self.explanation = Self.localized(q.explanations, language)
         self.focus = q.focus
+    }
+
+    /// The 해설 in the chosen language, falling back deterministically.
+    static func localized(_ dict: [String: String], _ language: AppLanguage) -> String? {
+        for key in [language.glossKey, "en", "ko", "ja", "zh"] {
+            if let value = dict[key], !value.isEmpty { return value }
+        }
+        return dict.values.first { !$0.isEmpty }
     }
 }
 
@@ -99,12 +107,13 @@ public struct QuizFeature {
                 state.today = today
                 state.records = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
                 let studiedSet = Set(studied)
+                let lang = state.language
                 var items: [QuizItem] = []
                 withRandomNumberGenerator { rng in
                     var seen = Set<String>()
                     var newPerKanji: [Int: Int] = [:]
                     for q in questions {
-                        let item = QuizItem(q)
+                        let item = QuizItem(q, language: lang)
                         guard item.options.count >= 2, seen.insert(item.id).inserted else { continue }
                         if let record = state.records[item.id] {
                             // Already scheduled — resurface only when review is due.
