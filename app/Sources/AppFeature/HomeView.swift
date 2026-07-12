@@ -333,7 +333,8 @@ struct HomeView: View {
                         subtitle: due > 0 ? L.reviewSub[appLanguage] : L.quizSub[appLanguage],
                         count: due > 0 ? due : nil,
                         soft: Palette.lavenderSoft, accent: Palette.lavender) {
-            store.send(.startQuiz(level: targetLevel))
+            // Pass today's planned new kanji so the quiz works even before study.
+            store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
         }
     }
 
@@ -358,7 +359,7 @@ struct HomeView: View {
         return launcher(icon: "bookmark.fill", title: L.wordbook[appLanguage],
                         subtitle: "\(L.kanji[appLanguage]) \(bookmarkedKanji.count) · \(L.words[appLanguage]) \(store.wordReview.words.count)",
                         count: total > 0 ? total : nil,
-                        soft: Palette.lavenderSoft, accent: Palette.lavender) {
+                        soft: Palette.coralSoft, accent: Palette.coral) {
             store.send(.setShowWordbook(true))
         }
     }

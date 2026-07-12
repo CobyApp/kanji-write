@@ -39,6 +39,9 @@ public struct QuizFeature {
     public struct State: Equatable {
         public var level: String
         public var language: AppLanguage
+        /// Today's planned new kanji (from the study plan) — quizzable even before
+        /// they've been studied, so the quiz is never empty on a fresh day.
+        public var plannedIDs: [Int]
         public var today = 0
         public var records: [String: QuizRecord] = [:]
 
@@ -52,8 +55,9 @@ public struct QuizFeature {
         public var started = false
         public var isLoading = false
 
-        public init(level: String, language: AppLanguage = .ko) {
+        public init(level: String, plannedIDs: [Int] = [], language: AppLanguage = .ko) {
             self.level = level
+            self.plannedIDs = plannedIDs
             self.language = language
         }
 
@@ -158,15 +162,18 @@ public struct QuizFeature {
     private func load(state: inout State) -> Effect<Action> {
         state.isLoading = true
         state.started = false
+        let planned = state.plannedIDs
         return .run { send in
             let today = Int(date.now.timeIntervalSince1970 / 86_400)
             // Read the kanji SRS fresh from disk (a study session may have just
             // written it) — kanji studied today OR due for review are the new
-            // material; review questions are woven in from the quiz SRS below.
+            // material. Today's *planned* kanji are folded in too so the quiz
+            // works even before today's study is done.
             let reviewRecords = await reviewStore.loadRecords()
-            let studied = reviewRecords
+            let studiedRecords = reviewRecords
                 .filter { $0.lastReviewedDay == today || $0.due <= today }
                 .map(\.kanjiID)
+            let studied = Array(Set(studiedRecords).union(planned))
             let records = await quizStore.load()
             // Kanji referenced by any due quiz record → re-fetch their questions so
             // the specific due question can be resurfaced ("q:<kanjiID>:<qid>").
