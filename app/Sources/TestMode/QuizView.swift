@@ -6,6 +6,8 @@ import SwiftUI
 public struct QuizView: View {
     @Bindable public var store: StoreOf<QuizFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    // Stamped when a quiz finishes so Home knows today's quiz is done.
+    @AppStorage("lastQuizDay") private var lastQuizDay = -1
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<QuizFeature>) {
@@ -20,6 +22,9 @@ public struct QuizView: View {
         .navigationTitle(L.quiz[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
         .task { store.send(.onAppear(language: appLanguage)) }
+        .onChange(of: store.isFinished) { _, finished in
+            if finished { lastQuizDay = store.today }
+        }
     }
 
     @ViewBuilder

@@ -14,8 +14,12 @@ struct HomeView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("newPerDay") private var newPerDay = 7
+    // Epoch-day the last quiz was completed (set by QuizView), so Home can tell
+    // whether today's quiz is still pending.
+    @AppStorage("lastQuizDay") private var lastQuizDay = -1
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showPlan = false
+    @State private var showStudyDoneConfirm = false
 
     private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, level: targetLevel) }
     private var learnedInLevel: Int {
@@ -64,6 +68,24 @@ struct HomeView: View {
     private var doneToday: Int { learnedToday(records: store.review.records.elements, today: store.review.today) }
     private var goalFraction: Double { newPerDay > 0 ? min(Double(doneToday) / Double(newPerDay), 1) : 0 }
     private var remaining: Int { remainingNew(order: levelOrder, records: store.review.records.elements) }
+
+    /// Today's new-kanji goal has been met (and there's still more to pull from).
+    private var studyDoneToday: Bool {
+        newPerDay > 0 && doneToday >= newPerDay && !session.newIDs.isEmpty
+    }
+    /// Today's quiz has already been completed.
+    private var quizTakenToday: Bool { lastQuizDay == store.review.today }
+
+    /// 학습하기 tapped. If today's goal is already met, gate entry behind a
+    /// confirmation (pull tomorrow's study forward / take the pending quiz);
+    /// otherwise enter study directly.
+    private func startStudyTapped() {
+        if studyDoneToday {
+            showStudyDoneConfirm = true
+        } else {
+            store.send(.startStudy)
+        }
+    }
 
     /// The next never-seen kanji in the level (what the widget/watch previews).
     private var nextKanji: Kanji? {
@@ -117,6 +139,20 @@ struct HomeView: View {
             if store.showWordbook { wordbookOverlay.zIndex(1) }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .confirmationDialog(L.studyDoneTitle[appLanguage], isPresented: $showStudyDoneConfirm,
+                            titleVisibility: .visible) {
+            Button(L.studyPullTomorrow[appLanguage]) { store.send(.startStudy) }
+            // Only offered while today's quiz is still outstanding — lets the
+            // learner take it instead of skipping straight to tomorrow.
+            if !quizTakenToday {
+                Button(L.studyTakeQuizNow[appLanguage]) { store.send(.startQuiz(level: targetLevel)) }
+            }
+            Button(L.cancel[appLanguage], role: .cancel) {}
+        } message: {
+            Text(quizTakenToday
+                 ? L.studyDoneMessage[appLanguage]
+                 : "\(L.studyQuizPending[appLanguage]) \(L.studyDoneMessage[appLanguage])")
+        }
         .task {
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
@@ -242,7 +278,7 @@ struct HomeView: View {
                   spacing: 14) {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
-                     soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
+                     soft: Palette.pinkSoft, accent: Palette.pink) { startStudyTapped() }
             quizLauncher
             // Free handwriting is an Apple-Pencil activity → iPad only.
             dictionaryButton
@@ -322,7 +358,7 @@ struct HomeView: View {
         VStack(spacing: 14) {
             launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                      subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
-                     soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
+                     soft: Palette.pinkSoft, accent: Palette.pink) { startStudyTapped() }
             quizLauncher
         }
     }

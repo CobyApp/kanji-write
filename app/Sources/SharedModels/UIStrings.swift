@@ -221,6 +221,23 @@ public enum L {
         zh: "将删除所有汉字·单词的学习记录和单词本，无法撤销。",
         en: "Deletes all kanji/word progress and your wordbook. This can’t be undone.")
     public static let cancel = L10nText(ko: "취소", ja: "キャンセル", zh: "取消", en: "Cancel")
+    // Study-done gate: shown when today's goal is met and 학습하기 is tapped again.
+    public static let studyDoneTitle = L10nText(
+        ko: "오늘 학습 완료!", ja: "今日の学習が完了！", zh: "今日学习完成！", en: "Today's study is done!")
+    public static let studyDoneMessage = L10nText(
+        ko: "내일 학습을 미리 당겨서 할까요?",
+        ja: "明日の学習を先取りしますか？",
+        zh: "要提前学习明天的内容吗？",
+        en: "Pull tomorrow's study forward and do it now?")
+    public static let studyPullTomorrow = L10nText(
+        ko: "내일 학습 미리 하기", ja: "明日の学習を先取り", zh: "提前学明天的", en: "Study tomorrow's now")
+    public static let studyQuizPending = L10nText(
+        ko: "오늘 퀴즈를 아직 안 풀었어요.",
+        ja: "今日のクイズをまだ解いていません。",
+        zh: "今天的测验还没做。",
+        en: "You haven't taken today's quiz yet.")
+    public static let studyTakeQuizNow = L10nText(
+        ko: "오늘 퀴즈 풀기", ja: "今日のクイズを解く", zh: "做今天的测验", en: "Take today's quiz")
     public static let reset = L10nText(ko: "초기화", ja: "リセット", zh: "重置", en: "Reset")
 
     // Practice — level filter
