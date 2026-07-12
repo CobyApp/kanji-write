@@ -245,13 +245,15 @@ struct HomeView: View {
                      soft: Palette.pinkSoft, accent: Palette.pink) { store.send(.startStudy) }
             quizLauncher
             // Free handwriting is an Apple-Pencil activity → iPad only.
+            dictionaryButton
+            wordDictionaryButton
+            // Free handwriting is an Apple-Pencil activity → iPad only. Placed
+            // second-from-last, just before the 단어장.
             if Platform.isPad {
                 launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
                          subtitle: L.practiceSub[appLanguage], count: nil,
-                         soft: Palette.mintSoft, accent: Palette.mint) { store.send(.startPractice) }
+                         soft: Palette.butterSoft, accent: Palette.butter) { store.send(.startPractice) }
             }
-            dictionaryButton
-            wordDictionaryButton
             wordbookButton
         }
     }
@@ -332,7 +334,7 @@ struct HomeView: View {
         return launcher(icon: "questionmark.circle.fill", title: L.quiz[appLanguage],
                         subtitle: due > 0 ? L.reviewSub[appLanguage] : L.quizSub[appLanguage],
                         count: due > 0 ? due : nil,
-                        soft: Palette.lavenderSoft, accent: Palette.lavender) {
+                        soft: Palette.coralSoft, accent: Palette.coral) {
             store.send(.startQuiz(level: targetLevel))
         }
     }
@@ -344,11 +346,12 @@ struct HomeView: View {
     }
 
     private var wordDictionaryButton: some View {
-        // Butter so each launcher owns a distinct hue (pink · lavender · mint ·
-        // sky · butter) — no two tiles share a color.
+        // Distinct hue per launcher — study/quiz/practice run warm
+        // (pink · coral · butter), the three references run cool (sky · mint ·
+        // lavender) so no two tiles share a color.
         launcher(icon: "text.book.closed", title: L.wordDictionary[appLanguage],
                  subtitle: L.wordSearchPrompt[appLanguage], count: nil,
-                 soft: Palette.butterSoft, accent: Palette.butter) { store.send(.openWordDictionary) }
+                 soft: Palette.mintSoft, accent: Palette.mint) { store.send(.openWordDictionary) }
     }
 
     /// The 단어장 (saved collection) — opens the bulk-manage overlay for the
