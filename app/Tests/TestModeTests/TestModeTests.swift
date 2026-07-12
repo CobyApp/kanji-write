@@ -42,7 +42,7 @@ final class QuizFeatureTests: XCTestCase {
             QuizFeature()
         } withDependencies: {
             $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
-            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            $0.dictionaryClient.allKanji = { [] }   // study-order rank source (empty → stable order)
             // A kanji studied today (lastReviewedDay == today) feeds the quiz.
             $0.reviewStore.loadRecords = {
                 [ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: day + 3, lastReviewedDay: day)]
@@ -67,7 +67,7 @@ final class QuizFeatureTests: XCTestCase {
             QuizFeature()
         } withDependencies: {
             $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
-            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            $0.dictionaryClient.allKanji = { [] }   // study-order rank source (empty → stable order)
             $0.reviewStore.loadRecords = {
                 [ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: day + 3, lastReviewedDay: day)]
             }
@@ -91,7 +91,7 @@ final class QuizFeatureTests: XCTestCase {
             QuizFeature()
         } withDependencies: {
             $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
-            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            $0.dictionaryClient.allKanji = { [] }   // study-order rank source (empty → stable order)
             $0.reviewStore.loadRecords = {
                 [ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: day + 3, lastReviewedDay: day)]
             }
