@@ -84,7 +84,7 @@ final class QuizFeatureTests: XCTestCase {
             QuizFeature()
         } withDependencies: {
             $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
-            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            $0.dictionaryClient.allKanji = { [] }   // study-order rank source (empty → stable order)
             $0.reviewStore.loadRecords = { [] }        // nothing studied, nothing due
             $0.quizStore.load = { [] }
             $0.quizStore.save = { _ in }
