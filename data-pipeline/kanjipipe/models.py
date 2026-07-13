@@ -60,11 +60,12 @@ class LlmGloss:
 
 @dataclass
 class JlptQuestion:
-    literal: str          # the kanji this question is about (join key)
-    level: str            # 'N5'..'N1'
-    kind: str             # 'reading' | 'orthography' | 'context'
+    literal: str                  # the kanji this question is about (join key)
+    level: str                    # 'N5'..'N1'
+    kind: str                     # 'reading' | 'orthography' | 'context'
     prompt: str
     options: list[str]
-    answer: int           # 0-based index into options
-    explanation: str | None = None
+    answer: int                   # 0-based index into options
+    explanations: dict            # lang code → 해설 (ko/ja/zh/en)
+    focus: str | None = None      # substring of prompt to underline
     focus: str | None = None   # substring of prompt to underline (target word)

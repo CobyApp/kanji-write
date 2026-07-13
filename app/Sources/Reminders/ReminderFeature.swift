@@ -12,7 +12,7 @@ public struct ReminderFeature {
     public enum Action: Equatable {
         case apply(enabled: Bool, hour: Int)
         case authorizationResult(Bool)
-        case resetProgress   // clears kanji + word SRS records, the wordbook, and quiz history
+        case resetProgress   // clears kanji + word SRS records, quiz SRS, wordbook
     }
 
     @Dependency(\.notificationClient) var notificationClient
@@ -29,8 +29,7 @@ public struct ReminderFeature {
                 return .run { _ in
                     await reviewStore.saveRecords([])
                     await wordReviewStore.saveRecords([])
-                    // Progress reset also wipes quiz history so quizzes start fresh.
-                    await quizStore.save([])
+                    await quizStore.save([])   // reset quiz spaced-repetition too
                 }
             case let .apply(enabled, hour):
                 guard enabled else {
