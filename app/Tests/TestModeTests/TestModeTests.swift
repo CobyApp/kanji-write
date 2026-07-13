@@ -50,7 +50,7 @@ final class QuizFeatureTests: XCTestCase {
         JLPTQuestion(
             id: id, kanjiID: kanji, level: "N5", kind: "reading",
             prompt: "問題\(id)", options: ["あ\(id)", "い\(id)", "う\(id)", "え\(id)"],
-            answer: answer, explanation: "해설\(id)")
+            answer: answer, explanations: ["ko": "해설\(id)"])
     }
 
     func testTodaysStudiedKanjiProduceQuestions() async {
@@ -76,6 +76,28 @@ final class QuizFeatureTests: XCTestCase {
         await store.receive(\.loaded)
         XCTAssertFalse(store.state.queue.isEmpty)          // today's kanji → questions
         XCTAssertTrue(store.state.started)
+    }
+
+    func testPlannedKanjiAreQuizzableBeforeStudy() async {
+        let day = 100
+        let store = TestStore(initialState: QuizFeature.State(level: "N5", plannedIDs: [7])) {
+            QuizFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: Double(day) * 86_400))
+            $0.withRandomNumberGenerator = WithRandomNumberGenerator(SystemRandomNumberGenerator())
+            $0.reviewStore.loadRecords = { [] }        // nothing studied, nothing due
+            $0.quizStore.load = { [] }
+            $0.quizStore.save = { _ in }
+            $0.dictionaryClient.jlptQuestions = { ids, _ in
+                ids.contains(7) ? [self.question(70, kanji: 7)] : []
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.onAppear(language: .ko))
+        await store.receive(\.loaded)
+        // Even with no study today, today's planned kanji feed the quiz.
+        XCTAssertFalse(store.state.queue.isEmpty)
     }
 
     func testNewQuestionsCappedAtTwoPerKanji() async {

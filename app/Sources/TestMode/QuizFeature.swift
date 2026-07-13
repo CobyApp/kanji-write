@@ -16,13 +16,13 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
     public let explanation: String?
     public let focus: String?    // substring of prompt to underline (target word)
 
-    init(_ q: JLPTQuestion) {
+    init(_ q: JLPTQuestion, language: AppLanguage) {
         self.id = "q:\(q.kanjiID):\(q.id)"
         self.kanjiID = q.kanjiID
         self.kind = q.kind
         self.options = q.options
         self.answer = q.options.indices.contains(q.answer) ? q.options[q.answer] : (q.options.first ?? "")
-        self.explanation = q.explanation
+        self.explanation = Self.localized(q.explanations, language)
         // Some prompts wrap the target word in <u>…</u>. Strip the tags for
         // display and use the wrapped text as the underline target (falling back
         // to the focus column when there are no tags).
@@ -43,6 +43,14 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
             .replacingOccurrences(of: "</u>", with: "")
         return (clean, target.isEmpty ? nil : target)
     }
+
+    /// The 해설 in the chosen language, falling back deterministically.
+    static func localized(_ dict: [String: String], _ language: AppLanguage) -> String? {
+        for key in [language.glossKey, "en", "ko", "ja", "zh"] {
+            if let value = dict[key], !value.isEmpty { return value }
+        }
+        return dict.values.first { !$0.isEmpty }
+    }
 }
 
 /// A learn-what-you-studied quiz built from the offline JLPT question bank. It
@@ -56,6 +64,9 @@ public struct QuizFeature {
     public struct State: Equatable {
         public var level: String
         public var language: AppLanguage
+        /// Today's planned new kanji (from the study plan) — quizzable even before
+        /// they've been studied, so the quiz is never empty on a fresh day.
+        public var plannedIDs: [Int]
         public var today = 0
         public var records: [String: QuizRecord] = [:]
 
@@ -73,8 +84,9 @@ public struct QuizFeature {
         // attempts don't reschedule/persist SRS (scheduling happened on pass 1).
         public var isReplay = false
 
-        public init(level: String, language: AppLanguage = .ko) {
+        public init(level: String, plannedIDs: [Int] = [], language: AppLanguage = .ko) {
             self.level = level
+            self.plannedIDs = plannedIDs
             self.language = language
         }
 
@@ -128,11 +140,12 @@ public struct QuizFeature {
                 state.today = today
                 state.records = Dictionary(records.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
                 let studiedSet = Set(studied)
+                let lang = state.language
                 var items: [QuizItem] = []
                 var seen = Set<String>()
                 var newPerKanji: [Int: Int] = [:]
                 for q in questions {
-                    let item = QuizItem(q)
+                    let item = QuizItem(q, language: lang)
                     guard item.options.count >= 2, seen.insert(item.id).inserted else { continue }
                     if let record = state.records[item.id] {
                         // Already scheduled — resurface only when review is due.
@@ -201,15 +214,18 @@ public struct QuizFeature {
     private func load(state: inout State) -> Effect<Action> {
         state.isLoading = true
         state.started = false
+        let planned = state.plannedIDs
         return .run { send in
             let today = Int(date.now.timeIntervalSince1970 / 86_400)
             // Read the kanji SRS fresh from disk (a study session may have just
             // written it) — kanji studied today OR due for review are the new
-            // material; review questions are woven in from the quiz SRS below.
+            // material. Today's *planned* kanji are folded in too so the quiz
+            // works even before today's study is done.
             let reviewRecords = await reviewStore.loadRecords()
-            let studied = reviewRecords
+            let studiedRecords = reviewRecords
                 .filter { $0.lastReviewedDay == today || $0.due <= today }
                 .map(\.kanjiID)
+            let studied = Array(Set(studiedRecords).union(planned))
             let records = await quizStore.load()
             // Kanji referenced by any due quiz record → re-fetch their questions so
             // the specific due question can be resurfaced ("q:<kanjiID>:<qid>").

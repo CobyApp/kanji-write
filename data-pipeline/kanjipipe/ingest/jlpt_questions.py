@@ -33,7 +33,14 @@ def parse_jlpt_questions(path: str | Path) -> list[JlptQuestion]:
             options = [o for o in options if isinstance(o, str) and o.strip()]
             if len(options) < 2 or not isinstance(answer, int) or not (0 <= answer < len(options)):
                 continue
-            explanation = obj.get("explanation")
+            # Explanations: a lang→text object. Accept a legacy single-string
+            # `explanation` (treated as Korean) for backward compatibility.
+            explanations = obj.get("explanations")
+            if not isinstance(explanations, dict):
+                legacy = obj.get("explanation")
+                explanations = {"ko": legacy} if isinstance(legacy, str) and legacy.strip() else {}
+            explanations = {k: v.strip() for k, v in explanations.items()
+                            if isinstance(v, str) and v.strip()}
             focus = obj.get("focus")
             # A focus must be a real substring of the prompt to underline it.
             focus = focus if isinstance(focus, str) and focus and focus in prompt else None
@@ -44,7 +51,7 @@ def parse_jlpt_questions(path: str | Path) -> list[JlptQuestion]:
                 prompt=prompt,
                 options=options,
                 answer=answer,
-                explanation=explanation.strip() if isinstance(explanation, str) and explanation.strip() else None,
+                explanations=explanations,
                 focus=focus,
             ))
     return entries

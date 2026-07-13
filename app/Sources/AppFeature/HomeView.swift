@@ -145,7 +145,9 @@ struct HomeView: View {
             // Only offered while today's quiz is still outstanding — lets the
             // learner take it instead of skipping straight to tomorrow.
             if !quizTakenToday {
-                Button(L.studyTakeQuizNow[appLanguage]) { store.send(.startQuiz(level: targetLevel)) }
+                Button(L.studyTakeQuizNow[appLanguage]) {
+                    store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
+                }
             }
             Button(L.cancel[appLanguage], role: .cancel) {}
         } message: {
@@ -371,7 +373,8 @@ struct HomeView: View {
                         subtitle: due > 0 ? L.reviewSub[appLanguage] : L.quizSub[appLanguage],
                         count: due > 0 ? due : nil,
                         soft: Palette.coralSoft, accent: Palette.coral) {
-            store.send(.startQuiz(level: targetLevel))
+            // Pass today's planned new kanji so the quiz works even before study.
+            store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
         }
     }
 
@@ -397,7 +400,7 @@ struct HomeView: View {
         return launcher(icon: "bookmark.fill", title: L.wordbook[appLanguage],
                         subtitle: "\(L.kanji[appLanguage]) \(bookmarkedKanji.count) · \(L.words[appLanguage]) \(store.wordReview.words.count)",
                         count: total > 0 ? total : nil,
-                        soft: Palette.lavenderSoft, accent: Palette.lavender) {
+                        soft: Palette.coralSoft, accent: Palette.coral) {
             store.send(.setShowWordbook(true))
         }
     }

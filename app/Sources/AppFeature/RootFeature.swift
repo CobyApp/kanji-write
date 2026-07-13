@@ -74,7 +74,7 @@ public struct RootFeature {
         case bookmarksLoaded([Int])
         case startStudy
         case startPractice
-        case startQuiz(level: String)
+        case startQuiz(level: String, planned: [Int])
         case path(StackActionOf<Path>)
         case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
@@ -165,10 +165,11 @@ public struct RootFeature {
                 state.sessionPath.removeAll()
                 state.session = .practice(PracticeFeature.State())
                 return .none
-            case let .startQuiz(level):
+            case let .startQuiz(level, planned):
                 state.sessionPath.removeAll()
-                // QuizFeature reads today's / due kanji fresh from the store itself.
-                state.session = .quiz(QuizFeature.State(level: level))
+                // QuizFeature reads today's studied / due kanji fresh from the
+                // store; `planned` lets it also quiz today's not-yet-studied kanji.
+                state.session = .quiz(QuizFeature.State(level: level, plannedIDs: planned))
                 return .none
 
             // Tapping a word / kanji while studying drills into its detail on the
