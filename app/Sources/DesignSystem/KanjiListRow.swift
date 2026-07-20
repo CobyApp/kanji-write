@@ -57,12 +57,14 @@ public struct KanjiListRow: View {
         .buttonStyle(.bouncy)
     }
 
-    /// A 음/훈 reading line with a colored label chip.
+    /// A 음/훈 reading line with a colored label chip. Baseline-aligned so the
+    /// Japanese reading sits level with the label chip (the Japanese face renders
+    /// low in its line box, so `.top` made the reading look dropped).
     private func readingLine(_ label: String, _ readings: [String], _ accent: Color) -> some View {
-        HStack(alignment: .top, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(label)
                 .font(.kawaii(10, weight: .bold)).foregroundStyle(.white)
-                .padding(.horizontal, 6).padding(.vertical, 1)
+                .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(accent).clipShape(Capsule())
             Text(readings.prefix(6).joined(separator: "、"))
                 .font(.kawaiiJP(13, weight: .semibold)).foregroundStyle(Palette.ink)
