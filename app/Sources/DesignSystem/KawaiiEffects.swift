@@ -5,14 +5,27 @@ import SwiftUI
 // lively background, and a pop-in appear modifier. All decoration-only and
 // dependency-free.
 
-/// A button style that springs inward on press for a bouncy, tactile feel.
+/// A button style that springs inward on press for a bouncy, tactile feel, and
+/// lifts a touch on pointer hover (iPad pointer / Mac Catalyst).
 public struct BouncyButtonStyle: ButtonStyle {
     public init() {}
     public func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1)
-            .brightness(configuration.isPressed ? -0.03 : 0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.5), value: configuration.isPressed)
+        BouncyLabel(configuration: configuration)
+    }
+
+    /// A small wrapper so the style can hold hover state (ButtonStyle itself
+    /// can't) — hover gently scales up + brightens; press springs inward.
+    private struct BouncyLabel: View {
+        let configuration: Configuration
+        @State private var hovering = false
+        var body: some View {
+            configuration.label
+                .scaleEffect(configuration.isPressed ? 0.94 : (hovering ? 1.03 : 1))
+                .brightness(configuration.isPressed ? -0.03 : (hovering ? 0.02 : 0))
+                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: configuration.isPressed)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: hovering)
+                .onHover { hovering = $0 }
+        }
     }
 }
 

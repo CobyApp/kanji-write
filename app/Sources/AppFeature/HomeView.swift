@@ -181,7 +181,7 @@ struct HomeView: View {
             OverlayHeader(title: L.studyPlan[appLanguage]) { closePlan() }
         }
         .background(Palette.background.ignoresSafeArea())
-        .transition(.opacity)
+        .transition(.scale(scale: 0.97).combined(with: .opacity))
     }
 
     // MARK: Greeting + ring
@@ -469,7 +469,7 @@ struct HomeView: View {
             OverlayHeader(title: L.wordbook[appLanguage]) { closeWordbook() }
         }
         .background(Palette.background.ignoresSafeArea())
-        .transition(.opacity)
+        .transition(.scale(scale: 0.97).combined(with: .opacity))
     }
 
     private var emptyWordbook: some View {

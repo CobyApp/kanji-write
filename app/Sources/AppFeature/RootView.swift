@@ -38,12 +38,12 @@ public struct RootView: View {
             // (like these) always respond.
             if let sessionStore = store.scope(state: \.session, action: \.session.presented) {
                 SessionCover(store: store, sessionStore: sessionStore)
-                    .transition(.opacity)
+                    .transition(.scale(scale: 0.97).combined(with: .opacity))
                     .zIndex(2)
             }
             if store.showSettings {
                 settingsOverlay
-                    .transition(.opacity)
+                    .transition(.scale(scale: 0.97).combined(with: .opacity))
                     .zIndex(3)
             }
         }
