@@ -24,7 +24,7 @@ public struct CircleButton: View {
                 .background(Palette.card, in: Circle())
                 .shadow(color: Palette.ink.opacity(0.06), radius: 5, y: 2)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bouncy)   // springy press + gentle pointer-hover lift
     }
 }
 
