@@ -358,7 +358,7 @@ struct KanjiCardList: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var gridColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: sizeClass == .compact ? 98 : 124), spacing: 12)]
+        [GridItem(.adaptive(minimum: sizeClass == .compact ? 112 : 138), spacing: 12)]
     }
 
     var body: some View {
@@ -394,22 +394,45 @@ struct KanjiCardList: View {
         }
     }
 
-    /// A compact grid cell: big glyph tile + a one-line meaning.
+    /// A compact grid cell: glyph tile + meaning + 음/훈 readings.
     private func gridCell(_ kanji: Kanji, tint: (soft: Color, accent: Color)) -> some View {
         Button { onSelect(kanji) } label: {
-            VStack(spacing: 8) {
-                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent, size: 60, fontSize: 34)
+            VStack(spacing: 6) {
+                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent, size: 54, fontSize: 30)
                 if let meaning = kanjiGloss(glosses[kanji.id] ?? [:], appLanguage), !meaning.isEmpty {
                     Text(meaning)
                         .font(.kawaii(12, weight: .bold, language: appLanguage))
                         .foregroundStyle(Palette.ink)
                         .lineLimit(1).minimumScaleFactor(0.7)
                 }
+                VStack(spacing: 3) {
+                    if !kanji.onReadings.isEmpty {
+                        gridReading(L.onReading[appLanguage], kanji.onReadings, Palette.sky)
+                    }
+                    if !kanji.kunReadings.isEmpty {
+                        gridReading(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint)
+                    }
+                }
             }
-            .frame(maxWidth: .infinity).padding(.vertical, 14).padding(.horizontal, 6)
+            // Uniform min height + top alignment so cards line up whether a kanji
+            // has one reading row or two.
+            .frame(maxWidth: .infinity, minHeight: 108, alignment: .top)
+            .padding(.vertical, 14).padding(.horizontal, 6)
             .roundedCard()
         }
         .buttonStyle(.bouncy)
+    }
+
+    /// A tiny 음/훈 reading line for a grid cell (label chip + truncated reading).
+    private func gridReading(_ label: String, _ readings: [String], _ accent: Color) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.kawaii(9, weight: .bold)).foregroundStyle(.white)
+                .padding(.horizontal, 5).padding(.vertical, 1).background(accent).clipShape(Capsule())
+            Text(readings.prefix(3).joined(separator: "、"))
+                .font(.kawaiiJP(11, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                .lineLimit(1).minimumScaleFactor(0.6)
+        }
     }
 }
 
