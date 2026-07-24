@@ -137,6 +137,27 @@ public struct WorksheetView: View {
                     options: options, answer: kun, japaneseOptions: true))
             }
         }
+        // 画数 (stroke count) — a 漢検 staple. Distractors are nearby counts.
+        let unit = L.strokesUnit[appLanguage]
+        let answerStrokes = "\(kanji.strokeCount)\(unit)"
+        let strokePool = (max(1, kanji.strokeCount - 4)...(kanji.strokeCount + 4))
+            .filter { $0 != kanji.strokeCount }.map { "\($0)\(unit)" }
+        let strokeOptions = quizOptions(answer: answerStrokes, pool: strokePool, rng: &rng)
+        if strokeOptions.count >= 2 {
+            candidates.append(StudyQuizSpec(
+                subject: .kanji(kanji.literal), prompt: L.studyQuizStrokes[appLanguage],
+                options: strokeOptions, answer: answerStrokes, japaneseOptions: false))
+        }
+        // 部首 (radical) — distractors from the other session kanji's radicals.
+        if let radical = kanji.radicalGlyph {
+            let pool = store.queue.compactMap { $0.radicalGlyph }
+            let options = quizOptions(answer: radical, pool: pool, rng: &rng)
+            if options.count >= 2 {
+                candidates.append(StudyQuizSpec(
+                    subject: .kanji(kanji.literal), prompt: L.studyQuizRadical[appLanguage],
+                    options: options, answer: radical, japaneseOptions: true))
+            }
+        }
         return pick(candidates, kanji)
     }
 
