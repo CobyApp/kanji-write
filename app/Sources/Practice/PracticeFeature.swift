@@ -75,6 +75,11 @@ public struct PracticeFeature {
             case let .loaded(all, glosses):
                 state.kanji = IdentifiedArray(uniqueElements: all)
                 state.glossesByID = glosses
+                // Keep the chosen level valid for the current exam (e.g. after
+                // switching JLPT↔漢検 the old "N5" wouldn't exist under 漢検).
+                if !ExamType.current.levels.contains(state.level) {
+                    state.level = ExamType.current.defaultLevel
+                }
                 return .none
 
             case let .levelSelected(level):

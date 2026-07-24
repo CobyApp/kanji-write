@@ -14,14 +14,14 @@ public struct KanjiLevel: Equatable, Hashable, Identifiable, Sendable {
     public var label: String { level }
 }
 
-/// The ordered JLPT levels, easiest first.
-public func levels() -> [KanjiLevel] {
-    ["N5", "N4", "N3", "N2", "N1"].map { KanjiLevel(level: $0) }
+/// The ordered levels of the exam, easiest first.
+public func levels(for exam: ExamType = .current) -> [KanjiLevel] {
+    exam.levels.map { KanjiLevel(level: $0) }
 }
 
-/// The kanji belonging to a level.
-public func kanjiIn(_ all: [Kanji], in level: KanjiLevel) -> [Kanji] {
-    all.filter { $0.jlptLevel == level.level }
+/// The kanji belonging to a level of the given exam.
+public func kanjiIn(_ all: [Kanji], in level: KanjiLevel, exam: ExamType = .current) -> [Kanji] {
+    all.filter { $0.level(for: exam) == level.level }
 }
 
 /// Free-text match: the literal, any on/kun reading (kun dots ignored), or the

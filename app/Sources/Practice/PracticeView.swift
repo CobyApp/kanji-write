@@ -19,6 +19,7 @@ private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage
 public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("examType") private var examType: ExamType = .jlpt
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// The current question's canvas.
     @State private var drawing = PKDrawing()
@@ -26,7 +27,7 @@ public struct PracticeView: View {
     /// Fixed canvas side, matched by the review capture rect so nothing clips.
     private let canvasSide: CGFloat = 320
 
-    private let levels = ["N5", "N4", "N3", "N2", "N1"]
+    private var levels: [String] { examType.levels }
     private let countOptions = [10, 20, 30, 50]
 
     public init(store: StoreOf<PracticeFeature>) { self.store = store }
