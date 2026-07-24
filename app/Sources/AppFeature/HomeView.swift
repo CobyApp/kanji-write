@@ -26,7 +26,11 @@ struct HomeView: View {
     private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, level: targetLevel) }
     private var learnedInLevel: Int {
         let tracked = Set(store.review.records.ids)
-        return levelOrder.filter { tracked.contains($0.id) }.count
+        // Kanji before the plan's start position count as already known (the
+        // learner chose to skip them), so they fill the progress ring too.
+        let skipped = min(max(0, studyStartIndex), levelOrder.count)
+        let learnedAfter = levelOrder.dropFirst(skipped).filter { tracked.contains($0.id) }.count
+        return skipped + learnedAfter
     }
     private var levelTotal: Int { max(levelOrder.count, 1) }
     private var progress: Double { Double(learnedInLevel) / Double(levelTotal) }
