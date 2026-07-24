@@ -22,6 +22,8 @@ struct HomeView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showPlan = false
     @State private var showStudyDoneConfirm = false
+    @State private var wordbookTab = 0          // 0: 한자, 1: 단어
+    @State private var flashcards: [FlashcardItem] = []   // non-empty → card session shown
 
     private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, level: targetLevel) }
     private var learnedInLevel: Int {
@@ -145,7 +147,13 @@ struct HomeView: View {
             // settings). In-content buttons respond reliably on Mac Catalyst.
             if showPlan { planOverlay.zIndex(1) }
             if store.showWordbook { wordbookOverlay.zIndex(1) }
+            if !flashcards.isEmpty {
+                FlashcardView(items: flashcards) { flashcards = [] }
+                    .transition(.scale(scale: 0.97).combined(with: .opacity))
+                    .zIndex(2)
+            }
         }
+        .animation(.easeOut(duration: 0.2), value: flashcards.isEmpty)
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog(L.studyDoneTitle[appLanguage], isPresented: $showStudyDoneConfirm,
                             titleVisibility: .visible) {
@@ -475,24 +483,131 @@ struct HomeView: View {
     /// The 단어장 as a full-screen overlay (same presentation as plan/settings):
     /// saved kanji and words, each openable and removable in one place.
     private var wordbookOverlay: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                if bookmarkedKanji.isEmpty && store.wordReview.words.isEmpty {
-                    emptyWordbook
-                } else {
-                    if !bookmarkedKanji.isEmpty { savedKanjiSection }
-                    if !store.wordReview.words.isEmpty { savedWordsSection }
+        let isEmpty = bookmarkedKanji.isEmpty && store.wordReview.words.isEmpty
+        return Group {
+            if isEmpty {
+                ScrollView { emptyWordbook.padding(20).readableWidth(sizeClass) }
+            } else {
+                wordbookList
+            }
+        }
+        .safeAreaInset(edge: .top) {
+            VStack(spacing: 12) {
+                OverlayHeader(title: L.wordbook[appLanguage]) { closeWordbook() }
+                if !isEmpty {
+                    Picker("", selection: $wordbookTab) {
+                        Text("\(L.kanji[appLanguage]) \(bookmarkedKanji.count)").tag(0)
+                        Text("\(L.words[appLanguage]) \(store.wordReview.words.count)").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 20).readableWidth(sizeClass)
+                    cardStudyButton
                 }
             }
-            .padding(20)
-            .readableWidth(sizeClass)
-        }
-        .scrollIndicators(.hidden)
-        .safeAreaInset(edge: .top) {
-            OverlayHeader(title: L.wordbook[appLanguage]) { closeWordbook() }
+            .padding(.bottom, 6)
+            .background(Palette.background)
         }
         .background(Palette.background.ignoresSafeArea())
         .transition(.scale(scale: 0.97).combined(with: .opacity))
+    }
+
+    /// The active tab's saved items in a List, so rows swipe to delete (no inline
+    /// delete icons). Kanji rows reuse the dictionary's KanjiListRow for a look
+    /// consistent with 한자사전; words match 단어사전.
+    @ViewBuilder private var wordbookList: some View {
+        List {
+            if wordbookTab == 0 {
+                ForEach(Array(bookmarkedKanji.enumerated()), id: \.element.id) { i, kanji in
+                    KanjiListRow(kanji: kanji,
+                                 meaning: kanjiGloss(store.review.glosses[kanji.id] ?? [:], appLanguage),
+                                 tint: Palette.tint(i), language: appLanguage) {
+                        closeWordbook(); store.send(.kanjiSelected(kanji))
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0))
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) { store.send(.removeBookmarkedKanji(kanji.id)) } label: {
+                            Label(L.delete[appLanguage], systemImage: "trash")
+                        }
+                    }
+                }
+            } else {
+                ForEach(store.wordReview.words.elements) { word in
+                    wordbookWordRow(word)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0))
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) { store.send(.wordReview(.remove(wordID: word.id))) } label: {
+                                Label(L.delete[appLanguage], systemImage: "trash")
+                            }
+                        }
+                }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .padding(.horizontal, 16)
+        .readableWidth(sizeClass)
+    }
+
+    private func wordbookWordRow(_ word: WordEntry) -> some View {
+        Button {
+            closeWordbook(); store.send(.wordReview(.wordTapped(word)))
+        } label: {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 3) {
+                    RubyWord(word.surface, reading: word.reading, size: 20)
+                    if let meaning = wordMeaningText(word, appLanguage), !meaning.isEmpty {
+                        Text(meaning).font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+            }
+            .roundedCard()
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    /// Starts a flashcard session over the current tab's saved items.
+    private var cardStudyButton: some View {
+        Button {
+            flashcards = wordbookTab == 0 ? kanjiFlashcards : wordFlashcards
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "rectangle.on.rectangle.angled").font(.system(size: 13, weight: .bold))
+                Text(L.flashcards[appLanguage]).font(.kawaii(14, weight: .bold, language: appLanguage))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity).padding(.vertical, 11)
+            .background(Palette.accent).clipShape(Capsule())
+        }
+        .buttonStyle(.bouncy)
+        .padding(.horizontal, 20).readableWidth(sizeClass)
+        .disabled(wordbookTab == 0 ? bookmarkedKanji.isEmpty : store.wordReview.words.isEmpty)
+    }
+
+    private var kanjiFlashcards: [FlashcardItem] {
+        bookmarkedKanji.map { kanji in
+            let on = kanji.onReadings.isEmpty ? nil : "\(L.onReading[appLanguage]) \(kanji.onReadings.prefix(4).joined(separator: "、"))"
+            let kun = kanji.kunReadings.isEmpty ? nil : "\(L.kunReading[appLanguage]) \(kanji.kunReadings.prefix(4).joined(separator: "、"))"
+            return FlashcardItem(
+                id: kanji.id, front: kanji.literal, frontReading: nil,
+                back: kanjiGloss(store.review.glosses[kanji.id] ?? [:], appLanguage) ?? "",
+                backSub: [on, kun].compactMap { $0 }.joined(separator: "\n"), isKanji: true)
+        }
+    }
+
+    private var wordFlashcards: [FlashcardItem] {
+        store.wordReview.words.elements.map { word in
+            FlashcardItem(
+                id: word.id, front: word.surface, frontReading: word.reading,
+                back: wordMeaningText(word, appLanguage) ?? "", backSub: "", isKanji: false)
+        }
     }
 
     private var emptyWordbook: some View {
@@ -506,72 +621,6 @@ struct HomeView: View {
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 60)
-    }
-
-    private var savedKanjiSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(L.kanji[appLanguage], accent: Palette.pink)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 12)], spacing: 12) {
-                ForEach(Array(bookmarkedKanji.enumerated()), id: \.element.id) { i, kanji in
-                    let tint = Palette.tint(i)
-                    Button {
-                        closeWordbook()
-                        store.send(.kanjiSelected(kanji))
-                    } label: {
-                        PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent,
-                                   size: 60, fontSize: 32)
-                    }
-                    .buttonStyle(.plain)
-                    .overlay(alignment: .topTrailing) {
-                        removeBadge { store.send(.removeBookmarkedKanji(kanji.id)) }
-                    }
-                }
-            }
-        }
-        .cardBackground()
-    }
-
-    private var savedWordsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(L.words[appLanguage], accent: Palette.lavender)
-            ForEach(store.wordReview.words.elements) { word in
-                HStack(spacing: 8) {
-                    Button {
-                        closeWordbook()
-                        store.send(.wordReview(.wordTapped(word)))
-                    } label: {
-                        HStack {
-                            Text("\(word.surface)（\(word.reading)）")
-                                .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.ink)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.inkSoft)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    Button { store.send(.wordReview(.remove(wordID: word.id))) } label: {
-                        Image(systemName: "trash")
-                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(Palette.pink)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.vertical, 2)
-            }
-        }
-        .cardBackground()
-    }
-
-    /// A small ✕ badge overlaid on a saved tile to remove it.
-    private func removeBadge(_ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: "xmark.circle.fill")
-                .font(.system(size: 18))
-                .foregroundStyle(.white, Palette.pink)
-                .background(Circle().fill(.white).padding(3))
-        }
-        .buttonStyle(.plain)
-        .offset(x: 6, y: -6)
     }
 }
 

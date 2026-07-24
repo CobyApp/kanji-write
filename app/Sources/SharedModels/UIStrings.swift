@@ -135,6 +135,12 @@ public enum L {
         en: "Pick a kanji from Browse or Study\nto see it here")
     public static let wordbookEmpty = L10nText(
         ko: "단어장이 아직 비어 있어요", ja: "単語帳はまだ空です", zh: "单词本还是空的", en: "Your wordbook is empty")
+    public static let delete = L10nText(ko: "삭제", ja: "削除", zh: "删除", en: "Delete")
+    public static let flashcards = L10nText(ko: "카드 학습", ja: "カード学習", zh: "卡片学习", en: "Flashcards")
+    public static let flashcardTapHint = L10nText(
+        ko: "카드를 탭하면 뒤집혀요", ja: "カードをタップで裏返し", zh: "点击卡片翻面", en: "Tap the card to flip")
+    public static let swipeToDelete = L10nText(
+        ko: "밀어서 삭제", ja: "スワイプで削除", zh: "滑动删除", en: "Swipe to delete")
     public static let wordbookEmptyHint = L10nText(
         ko: "단어 상세에서 ‘단어장에 추가’로 저장하면\n여기서 복습할 수 있어요",
         ja: "単語の詳細から「単語帳に追加」で保存すると\nここで復習できます",
