@@ -317,18 +317,27 @@ private struct WordDictionaryView: View {
         .buttonStyle(.bouncy)
     }
 
-    /// A compact grid cell: word (with furigana) + a one-line meaning.
+    /// A compact grid cell: reading (furigana) + word + meaning, each on a single
+    /// line that shrinks to fit the cell width so every card is the same height.
     private func wordGridCell(_ word: WordEntry) -> some View {
         Button { store.send(.wordSelected(word)) } label: {
-            VStack(spacing: 6) {
-                RubyWord(word.surface, reading: word.reading, size: 20)
+            VStack(spacing: 4) {
+                if !word.reading.isEmpty {
+                    Text(word.reading)
+                        .font(.kawaii(10, weight: .semibold)).foregroundStyle(Palette.pink)
+                        .lineLimit(1).minimumScaleFactor(0.5)
+                }
+                Text(word.surface)
+                    .font(.kawaiiJP(22, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.4)
                 if let meaning = wordMeaningText(word, appLanguage), !meaning.isEmpty {
                     Text(meaning)
                         .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                        .lineLimit(1).minimumScaleFactor(0.7)
+                        .lineLimit(1).minimumScaleFactor(0.6)
                 }
             }
-            .frame(maxWidth: .infinity).padding(.vertical, 14).padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: 82)
+            .padding(.vertical, 14).padding(.horizontal, 8)
             .roundedCard()
         }
         .buttonStyle(.bouncy)
