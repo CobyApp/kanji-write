@@ -42,6 +42,7 @@ public struct WorksheetView: View {
     @Bindable public var store: StoreOf<WorksheetFeature>
     @AppStorage("newPerDay") private var newPerDay = 7
     @AppStorage("targetLevel") private var targetLevel = "N5"
+    @AppStorage("studyStartIndex") private var studyStartIndex = 0
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// Which card of the current kanji is showing (0…`lastCard`).
@@ -214,7 +215,7 @@ public struct WorksheetView: View {
         }
         .navigationTitle(L.study[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
-        .task { store.send(.onAppear(newPerDay: max(1, newPerDay), level: targetLevel)) }
+        .task { store.send(.onAppear(newPerDay: max(1, newPerDay), level: targetLevel, startIndex: studyStartIndex)) }
     }
 
     @ViewBuilder

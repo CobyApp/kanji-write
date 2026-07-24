@@ -14,6 +14,8 @@ struct HomeView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("newPerDay") private var newPerDay = 7
+    // Study-plan start position: how many kanji to skip at the front of the level.
+    @AppStorage("studyStartIndex") private var studyStartIndex = 0
     // Epoch-day the last quiz was completed (set by QuizView), so Home can tell
     // whether today's quiz is still pending.
     @AppStorage("lastQuizDay") private var lastQuizDay = -1
@@ -30,7 +32,7 @@ struct HomeView: View {
     private var progress: Double { Double(learnedInLevel) / Double(levelTotal) }
     private var session: StudySession {
         todaysSession(records: store.review.records.elements, order: levelOrder,
-                      today: store.review.today, newPerDay: newPerDay)
+                      today: store.review.today, newPerDay: newPerDay, startIndex: studyStartIndex)
     }
 
     // Plan: the daily new-kanji count is the source of truth; the goal date is
@@ -67,7 +69,9 @@ struct HomeView: View {
     }
     private var doneToday: Int { learnedToday(records: store.review.records.elements, today: store.review.today) }
     private var goalFraction: Double { newPerDay > 0 ? min(Double(doneToday) / Double(newPerDay), 1) : 0 }
-    private var remaining: Int { remainingNew(order: levelOrder, records: store.review.records.elements) }
+    private var remaining: Int {
+        remainingNew(order: levelOrder, records: store.review.records.elements, startIndex: studyStartIndex)
+    }
 
     /// Today's new-kanji goal has been met (and there's still more to pull from).
     private var studyDoneToday: Bool {
@@ -161,7 +165,7 @@ struct HomeView: View {
             writeSnapshot()
         }
         .onChange(of: newPerDay) { _, _ in writeSnapshot() }
-        .onChange(of: targetLevel) { _, _ in writeSnapshot() }
+        .onChange(of: targetLevel) { _, _ in studyStartIndex = 0; writeSnapshot() }
         .onChange(of: levelTotal) { _, _ in writeSnapshot() }
         .onChange(of: store.review.records.count) { _, _ in writeSnapshot() }
     }
@@ -329,6 +333,24 @@ struct HomeView: View {
                 ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
             }
             .pickerStyle(.segmented)
+
+            // 시작 위치 — where in the level to begin (skip kanji already known),
+            // so a returning learner can start mid-level instead of from the top.
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(L.writeStartPos[appLanguage])
+                        .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                    Spacer()
+                    Text("\(studyStartIndex + 1)\(L.unitCount[appLanguage])~")
+                        .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.lavender)
+                }
+                Slider(value: Binding(
+                    get: { Double(studyStartIndex) },
+                    set: { studyStartIndex = min(Int($0), max(0, levelTotal - 1)) }),
+                       in: 0...Double(max(1, levelTotal - 1)))
+                    .tint(Palette.accent)
+            }
+            Divider()
 
             // 하루 몇 자 — the daily count (drives the goal date).
             Stepper(value: $newPerDay, in: 1...50) {
