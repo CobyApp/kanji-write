@@ -243,7 +243,7 @@ public struct QuizFeature {
             // the reducer can serve questions in learned order.
             let allKanji = (try? await dictionaryClient.allKanji()) ?? []
             var order: [Int: Int] = [:]
-            for (index, kanji) in studyOrder(allKanji).enumerated() where contextSet.contains(kanji.id) {
+            for (index, kanji) in studyOrder(allKanji, exam: ExamType.current).enumerated() where contextSet.contains(kanji.id) {
                 order[kanji.id] = index
             }
             await send(.loaded(questions: questions, studied: studied, records: records,

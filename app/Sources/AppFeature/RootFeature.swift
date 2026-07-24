@@ -113,7 +113,7 @@ public struct RootFeature {
                 return .none
 
             case let .levelSelected(level):
-                let items = studyOrder(state.review.kanji.elements, level: level.level)
+                let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: level.level)
                 state.path.append(
                     .kanjiList(KanjiListPathFeature.State(
                         title: level.label, kanji: items, glosses: state.review.glosses)))
@@ -142,7 +142,7 @@ public struct RootFeature {
 
             // Dictionary browse (from the study hub) → drill into a level / a searched kanji.
             case let .path(.element(id: _, action: .dictionary(.levelSelected(level)))):
-                let items = studyOrder(state.review.kanji.elements, level: level.level)
+                let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: level.level)
                 state.path.append(
                     .kanjiList(KanjiListPathFeature.State(
                         title: level.label, kanji: items, glosses: state.review.glosses)))

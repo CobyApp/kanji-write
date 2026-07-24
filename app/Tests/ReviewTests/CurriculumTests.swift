@@ -14,9 +14,9 @@ final class CurriculumTests: XCTestCase {
                      k(2, strokes: 3, grade: 1, jlpt: "N4"),
                      k(3, strokes: 2, grade: 1, jlpt: "N5")]
         // Only N5, ordered by strokes: id 3 (2str) then id 1 (5str).
-        XCTAssertEqual(studyOrder(input, level: "N5").map(\.id), [3, 1])
+        XCTAssertEqual(studyOrder(input, exam: .jlpt, level: "N5").map(\.id), [3, 1])
         // nil level = all.
-        XCTAssertEqual(studyOrder(input, level: nil).count, 3)
+        XCTAssertEqual(studyOrder(input, exam: .jlpt, level: nil).count, 3)
     }
 
     func testRemainingNewAndDaysToFinish() {
@@ -54,7 +54,7 @@ final class CurriculumTests: XCTestCase {
             k(3, strokes: 8, grade: 1, jlpt: "N5"),
             k(4, strokes: 1, grade: nil, jlpt: nil),  // unmapped → last
         ]
-        let ordered = studyOrder(input).map(\.id)
+        let ordered = studyOrder(input, exam: .jlpt).map(\.id)
         XCTAssertEqual(ordered, [2, 3, 1, 4])  // N5(3str), N5(8str), N1, none
     }
 
@@ -63,7 +63,7 @@ final class CurriculumTests: XCTestCase {
             k(7, strokes: 4, grade: 2, jlpt: "N4"),
             k(3, strokes: 4, grade: 2, jlpt: "N4"),
         ]
-        XCTAssertEqual(studyOrder(input).map(\.id), [3, 7])
+        XCTAssertEqual(studyOrder(input, exam: .jlpt).map(\.id), [3, 7])
     }
 
     func testSessionDueAndNew() {
