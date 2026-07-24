@@ -34,28 +34,23 @@ func clampedTail(_ order: [Kanji], from start: Int) -> [Kanji] {
     return Array(order[start...])
 }
 
-/// The order in which new kanji are introduced: by JLPT level (N5→N1; un-leveled
-/// last), then by ascending stroke count (simpler first), then id for stability.
-public func studyOrder(_ kanji: [Kanji]) -> [Kanji] {
-    kanji.sorted { a, b in
-        let ra = orderRank(a)
-        let rb = orderRank(b)
-        if ra.level != rb.level { return ra.level < rb.level }
-        if ra.strokes != rb.strokes { return ra.strokes < rb.strokes }
-        return ra.id < rb.id
+/// The order in which new kanji are introduced: by the exam's level (easiest
+/// first; un-leveled last), then ascending stroke count, then id for stability.
+public func studyOrder(_ kanji: [Kanji], exam: ExamType) -> [Kanji] {
+    let rank = Dictionary(uniqueKeysWithValues: exam.levels.enumerated().map { ($1, $0) })
+    return kanji.sorted { a, b in
+        let la = rank[a.level(for: exam) ?? ""] ?? 99
+        let lb = rank[b.level(for: exam) ?? ""] ?? 99
+        if la != lb { return la < lb }
+        if a.strokeCount != b.strokeCount { return a.strokeCount < b.strokeCount }
+        return a.id < b.id
     }
 }
 
-private func orderRank(_ k: Kanji) -> (level: Int, strokes: Int, id: Int) {
-    // N5 first … N1 last; unmapped sorts after.
-    let level = ["N5": 0, "N4": 1, "N3": 2, "N2": 3, "N1": 4][k.jlptLevel ?? ""] ?? 99
-    return (level, k.strokeCount, k.id)
-}
-
-/// Study order scoped to a single JLPT level (nil = all levels).
-public func studyOrder(_ kanji: [Kanji], level: String?) -> [Kanji] {
-    guard let level else { return studyOrder(kanji) }
-    return studyOrder(kanji.filter { $0.jlptLevel == level })
+/// Study order scoped to a single level of the exam (nil = all levels).
+public func studyOrder(_ kanji: [Kanji], exam: ExamType, level: String?) -> [Kanji] {
+    guard let level else { return studyOrder(kanji, exam: exam) }
+    return studyOrder(kanji.filter { $0.level(for: exam) == level }, exam: exam)
 }
 
 /// How many kanji in `order` (from `startIndex` onward) have not been started yet.

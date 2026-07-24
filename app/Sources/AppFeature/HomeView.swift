@@ -12,6 +12,7 @@ import WidgetKit
 struct HomeView: View {
     @Bindable var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("examType") private var examType: ExamType = .jlpt
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("newPerDay") private var newPerDay = 7
     // Study-plan start position: how many kanji to skip at the front of the level.
@@ -25,7 +26,7 @@ struct HomeView: View {
     @State private var wordbookTab = 0          // 0: 한자, 1: 단어
     @State private var flashcards: [FlashcardItem] = []   // non-empty → card session shown
 
-    private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, level: targetLevel) }
+    private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, exam: examType, level: targetLevel) }
     private var learnedInLevel: Int {
         let tracked = Set(store.review.records.ids)
         // Kanji before the plan's start position count as already known (the

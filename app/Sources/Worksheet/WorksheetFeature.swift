@@ -13,7 +13,7 @@ public func buildWorksheetQueue(
     level: String? = nil, startIndex: Int = 0
 ) -> [Kanji] {
     let session = todaysSession(
-        records: records, order: studyOrder(kanji, level: level), today: today,
+        records: records, order: studyOrder(kanji, exam: ExamType.current, level: level), today: today,
         newPerDay: newPerDay, startIndex: startIndex)
     let byID = Dictionary(kanji.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     return session.newIDs.compactMap { byID[$0] }
@@ -132,7 +132,7 @@ public struct WorksheetFeature {
                     records: records, kanji: kanji, today: today, newPerDay: state.newPerDay,
                     level: state.targetLevel, startIndex: state.startIndex)
                 state.remaining = remainingNew(
-                    order: studyOrder(kanji, level: state.targetLevel), records: records,
+                    order: studyOrder(kanji, exam: ExamType.current, level: state.targetLevel), records: records,
                     startIndex: state.startIndex)
                 state.index = 0
                 // Nothing to study → mark loaded (shows the empty state). Otherwise
