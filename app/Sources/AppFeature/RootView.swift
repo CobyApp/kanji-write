@@ -144,7 +144,7 @@ private struct KanjiListPathView: View {
         KanjiCardList(items: items, glosses: glosses, onSelect: onSelect)
             .toolbar(.hidden, for: .navigationBar)
             .safeAreaInset(edge: .top) {
-                NavHeader(title: title) { dismiss() }
+                NavHeader(title: title, onBack: { dismiss() }) { GridToggleButton() }
                     .background(Palette.background)
             }
     }
@@ -211,7 +211,7 @@ private struct DictionaryPathView: View {
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top) {
             VStack(spacing: 10) {
-                NavHeader(title: L.kanjiDictionary[appLanguage]) { dismiss() }
+                NavHeader(title: L.kanjiDictionary[appLanguage], onBack: { dismiss() }) { GridToggleButton() }
                 SearchField(text: searchBinding, placeholder: L.searchPrompt[appLanguage])
                     .padding(.horizontal, 16)
                     .readableWidth(sizeClass)
@@ -229,6 +229,7 @@ private struct DictionaryPathView: View {
 private struct WordDictionaryView: View {
     @Bindable var store: StoreOf<WordDictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("dictGridMode") private var gridMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -237,6 +238,9 @@ private struct WordDictionaryView: View {
     }
     private var levelBinding: Binding<String> {
         Binding(get: { store.level }, set: { store.send(.levelSelected($0)) })
+    }
+    private var gridColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: sizeClass == .compact ? 120 : 150), spacing: 12)]
     }
 
     var body: some View {
@@ -259,7 +263,7 @@ private struct WordDictionaryView: View {
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top) {
             VStack(spacing: 10) {
-                NavHeader(title: L.wordDictionary[appLanguage]) { dismiss() }
+                NavHeader(title: L.wordDictionary[appLanguage], onBack: { dismiss() }) { GridToggleButton() }
                 SearchField(text: searchBinding, placeholder: L.wordSearchPrompt[appLanguage])
                     .padding(.horizontal, 16)
                     .readableWidth(sizeClass)
@@ -273,35 +277,61 @@ private struct WordDictionaryView: View {
     @ViewBuilder
     private func wordList(_ words: [WordEntry]) -> some View {
         ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(words) { word in
-                    Button { store.send(.wordSelected(word)) } label: {
-                        HStack(spacing: 14) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                RubyWord(word.surface, reading: word.reading, size: 22)
-                                if let meaning = wordMeaningText(word, appLanguage), !meaning.isEmpty {
-                                    Text(meaning).font(.kawaii(14, language: appLanguage))
-                                        .foregroundStyle(Palette.inkSoft)
-                                }
-                            }
-                            Spacer(minLength: 0)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(Palette.inkSoft)
-                        }
-                        .roundedCard()
-                    }
-                    .buttonStyle(.bouncy)
+            if words.isEmpty {
+                Text(L.noWordsFound[appLanguage])
+                    .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
+            } else if gridMode {
+                LazyVGrid(columns: gridColumns, spacing: 12) {
+                    ForEach(words) { word in wordGridCell(word) }
                 }
-                if words.isEmpty {
-                    Text(L.noWordsFound[appLanguage])
-                        .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
+                .padding(16)
+                .readableWidth(sizeClass)
+            } else {
+                LazyVStack(spacing: 10) {
+                    ForEach(words) { word in wordRow(word) }
                 }
+                .padding(16)
+                .readableWidth(sizeClass)
             }
-            .padding(16)
-            .readableWidth(sizeClass)
         }
         .scrollIndicators(.hidden)
+    }
+
+    private func wordRow(_ word: WordEntry) -> some View {
+        Button { store.send(.wordSelected(word)) } label: {
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 3) {
+                    RubyWord(word.surface, reading: word.reading, size: 22)
+                    if let meaning = wordMeaningText(word, appLanguage), !meaning.isEmpty {
+                        Text(meaning).font(.kawaii(14, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Palette.inkSoft)
+            }
+            .roundedCard()
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    /// A compact grid cell: word (with furigana) + a one-line meaning.
+    private func wordGridCell(_ word: WordEntry) -> some View {
+        Button { store.send(.wordSelected(word)) } label: {
+            VStack(spacing: 6) {
+                RubyWord(word.surface, reading: word.reading, size: 20)
+                if let meaning = wordMeaningText(word, appLanguage), !meaning.isEmpty {
+                    Text(meaning)
+                        .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                }
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 14).padding(.horizontal, 8)
+            .roundedCard()
+        }
+        .buttonStyle(.bouncy)
     }
 }
 
@@ -323,28 +353,73 @@ struct KanjiCardList: View {
     var glosses: [Int: [String: String]] = [:]
     let onSelect: (Kanji) -> Void
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    // Shared with the dictionary header's grid/list toggle.
+    @AppStorage("dictGridMode") private var gridMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var gridColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: sizeClass == .compact ? 98 : 124), spacing: 12)]
+    }
 
     var body: some View {
         ZStack {
             Palette.background.ignoresSafeArea()
             ScrollView {
-                LazyVStack(spacing: 10) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
-                        KanjiListRow(kanji: kanji,
-                                     meaning: kanjiGloss(glosses[kanji.id] ?? [:], appLanguage),
-                                     tint: Palette.tint(index),
-                                     language: appLanguage) { onSelect(kanji) }
-                            .popIn(delay: min(Double(index), 6) * 0.04)
+                if items.isEmpty {
+                    Text(L.noKanjiFound[appLanguage])
+                        .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
+                } else if gridMode {
+                    LazyVGrid(columns: gridColumns, spacing: 12) {
+                        ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
+                            gridCell(kanji, tint: Palette.tint(index))
+                                .popIn(delay: min(Double(index), 8) * 0.03)
+                        }
                     }
-                    if items.isEmpty {
-                        Text(L.noKanjiFound[appLanguage])
-                            .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
+                    .padding(16)
+                    .readableWidth(sizeClass)
+                } else {
+                    LazyVStack(spacing: 10) {
+                        ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
+                            KanjiListRow(kanji: kanji,
+                                         meaning: kanjiGloss(glosses[kanji.id] ?? [:], appLanguage),
+                                         tint: Palette.tint(index),
+                                         language: appLanguage) { onSelect(kanji) }
+                                .popIn(delay: min(Double(index), 6) * 0.04)
+                        }
                     }
+                    .padding(16)
+                    .readableWidth(sizeClass)
                 }
-                .padding(16)
-                .readableWidth(sizeClass)
             }
+        }
+    }
+
+    /// A compact grid cell: big glyph tile + a one-line meaning.
+    private func gridCell(_ kanji: Kanji, tint: (soft: Color, accent: Color)) -> some View {
+        Button { onSelect(kanji) } label: {
+            VStack(spacing: 8) {
+                PastelTile(kanji.literal, soft: tint.soft, accent: tint.accent, size: 60, fontSize: 34)
+                if let meaning = kanjiGloss(glosses[kanji.id] ?? [:], appLanguage), !meaning.isEmpty {
+                    Text(meaning)
+                        .font(.kawaii(12, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.ink)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                }
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 14).padding(.horizontal, 6)
+            .roundedCard()
+        }
+        .buttonStyle(.bouncy)
+    }
+}
+
+/// The dictionary header's grid/list toggle — round button bound to the shared
+/// `dictGridMode` flag.
+struct GridToggleButton: View {
+    @AppStorage("dictGridMode") private var gridMode = false
+    var body: some View {
+        CircleButton(gridMode ? "list.bullet" : "square.grid.2x2", size: 34) {
+            withAnimation(.easeInOut(duration: 0.2)) { gridMode.toggle() }
         }
     }
 }
