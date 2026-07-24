@@ -44,7 +44,7 @@ public enum L {
     public static let noWordsFound = L10nText(
         ko: "단어를 찾을 수 없어요", ja: "単語が見つかりません", zh: "找不到单词", en: "No words found")
     public static let startStudy = L10nText(ko: "학습 시작", ja: "学習を始める", zh: "开始学习", en: "Start studying")
-    public static let startPractice = L10nText(ko: "연습하기", ja: "練習する", zh: "去练习", en: "Practice")
+    public static let startPractice = L10nText(ko: "쓰기 테스트", ja: "書き取りテスト", zh: "书写测验", en: "Writing test")
     public static let close = L10nText(ko: "닫기", ja: "閉じる", zh: "关闭", en: "Close")
     public static let study = L10nText(ko: "학습", ja: "学習", zh: "学习", en: "Study")
     public static let review = L10nText(ko: "복습", ja: "復習", zh: "复习", en: "Review")
@@ -73,7 +73,7 @@ public enum L {
     public static let continueStudy = L10nText(ko: "이어서 학습", ja: "学習を続ける", zh: "继续学习", en: "Keep going")
     public static let newKanjiSub = L10nText(ko: "새 한자 배우기", ja: "新しい漢字を学ぶ", zh: "学习新汉字", en: "Learn new kanji")
     public static let reviewSub = L10nText(ko: "복습할 시간", ja: "復習の時間", zh: "复习时间", en: "Time to review")
-    public static let practiceSub = L10nText(ko: "자유롭게 써보기", ja: "自由に書いて練習", zh: "自由书写练习", en: "Free writing")
+    public static let practiceSub = L10nText(ko: "급수·범위별 한자 쓰기", ja: "レベル・範囲で漢字を書く", zh: "按等级·范围写汉字", en: "Write by level & range")
     public static let allCaughtUp = L10nText(ko: "복습 완료!", ja: "復習は完了！", zh: "复习完成！", en: "All caught up!")
 
     // Grades (FSRS)
@@ -215,6 +215,22 @@ public enum L {
     public static let testPrompt = L10nText(ko: "뜻을 보고 한자를 써보세요", ja: "意味を見て漢字を書こう", zh: "根据意思写汉字", en: "Write the kanji for this meaning")
     public static let practicePrompt = L10nText(ko: "반복해서 써보며 익히세요", ja: "繰り返し書いて覚えよう", zh: "反复书写来记住", en: "Write it repeatedly to memorize")
     public static let pickToPractice = L10nText(ko: "연습할 한자를 고르세요", ja: "練習する漢字を選ぼう", zh: "选择要练习的汉字", en: "Pick a kanji to practice")
+    // 한자쓰기 테스트 (writing test)
+    public static let writeTestTitle = L10nText(
+        ko: "한자쓰기 테스트", ja: "漢字書き取りテスト", zh: "汉字书写测验", en: "Kanji writing test")
+    public static let writeTestStart = L10nText(ko: "테스트 시작", ja: "テスト開始", zh: "开始测验", en: "Start test")
+    public static let writeTestPrompt = L10nText(
+        ko: "이 뜻의 한자를 써보세요", ja: "この意味の漢字を書こう", zh: "写出这个意思的汉字", en: "Write the kanji for this meaning")
+    public static let writeStartPos = L10nText(ko: "시작 위치", ja: "開始位置", zh: "起始位置", en: "Start from")
+    public static let writeCount = L10nText(ko: "문항 수", ja: "問題数", zh: "题数", en: "Questions")
+    public static let writeSeeResult = L10nText(ko: "결과 보기", ja: "結果を見る", zh: "查看结果", en: "See result")
+    public static let writeCompareHint = L10nText(
+        ko: "실제 한자와 대조해 보세요", ja: "実際の漢字と見比べてね", zh: "和真正的汉字对照一下", en: "Compare with the real kanji")
+    public static let writeMine = L10nText(ko: "내 글씨", ja: "自分の字", zh: "我写的", en: "Mine")
+    public static let writeAnswer = L10nText(ko: "정답", ja: "正解", zh: "答案", en: "Answer")
+    public static let writeRetest = L10nText(ko: "다시 테스트", ja: "もう一度", zh: "再测一次", en: "Test again")
+    public static let writeNewRange = L10nText(ko: "범위 다시 선택", ja: "範囲を選び直す", zh: "重新选范围", en: "Pick new range")
+    public static let unitCount = L10nText(ko: "자", ja: "字", zh: "字", en: "")
     public static let testChoosePrompt = L10nText(
         ko: "뜻에 맞는 한자를 고르세요", ja: "意味に合う漢字を選ぼう", zh: "选择对应意思的汉字",
         en: "Pick the kanji for this meaning")

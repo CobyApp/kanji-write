@@ -4,48 +4,57 @@ import Foundation
 import Review
 import SharedModels
 
-/// Free-repetition writing notebook (한자노트). The learner picks a kanji and
-/// writes it many times over a faint stroke-order guide. Ungraded muscle-memory
-/// practice — no FSRS, no recognition.
+/// A kanji writing test (한자쓰기 테스트). The learner picks a JLPT level and a
+/// range, then for each kanji sees only its meaning + readings and writes the
+/// kanji from memory on a blank canvas. Nothing is auto-graded: at the end every
+/// answer is shown next to the real kanji so the learner checks at a glance.
 @Reducer
 public struct PracticeFeature {
     @ObservableState
     public struct State: Equatable {
-        /// All kanji available to pick from (loaded on appear).
-        public var kanji: IdentifiedArrayOf<Kanji> = []
-        /// The JLPT level whose kanji are shown in the picker strip.
-        public var level = "N5"
-        /// The kanji currently being practiced, if any.
-        public var selected: Kanji?
+        public enum Phase: Equatable { case setup, testing, review }
+        public var phase: Phase = .setup
 
-        /// The kanji shown in the picker, filtered to `level` and in the same
-        /// order as study / the dictionary (JLPT → stroke count → id).
-        public var levelKanji: [Kanji] {
-            studyOrder(kanji.elements, level: level)
-        }
-        /// Faint stroke-order guide (KanjiVG path `d` strings) for `selected`.
-        public var strokePaths: [String] = []
-        /// Meaning map (lang code → text) for `selected`; view resolves per language.
-        public var glosses: [String: String] = [:]
-        /// Whether the faint guide is shown behind each cell.
-        public var showGuide = true
-        /// Incremented to force every canvas cell to reset (clear-all).
-        public var clearToken = 0
-        /// How many write cells the notebook shows (grows by 10 on demand).
-        public var cellCount = 10
+        /// All kanji + glosses (loaded on appear).
+        public var kanji: IdentifiedArrayOf<Kanji> = []
+        public var glossesByID: [Int: [String: String]] = [:]
+
+        /// Chosen level + range.
+        public var level = "N5"
+        public var start = 0        // 0-based index within levelKanji
+        public var count = 20       // how many to test
+
+        /// The kanji being tested this run, in study order.
+        public var questions: [Kanji] = []
+        public var index = 0
+        /// Per-question PKDrawing data (question index → serialized drawing).
+        public var drawings: [Int: Data] = [:]
+
         public init() {}
+
+        /// The level's kanji in study order (JLPT → strokes → id).
+        public var levelKanji: [Kanji] { studyOrder(kanji.elements, level: level) }
+        public var levelCount: Int { levelKanji.count }
+        /// Largest valid start index.
+        public var maxStart: Int { max(0, levelCount - 1) }
+        public var current: Kanji? { questions.indices.contains(index) ? questions[index] : nil }
+        public var isLast: Bool { index >= questions.count - 1 }
+        /// Exclusive range end (clamped) for the summary label.
+        public var rangeEnd: Int { min(start + count, levelCount) }
     }
 
     public enum Action: Equatable {
-        case onAppear(selectedID: Int?)
-        case kanjiLoaded([Kanji], selectedID: Int?)
-        case kanjiSelected(Kanji)
+        case onAppear
+        case loaded([Kanji], [Int: [String: String]])
         case levelSelected(String)
-        case strokesLoaded([String])
-        case glossesLoaded([String: String])
-        case toggleGuide
-        case clearAll
-        case addCells
+        case setStart(Double)
+        case setCount(Int)
+        case startTest
+        case saveDrawing(Data)   // commit the current canvas into `drawings`
+        case next
+        case prev
+        case finish              // → review
+        case restart             // → setup
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
@@ -55,68 +64,64 @@ public struct PracticeFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .onAppear(selectedID):
-                // Reload only when empty so re-appearing keeps the selection.
+            case .onAppear:
                 guard state.kanji.isEmpty else { return .none }
                 return .run { send in
                     let all = (try? await dictionaryClient.allKanji()) ?? []
-                    await send(.kanjiLoaded(all, selectedID: selectedID))
+                    let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
+                    await send(.loaded(all, glosses))
                 }
 
-            case let .kanjiLoaded(all, selectedID):
+            case let .loaded(all, glosses):
                 state.kanji = IdentifiedArray(uniqueElements: all)
-                guard state.selected == nil else { return .none }
-                // Restore the last-practiced kanji (jump to its level); otherwise
-                // default to the first kanji of the current level.
-                if let id = selectedID, let restored = state.kanji[id: id] {
-                    state.level = restored.jlptLevel ?? state.level
-                    return .send(.kanjiSelected(restored))
-                }
-                if let first = state.levelKanji.first {
-                    return .send(.kanjiSelected(first))
-                }
+                state.glossesByID = glosses
                 return .none
 
             case let .levelSelected(level):
                 state.level = level
-                // Jump the notebook to the first kanji of the newly picked level.
-                if let first = state.levelKanji.first {
-                    return .send(.kanjiSelected(first))
-                }
+                state.start = 0          // reset range to the top of the new level
                 return .none
 
-            case let .kanjiSelected(kanji):
-                state.selected = kanji
-                state.strokePaths = []
-                state.glosses = [:]
-                state.clearToken += 1  // fresh page when switching kanji
-                state.cellCount = 10   // reset the notebook length
-                let id = kanji.id
-                return .run { send in
-                    async let glossesTask = try? await dictionaryClient.glosses(id)
-                    let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
-                    await send(.strokesLoaded(paths))
-                    await send(.glossesLoaded(await glossesTask ?? [:]))
-                }
-
-            case let .strokesLoaded(paths):
-                state.strokePaths = paths
+            case let .setStart(value):
+                state.start = max(0, min(Int(value), state.maxStart))
                 return .none
 
-            case let .glossesLoaded(glosses):
-                state.glosses = glosses
+            case let .setCount(count):
+                state.count = count
                 return .none
 
-            case .toggleGuide:
-                state.showGuide.toggle()
+            case .startTest:
+                let lk = state.levelKanji
+                guard !lk.isEmpty else { return .none }
+                let s = min(state.start, max(0, lk.count - 1))
+                let e = min(s + state.count, lk.count)
+                state.questions = Array(lk[s..<e])
+                state.index = 0
+                state.drawings = [:]
+                state.phase = .testing
                 return .none
 
-            case .clearAll:
-                state.clearToken += 1
+            case let .saveDrawing(data):
+                state.drawings[state.index] = data
                 return .none
 
-            case .addCells:
-                state.cellCount += 10
+            case .next:
+                if state.index < state.questions.count - 1 { state.index += 1 }
+                return .none
+
+            case .prev:
+                if state.index > 0 { state.index -= 1 }
+                return .none
+
+            case .finish:
+                state.phase = .review
+                return .none
+
+            case .restart:
+                state.phase = .setup
+                state.questions = []
+                state.drawings = [:]
+                state.index = 0
                 return .none
             }
         }
