@@ -219,6 +219,10 @@ public enum L {
         ko: "이 단어의 뜻은?", ja: "この単語の意味は？", zh: "这个词的意思是？", en: "What does this word mean?")
     public static let studyQuizWordReading = L10nText(
         ko: "이 단어의 읽기는?", ja: "この単語の読み方は？", zh: "这个词怎么读？", en: "How is this word read?")
+    public static let studyQuizStrokes = L10nText(
+        ko: "이 한자는 몇 획?", ja: "この漢字は何画？", zh: "这个汉字几画？", en: "How many strokes?")
+    public static let studyQuizRadical = L10nText(
+        ko: "이 한자의 부수는?", ja: "この漢字の部首は？", zh: "这个汉字的部首？", en: "What is the radical?")
     public static let testPrompt = L10nText(ko: "뜻을 보고 한자를 써보세요", ja: "意味を見て漢字を書こう", zh: "根据意思写汉字", en: "Write the kanji for this meaning")
     public static let practicePrompt = L10nText(ko: "반복해서 써보며 익히세요", ja: "繰り返し書いて覚えよう", zh: "反复书写来记住", en: "Write it repeatedly to memorize")
     public static let pickToPractice = L10nText(ko: "연습할 한자를 고르세요", ja: "練習する漢字を選ぼう", zh: "选择要练习的汉字", en: "Pick a kanji to practice")
