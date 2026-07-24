@@ -9,10 +9,12 @@ import SharedModels
 /// `Kanji`. IDs whose kanji is missing are dropped so the queue never holds an
 /// unshowable lesson. Order is preserved from `newIDs` (JLPT → strokes → id).
 public func buildWorksheetQueue(
-    records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int, level: String? = nil
+    records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int,
+    level: String? = nil, startIndex: Int = 0
 ) -> [Kanji] {
     let session = todaysSession(
-        records: records, order: studyOrder(kanji, level: level), today: today, newPerDay: newPerDay)
+        records: records, order: studyOrder(kanji, level: level), today: today,
+        newPerDay: newPerDay, startIndex: startIndex)
     let byID = Dictionary(kanji.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     return session.newIDs.compactMap { byID[$0] }
 }
@@ -48,6 +50,9 @@ public struct WorksheetFeature {
         /// Target JLPT level for the plan (from `@AppStorage("targetLevel")`); new
         /// kanji are drawn only from this level. nil = all levels.
         public var targetLevel: String? = "N5"
+        /// How many kanji to skip at the front of the level (the study plan's
+        /// start position), so study can begin mid-level.
+        public var startIndex = 0
         /// All queue kanji's card content, prefetched up front and keyed by kanji
         /// id — so swiping to the next kanji shows its words/sentences/strokes/
         /// meaning instantly, with no load flicker.
@@ -86,7 +91,7 @@ public struct WorksheetFeature {
     }
 
     public enum Action: Equatable {
-        case onAppear(newPerDay: Int, level: String?)
+        case onAppear(newPerDay: Int, level: String?, startIndex: Int)
         case loaded([ReviewRecord], [Kanji], Int)
         case contentLoaded([Int: CardContent])  // all queue kanji, prefetched
         case nextTapped
@@ -106,11 +111,12 @@ public struct WorksheetFeature {
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
-            case let .onAppear(newPerDay, level):
+            case let .onAppear(newPerDay, level, startIndex):
                 guard state.queue.isEmpty, !state.isFinished, !state.isLoading else { return .none }
                 state.isLoading = true
                 state.newPerDay = max(1, newPerDay)  // never let a 0/day plan blank the lesson
                 state.targetLevel = level
+                state.startIndex = max(0, startIndex)
                 let today = Int(date.now.timeIntervalSince1970 / 86_400)
                 return .run { send in
                     async let records = reviewStore.loadRecords()
@@ -124,9 +130,10 @@ public struct WorksheetFeature {
                 state.today = today
                 state.queue = buildWorksheetQueue(
                     records: records, kanji: kanji, today: today, newPerDay: state.newPerDay,
-                    level: state.targetLevel)
+                    level: state.targetLevel, startIndex: state.startIndex)
                 state.remaining = remainingNew(
-                    order: studyOrder(kanji, level: state.targetLevel), records: records)
+                    order: studyOrder(kanji, level: state.targetLevel), records: records,
+                    startIndex: state.startIndex)
                 state.index = 0
                 // Nothing to study → mark loaded (shows the empty state). Otherwise
                 // prefetch every queue kanji's content before revealing the deck.

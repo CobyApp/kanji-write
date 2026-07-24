@@ -13,15 +13,25 @@ public struct StudySession: Equatable, Sendable {
 /// Build today's session: every tracked card whose `due` has arrived (ordered by
 /// due then difficulty), plus the next `newPerDay` never-seen kanji from
 /// `order`.
+/// `startIndex` skips that many kanji at the front of `order`, so a learner can
+/// start the level mid-way (set from the study plan's range).
 public func todaysSession(
-    records: [ReviewRecord], order: [Kanji], today: Int, newPerDay: Int
+    records: [ReviewRecord], order: [Kanji], today: Int, newPerDay: Int, startIndex: Int = 0
 ) -> StudySession {
     let known = Set(records.map(\.kanjiID))
     let due = records.filter { $0.due <= today }
         .sorted { ($0.due, $0.difficulty) < ($1.due, $1.difficulty) }
         .map(\.kanjiID)
-    let new = order.lazy.filter { !known.contains($0.id) }.prefix(max(0, newPerDay)).map(\.id)
+    let pool = clampedTail(order, from: startIndex)
+    let new = pool.lazy.filter { !known.contains($0.id) }.prefix(max(0, newPerDay)).map(\.id)
     return StudySession(dueIDs: due, newIDs: Array(new))
+}
+
+/// `order` from `start` onward, with `start` clamped to a valid range.
+func clampedTail(_ order: [Kanji], from start: Int) -> [Kanji] {
+    guard start > 0 else { return order }
+    guard start < order.count else { return [] }
+    return Array(order[start...])
 }
 
 /// The order in which new kanji are introduced: by JLPT level (N5→N1; un-leveled
@@ -48,10 +58,10 @@ public func studyOrder(_ kanji: [Kanji], level: String?) -> [Kanji] {
     return studyOrder(kanji.filter { $0.jlptLevel == level })
 }
 
-/// How many kanji in `order` have not been started yet (no review record).
-public func remainingNew(order: [Kanji], records: [ReviewRecord]) -> Int {
+/// How many kanji in `order` (from `startIndex` onward) have not been started yet.
+public func remainingNew(order: [Kanji], records: [ReviewRecord], startIndex: Int = 0) -> Int {
     let known = Set(records.map(\.kanjiID))
-    return order.filter { !known.contains($0.id) }.count
+    return clampedTail(order, from: startIndex).filter { !known.contains($0.id) }.count
 }
 
 /// Days to finish `remaining` new kanji at `perDay` per day (round up).
