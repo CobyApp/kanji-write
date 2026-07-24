@@ -264,12 +264,21 @@ public struct WorksheetView: View {
     private var deckHeader: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("\(min(store.index + 1, store.queue.count)) / \(store.queue.count)")
+                Text("\(min(store.index + 1, store.queue.count)) / \(store.queue.count) · \(targetLevel)")
                     .font(.kawaii(14, weight: .bold)).monospacedDigit()
                     .foregroundStyle(Palette.inkSoft)
                 Spacer()
-                Text("\(targetLevel) · \(newPerDay)/\(L.daysUnit[appLanguage])")
-                    .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+                // "이미 알아요" — learn the current kanji + jump ahead (start mid-way).
+                Button { store.send(.skipTapped) } label: {
+                    HStack(spacing: 4) {
+                        Text(L.alreadyKnow[appLanguage])
+                        Image(systemName: "forward.fill").font(.system(size: 10, weight: .bold))
+                    }
+                    .font(.kawaii(12, weight: .bold)).foregroundStyle(Palette.lavender)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Palette.lavenderSoft).clipShape(Capsule())
+                }
+                .buttonStyle(.bouncy)
             }
             HStack(spacing: 6) {
                 ForEach(0..<steps.count, id: \.self) { i in

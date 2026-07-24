@@ -90,6 +90,7 @@ public struct WorksheetFeature {
         case loaded([ReviewRecord], [Kanji], Int)
         case contentLoaded([Int: CardContent])  // all queue kanji, prefetched
         case nextTapped
+        case skipTapped          // "이미 알아요" — learn now + jump to the next kanji
         case doneTapped
         case closeTapped          // delegate → parent dismisses the session
         case kanjiTapped(Kanji)   // delegate → parent drills into the kanji detail
@@ -145,6 +146,29 @@ public struct WorksheetFeature {
                 state.index += 1
                 state.clearToken += 1
                 return .none  // content is already prefetched — instant, no flicker
+
+            case .skipTapped:
+                // "이미 알아요" — mark the current kanji learned right away (so it
+                // leaves the new-kanji queue) and jump ahead. Lets a returning
+                // learner skip past kanji they already know and start mid-way.
+                guard let kanji = state.current else { return .none }
+                let today = state.today
+                if state.records[id: kanji.id] == nil {
+                    let initial = FSRS.initialState(.good)
+                    let interval = FSRS.interval(stability: initial.stability, retention: 0.9)
+                    state.records[id: kanji.id] = ReviewRecord(
+                        kanjiID: kanji.id, stability: initial.stability,
+                        difficulty: initial.difficulty, due: today + interval,
+                        lastReviewedDay: today, lapses: 0, reps: 1)
+                }
+                let all = Array(state.records)
+                if state.isLast {
+                    state.isFinished = true
+                } else {
+                    state.index += 1
+                    state.clearToken += 1
+                }
+                return .run { _ in await reviewStore.saveRecords(all) }
 
             case .doneTapped:
                 let today = state.today

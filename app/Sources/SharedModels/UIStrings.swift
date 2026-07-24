@@ -199,6 +199,7 @@ public enum L {
         ko: "그 외 단어", ja: "その他の単語", zh: "其他词", en: "Other words")
     public static let worksheetWord = L10nText(ko: "이 한자가 든 단어", ja: "この漢字を使う単語", zh: "含这个汉字的单词", en: "A word using it")
     public static let worksheetExample = L10nText(ko: "예문", ja: "例文", zh: "例句", en: "Example")
+    public static let alreadyKnow = L10nText(ko: "이미 알아요", ja: "知ってる", zh: "已会", en: "I know this")
     // Mini quiz mixed into the study deck.
     public static let worksheetQuiz = L10nText(ko: "확인 퀴즈", ja: "確認クイズ", zh: "小测验", en: "Quick check")
     public static let studyQuizMeaning = L10nText(
