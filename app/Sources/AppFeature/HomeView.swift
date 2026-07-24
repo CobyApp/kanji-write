@@ -159,18 +159,9 @@ struct HomeView: View {
         .confirmationDialog(L.studyDoneTitle[appLanguage], isPresented: $showStudyDoneConfirm,
                             titleVisibility: .visible) {
             Button(L.studyPullTomorrow[appLanguage]) { store.send(.startStudy) }
-            // Only offered while today's quiz is still outstanding — lets the
-            // learner take it instead of skipping straight to tomorrow.
-            if !quizTakenToday {
-                Button(L.studyTakeQuizNow[appLanguage]) {
-                    store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
-                }
-            }
             Button(L.cancel[appLanguage], role: .cancel) {}
         } message: {
-            Text(quizTakenToday
-                 ? L.studyDoneMessage[appLanguage]
-                 : "\(L.studyQuizPending[appLanguage]) \(L.studyDoneMessage[appLanguage])")
+            Text(L.studyDoneMessage[appLanguage])
         }
         .task {
             // Keep the plan's level valid for the current exam (guards against a
@@ -247,7 +238,6 @@ struct HomeView: View {
             // row, all with the same spacing (no side-by-side cards).
             VStack(spacing: 12) {
                 studyLauncher
-                quizLauncher
                 dictionaryButton
                 wordDictionaryButton
                 wordbookButton
@@ -309,7 +299,6 @@ struct HomeView: View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                   spacing: 12) {
             studyLauncher
-            quizLauncher
             dictionaryButton
             wordDictionaryButton
             // Free handwriting is an Apple-Pencil activity → iPad only. Placed
@@ -404,19 +393,6 @@ struct HomeView: View {
         launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
                  subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
                  soft: Palette.pinkSoft, accent: Palette.pink) { startStudyTapped() }
-    }
-
-    /// The quiz — one place that mixes review (spaced-repetition due items) with
-    /// new questions on what was studied today. Badge shows kanji due for review.
-    private var quizLauncher: some View {
-        let due = session.dueIDs.count
-        return launcher(icon: "questionmark.circle.fill", title: L.quiz[appLanguage],
-                        subtitle: due > 0 ? L.reviewSub[appLanguage] : L.quizSub[appLanguage],
-                        count: due > 0 ? due : nil,
-                        soft: Palette.coralSoft, accent: Palette.coral) {
-            // Pass today's planned new kanji so the quiz works even before study.
-            store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
-        }
     }
 
     private var dictionaryButton: some View {
