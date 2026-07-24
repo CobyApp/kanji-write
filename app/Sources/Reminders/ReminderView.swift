@@ -6,6 +6,9 @@ import SwiftUI
 public struct ReminderView: View {
     @Bindable public var store: StoreOf<ReminderFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("examType") private var examType: ExamType = .jlpt
+    @AppStorage("targetLevel") private var targetLevel = "N5"
+    @AppStorage("studyStartIndex") private var studyStartIndex = 0
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -20,6 +23,7 @@ public struct ReminderView: View {
             Palette.background.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 16) {
+                    examCard
                     languageCard
                     reminderCard
                     resetCard
@@ -44,6 +48,24 @@ public struct ReminderView: View {
         }
         .onChange(of: hour) { _, newValue in
             store.send(.apply(enabled: enabled, hour: newValue))
+        }
+    }
+
+    /// Exam target: JLPT or 漢検. Switching resets the plan's level/range so it
+    /// always points at a valid level for the chosen exam.
+    private var examCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(L.examType[appLanguage], accent: Palette.sky)
+            Picker("Exam", selection: $examType) {
+                Text("JLPT").tag(ExamType.jlpt)
+                Text("漢検").tag(ExamType.kanken)
+            }
+            .pickerStyle(.segmented)
+        }
+        .roundedCard()
+        .onChange(of: examType) { _, newExam in
+            targetLevel = newExam.defaultLevel
+            studyStartIndex = 0
         }
     }
 

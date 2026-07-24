@@ -108,6 +108,7 @@ public enum L {
 
     // Settings
     public static let language = L10nText(ko: "언어", ja: "言語", zh: "语言", en: "Language")
+    public static let examType = L10nText(ko: "시험 종류", ja: "試験の種類", zh: "考试类型", en: "Exam")
     public static let reminder = L10nText(ko: "리마인더", ja: "リマインダー", zh: "提醒", en: "Reminder")
     public static let dailyReminder = L10nText(ko: "매일 리마인더", ja: "毎日のリマインダー", zh: "每日提醒", en: "Daily reminder")
     public static let time = L10nText(ko: "시각", ja: "時刻", zh: "时间", en: "Time")

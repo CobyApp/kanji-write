@@ -173,9 +173,18 @@ struct HomeView: View {
                  : "\(L.studyQuizPending[appLanguage]) \(L.studyDoneMessage[appLanguage])")
         }
         .task {
+            // Keep the plan's level valid for the current exam (guards against a
+            // stale JLPT level lingering after switching to 漢検, or vice versa).
+            if !examType.levels.contains(targetLevel) { targetLevel = examType.defaultLevel }
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
             writeSnapshot()
+        }
+        .onChange(of: examType) { _, newExam in
+            if !newExam.levels.contains(targetLevel) {
+                targetLevel = newExam.defaultLevel
+                studyStartIndex = 0
+            }
         }
         .onChange(of: newPerDay) { _, _ in writeSnapshot() }
         .onChange(of: targetLevel) { _, _ in studyStartIndex = 0; writeSnapshot() }
@@ -344,7 +353,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 16) {
             SectionHeader(L.studyPlan[appLanguage], accent: Palette.sky)
             Picker(L.targetLevel[appLanguage], selection: $targetLevel) {
-                ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
+                ForEach(examType.levels, id: \.self) { Text($0).tag($0) }
             }
             .pickerStyle(.segmented)
 
