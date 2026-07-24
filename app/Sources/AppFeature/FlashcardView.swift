@@ -102,24 +102,30 @@ struct FlashcardView: View {
     }
 
     private var navButtons: some View {
-        HStack(spacing: 12) {
+        let atEnd = index >= items.count - 1
+        return HStack(spacing: 12) {
             Button { move(-1) } label: {
-                Image(systemName: "chevron.left").font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(index == 0 ? Palette.inkSoft : Palette.pink)
-                    .frame(width: 64).padding(.vertical, 14)
-                    .background(Palette.pinkSoft.opacity(index == 0 ? 0.4 : 1)).clipShape(Capsule())
+                HStack(spacing: 4) {
+                    Image(systemName: "chevron.left").font(.system(size: 13, weight: .bold))
+                    Text(L.prev[appLanguage]).font(.kawaii(16, weight: .bold))
+                }
+                .foregroundStyle(index == 0 ? Palette.inkSoft : Palette.pink)
+                .frame(width: 110).padding(.vertical, 14)
+                .background(Palette.pinkSoft.opacity(index == 0 ? 0.4 : 1)).clipShape(Capsule())
             }
             .buttonStyle(.bouncy).disabled(index == 0)
 
-            Button { move(1) } label: {
-                Image(systemName: "chevron.right").font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(index >= items.count - 1 ? Palette.inkSoft : .white)
+            // Last card → 완료 (closes); otherwise 다음.
+            Button { atEnd ? onClose() : move(1) } label: {
+                Text(atEnd ? L.done[appLanguage] : L.next[appLanguage])
+                    .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(index >= items.count - 1 ? AnyShapeStyle(Palette.pinkSoft.opacity(0.4))
-                                : AnyShapeStyle(Palette.accent))
+                    .background(LinearGradient(
+                        colors: atEnd ? [Palette.mint, Palette.sky] : [Palette.butter, Palette.pink],
+                        startPoint: .leading, endPoint: .trailing))
                     .clipShape(Capsule())
             }
-            .buttonStyle(.bouncy).disabled(index >= items.count - 1)
+            .buttonStyle(.bouncy)
         }
     }
 
