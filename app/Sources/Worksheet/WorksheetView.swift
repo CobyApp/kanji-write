@@ -44,6 +44,7 @@ public struct WorksheetView: View {
     @AppStorage("targetLevel") private var targetLevel = "N5"
     @AppStorage("studyStartIndex") private var studyStartIndex = 0
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("examType") private var examType: ExamType = .jlpt
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// Which card of the current kanji is showing (0…`lastCard`).
     @State private var card = 0
@@ -94,14 +95,16 @@ public struct WorksheetView: View {
     /// the facet by kanji id gives variety across a session so every aspect gets
     /// exercised. Empty when there isn't enough material for even one.
     private func studyQuizzes(_ kanji: Kanji) -> [StudyQuizSpec] {
-        // Two checks per kanji: a JLPT-style question (from the bank) + a 漢検-style
-        // one (auto-generated: reading / meaning / 画数 / 部首).
-        [jlptStyleQuiz(kanji), kanjiFacetQuiz(kanji)].compactMap { $0 }
+        // Two checks per kanji, matched to the active exam: a bank question
+        // (읽기·표기·문맥 — shared) + a facet quiz whose candidate set is
+        // exam-specific (漢検 adds its staples 画数·部首; JLPT stays vocabulary).
+        [bankQuiz(kanji), kanjiFacetQuiz(kanji)].compactMap { $0 }
     }
 
-    /// A pre-authored JLPT-style question about the kanji (reading / orthography /
-    /// context), shown as a prompt with the target word underlined.
-    private func jlptStyleQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
+    /// A pre-authored bank question about the kanji (reading / orthography /
+    /// context), shown as a prompt with the target word underlined. Shared by both
+    /// exams — 漢検 reads these as 読み / 書き取り, JLPT as 漢字読み / 表記.
+    private func bankQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
         guard let q = store.jlptQuestions.first(where: { $0.options.count >= 2 }) else { return nil }
         let label: String
         switch q.kind {
@@ -154,25 +157,27 @@ public struct WorksheetView: View {
                     options: options, answer: kun, japaneseOptions: true))
             }
         }
-        // 画数 (stroke count) — a 漢検 staple. Distractors are nearby counts.
-        let unit = L.strokesUnit[appLanguage]
-        let answerStrokes = "\(kanji.strokeCount)\(unit)"
-        let strokePool = (max(1, kanji.strokeCount - 4)...(kanji.strokeCount + 4))
-            .filter { $0 != kanji.strokeCount }.map { "\($0)\(unit)" }
-        let strokeOptions = quizOptions(answer: answerStrokes, pool: strokePool, rng: &rng)
-        if strokeOptions.count >= 2 {
-            candidates.append(StudyQuizSpec(
-                subject: .kanji(kanji.literal), prompt: L.studyQuizStrokes[appLanguage],
-                options: strokeOptions, answer: answerStrokes, japaneseOptions: false))
-        }
-        // 部首 (radical) — distractors from the other session kanji's radicals.
-        if let radical = kanji.radicalGlyph {
-            let pool = store.queue.compactMap { $0.radicalGlyph }
-            let options = quizOptions(answer: radical, pool: pool, rng: &rng)
-            if options.count >= 2 {
+        // 画数 (stroke count) and 部首 (radical) are 漢検-specific sections — only
+        // mix them into the study checks when the learner targets the 漢検.
+        if examType == .kanken {
+            let unit = L.strokesUnit[appLanguage]
+            let answerStrokes = "\(kanji.strokeCount)\(unit)"
+            let strokePool = (max(1, kanji.strokeCount - 4)...(kanji.strokeCount + 4))
+                .filter { $0 != kanji.strokeCount }.map { "\($0)\(unit)" }
+            let strokeOptions = quizOptions(answer: answerStrokes, pool: strokePool, rng: &rng)
+            if strokeOptions.count >= 2 {
                 candidates.append(StudyQuizSpec(
-                    subject: .kanji(kanji.literal), prompt: L.studyQuizRadical[appLanguage],
-                    options: options, answer: radical, japaneseOptions: true))
+                    subject: .kanji(kanji.literal), prompt: L.studyQuizStrokes[appLanguage],
+                    options: strokeOptions, answer: answerStrokes, japaneseOptions: false))
+            }
+            if let radical = kanji.radicalGlyph {
+                let pool = store.queue.compactMap { $0.radicalGlyph }
+                let options = quizOptions(answer: radical, pool: pool, rng: &rng)
+                if options.count >= 2 {
+                    candidates.append(StudyQuizSpec(
+                        subject: .kanji(kanji.literal), prompt: L.studyQuizRadical[appLanguage],
+                        options: options, answer: radical, japaneseOptions: true))
+                }
             }
         }
         return pick(candidates, kanji)

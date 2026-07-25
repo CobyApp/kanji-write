@@ -1,40 +1,64 @@
 import Foundation
 
-/// One of the 漢検 exam's 大問 question types. Phase 1 ships the three that come
-/// from real, vetted data (読み・部首・書き取り); the rest are curated later.
+/// How a question renders in the player: a radical pick (kanji glyph + 部首
+/// options) vs. a sentence prompt (reading / orthography / context). Also tags a
+/// stored `KankenQuestion` so the 오답노트 knows how to draw it.
 public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codable {
-    case reading          // 一 読み
-    case radical          // 二 部首
-    case writing          // 九 書き取り
-    // Phase 2 (curated data):
-    // case compound      // 三 熟語の構成
-    // case yojijukugo    // 四 四字熟語
-    // case antonymSynonym// 五 対義・類義
-    // case homophone     // 六 同音・同訓異字
-    // case errorFix      // 七 誤字訂正
-    // case okurigana     // 八 送りがな
+    case reading          // 読み / 漢字読み — sentence, answer is a reading
+    case radical          // 部首 — kanji glyph, options are 部首 glyphs
+    case writing          // 書き取り / 表記 — sentence, answer is a kanji spelling
+    case context          // 文脈規定 — sentence cloze
 
-    /// The 大問 number label (Japanese numeral), e.g. "一".
-    public var numeral: String {
+    /// Reading answers get slightly larger option type than kanji/word answers.
+    public var isReading: Bool { self == .reading }
+}
+
+/// One selectable section of an exam's question paper — its label, the 大問 marker
+/// shown on the card, how its questions render, and where they come from (a bank
+/// `kind`, or the radical generator when `kind` is nil). Exam-specific: JLPT and
+/// 漢検 expose different section lists (see `ExamType.sections`).
+public struct ExamSection: Equatable, Sendable, Identifiable {
+    public let id: String            // stable per section, unique within an exam
+    public let numeral: String       // 大問 marker ("一" / "1" …)
+    public let jaTitle: String       // section name as printed on the exam
+    public let renderType: KankenQuestionType
+    public let kind: String?         // bank kind to query; nil = radical-generated
+
+    public init(id: String, numeral: String, jaTitle: String,
+                renderType: KankenQuestionType, kind: String?) {
+        self.id = id
+        self.numeral = numeral
+        self.jaTitle = jaTitle
+        self.renderType = renderType
+        self.kind = kind
+    }
+}
+
+extension ExamType {
+    /// The exam-question hub's section list. Only sections backed by real, vetted
+    /// data ship today; curated ones (四字熟語 etc.) are added in Phase 2.
+    public var sections: [ExamSection] {
         switch self {
-        case .reading: "一"
-        case .radical: "二"
-        case .writing: "九"
+        case .kanken:
+            return [
+                ExamSection(id: "reading", numeral: "一", jaTitle: "読み",
+                            renderType: .reading, kind: "reading"),
+                ExamSection(id: "radical", numeral: "二", jaTitle: "部首",
+                            renderType: .radical, kind: nil),
+                ExamSection(id: "writing", numeral: "九", jaTitle: "書き取り",
+                            renderType: .writing, kind: "orthography"),
+            ]
+        case .jlpt:
+            return [
+                ExamSection(id: "reading", numeral: "1", jaTitle: "漢字読み",
+                            renderType: .reading, kind: "reading"),
+                ExamSection(id: "orthography", numeral: "2", jaTitle: "表記",
+                            renderType: .writing, kind: "orthography"),
+                ExamSection(id: "context", numeral: "3", jaTitle: "文脈規定",
+                            renderType: .context, kind: "context"),
+            ]
         }
     }
-
-    /// The Japanese section name, as printed on the exam.
-    public var jaTitle: String {
-        switch self {
-        case .reading: "読み"
-        case .radical: "部首"
-        case .writing: "書き取り"
-        }
-    }
-
-    /// Whether the multiple-choice options are Japanese text (readings / kanji) —
-    /// so the card renders them in the Japanese face.
-    public var japaneseOptions: Bool { true }
 }
 
 /// A ready-to-show 漢検 multiple-choice question. Adapted from the pre-authored

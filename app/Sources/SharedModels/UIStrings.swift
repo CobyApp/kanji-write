@@ -195,8 +195,11 @@ public enum L {
         ja: "復習する内容がありません\n学習してからまた開いてね",
         zh: "暂无需要复习的内容\n学习后再来吧", en: "Nothing to review yet\nStudy first, then come back")
 
-    // 칸켄 문제 허브 (Kanken exam hub)
+    // 칸켄 / JLPT 문제 허브 (exam question hub)
     public static let kankenHub = L10nText(ko: "칸켄 문제", ja: "漢検問題", zh: "汉检题库", en: "Kanken exam")
+    public static let jlptHub = L10nText(ko: "JLPT 문제", ja: "JLPT問題", zh: "JLPT题库", en: "JLPT exam")
+    public static let kankenContextDesc = L10nText(
+        ko: "문맥에 맞는 단어", ja: "文脈に合う語", zh: "符合文意的词", en: "The word that fits the sentence")
     public static let kankenHubSubtitle = L10nText(
         ko: "출제 유형별 연습", ja: "出題形式ごとの練習", zh: "按题型练习", en: "Practice by exam section")
     public static let kankenReadingDesc = L10nText(
