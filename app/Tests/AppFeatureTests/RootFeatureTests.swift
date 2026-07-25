@@ -122,7 +122,7 @@ final class RootFeatureTests: XCTestCase {
         let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
         store.exhaustivity = .off
 
-        await store.send(.startStudy)
+        await store.send(.startStudy(pullAhead: false))
         guard case .worksheet = store.state.session else {
             return XCTFail("expected a worksheet session")
         }

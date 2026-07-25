@@ -11,19 +11,28 @@ public struct StudySession: Equatable, Sendable {
 }
 
 /// Build today's session: every tracked card whose `due` has arrived (ordered by
-/// due then difficulty), plus the next `newPerDay` never-seen kanji from
-/// `order`.
+/// due then difficulty), plus today's remaining new-kanji quota from `order`.
+///
+/// `newPerDay` is a *daily quota*, not a per-session batch: the new count is
+/// `newPerDay − (kanji already learned today)`, so studying twice in one day
+/// doesn't hand out two full batches, and the count winds down to zero as today's
+/// goal is met. Pass `ignoreTodaysProgress: true` to deliberately study ahead
+/// (pull tomorrow's batch forward) — then a full `newPerDay` is served regardless.
+///
 /// `startIndex` skips that many kanji at the front of `order`, so a learner can
 /// start the level mid-way (set from the study plan's range).
 public func todaysSession(
-    records: [ReviewRecord], order: [Kanji], today: Int, newPerDay: Int, startIndex: Int = 0
+    records: [ReviewRecord], order: [Kanji], today: Int, newPerDay: Int,
+    startIndex: Int = 0, ignoreTodaysProgress: Bool = false
 ) -> StudySession {
     let known = Set(records.map(\.kanjiID))
     let due = records.filter { $0.due <= today }
         .sorted { ($0.due, $0.difficulty) < ($1.due, $1.difficulty) }
         .map(\.kanjiID)
+    let learnedToday = ignoreTodaysProgress ? 0 : records.filter { $0.lastReviewedDay == today }.count
+    let quota = max(0, newPerDay - learnedToday)
     let pool = clampedTail(order, from: startIndex)
-    let new = pool.lazy.filter { !known.contains($0.id) }.prefix(max(0, newPerDay)).map(\.id)
+    let new = pool.lazy.filter { !known.contains($0.id) }.prefix(quota).map(\.id)
     return StudySession(dueIDs: due, newIDs: Array(new))
 }
 

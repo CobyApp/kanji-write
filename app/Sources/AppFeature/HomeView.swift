@@ -81,8 +81,10 @@ struct HomeView: View {
     }
 
     /// Today's new-kanji goal has been met (and there's still more to pull from).
+    /// `session.newIDs` is now empty once the quota is met, so gate on the total
+    /// remaining instead.
     private var studyDoneToday: Bool {
-        newPerDay > 0 && doneToday >= newPerDay && !session.newIDs.isEmpty
+        newPerDay > 0 && doneToday >= newPerDay && remaining > 0
     }
     /// Today's quiz has already been completed.
     private var quizTakenToday: Bool { lastQuizDay == store.review.today }
@@ -94,7 +96,7 @@ struct HomeView: View {
         if studyDoneToday {
             showStudyDoneConfirm = true
         } else {
-            store.send(.startStudy)
+            store.send(.startStudy(pullAhead: false))
         }
     }
 
@@ -159,7 +161,7 @@ struct HomeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .confirmationDialog(L.studyDoneTitle[appLanguage], isPresented: $showStudyDoneConfirm,
                             titleVisibility: .visible) {
-            Button(L.studyPullTomorrow[appLanguage]) { store.send(.startStudy) }
+            Button(L.studyPullTomorrow[appLanguage]) { store.send(.startStudy(pullAhead: true)) }
             Button(L.cancel[appLanguage], role: .cancel) {}
         } message: {
             Text(L.studyDoneMessage[appLanguage])
@@ -413,10 +415,12 @@ struct HomeView: View {
 
     // MARK: Study-mode launchers
 
-    /// The 학습 시작 launcher (also used inside the iPad grid).
+    /// The 학습 시작 launcher (also used inside the iPad grid). The badge is today's
+    /// remaining new-kanji quota (hidden once the daily goal is met).
     private var studyLauncher: some View {
         launcher(icon: "pencil.and.outline", title: L.startStudy[appLanguage],
-                 subtitle: L.newKanjiSub[appLanguage], count: session.newIDs.count,
+                 subtitle: L.newKanjiSub[appLanguage],
+                 count: session.newIDs.isEmpty ? nil : session.newIDs.count,
                  soft: Palette.pinkSoft, accent: Palette.pink) { startStudyTapped() }
     }
 
