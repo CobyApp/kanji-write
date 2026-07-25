@@ -194,6 +194,33 @@ public enum L {
         ko: "복습할 내용이 없어요\n학습 후 다시 열어보세요",
         ja: "復習する内容がありません\n学習してからまた開いてね",
         zh: "暂无需要复习的内容\n学习后再来吧", en: "Nothing to review yet\nStudy first, then come back")
+
+    // 칸켄 문제 허브 (Kanken exam hub)
+    public static let kankenHub = L10nText(ko: "칸켄 문제", ja: "漢検問題", zh: "汉检题库", en: "Kanken exam")
+    public static let kankenHubSubtitle = L10nText(
+        ko: "출제 유형별 연습", ja: "出題形式ごとの練習", zh: "按题型练习", en: "Practice by exam section")
+    public static let kankenReadingDesc = L10nText(
+        ko: "밑줄 친 한자어의 읽기", ja: "傍線部の読み", zh: "读音", en: "Reading of the underlined word")
+    public static let kankenRadicalDesc = L10nText(
+        ko: "한자의 부수 고르기", ja: "漢字の部首", zh: "部首", en: "The kanji's radical")
+    public static let kankenWritingDesc = L10nText(
+        ko: "읽기에 맞는 한자 표기", ja: "正しい漢字表記", zh: "书写", en: "Write it in kanji")
+    public static let kankenComingSoon = L10nText(ko: "준비 중", ja: "準備中", zh: "准备中", en: "Coming soon")
+    public static let wrongNote = L10nText(ko: "오답노트", ja: "間違いノート", zh: "错题本", en: "Mistake notebook")
+    public static let wrongNoteDesc = L10nText(
+        ko: "틀린 문제 다시 풀기", ja: "間違えた問題を解き直す", zh: "重做错题", en: "Re-solve missed questions")
+    public static let wrongNoteEmpty = L10nText(
+        ko: "오답노트가 비어 있어요\n문제를 풀다 틀리면 여기에 모여요",
+        ja: "間違いノートは空です\n間違えた問題がここに集まります",
+        zh: "错题本是空的\n答错的题会收集到这里", en: "No mistakes yet\nMissed questions collect here")
+    public static let wrongNoteCleared = L10nText(
+        ko: "오답노트를 모두 풀었어요!", ja: "間違いノートを全部解いたよ！",
+        zh: "错题都做完了！", en: "Mistake notebook cleared!")
+    public static let backToHub = L10nText(ko: "허브로", ja: "ハブへ", zh: "返回", en: "Back")
+    public static let kankenSectionEmpty = L10nText(
+        ko: "이 급수에는 아직 문제가 없어요",
+        ja: "この級にはまだ問題がありません",
+        zh: "该级别暂无题目", en: "No questions for this level yet")
     public static let worksheetWrite = L10nText(ko: "한자를 써보세요", ja: "漢字を書いてみよう", zh: "写一写这个汉字", en: "Write the kanji")
     public static let worksheetVerbs = L10nText(
         ko: "이 한자로 만드는 동사", ja: "この漢字でできる動詞", zh: "用这个汉字构成的动词",

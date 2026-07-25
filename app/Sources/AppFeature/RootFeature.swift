@@ -30,6 +30,7 @@ public struct RootFeature {
         case worksheet(WorksheetFeature)
         case practice(PracticeFeature)
         case quiz(QuizFeature)
+        case kanken(KankenExamFeature)
     }
 
     @ObservableState
@@ -75,6 +76,7 @@ public struct RootFeature {
         case startStudy
         case startPractice
         case startQuiz(level: String, planned: [Int])
+        case startKanken(level: String)
         case path(StackActionOf<Path>)
         case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
@@ -170,6 +172,10 @@ public struct RootFeature {
                 // QuizFeature reads today's studied / due kanji fresh from the
                 // store; `planned` lets it also quiz today's not-yet-studied kanji.
                 state.session = .quiz(QuizFeature.State(level: level, plannedIDs: planned))
+                return .none
+            case let .startKanken(level):
+                state.sessionPath.removeAll()
+                state.session = .kanken(KankenExamFeature.State(level: level))
                 return .none
 
             // Tapping a word / kanji while studying drills into its detail on the

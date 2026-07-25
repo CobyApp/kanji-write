@@ -383,6 +383,57 @@ extension DictionaryClient: DependencyKey {
                 }
                 return out
             }
+        },
+        kankenQuestions: { kankenLevel, kind, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [JLPTQuestion] in
+                // Questions for kanji whose 漢検 級 matches, of the requested kind.
+                // RANDOM() so each practice run draws a fresh set.
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT q.id, q.kanji_id, q.level, q.kind, q.prompt, q.options,
+                           q.answer, q.explanations, q.focus
+                    FROM jlpt_question q
+                    JOIN kanji k ON k.id = q.kanji_id
+                    WHERE k.kanken_level = ? AND q.kind = ?
+                    ORDER BY RANDOM()
+                    LIMIT ?
+                    """, arguments: [kankenLevel, kind, limit])
+                var out: [JLPTQuestion] = []
+                for row in rows {
+                    let optionsJSON: String = row["options"]
+                    guard let data = optionsJSON.data(using: .utf8),
+                          let options = try? JSONDecoder().decode([String].self, from: data),
+                          options.count >= 2 else { continue }
+                    var explanations: [String: String] = [:]
+                    if let ex: String = row["explanations"], let d = ex.data(using: .utf8),
+                       let map = try? JSONDecoder().decode([String: String].self, from: d) {
+                        explanations = map
+                    }
+                    out.append(JLPTQuestion(
+                        id: row["id"], kanjiID: row["kanji_id"], level: row["level"],
+                        kind: row["kind"], prompt: row["prompt"], options: options,
+                        answer: row["answer"], explanations: explanations, focus: row["focus"]))
+                }
+                return out
+            }
+        },
+        kankenRadicalItems: { kankenLevel, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [RadicalItem] in
+                // `radical` is a KANGXI index (Int 1…214); map it to its 部首 glyph
+                // for display. Kanji whose radical index has no glyph are skipped.
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, literal, radical FROM kanji
+                    WHERE kanken_level = ? AND radical IS NOT NULL AND radical > 0
+                    ORDER BY RANDOM()
+                    LIMIT ?
+                    """, arguments: [kankenLevel, limit])
+                return rows.compactMap { row -> RadicalItem? in
+                    let index: Int = row["radical"]
+                    guard let glyph = kangxiRadical(index) else { return nil }
+                    return RadicalItem(kanjiID: row["id"], literal: row["literal"], radical: glyph)
+                }
+            }
         }
     )
 
