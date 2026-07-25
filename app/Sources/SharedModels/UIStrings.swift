@@ -38,6 +38,13 @@ public enum L {
     public static let dictionary = L10nText(ko: "사전", ja: "辞書", zh: "词典", en: "Dictionary")
     public static let kanjiDictionary = L10nText(ko: "한자사전", ja: "漢字辞書", zh: "汉字词典", en: "Kanji dictionary")
     public static let wordDictionary = L10nText(ko: "단어사전", ja: "単語辞書", zh: "单词词典", en: "Word dictionary")
+    public static let expressionDictionary = L10nText(
+        ko: "표현사전", ja: "表現辞書", zh: "表达词典", en: "Expression dictionary")
+    public static let expressionSearchPrompt = L10nText(
+        ko: "표현·읽기·뜻으로 검색", ja: "表現・読み・意味で検索",
+        zh: "按表达·读音·意思搜索", en: "Search expressions, readings, meanings")
+    public static let expressionSub = L10nText(
+        ko: "관용구·표현 검색", ja: "慣用句・表現を検索", zh: "查惯用句·表达", en: "Idioms & phrases")
     public static let wordSearchPrompt = L10nText(
         ko: "단어·읽기·뜻으로 검색", ja: "単語・読み・意味で検索", zh: "按单词·读音·意思搜索",
         en: "Search words, readings, meanings")

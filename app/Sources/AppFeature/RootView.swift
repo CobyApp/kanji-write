@@ -132,6 +132,8 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
         WordDictionaryView(store: s)
     case let .yojiDictionary(s):
         YojiDictionaryView(store: s)
+    case let .yojiDetail(s):
+        YojiDetailView(store: s)
     }
 }
 
@@ -249,19 +251,21 @@ private struct WordDictionaryView: View {
         ZStack {
             Palette.background.ignoresSafeArea()
             if store.isSearching {
-                wordList(store.searchResults)
+                wordList(store.visibleResults)
             } else {
                 VStack(spacing: 12) {
                     levelChips
-                    wordList(store.words)
+                    wordList(store.visibleWords)
                 }
             }
         }
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top) {
             VStack(spacing: 10) {
-                NavHeader(title: L.wordDictionary[appLanguage], onBack: { dismiss() }) { GridToggleButton() }
-                SearchField(text: searchBinding, placeholder: L.wordSearchPrompt[appLanguage])
+                NavHeader(title: (store.expressions ? L.expressionDictionary : L.wordDictionary)[appLanguage],
+                          onBack: { dismiss() }) { GridToggleButton() }
+                SearchField(text: searchBinding,
+                            placeholder: (store.expressions ? L.expressionSearchPrompt : L.wordSearchPrompt)[appLanguage])
                     .padding(.horizontal, 16)
                     .readableWidth(sizeClass)
             }
@@ -454,25 +458,84 @@ private struct YojiDictionaryView: View {
     }
 
     private func row(_ yoji: Yojijukugo) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(yoji.yoji)
-                    .font(.kawaiiJP(24, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                Text(yoji.reading)
-                    .font(.kawaii(13)).foregroundStyle(Palette.pink)
-                Spacer(minLength: 0)
-                Text(yoji.level)
-                    .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.lavender)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Palette.lavenderSoft).clipShape(Capsule())
+        Button { store.send(.yojiSelected(yoji)) } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(yoji.yoji)
+                        .font(.kawaiiJP(24, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    Text(yoji.reading)
+                        .font(.kawaii(13)).foregroundStyle(Palette.pink)
+                    Spacer(minLength: 0)
+                    Text(yoji.level)
+                        .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.lavender)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Palette.lavenderSoft).clipShape(Capsule())
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                }
+                if let meaning = yoji.meaning(appLanguage), !meaning.isEmpty {
+                    Text(meaning)
+                        .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            if let meaning = yoji.meaning(appLanguage), !meaning.isEmpty {
-                Text(meaning)
-                    .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .roundedCard()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.bouncy)
+    }
+}
+
+/// The 四字熟語 detail: the idiom, reading, meaning, and its four kanji as cards
+/// that drill into the full kanji detail.
+private struct YojiDetailView: View {
+    @Bindable var store: StoreOf<YojiDetailFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            ScrollView {
+                VStack(spacing: 18) {
+                    headerCard
+                    if !store.kanji.isEmpty {
+                        KanjiCardList(items: store.kanji, glosses: [:],
+                                      onSelect: { store.send(.kanjiTapped($0)) })
+                    }
+                }
+                .padding(16)
+                .readableWidth(sizeClass)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            NavHeader(title: L.yojiDictionary[appLanguage], onBack: { dismiss() })
+                .background(Palette.background)
+        }
+        .task { store.send(.onAppear) }
+    }
+
+    private var headerCard: some View {
+        VStack(spacing: 10) {
+            Text(store.yoji.yoji)
+                .font(.kawaiiJP(44, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+            Text(store.yoji.reading)
+                .font(.kawaii(16, weight: .bold)).foregroundStyle(Palette.pink)
+            if let meaning = store.yoji.meaning(appLanguage), !meaning.isEmpty {
+                Text(meaning)
+                    .font(.kawaii(15, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            }
+            Text(store.yoji.level)
+                .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.lavender)
+                .padding(.horizontal, 10).padding(.vertical, 3)
+                .background(Palette.lavenderSoft).clipShape(Capsule())
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 26).padding(.horizontal, 16)
         .roundedCard()
     }
 }

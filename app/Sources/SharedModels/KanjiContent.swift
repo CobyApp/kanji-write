@@ -1,5 +1,17 @@
 import Foundation
 
+/// Heuristic word / 表現(expression) split — the bundled DB has no POS column, so
+/// a phrase is detected by a mid-string kana particle (お世話になる, 油を売る); a plain
+/// vocabulary word (世界, 動く) has none. Pure-kanji words and okurigana words
+/// (trailing kana only) are never flagged.
+public func isExpressionSurface(_ surface: String) -> Bool {
+    let particles: Set<Character> = ["は", "が", "を", "に", "へ", "と", "も", "の", "で", "や"]
+    let chars = Array(surface)
+    guard chars.count >= 3 else { return false }
+    for i in 0..<(chars.count - 1) where particles.contains(chars[i]) { return true }
+    return false
+}
+
 /// A usage word that contains a kanji (from JMdict).
 public struct WordEntry: Equatable, Identifiable, Sendable {
     public let id: Int

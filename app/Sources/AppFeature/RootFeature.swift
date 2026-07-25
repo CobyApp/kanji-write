@@ -23,6 +23,7 @@ public struct RootFeature {
         case dictionary(DictionaryFeature)
         case wordDictionary(WordDictionaryFeature)
         case yojiDictionary(YojiDictionaryFeature)
+        case yojiDetail(YojiDetailFeature)
     }
 
     /// A full-screen study session launched from Home.
@@ -72,6 +73,7 @@ public struct RootFeature {
         case levelSelected(KanjiLevel)
         case openDictionary
         case openWordDictionary
+        case openExpressionDictionary
         case openYojiDictionary
         case bookmarksAppeared
         case bookmarksLoaded([Int])
@@ -133,6 +135,10 @@ public struct RootFeature {
                 state.path.append(.wordDictionary(WordDictionaryFeature.State()))
                 return .none
 
+            case .openExpressionDictionary:
+                state.path.append(.wordDictionary(WordDictionaryFeature.State(expressions: true)))
+                return .none
+
             case .openYojiDictionary:
                 state.path.append(.yojiDictionary(YojiDictionaryFeature.State()))
                 return .none
@@ -140,6 +146,14 @@ public struct RootFeature {
             // Word dictionary → drill into a selected word's detail.
             case let .path(.element(id: _, action: .wordDictionary(.wordSelected(word)))):
                 state.path.append(.word(WordDetailFeature.State(word: word)))
+                return .none
+
+            // 四字熟語 dictionary → idiom detail; idiom detail → a constituent kanji.
+            case let .path(.element(id: _, action: .yojiDictionary(.yojiSelected(yoji)))):
+                state.path.append(.yojiDetail(YojiDetailFeature.State(yoji: yoji)))
+                return .none
+            case let .path(.element(id: _, action: .yojiDetail(.kanjiTapped(kanji)))):
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
 
             case .bookmarksAppeared:

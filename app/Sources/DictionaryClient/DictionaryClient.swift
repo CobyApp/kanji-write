@@ -57,6 +57,9 @@ public struct DictionaryClient: Sendable {
     public var examYojijukugo: @Sendable (_ level: String, _ limit: Int) async throws -> [Yojijukugo]
     /// Every 四字熟語 (idiom order), for the 사자성어 dictionary browse.
     public var allYojijukugo: @Sendable () async throws -> [Yojijukugo]
+    /// The kanji that make up a 四字熟語, in idiom order — for the idiom detail's
+    /// per-kanji breakdown.
+    public var kanjiForYoji: @Sendable (_ yoji: String) async throws -> [Kanji]
     /// Free-text 四字熟語 search over idiom / reading / meaning.
     public var searchYojijukugo: @Sendable (_ query: String, _ limit: Int) async throws -> [Yojijukugo]
     /// Single-kanji-stem 送りがな candidates (surface = kanji + trailing kana, e.g.
