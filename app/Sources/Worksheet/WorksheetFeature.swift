@@ -58,6 +58,9 @@ public struct WorksheetFeature {
         /// Study ahead: serve a full `newPerDay` batch even if today's goal is
         /// already met (set when the learner pulls tomorrow's study forward).
         public var pullAhead = false
+        /// Kanji already learned today before this session started — so the deck's
+        /// progress counter is cumulative (11/20, not a fresh 1/10 each session).
+        public var doneBefore = 0
         /// All queue kanji's card content, prefetched up front and keyed by kanji
         /// id — so swiping to the next kanji shows its words/sentences/strokes/
         /// meaning instantly, with no load flicker.
@@ -97,6 +100,13 @@ public struct WorksheetFeature {
 
         /// True when the current kanji is the last one in the queue.
         public var isLast: Bool { index >= queue.count - 1 }
+
+        /// Cumulative position in today's study (1-based): kanji learned earlier
+        /// today + the current card. So a session that follows 10 earlier kanji
+        /// starts at 11, not 1.
+        public var deckPosition: Int { doneBefore + min(index + 1, queue.count) }
+        /// Today's running total once this session's queue is done.
+        public var deckTotal: Int { doneBefore + queue.count }
     }
 
     public enum Action: Equatable {
@@ -137,6 +147,10 @@ public struct WorksheetFeature {
                 state.isLoading = false
                 state.records = IdentifiedArray(uniqueElements: records)
                 state.today = today
+                // Baseline for the cumulative deck counter: kanji already learned
+                // today (records aren't updated until finish, so this stays fixed
+                // through the session).
+                state.doneBefore = records.filter { $0.lastReviewedDay == today }.count
                 state.queue = buildWorksheetQueue(
                     records: records, kanji: kanji, today: today, newPerDay: state.newPerDay,
                     level: state.targetLevel, startIndex: state.startIndex, pullAhead: state.pullAhead)
