@@ -327,7 +327,7 @@ public struct WorksheetView: View {
     /// is kept short enough to fit (lists are split across cards and capped).
     private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
         body()
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .frame(maxWidth: .infinity)
     }
 
     /// Shared card chrome: an icon+title header in the card's accent, content
