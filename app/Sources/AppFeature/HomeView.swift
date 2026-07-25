@@ -243,6 +243,7 @@ struct HomeView: View {
                 dictionaryButton
                 wordDictionaryButton
                 expressionDictionaryButton
+                practiceButton
                 if examType == .kanken { yojiDictionaryButton }
                 wordbookButton
             }
@@ -307,13 +308,7 @@ struct HomeView: View {
             dictionaryButton
             wordDictionaryButton
             expressionDictionaryButton
-            // Free handwriting is an Apple-Pencil activity → iPad only. Placed
-            // second-from-last, just before the 단어장.
-            if Platform.isPad {
-                launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
-                         subtitle: L.practiceSub[appLanguage], count: nil,
-                         soft: Palette.butterSoft, accent: Palette.butter) { store.send(.startPractice) }
-            }
+            practiceButton
             if examType == .kanken { yojiDictionaryButton }
             wordbookButton
         }
@@ -457,6 +452,14 @@ struct HomeView: View {
         launcher(icon: "text.book.closed", title: L.wordDictionary[appLanguage],
                  subtitle: L.wordSearchPrompt[appLanguage], count: nil,
                  soft: Palette.mintSoft, accent: Palette.mint) { store.send(.openWordDictionary) }
+    }
+
+    /// 쓰기 테스트 — free handwriting practice. Available on every device (iPhone
+    /// included), not just iPad.
+    private var practiceButton: some View {
+        launcher(icon: "paintbrush.pointed.fill", title: L.startPractice[appLanguage],
+                 subtitle: L.practiceSub[appLanguage], count: nil,
+                 soft: Palette.butterSoft, accent: Palette.butter) { store.send(.startPractice) }
     }
 
     /// 표현사전 — 慣用句・phrases split out of the word dictionary.
