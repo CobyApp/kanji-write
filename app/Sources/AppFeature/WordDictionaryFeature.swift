@@ -17,11 +17,24 @@ public struct WordDictionaryFeature {
         public var searchText = ""
         public var searchResults: [WordEntry] = []
         public var isLoading = false
+        /// true = 표현(expression) dictionary (phrases); false = plain 단어 dictionary.
+        public var expressions = false
 
-        public init() {}
+        public init(expressions: Bool = false) {
+            self.expressions = expressions
+        }
 
         public var isSearching: Bool {
             !searchText.trimmingCharacters(in: .whitespaces).isEmpty
+        }
+
+        /// The level list, split to this dictionary's mode (word vs expression).
+        public var visibleWords: [WordEntry] {
+            words.filter { isExpressionSurface($0.surface) == expressions }
+        }
+        /// Search results, split to this dictionary's mode.
+        public var visibleResults: [WordEntry] {
+            searchResults.filter { isExpressionSurface($0.surface) == expressions }
         }
     }
 

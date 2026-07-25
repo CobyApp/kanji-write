@@ -483,6 +483,38 @@ extension DictionaryClient: DependencyKey {
                 return rows.map(Self.makeYoji)
             }
         },
+        kanjiForYoji: { yoji in
+            let chars = yoji.map(String.init)
+            guard !chars.isEmpty else { return [] }
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [Kanji] in
+                let placeholders = chars.map { _ in "?" }.joined(separator: ",")
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, literal, stroke_count, grade, jlpt_level
+                    FROM kanji WHERE literal IN (\(placeholders))
+                    """, arguments: StatementArguments(chars))
+                var byLiteral: [String: Kanji] = [:]
+                for row in rows {
+                    let id: Int = row["id"]
+                    let rr = try Row.fetchAll(db, sql: """
+                        SELECT lang_axis, value FROM reading
+                        WHERE kanji_id = ? AND lang_axis IN ('on','kun')
+                        """, arguments: [id])
+                    var on: [String] = [], kun: [String] = []
+                    for r in rr {
+                        let axis: String = r["lang_axis"], value: String = r["value"]
+                        if axis == "on" { on.append(value) } else { kun.append(value) }
+                    }
+                    byLiteral[row["literal"]] = Kanji(
+                        id: id, literal: row["literal"], strokeCount: row["stroke_count"],
+                        grade: row["grade"], jlptLevel: row["jlpt_level"],
+                        onReadings: on, kunReadings: kun)
+                }
+                // Preserve idiom order, each distinct kanji once (一朝一夕 → 一朝夕).
+                var seen = Set<Int>()
+                return chars.compactMap { byLiteral[$0] }.filter { seen.insert($0.id).inserted }
+            }
+        },
         searchYojijukugo: { query, limit in
             let queue = try openBundledDatabase()
             let q = "%\(query)%"

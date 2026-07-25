@@ -49,6 +49,7 @@ public struct YojiDictionaryFeature {
         case loaded([Yojijukugo])
         case searchChanged(String)
         case levelSelected(String?)
+        case yojiSelected(Yojijukugo)   // delegate → parent pushes the idiom detail
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
@@ -75,6 +76,47 @@ public struct YojiDictionaryFeature {
             case let .levelSelected(level):
                 state.level = level
                 return .none
+            case .yojiSelected:
+                return .none  // handled by the parent (navigation)
+            }
+        }
+    }
+}
+
+/// The 四字熟語 detail: the idiom with reading + meaning, and its constituent kanji
+/// as tappable cards that drill into the kanji detail (like the word detail).
+@Reducer
+public struct YojiDetailFeature {
+    @ObservableState
+    public struct State: Equatable {
+        public let yoji: Yojijukugo
+        public var kanji: [Kanji] = []
+        public init(yoji: Yojijukugo) { self.yoji = yoji }
+    }
+
+    public enum Action: Equatable {
+        case onAppear
+        case loaded([Kanji])
+        case kanjiTapped(Kanji)   // delegate → parent pushes the kanji detail
+    }
+
+    @Dependency(\.dictionaryClient) var dictionaryClient
+    public init() {}
+
+    public var body: some ReducerOf<Self> {
+        Reduce { state, action in
+            switch action {
+            case .onAppear:
+                guard state.kanji.isEmpty else { return .none }
+                let yoji = state.yoji.yoji
+                return .run { send in
+                    await send(.loaded((try? await dictionaryClient.kanjiForYoji(yoji)) ?? []))
+                }
+            case let .loaded(kanji):
+                state.kanji = kanji
+                return .none
+            case .kanjiTapped:
+                return .none  // handled by the parent (navigation)
             }
         }
     }
