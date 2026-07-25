@@ -59,6 +59,12 @@ public struct DictionaryClient: Sendable {
     public var allYojijukugo: @Sendable () async throws -> [Yojijukugo]
     /// Free-text 四字熟語 search over idiom / reading / meaning.
     public var searchYojijukugo: @Sendable (_ query: String, _ limit: Int) async throws -> [Yojijukugo]
+    /// Single-kanji-stem 送りがな candidates (surface = kanji + trailing kana, e.g.
+    /// 補う) for kanji at the level — the input to the 送りがな question generator.
+    public var examOkurigana: @Sendable (_ level: String, _ limit: Int) async throws -> [WordEntry]
+    /// 対義語・類義語 pairs at or below the 漢検 級 (cumulative). `relationOnly` filters
+    /// to "対義" or "類義" (nil = both). JLPT levels return [].
+    public var examTaigirui: @Sendable (_ level: String, _ relationOnly: String?, _ limit: Int) async throws -> [TaigiruiPair]
 }
 
 extension DictionaryClient: TestDependencyKey {

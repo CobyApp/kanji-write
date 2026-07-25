@@ -204,6 +204,10 @@ public enum L {
         ko: "한자의 총획수", ja: "総画数", zh: "总笔画数", en: "The kanji's stroke count")
     public static let kankenYojiDesc = L10nText(
         ko: "사자성어 읽기·뜻", ja: "四字熟語の読み・意味", zh: "四字成语读音·意思", en: "Four-character idioms")
+    public static let kankenOkuriDesc = L10nText(
+        ko: "올바른 오쿠리가나 표기", ja: "正しい送りがな", zh: "正确的送假名", en: "The correct okurigana")
+    public static let kankenTaigiruiDesc = L10nText(
+        ko: "대의어·유의어 고르기", ja: "対義語・類義語", zh: "反义词·近义词", en: "Antonym / synonym")
     public static let yojiDictionary = L10nText(
         ko: "사자성어 사전", ja: "四字熟語辞典", zh: "四字成语词典", en: "Idiom dictionary")
     public static let yojiSearchPrompt = L10nText(

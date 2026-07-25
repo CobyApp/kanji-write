@@ -495,6 +495,54 @@ extension DictionaryClient: DependencyKey {
                     """, arguments: [q, q, q, q, limit])
                 return rows.map(Self.makeYoji)
             }
+        },
+        examOkurigana: { level, limit in
+            let queue = try openBundledDatabase()
+            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            return try await queue.read { db -> [WordEntry] in
+                // Single-kanji stem + trailing kana (送りがな shape). GLOB anchors a
+                // kanji at the start and a hiragana at the end; the Swift generator
+                // filters to verb/adjective endings and builds boundary distractors.
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT DISTINCT w.id, w.surface, w.reading_kana FROM word w
+                    JOIN word_kanji wk ON wk.word_id = w.id
+                    JOIN kanji k ON k.id = wk.kanji_id
+                    WHERE k.\(column) = ? AND w.is_common = 1
+                      AND w.surface GLOB '[一-龠][ぁ-ん]*'
+                      AND LENGTH(w.surface) <= 5
+                    ORDER BY RANDOM() LIMIT ?
+                    """, arguments: [level, limit])
+                return rows.map { row in
+                    let id: Int = row["id"]
+                    let ko = try? String.fetchOne(
+                        db, sql: "SELECT text FROM word_gloss WHERE word_id=? AND lang='ko' LIMIT 1",
+                        arguments: [id])
+                    return WordEntry(id: id, surface: row["surface"], reading: row["reading_kana"],
+                                     meaningEn: nil, meaningKo: ko ?? nil)
+                }
+            }
+        },
+        examTaigirui: { level, relationOnly, limit in
+            let ranks = ["5級": 1, "4級": 2, "3級": 3, "準2級": 4, "2級": 5]
+            guard let target = ranks[level] else { return [] }
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [TaigiruiPair] in
+                var sql = """
+                    SELECT id, word, word_reading, answer, answer_reading, relation, kanken_level
+                    FROM taigirui
+                    WHERE (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2 WHEN '3級' THEN 3
+                           WHEN '準2級' THEN 4 WHEN '2級' THEN 5 ELSE 99 END) <= ?
+                    """
+                var args: [DatabaseValueConvertible] = [target]
+                if let relationOnly { sql += " AND relation = ?"; args.append(relationOnly) }
+                sql += " ORDER BY RANDOM() LIMIT ?"; args.append(limit)
+                let rows = try Row.fetchAll(db, sql: sql, arguments: StatementArguments(args))
+                return rows.map {
+                    TaigiruiPair(id: $0["id"], word: $0["word"], wordReading: $0["word_reading"],
+                                 answer: $0["answer"], answerReading: $0["answer_reading"],
+                                 relation: $0["relation"], level: $0["kanken_level"])
+                }
+            }
         }
     )
 

@@ -133,6 +133,8 @@ public struct KankenExamView: View {
         case .context: L.kankenContextDesc[appLanguage]
         case .strokes: L.kankenStrokesDesc[appLanguage]
         case .yojijukugo: L.kankenYojiDesc[appLanguage]
+        case .okurigana: L.kankenOkuriDesc[appLanguage]
+        case .taigirui: L.kankenTaigiruiDesc[appLanguage]
         case .comingSoon: L.kankenComingSoon[appLanguage]
         }
     }
@@ -231,6 +233,8 @@ public struct KankenExamView: View {
         case .context: L.kankenContextDesc[appLanguage]
         case .strokes: L.kankenStrokesDesc[appLanguage]
         case .yojijukugo: L.kankenYojiDesc[appLanguage]
+        case .okurigana: L.kankenOkuriDesc[appLanguage]
+        case .taigirui: L.kankenTaigiruiDesc[appLanguage]
         case .comingSoon: ""
         }
     }
