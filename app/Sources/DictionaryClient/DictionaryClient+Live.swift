@@ -384,20 +384,23 @@ extension DictionaryClient: DependencyKey {
                 return out
             }
         },
-        kankenQuestions: { kankenLevel, kind, limit in
+        examQuestions: { level, kind, limit in
             let queue = try openBundledDatabase()
+            // "N5" → jlpt_level; "10級" → kanken_level. Column name is a controlled
+            // constant (not user input), so interpolation is safe.
+            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
             return try await queue.read { db -> [JLPTQuestion] in
-                // Questions for kanji whose 漢検 級 matches, of the requested kind.
+                // Questions for kanji at the level, of the requested kind.
                 // RANDOM() so each practice run draws a fresh set.
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT q.id, q.kanji_id, q.level, q.kind, q.prompt, q.options,
                            q.answer, q.explanations, q.focus
                     FROM jlpt_question q
                     JOIN kanji k ON k.id = q.kanji_id
-                    WHERE k.kanken_level = ? AND q.kind = ?
+                    WHERE k.\(column) = ? AND q.kind = ?
                     ORDER BY RANDOM()
                     LIMIT ?
-                    """, arguments: [kankenLevel, kind, limit])
+                    """, arguments: [level, kind, limit])
                 var out: [JLPTQuestion] = []
                 for row in rows {
                     let optionsJSON: String = row["options"]
@@ -417,17 +420,18 @@ extension DictionaryClient: DependencyKey {
                 return out
             }
         },
-        kankenRadicalItems: { kankenLevel, limit in
+        examRadicalItems: { level, limit in
             let queue = try openBundledDatabase()
+            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
             return try await queue.read { db -> [RadicalItem] in
                 // `radical` is a KANGXI index (Int 1…214); map it to its 部首 glyph
                 // for display. Kanji whose radical index has no glyph are skipped.
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT id, literal, radical FROM kanji
-                    WHERE kanken_level = ? AND radical IS NOT NULL AND radical > 0
+                    WHERE \(column) = ? AND radical IS NOT NULL AND radical > 0
                     ORDER BY RANDOM()
                     LIMIT ?
-                    """, arguments: [kankenLevel, limit])
+                    """, arguments: [level, limit])
                 return rows.compactMap { row -> RadicalItem? in
                     let index: Int = row["radical"]
                     guard let glyph = kangxiRadical(index) else { return nil }

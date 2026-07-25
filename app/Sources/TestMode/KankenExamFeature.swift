@@ -3,12 +3,12 @@ import DictionaryClient
 import Foundation
 import SharedModels
 
-/// The 칸켄 문제 허브: real-exam-shaped practice organized by the 漢検's 大問 types.
-/// From the hub the learner picks a section (読み / 部首 / 書き取り) to practice, or
-/// opens the 오답노트 (wrong-answer notebook). A section runs a mastery loop —
-/// wrong answers requeue until cleared, and a first miss is saved to the 오답노트;
-/// clearing a note in 오답노트 mode removes it. Questions are scoped to the
-/// current 級.
+/// The exam-question hub: real-exam-shaped practice organized by the exam's 大問
+/// sections (漢検: 読み / 部首 / 書き取り — JLPT: 漢字読み / 表記 / 文脈規定). From the
+/// hub the learner picks a section to practice, or opens the 오답노트 (wrong-answer
+/// notebook). A section runs a mastery loop — wrong answers requeue until cleared,
+/// and a first miss is saved to the 오답노트; clearing a note in 오답노트 mode
+/// removes it. Questions are scoped to the current level.
 @Reducer
 public struct KankenExamFeature {
     @ObservableState
@@ -19,8 +19,8 @@ public struct KankenExamFeature {
         public var wrongCount = 0
         public var today = 0
 
-        // Session state — nil `activeType` and not `isWrongNote` means the hub.
-        public var activeType: KankenQuestionType?
+        // Session state — nil `activeSection` and not `isWrongNote` means the hub.
+        public var activeSection: ExamSection?
         public var isWrongNote = false
         public var queue: [KankenQuestion] = []
         public var sessionItems: [KankenQuestion] = []
@@ -37,7 +37,7 @@ public struct KankenExamFeature {
         }
 
         /// True while a section / 오답노트 session is running (vs. the hub).
-        public var isPlaying: Bool { activeType != nil || isWrongNote }
+        public var isPlaying: Bool { activeSection != nil || isWrongNote }
         public var current: KankenQuestion? { queue.first }
         public var isFinished: Bool { started && total > 0 && queue.isEmpty }
         public var answered: Bool { chosen != nil }
@@ -45,14 +45,14 @@ public struct KankenExamFeature {
         /// Section title shown in the session header.
         public var sessionTitle: String {
             if isWrongNote { return "오답노트" }
-            return activeType.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
+            return activeSection.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
         }
     }
 
     public enum Action: Equatable {
         case onAppear(level: String, language: AppLanguage)
         case wrongCountLoaded(Int)
-        case selectType(KankenQuestionType)
+        case selectSection(ExamSection)
         case selectWrongNote
         case loaded([KankenQuestion])
         case chose(String)
@@ -84,13 +84,13 @@ public struct KankenExamFeature {
                 state.wrongCount = count
                 return .none
 
-            case let .selectType(type):
-                state.activeType = type
+            case let .selectSection(section):
+                state.activeSection = section
                 state.isWrongNote = false
-                return loadSection(state: &state, type: type)
+                return loadSection(state: &state, section: section)
 
             case .selectWrongNote:
-                state.activeType = nil
+                state.activeSection = nil
                 state.isWrongNote = true
                 state.isLoading = true
                 state.started = false
@@ -152,7 +152,7 @@ public struct KankenExamFeature {
                 return .none
 
             case .exitToHub:
-                state.activeType = nil
+                state.activeSection = nil
                 state.isWrongNote = false
                 state.queue = []
                 state.sessionItems = []
@@ -169,23 +169,21 @@ public struct KankenExamFeature {
         }
     }
 
-    /// Loads and builds a section's questions from real data.
-    private func loadSection(state: inout State, type: KankenQuestionType) -> Effect<Action> {
+    /// Loads and builds a section's questions from real data. A section with a
+    /// bank `kind` pulls pre-authored questions; one without (`kind == nil`) is the
+    /// radical generator.
+    private func loadSection(state: inout State, section: ExamSection) -> Effect<Action> {
         state.isLoading = true
         state.started = false
         let level = state.level
         let language = state.language
         return .run { send in
             let questions: [KankenQuestion]
-            switch type {
-            case .reading:
-                let bank = (try? await dictionaryClient.kankenQuestions(level, "reading", 20)) ?? []
-                questions = bank.map { KankenQuestion.from($0, type: .reading, language: language) }
-            case .writing:
-                let bank = (try? await dictionaryClient.kankenQuestions(level, "orthography", 20)) ?? []
-                questions = bank.map { KankenQuestion.from($0, type: .writing, language: language) }
-            case .radical:
-                let items = (try? await dictionaryClient.kankenRadicalItems(level, 80)) ?? []
+            if let kind = section.kind {
+                let bank = (try? await dictionaryClient.examQuestions(level, kind, 20)) ?? []
+                questions = bank.map { KankenQuestion.from($0, type: section.renderType, language: language) }
+            } else {
+                let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
                 questions = KankenQuestion.radicalQuiz(items, count: 15)
             }
             await send(.loaded(questions.filter { $0.options.count >= 2 }))

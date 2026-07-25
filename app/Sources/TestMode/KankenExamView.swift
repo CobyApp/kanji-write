@@ -9,6 +9,7 @@ import SwiftUI
 public struct KankenExamView: View {
     @Bindable public var store: StoreOf<KankenExamFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("examType") private var examType: ExamType = .jlpt
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(store: StoreOf<KankenExamFeature>) {
@@ -33,8 +34,8 @@ public struct KankenExamView: View {
         ScrollView {
             VStack(spacing: 14) {
                 header
-                ForEach(KankenQuestionType.allCases, id: \.self) { type in
-                    sectionCard(type)
+                ForEach(examType.sections) { section in
+                    sectionCard(section)
                 }
                 wrongNoteCard
             }
@@ -44,9 +45,14 @@ public struct KankenExamView: View {
         .scrollIndicators(.hidden)
     }
 
+    /// "JLPT 문제" / "칸켄 문제", per the active exam.
+    private var hubTitle: String {
+        examType == .kanken ? L.kankenHub[appLanguage] : L.jlptHub[appLanguage]
+    }
+
     private var header: some View {
         VStack(spacing: 4) {
-            Text(L.kankenHub[appLanguage])
+            Text(hubTitle)
                 .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
             Text("\(store.level) · \(L.kankenHubSubtitle[appLanguage])")
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
@@ -55,18 +61,18 @@ public struct KankenExamView: View {
         .padding(.top, 8).padding(.bottom, 4)
     }
 
-    private func sectionCard(_ type: KankenQuestionType) -> some View {
-        Button { store.send(.selectType(type)) } label: {
+    private func sectionCard(_ section: ExamSection) -> some View {
+        Button { store.send(.selectSection(section)) } label: {
             HStack(spacing: 14) {
-                Text(type.numeral)
+                Text(section.numeral)
                     .font(.kawaiiJP(22, weight: .bold)).foregroundStyle(.white)
                     .frame(width: 44, height: 44)
                     .background(Palette.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(type.jaTitle)
+                    Text(section.jaTitle)
                         .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                    Text(sectionDesc(type))
+                    Text(sectionDesc(section.renderType))
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 }
                 Spacer(minLength: 0)
@@ -114,6 +120,7 @@ public struct KankenExamView: View {
         case .reading: L.kankenReadingDesc[appLanguage]
         case .radical: L.kankenRadicalDesc[appLanguage]
         case .writing: L.kankenWritingDesc[appLanguage]
+        case .context: L.kankenContextDesc[appLanguage]
         }
     }
 
@@ -208,6 +215,7 @@ public struct KankenExamView: View {
         case .reading: L.kankenReadingDesc[appLanguage]
         case .radical: L.kankenRadicalDesc[appLanguage]
         case .writing: L.kankenWritingDesc[appLanguage]
+        case .context: L.kankenContextDesc[appLanguage]
         }
     }
 

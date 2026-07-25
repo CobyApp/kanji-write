@@ -42,12 +42,13 @@ public struct DictionaryClient: Sendable {
     /// Pre-authored JLPT questions for a set of kanji (the day's studied + due
     /// kanji), capped per kanji — the source for the quiz.
     public var jlptQuestions: @Sendable (_ kanjiIDs: [Int], _ perKanji: Int) async throws -> [JLPTQuestion]
-    /// Pre-authored questions of one kind (reading / orthography) for kanji whose
-    /// 漢検 級 matches — the source for the 칸켄 문제 허브's 読み / 書き取り sections.
-    public var kankenQuestions: @Sendable (_ kankenLevel: String, _ kind: String, _ limit: Int) async throws -> [JLPTQuestion]
-    /// Kanji + their radical for a 漢검 級 — the input to the 部首 question
-    /// generator (distractors are drawn from the pool of real radicals).
-    public var kankenRadicalItems: @Sendable (_ kankenLevel: String, _ limit: Int) async throws -> [RadicalItem]
+    /// Pre-authored questions of one kind (reading / orthography / context) for
+    /// kanji at the given level — the source for the exam hub's sections. The
+    /// level's format picks the column: "N5" → jlpt_level, "10級" → kanken_level.
+    public var examQuestions: @Sendable (_ level: String, _ kind: String, _ limit: Int) async throws -> [JLPTQuestion]
+    /// Kanji + their radical for a level — the input to the 部首 question generator
+    /// (distractors are drawn from the pool of real radicals).
+    public var examRadicalItems: @Sendable (_ level: String, _ limit: Int) async throws -> [RadicalItem]
 }
 
 extension DictionaryClient: TestDependencyKey {
