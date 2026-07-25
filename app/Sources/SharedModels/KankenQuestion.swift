@@ -12,6 +12,7 @@ public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codab
     case yojijukugo       // 四字熟語 — idiom glyph, answer is its reading / meaning
     case okurigana        // 送りがな — カナ word, answer is the kanji+okurigana form
     case taigirui         // 対義語・類義語 — a word, answer is its antonym / synonym
+    case onkun            // 音読み・訓読み — kanji glyph, answer is an on / kun reading
     case comingSoon       // real 大問, curated data not ready yet (not playable)
 
     /// Reading answers get slightly larger option type than kanji/word answers.
@@ -71,6 +72,21 @@ public struct TaigiruiPair: Equatable, Identifiable, Sendable {
         self.answerReading = answerReading
         self.relation = relation
         self.level = level
+    }
+}
+
+/// A kanji with its 音読み / 訓読み reading sets — the input to the 音読み・訓読み
+/// question generator (on = katakana, kun = hiragana, okurigana dots stripped).
+public struct OnKunItem: Equatable, Sendable {
+    public let kanjiID: Int
+    public let literal: String
+    public let onReadings: [String]
+    public let kunReadings: [String]
+    public init(kanjiID: Int, literal: String, onReadings: [String], kunReadings: [String]) {
+        self.kanjiID = kanjiID
+        self.literal = literal
+        self.onReadings = onReadings
+        self.kunReadings = kunReadings
     }
 }
 
@@ -150,6 +166,7 @@ extension ExamType {
     private static func okuri(_ ja: String) -> ExamSection { live("okuri", ja, .okurigana, nil) }
     /// 対義語・類義語 — live only where the dataset covers (5級〜2級).
     private static var taigirui: ExamSection { live("taigirui", "対義語・類義語", .taigirui, nil) }
+    private static var onkun: ExamSection { live("onkun", "音読み・訓読み", .onkun, nil) }
 
     /// 漢検 10級〜2級 papers (準1級/1級 use 表外漢字 not yet in the dictionary).
     private static func kankenSections(_ level: String) -> [ExamSection] {
@@ -161,21 +178,21 @@ extension ExamType {
             return [reading, soon("hitsujun", "筆順"), strokes, okuri("送りがな"),
                     soon("hantai", "反対のことば"), writing]
         case "8級":
-            return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
+            return [reading, onkun, radical, strokes,
                     okuri("送りがな"), soon("taigi", "対義語"),
                     soon("doon", "同音異字"), writing]
         case "7級":
-            return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
+            return [reading, onkun, radical, strokes,
                     okuri("送りがな"), soon("taigi", "対義語"),
                     soon("doon", "同音異字"), soon("sanji", "三字熟語"), writing]
         case "6級":
-            return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
+            return [reading, onkun, radical, strokes,
                     okuri("送りがな"), soon("taigirui", "対義語・類義語"),
                     soon("doonkun", "同音・同訓異字"), soon("tsukuri", "熟語作り"), writing]
         case "5級":
             return [reading, radical, strokes, okuri("送りがな"),
                     taigirui, soon("kousei", "熟語の構成"),
-                    soon("onkun", "音読み・訓読み"), yoji,
+                    onkun, yoji,
                     soon("doonkun", "同音・同訓異字"), writing]
         case "4級", "3級":
             return [reading, soon("doonkun", "同音・同訓異字"), soon("shikibetsu", "漢字識別"),

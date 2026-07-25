@@ -197,6 +197,9 @@ public struct KankenExamFeature {
                 let relationOnly = section.id == "taigi" ? "対義" : nil
                 let items = (try? await dictionaryClient.examTaigirui(level, relationOnly, 40)) ?? []
                 questions = KankenQuestion.taigiruiQuiz(items, count: 15)
+            } else if section.renderType == .onkun {
+                let items = (try? await dictionaryClient.examOnKun(level, 40)) ?? []
+                questions = KankenQuestion.onKunQuiz(items, count: 15)
             } else {
                 let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
                 questions = KankenQuestion.radicalQuiz(items, count: 15)
@@ -349,6 +352,35 @@ extension KankenQuestion {
                 prompt: item.word, focus: nil, options: options, answer: item.answer,
                 explanation: "\(item.answer)（\(item.answerReading)）",
                 label: item.relation == "対義" ? "対義語" : "類義語"))
+        }
+        return out
+    }
+
+    /// Builds 音読み・訓読み questions: show the kanji, pick one of its 音読み (or
+    /// 訓読み) readings. Distractors are same-type readings (katakana for 音 /
+    /// hiragana for 訓) from other kanji, so the script alone doesn't give it away.
+    static func onKunQuiz(_ items: [OnKunItem], count: Int) -> [KankenQuestion] {
+        let onPool = items.flatMap(\.onReadings)
+        let kunPool = items.flatMap(\.kunReadings)
+        guard onPool.count >= 4 || kunPool.count >= 4 else { return [] }
+        var out: [KankenQuestion] = []
+        for (index, item) in items.enumerated() where out.count < count {
+            let canOn = !item.onReadings.isEmpty && onPool.count >= 4
+            let canKun = !item.kunReadings.isEmpty && kunPool.count >= 4
+            let askOn: Bool
+            if index % 2 == 0, canOn { askOn = true }
+            else if index % 2 == 1, canKun { askOn = false }
+            else if canOn { askOn = true }
+            else if canKun { askOn = false }
+            else { continue }
+            var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 13))
+            let answer = askOn ? item.onReadings[0] : item.kunReadings[0]
+            let options = quizOptions(answer: answer, pool: askOn ? onPool : kunPool, rng: &rng)
+            guard options.count >= 2 else { continue }
+            out.append(KankenQuestion(
+                id: "onkun:\(askOn ? "o" : "k"):\(item.kanjiID)", type: .onkun, kanjiID: item.kanjiID,
+                prompt: item.literal, focus: nil, options: options, answer: answer,
+                explanation: nil, label: askOn ? "音読み" : "訓読み"))
         }
         return out
     }

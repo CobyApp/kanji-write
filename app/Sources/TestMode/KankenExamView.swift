@@ -135,6 +135,7 @@ public struct KankenExamView: View {
         case .yojijukugo: L.kankenYojiDesc[appLanguage]
         case .okurigana: L.kankenOkuriDesc[appLanguage]
         case .taigirui: L.kankenTaigiruiDesc[appLanguage]
+        case .onkun: L.kankenOnKunDesc[appLanguage]
         case .comingSoon: L.kankenComingSoon[appLanguage]
         }
     }
@@ -235,6 +236,7 @@ public struct KankenExamView: View {
         case .yojijukugo: L.kankenYojiDesc[appLanguage]
         case .okurigana: L.kankenOkuriDesc[appLanguage]
         case .taigirui: L.kankenTaigiruiDesc[appLanguage]
+        case .onkun: L.kankenOnKunDesc[appLanguage]
         case .comingSoon: ""
         }
     }
