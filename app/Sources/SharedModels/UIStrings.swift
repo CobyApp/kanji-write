@@ -51,6 +51,14 @@ public enum L {
     public static let noWordsFound = L10nText(
         ko: "단어를 찾을 수 없어요", ja: "単語が見つかりません", zh: "找不到单词", en: "No words found")
     public static let startStudy = L10nText(ko: "학습 시작", ja: "学習を始める", zh: "开始学习", en: "Start studying")
+    // Level completion → advance to the next 급수. "{level}" is replaced at display.
+    public static let levelCompleteTitle = L10nText(
+        ko: "{level} 완료!", ja: "{level} 完了！", zh: "{level} 完成！", en: "{level} complete!")
+    public static let goToNextLevel = L10nText(
+        ko: "{level} 시작하기", ja: "{level} を始める", zh: "开始 {level}", en: "Start {level}")
+    public static let allLevelsComplete = L10nText(
+        ko: "모든 급수를 완료했어요! 🎉", ja: "全ての級を制覇しました！🎉",
+        zh: "已完成所有级别！🎉", en: "You've finished every level! 🎉")
     public static let startPractice = L10nText(ko: "쓰기 테스트", ja: "書き取りテスト", zh: "书写测验", en: "Writing test")
     public static let close = L10nText(ko: "닫기", ja: "閉じる", zh: "关闭", en: "Close")
     public static let study = L10nText(ko: "학습", ja: "学習", zh: "学习", en: "Study")
