@@ -78,6 +78,25 @@ public struct JLPTQuestion: Equatable, Identifiable, Sendable {
         self.explanations = explanations
         self.focus = focus
     }
+
+    /// The correct option's text.
+    public var answerText: String {
+        options.indices.contains(answer) ? options[answer] : (options.first ?? "")
+    }
+    /// Prompt with any `<u>…</u>` tags stripped for display.
+    public var promptClean: String { JLPTQuestion.parseUnderline(prompt).clean }
+    /// The word to underline: the `<u>`-wrapped text, else the focus column.
+    public var underlineTarget: String? { JLPTQuestion.parseUnderline(prompt).target ?? focus }
+
+    /// Strips `<u>…</u>` and returns the cleaned prompt + wrapped substring.
+    public static func parseUnderline(_ raw: String) -> (clean: String, target: String?) {
+        guard let open = raw.range(of: "<u>"), let close = raw.range(of: "</u>"),
+              open.upperBound <= close.lowerBound else { return (raw, nil) }
+        let target = String(raw[open.upperBound..<close.lowerBound])
+        let clean = raw.replacingOccurrences(of: "<u>", with: "")
+            .replacingOccurrences(of: "</u>", with: "")
+        return (clean, target.isEmpty ? nil : target)
+    }
 }
 
 /// An antonym pair anchored to a kanji: a word that contains the kanji

@@ -94,7 +94,24 @@ public struct WorksheetView: View {
     /// the facet by kanji id gives variety across a session so every aspect gets
     /// exercised. Empty when there isn't enough material for even one.
     private func studyQuizzes(_ kanji: Kanji) -> [StudyQuizSpec] {
-        [kanjiFacetQuiz(kanji), wordFacetQuiz(kanji)].compactMap { $0 }
+        // Two checks per kanji: a JLPT-style question (from the bank) + a 漢検-style
+        // one (auto-generated: reading / meaning / 画数 / 部首).
+        [jlptStyleQuiz(kanji), kanjiFacetQuiz(kanji)].compactMap { $0 }
+    }
+
+    /// A pre-authored JLPT-style question about the kanji (reading / orthography /
+    /// context), shown as a prompt with the target word underlined.
+    private func jlptStyleQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
+        guard let q = store.jlptQuestions.first(where: { $0.options.count >= 2 }) else { return nil }
+        let label: String
+        switch q.kind {
+        case "reading": label = L.quizWordReading[appLanguage]
+        case "orthography": label = L.quizOrthography[appLanguage]
+        default: label = L.quizCloze[appLanguage]
+        }
+        return StudyQuizSpec(
+            subject: .sentence(q.promptClean, focus: q.underlineTarget),
+            prompt: label, options: q.options, answer: q.answerText, japaneseOptions: true)
     }
 
     /// A quiz on the kanji itself: its meaning, 음독, or 훈독 — whichever facets
@@ -156,38 +173,6 @@ public struct WorksheetView: View {
                 candidates.append(StudyQuizSpec(
                     subject: .kanji(kanji.literal), prompt: L.studyQuizRadical[appLanguage],
                     options: options, answer: radical, japaneseOptions: true))
-            }
-        }
-        return pick(candidates, kanji)
-    }
-
-    /// A quiz on a related word: its meaning or its reading, rotated by kanji id.
-    private func wordFacetQuiz(_ kanji: Kanji) -> StudyQuizSpec? {
-        guard let word = store.words.first else { return nil }
-        var rng = SeededRNG(seed: seed(kanji, salt: 2))
-        let allWords = store.queue.flatMap { store.content[$0.id]?.words ?? [] }
-        var candidates: [StudyQuizSpec] = []
-
-        // Word meaning (localized options).
-        if let answer = wordMeaning(word, appLanguage), !answer.isEmpty {
-            let pool = allWords.compactMap { wordMeaning($0, appLanguage) }
-            let options = quizOptions(answer: answer, pool: pool, rng: &rng)
-            if options.count >= 2 {
-                candidates.append(StudyQuizSpec(
-                    subject: .word(word.surface, reading: word.reading),
-                    prompt: L.studyQuizWordMeaning[appLanguage],
-                    options: options, answer: answer, japaneseOptions: false))
-            }
-        }
-        // Word reading (hide the reading in the subject; options are kana).
-        if !word.reading.isEmpty {
-            let pool = allWords.map(\.reading)
-            let options = quizOptions(answer: word.reading, pool: pool, rng: &rng)
-            if options.count >= 2 {
-                candidates.append(StudyQuizSpec(
-                    subject: .word(word.surface, reading: nil),
-                    prompt: L.studyQuizWordReading[appLanguage],
-                    options: options, answer: word.reading, japaneseOptions: true))
             }
         }
         return pick(candidates, kanji)

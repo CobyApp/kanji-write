@@ -59,11 +59,29 @@ struct StudyQuizCard: View {
                         .font(.kawaiiJP(40, weight: .bold)).japaneseGlyphs()
                         .foregroundStyle(Palette.ink)
                 }
+            case let .sentence(text, focus):
+                sentenceText(text, focus: focus)
+                    .font(.kawaiiJP(sentenceSize(text), weight: .bold)).japaneseGlyphs()
+                    .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Text(spec.prompt)
                 .font(.kawaii(15, language: language)).foregroundStyle(Palette.inkSoft)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    /// A JLPT-style prompt with its target word underlined + accented.
+    private func sentenceText(_ prompt: String, focus: String?) -> Text {
+        guard let focus, !focus.isEmpty, let range = prompt.range(of: focus) else { return Text(prompt) }
+        let before = String(prompt[..<range.lowerBound])
+        let target = String(prompt[range])
+        let after = String(prompt[range.upperBound...])
+        return Text(before) + Text(target).underline().foregroundColor(Palette.pink) + Text(after)
+    }
+
+    private func sentenceSize(_ s: String) -> CGFloat {
+        switch s.count { case 0...4: 38; case 5...12: 26; default: 20 }
     }
 
     private func optionFont() -> Font {
@@ -127,6 +145,7 @@ struct StudyQuizSpec: Equatable {
     enum Subject: Equatable {
         case kanji(String)                       // a kanji glyph
         case word(String, reading: String?)      // a word; reading hidden when it's the answer
+        case sentence(String, focus: String?)    // a JLPT-style prompt; focus is underlined
     }
     var subject: Subject
     var prompt: String
