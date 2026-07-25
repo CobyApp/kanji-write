@@ -86,6 +86,22 @@ final class CurriculumTests: XCTestCase {
         XCTAssertTrue(s.dueIDs.isEmpty)
     }
 
+    func testNewQuotaCountsDownWithTodaysProgress() {
+        let order = (1...10).map { k($0, strokes: $0, grade: 1, jlpt: "N5") }
+        // Two kanji already learned today (lastReviewedDay == today == 100).
+        let records = [
+            ReviewRecord(kanjiID: 1, stability: 5, difficulty: 5, due: 105, lastReviewedDay: 100),
+            ReviewRecord(kanjiID: 2, stability: 5, difficulty: 5, due: 105, lastReviewedDay: 100),
+        ]
+        // Goal 5/day, 2 done → only 3 new remain today.
+        let s = todaysSession(records: records, order: order, today: 100, newPerDay: 5)
+        XCTAssertEqual(s.newIDs, [3, 4, 5])
+        // Pulling ahead ignores today's progress → a full fresh batch of 5.
+        let ahead = todaysSession(records: records, order: order, today: 100,
+                                  newPerDay: 5, ignoreTodaysProgress: true)
+        XCTAssertEqual(ahead.newIDs, [3, 4, 5, 6, 7])
+    }
+
     func testSessionDueOrderedByDueThenDifficulty() {
         let records = [
             ReviewRecord(kanjiID: 1, stability: 5, difficulty: 8, due: 100, lastReviewedDay: 90),

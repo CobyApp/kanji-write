@@ -77,7 +77,7 @@ public struct RootFeature {
         case openYojiDictionary
         case bookmarksAppeared
         case bookmarksLoaded([Int])
-        case startStudy
+        case startStudy(pullAhead: Bool)
         case startPractice
         case startQuiz(level: String, planned: [Int])
         case startKanken(level: String)
@@ -179,9 +179,9 @@ public struct RootFeature {
 
             // Home session launchers → full-screen cover. Start each with a fresh
             // in-session navigation stack.
-            case .startStudy:
+            case let .startStudy(pullAhead):
                 state.sessionPath.removeAll()
-                state.session = .worksheet(WorksheetFeature.State())
+                state.session = .worksheet(WorksheetFeature.State(pullAhead: pullAhead))
                 return .none
             case .startPractice:
                 state.sessionPath.removeAll()

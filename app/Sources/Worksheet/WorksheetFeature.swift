@@ -10,11 +10,11 @@ import SharedModels
 /// unshowable lesson. Order is preserved from `newIDs` (JLPT → strokes → id).
 public func buildWorksheetQueue(
     records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int,
-    level: String? = nil, startIndex: Int = 0
+    level: String? = nil, startIndex: Int = 0, pullAhead: Bool = false
 ) -> [Kanji] {
     let session = todaysSession(
         records: records, order: studyOrder(kanji, exam: ExamType.current, level: level), today: today,
-        newPerDay: newPerDay, startIndex: startIndex)
+        newPerDay: newPerDay, startIndex: startIndex, ignoreTodaysProgress: pullAhead)
     let byID = Dictionary(kanji.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     return session.newIDs.compactMap { byID[$0] }
 }
@@ -55,6 +55,9 @@ public struct WorksheetFeature {
         /// How many kanji to skip at the front of the level (the study plan's
         /// start position), so study can begin mid-level.
         public var startIndex = 0
+        /// Study ahead: serve a full `newPerDay` batch even if today's goal is
+        /// already met (set when the learner pulls tomorrow's study forward).
+        public var pullAhead = false
         /// All queue kanji's card content, prefetched up front and keyed by kanji
         /// id — so swiping to the next kanji shows its words/sentences/strokes/
         /// meaning instantly, with no load flicker.
@@ -83,7 +86,9 @@ public struct WorksheetFeature {
         public var hasLoaded = false
         public var isFinished = false
 
-        public init() {}
+        public init(pullAhead: Bool = false) {
+            self.pullAhead = pullAhead
+        }
 
         /// The kanji currently being studied, or nil when the queue is exhausted.
         public var current: Kanji? {
@@ -134,7 +139,7 @@ public struct WorksheetFeature {
                 state.today = today
                 state.queue = buildWorksheetQueue(
                     records: records, kanji: kanji, today: today, newPerDay: state.newPerDay,
-                    level: state.targetLevel, startIndex: state.startIndex)
+                    level: state.targetLevel, startIndex: state.startIndex, pullAhead: state.pullAhead)
                 state.remaining = remainingNew(
                     order: studyOrder(kanji, exam: ExamType.current, level: state.targetLevel), records: records,
                     startIndex: state.startIndex)
