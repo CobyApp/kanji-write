@@ -36,6 +36,23 @@ struct HomeView: View {
     }
     private var levelTotal: Int { max(levelOrder.count, 1) }
     private var progress: Double { Double(learnedInLevel) / Double(levelTotal) }
+
+    /// Every kanji in the current level (from the plan's start) has been learned.
+    private var levelComplete: Bool { !levelOrder.isEmpty && remaining == 0 }
+    /// The next 급수/level after the current one, if any (nil at the last level).
+    private var nextLevel: String? {
+        let levels = examType.levels
+        guard let i = levels.firstIndex(of: targetLevel), i + 1 < levels.count else { return nil }
+        return levels[i + 1]
+    }
+    /// Advance the plan to the next level and start it from the beginning.
+    private func advanceLevel() {
+        guard let next = nextLevel else { return }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            targetLevel = next
+            studyStartIndex = 0
+        }
+    }
     private var session: StudySession {
         todaysSession(records: store.review.records.elements, order: levelOrder,
                       today: store.review.today, newPerDay: newPerDay, startIndex: studyStartIndex)
@@ -74,14 +91,20 @@ struct HomeView: View {
                       today: store.review.today)
     }
     private var doneToday: Int { learnedToday(records: store.review.records.elements, today: store.review.today) }
-    private var goalFraction: Double { newPerDay > 0 ? min(Double(doneToday) / Double(newPerDay), 1) : 0 }
     private var remaining: Int {
         remainingNew(order: levelOrder, records: store.review.records.elements, startIndex: studyStartIndex)
     }
 
-    /// Today's goal completion for display — capped at the goal so pulling ahead
-    /// never shows a nonsensical "10/5". The raw `doneToday` still drives logic.
-    private var doneTodayCapped: Int { min(doneToday, newPerDay) }
+    /// Today's goal grows in `newPerDay` steps as you study past it: the target is
+    /// the smallest multiple of `newPerDay` that covers what you've done, so the
+    /// bar reads 0/20 → 20/20 → 40/40 … and there's always a next target to fill
+    /// (never a capped "5/5" or a nonsensical "10/5").
+    private var goalTarget: Int {
+        guard newPerDay > 0 else { return max(doneToday, 1) }
+        let steps = max(1, (doneToday + newPerDay - 1) / newPerDay)
+        return steps * newPerDay
+    }
+    private var goalFraction: Double { goalTarget > 0 ? min(Double(doneToday) / Double(goalTarget), 1) : 0 }
     /// Today's quiz has already been completed.
     private var quizTakenToday: Bool { lastQuizDay == store.review.today }
 
@@ -105,7 +128,7 @@ struct HomeView: View {
         let next = nextKanji
         let meaning = next.flatMap { kanjiGloss(store.review.glosses[$0.id] ?? [:], appLanguage) } ?? ""
         let snapshot = StudySnapshot(
-            level: targetLevel, dailyGoal: newPerDay, doneToday: doneTodayCapped, streak: streak,
+            level: targetLevel, dailyGoal: goalTarget, doneToday: doneToday, streak: streak,
             remaining: remaining, learned: learnedInLevel, total: levelTotal,
             nextGlyph: next?.literal ?? "", nextMeaning: meaning, language: appLanguage.rawValue)
         StudySnapshotStore.save(snapshot)          // → home-screen widget (App Group)
@@ -224,6 +247,7 @@ struct HomeView: View {
             ring(168).popIn(delay: 0.08)
             HStack(spacing: 12) { streakChip; goalChip }.popIn(delay: 0.12)
             planButton.popIn(delay: 0.16)
+            if levelComplete { levelCompleteCard.popIn(delay: 0.18) }
             // iPhone is a single narrow column — every launcher is a full-width
             // row, all with the same spacing (no side-by-side cards).
             VStack(spacing: 12) {
@@ -248,6 +272,7 @@ struct HomeView: View {
             ring(200).popIn(delay: 0.08)
             HStack(spacing: 12) { streakChip; goalChip }.popIn(delay: 0.12)
             planButton.popIn(delay: 0.16)
+            if levelComplete { levelCompleteCard.popIn(delay: 0.18) }
             launchersGrid.popIn(delay: 0.22)
         }
     }
@@ -267,9 +292,9 @@ struct HomeView: View {
 
     private var goalChip: some View {
         VStack(spacing: 6) {
-            Text("\(doneTodayCapped)/\(newPerDay)")
+            Text("\(doneToday)/\(goalTarget)")
                 .font(.kawaii(20, weight: .bold)).monospacedDigit().foregroundStyle(Palette.mint)
-                .contentTransition(.numericText()).animation(.snappy, value: doneTodayCapped)
+                .contentTransition(.numericText()).animation(.snappy, value: doneToday)
             Capsule().fill(Palette.mintSoft).frame(height: 6)
                 .overlay(alignment: .leading) {
                     GeometryReader { geo in
@@ -443,6 +468,37 @@ struct HomeView: View {
         launcher(icon: "text.book.closed", title: L.wordDictionary[appLanguage],
                  subtitle: L.wordSearchPrompt[appLanguage], count: nil,
                  soft: Palette.mintSoft, accent: Palette.mint) { store.send(.openWordDictionary) }
+    }
+
+    /// Celebration banner shown when every kanji in the current level is learned:
+    /// advance to the next 급수, or a "all done" note at the last level.
+    private var levelCompleteCard: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 38)).foregroundStyle(Palette.mint)
+            Text(L.levelCompleteTitle[appLanguage].replacingOccurrences(of: "{level}", with: targetLevel))
+                .font(.kawaii(19, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+            if let next = nextLevel {
+                Button { advanceLevel() } label: {
+                    HStack(spacing: 6) {
+                        Text(L.goToNextLevel[appLanguage].replacingOccurrences(of: "{level}", with: next))
+                        Image(systemName: "arrow.right").font(.system(size: 13, weight: .bold))
+                    }
+                    .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
+                    .padding(.horizontal, 24).padding(.vertical, 12)
+                    .background(Palette.accent).clipShape(Capsule())
+                }
+                .buttonStyle(.bouncy)
+            } else {
+                Text(L.allLevelsComplete[appLanguage])
+                    .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+            }
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 24).padding(.horizontal, 16)
+        .background(Palette.mintSoft)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .stroke(Palette.mint.opacity(0.45), lineWidth: 1.5))
     }
 
     /// 쓰기 테스트 — free handwriting practice. Available on every device (iPhone
