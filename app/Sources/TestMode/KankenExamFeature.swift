@@ -189,6 +189,14 @@ public struct KankenExamFeature {
             } else if section.renderType == .yojijukugo {
                 let items = (try? await dictionaryClient.examYojijukugo(level, 60)) ?? []
                 questions = KankenQuestion.yojijukugoQuiz(items, count: 15, language: language)
+            } else if section.renderType == .okurigana {
+                let items = (try? await dictionaryClient.examOkurigana(level, 120)) ?? []
+                questions = KankenQuestion.okuriganaQuiz(items, count: 15)
+            } else if section.renderType == .taigirui {
+                // 対義語-only sections (lower 級) filter to antonyms; 対義語・類義語 uses both.
+                let relationOnly = section.id == "taigi" ? "対義" : nil
+                let items = (try? await dictionaryClient.examTaigirui(level, relationOnly, 40)) ?? []
+                questions = KankenQuestion.taigiruiQuiz(items, count: 15)
             } else {
                 let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
                 questions = KankenQuestion.radicalQuiz(items, count: 15)
@@ -274,6 +282,73 @@ extension KankenQuestion {
                     prompt: item.yoji, focus: nil, options: options, answer: meaning,
                     explanation: item.reading, label: "意味"))
             }
+        }
+        return out
+    }
+
+    /// Builds 送りがな questions: the word is shown in katakana; pick where the
+    /// kanji ends and the okurigana begins. Distractors shift the okurigana
+    /// boundary (the classic 送りがな trap), keeping the same kanji stem.
+    static func okuriganaQuiz(_ items: [WordEntry], count: Int) -> [KankenQuestion] {
+        // Endings that mark a conjugating word (verb う-row / i-adj / na-adj か…).
+        let okuriEndings: Set<Character> = ["う", "く", "ぐ", "す", "つ", "ぬ", "ぶ", "む", "る", "い", "か"]
+        var out: [KankenQuestion] = []
+        var used = Set<String>()
+        func isKanji(_ c: Character) -> Bool {
+            c.unicodeScalars.allSatisfy { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
+        }
+        func isHiragana(_ c: Character) -> Bool {
+            c.unicodeScalars.allSatisfy { (0x3040...0x309F).contains($0.value) }
+        }
+        for item in items where out.count < count {
+            let surface = item.surface
+            guard let first = surface.first, isKanji(first) else { continue }
+            let okurigana = String(surface.dropFirst())
+            // Single-kanji stem only: everything after the kanji must be hiragana
+            // (rejects compounds like 飲み干す / 引け値 that the SQL GLOB lets through).
+            guard !okurigana.isEmpty, okurigana.allSatisfy(isHiragana) else { continue }
+            let kanjiPart = String(first)
+            guard let last = okurigana.last, okuriEndings.contains(last), !used.contains(surface) else { continue }
+            let readingChars = Array(item.reading)
+            let okuriLen = okurigana.count
+            let kanjiKanaLen = readingChars.count - okuriLen
+            guard kanjiKanaLen >= 1, !readingChars.isEmpty else { continue }
+            // Boundary-shift distractors: same kanji, different okurigana length.
+            var distractors: [String] = []
+            for delta in [1, 2, -1] {
+                let newLen = okuriLen + delta
+                guard newLen >= 0, newLen <= readingChars.count - 1 else { continue }
+                let variant = kanjiPart + String(readingChars.suffix(newLen))
+                if variant != surface, !distractors.contains(variant) { distractors.append(variant) }
+            }
+            guard distractors.count >= 2 else { continue }
+            let kata = item.reading.applyingTransform(.hiraganaToKatakana, reverse: false) ?? item.reading
+            var rng = SeededRNG(seed: UInt64(item.id &+ 11))
+            let options = (Array(distractors.prefix(3)) + [surface]).shuffled(using: &rng)
+            used.insert(surface)
+            out.append(KankenQuestion(
+                id: "okuri:\(item.id)", type: .okurigana, kanjiID: item.id,
+                prompt: kata, focus: nil, options: options, answer: surface,
+                explanation: item.meaningKo, label: "送りがな"))
+        }
+        return out
+    }
+
+    /// Builds 対義語・類義語 questions: the prompt word is shown; pick its antonym or
+    /// synonym from four real words (distractors are other answers in the pool).
+    static func taigiruiQuiz(_ items: [TaigiruiPair], count: Int) -> [KankenQuestion] {
+        guard items.count >= 4 else { return [] }
+        let pool = items.map(\.answer)
+        var out: [KankenQuestion] = []
+        for (index, item) in items.prefix(count).enumerated() {
+            var rng = SeededRNG(seed: UInt64(item.id &+ index &+ 5))
+            let options = quizOptions(answer: item.answer, pool: pool, rng: &rng)
+            guard options.count >= 2 else { continue }
+            out.append(KankenQuestion(
+                id: "taigi:\(item.id)", type: .taigirui, kanjiID: item.id,
+                prompt: item.word, focus: nil, options: options, answer: item.answer,
+                explanation: "\(item.answer)（\(item.answerReading)）",
+                label: item.relation == "対義" ? "対義語" : "類義語"))
         }
         return out
     }

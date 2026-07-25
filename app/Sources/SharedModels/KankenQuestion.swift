@@ -10,6 +10,8 @@ public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codab
     case context          // 文脈規定 — sentence cloze
     case strokes          // 画数 — kanji glyph, answer is the stroke count
     case yojijukugo       // 四字熟語 — idiom glyph, answer is its reading / meaning
+    case okurigana        // 送りがな — カナ word, answer is the kanji+okurigana form
+    case taigirui         // 対義語・類義語 — a word, answer is its antonym / synonym
     case comingSoon       // real 大問, curated data not ready yet (not playable)
 
     /// Reading answers get slightly larger option type than kanji/word answers.
@@ -46,6 +48,29 @@ public struct Yojijukugo: Equatable, Identifiable, Sendable {
         case .ja: meaningJa ?? meaningKo
         default: meaningJa ?? meaningKo
         }
+    }
+}
+
+/// A 対義語・類義語 pair: a prompt word and its antonym ("対義") or synonym ("類義"),
+/// with readings and the 漢検 級. Powers the 対義語・類義語 exam section.
+public struct TaigiruiPair: Equatable, Identifiable, Sendable {
+    public let id: Int
+    public let word: String
+    public let wordReading: String
+    public let answer: String
+    public let answerReading: String
+    public let relation: String   // "対義" | "類義"
+    public let level: String
+
+    public init(id: Int, word: String, wordReading: String, answer: String,
+                answerReading: String, relation: String, level: String) {
+        self.id = id
+        self.word = word
+        self.wordReading = wordReading
+        self.answer = answer
+        self.answerReading = answerReading
+        self.relation = relation
+        self.level = level
     }
 }
 
@@ -122,6 +147,9 @@ extension ExamType {
     private static var radical: ExamSection { live("radical", "部首", .radical, nil) }
     private static var strokes: ExamSection { live("strokes", "画数", .strokes, nil) }
     private static var yoji: ExamSection { live("yoji", "四字熟語", .yojijukugo, nil) }
+    private static func okuri(_ ja: String) -> ExamSection { live("okuri", ja, .okurigana, nil) }
+    /// 対義語・類義語 — live only where the dataset covers (5級〜2級).
+    private static var taigirui: ExamSection { live("taigirui", "対義語・類義語", .taigirui, nil) }
 
     /// 漢検 10級〜2級 papers (準1級/1級 use 表外漢字 not yet in the dictionary).
     private static func kankenSections(_ level: String) -> [ExamSection] {
@@ -130,34 +158,34 @@ extension ExamType {
             return [reading, soon("hitsujun", "筆順"), strokes,
                     soon("hantai", "反対のことば"), writing]
         case "9級":
-            return [reading, soon("hitsujun", "筆順"), strokes, soon("okuri", "送りがな"),
+            return [reading, soon("hitsujun", "筆順"), strokes, okuri("送りがな"),
                     soon("hantai", "反対のことば"), writing]
         case "8級":
             return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
-                    soon("okuri", "送りがな"), soon("taigi", "対義語"),
+                    okuri("送りがな"), soon("taigi", "対義語"),
                     soon("doon", "同音異字"), writing]
         case "7級":
             return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
-                    soon("okuri", "送りがな"), soon("taigi", "対義語"),
+                    okuri("送りがな"), soon("taigi", "対義語"),
                     soon("doon", "同音異字"), soon("sanji", "三字熟語"), writing]
         case "6級":
             return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
-                    soon("okuri", "送りがな"), soon("taigirui", "対義語・類義語"),
+                    okuri("送りがな"), soon("taigirui", "対義語・類義語"),
                     soon("doonkun", "同音・同訓異字"), soon("tsukuri", "熟語作り"), writing]
         case "5級":
-            return [reading, radical, strokes, soon("okuri", "送りがな"),
-                    soon("taigirui", "対義語・類義語"), soon("kousei", "熟語の構成"),
+            return [reading, radical, strokes, okuri("送りがな"),
+                    taigirui, soon("kousei", "熟語の構成"),
                     soon("onkun", "音読み・訓読み"), yoji,
                     soon("doonkun", "同音・同訓異字"), writing]
         case "4級", "3級":
             return [reading, soon("doonkun", "同音・同訓異字"), soon("shikibetsu", "漢字識別"),
-                    soon("kousei", "熟語の構成"), radical, soon("taigirui", "対義語・類義語"),
-                    soon("okuri", "漢字と送りがな"), yoji,
+                    soon("kousei", "熟語の構成"), radical, taigirui,
+                    okuri("漢字と送りがな"), yoji,
                     soon("goji", "誤字訂正"), writing]
         case "準2級", "2級":
             return [reading, radical, soon("kousei", "熟語の構成"), yoji,
-                    soon("taigirui", "対義語・類義語"), soon("doonkun", "同音・同訓異字"),
-                    soon("goji", "誤字訂正"), soon("okuri", "漢字と送りがな"), writing]
+                    taigirui, soon("doonkun", "同音・同訓異字"),
+                    soon("goji", "誤字訂正"), okuri("漢字と送りがな"), writing]
         default:
             return [reading, radical, writing]
         }
