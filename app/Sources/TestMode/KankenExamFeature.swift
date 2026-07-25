@@ -186,6 +186,9 @@ public struct KankenExamFeature {
             } else if section.renderType == .strokes {
                 let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
                 questions = KankenQuestion.strokeQuiz(items, count: 15, unit: unit)
+            } else if section.renderType == .yojijukugo {
+                let items = (try? await dictionaryClient.examYojijukugo(level, 60)) ?? []
+                questions = KankenQuestion.yojijukugoQuiz(items, count: 15, language: language)
             } else {
                 let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
                 questions = KankenQuestion.radicalQuiz(items, count: 15)
@@ -243,6 +246,44 @@ extension KankenQuestion {
                 options: options, answer: answer, explanation: nil))
         }
         return out
+    }
+
+    /// Builds 四字熟語 questions, alternating two exam-authentic facets per idiom:
+    /// its reading (options are readings) and its meaning (options are meanings).
+    /// The idiom is shown; distractors are drawn from the other idioms in the pool.
+    static func yojijukugoQuiz(_ items: [Yojijukugo], count: Int, language: AppLanguage) -> [KankenQuestion] {
+        guard items.count >= 4 else { return [] }
+        var out: [KankenQuestion] = []
+        for (index, item) in items.prefix(count).enumerated() {
+            var rng = SeededRNG(seed: UInt64(item.id &+ index &+ 3))
+            let askReading = index % 2 == 0
+            if askReading {
+                let pool = items.map(\.reading)
+                let options = quizOptions(answer: item.reading, pool: pool, rng: &rng)
+                guard options.count >= 2 else { continue }
+                out.append(KankenQuestion(
+                    id: "yoji:r:\(item.id)", type: .yojijukugo, kanjiID: item.id,
+                    prompt: item.yoji, focus: nil, options: options, answer: item.reading,
+                    explanation: item.meaning(language), label: "読み"))
+            } else if let meaning = item.meaning(language), !meaning.isEmpty {
+                let pool = items.compactMap { $0.meaning(language) }
+                let options = quizOptions(answer: meaning, pool: pool, rng: &rng)
+                guard options.count >= 2 else { continue }
+                out.append(KankenQuestion(
+                    id: "yoji:m:\(item.id)", type: .yojijukugo, kanjiID: item.id,
+                    prompt: item.yoji, focus: nil, options: options, answer: meaning,
+                    explanation: item.reading, label: "意味"))
+            }
+        }
+        return out
+    }
+
+    /// The answer plus up to 3 distinct distractors from `pool`, seeded-shuffled.
+    private static func quizOptions(answer: String, pool: [String], rng: inout SeededRNG) -> [String] {
+        var distractors = Array(Set(pool.filter { $0 != answer && !$0.isEmpty })).sorted()
+        distractors.shuffle(using: &rng)
+        let options = (Array(distractors.prefix(3)) + [answer]).shuffled(using: &rng)
+        return options
     }
 
     private static func localizedExplanation(_ dict: [String: String], _ language: AppLanguage) -> String? {

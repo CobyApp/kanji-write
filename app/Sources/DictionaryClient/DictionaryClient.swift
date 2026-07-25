@@ -52,6 +52,13 @@ public struct DictionaryClient: Sendable {
     /// Kanji + their stroke count for a level — the input to the 画数 question
     /// generator (distractors are nearby counts).
     public var examStrokeItems: @Sendable (_ level: String, _ limit: Int) async throws -> [StrokeItem]
+    /// 四字熟語 at or below the given 漢検 級 (cumulative), for the 四字熟語 exam
+    /// section. "N…" JLPT levels have no 四字熟語 and return [].
+    public var examYojijukugo: @Sendable (_ level: String, _ limit: Int) async throws -> [Yojijukugo]
+    /// Every 四字熟語 (idiom order), for the 사자성어 dictionary browse.
+    public var allYojijukugo: @Sendable () async throws -> [Yojijukugo]
+    /// Free-text 四字熟語 search over idiom / reading / meaning.
+    public var searchYojijukugo: @Sendable (_ query: String, _ limit: Int) async throws -> [Yojijukugo]
 }
 
 extension DictionaryClient: TestDependencyKey {

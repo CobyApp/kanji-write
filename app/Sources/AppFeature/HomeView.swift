@@ -242,6 +242,7 @@ struct HomeView: View {
                 kankenButton
                 dictionaryButton
                 wordDictionaryButton
+                if examType == .kanken { yojiDictionaryButton }
                 wordbookButton
             }
             .popIn(delay: 0.22)
@@ -311,6 +312,7 @@ struct HomeView: View {
                          subtitle: L.practiceSub[appLanguage], count: nil,
                          soft: Palette.butterSoft, accent: Palette.butter) { store.send(.startPractice) }
             }
+            if examType == .kanken { yojiDictionaryButton }
             wordbookButton
         }
     }
@@ -435,6 +437,15 @@ struct HomeView: View {
                         subtitle: L.kankenHubSubtitle[appLanguage], count: nil,
                         soft: Palette.lavenderSoft, accent: Palette.lavender) {
             store.send(.startKanken(level: targetLevel))
+        }
+    }
+
+    /// 사자성어 사전 — 四字熟語 browse. 漢검 전용 (JLPT엔 사자성어 유형이 없음).
+    private var yojiDictionaryButton: some View {
+        launcher(icon: "quote.bubble", title: L.yojiDictionary[appLanguage],
+                 subtitle: L.kankenYojiDesc[appLanguage], count: nil,
+                 soft: Palette.coralSoft, accent: Palette.coral) {
+            store.send(.openYojiDictionary)
         }
     }
 

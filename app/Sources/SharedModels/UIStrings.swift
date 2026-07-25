@@ -202,6 +202,17 @@ public enum L {
         ko: "문맥에 맞는 단어", ja: "文脈に合う語", zh: "符合文意的词", en: "The word that fits the sentence")
     public static let kankenStrokesDesc = L10nText(
         ko: "한자의 총획수", ja: "総画数", zh: "总笔画数", en: "The kanji's stroke count")
+    public static let kankenYojiDesc = L10nText(
+        ko: "사자성어 읽기·뜻", ja: "四字熟語の読み・意味", zh: "四字成语读音·意思", en: "Four-character idioms")
+    public static let yojiDictionary = L10nText(
+        ko: "사자성어 사전", ja: "四字熟語辞典", zh: "四字成语词典", en: "Idiom dictionary")
+    public static let yojiSearchPrompt = L10nText(
+        ko: "사자성어·읽기·뜻으로 검색", ja: "四字熟語・読み・意味で検索",
+        zh: "按成语·读音·意思搜索", en: "Search idioms, readings, meanings")
+    public static let noYojiFound = L10nText(
+        ko: "사자성어를 찾을 수 없어요", ja: "四字熟語が見つかりません",
+        zh: "找不到四字成语", en: "No idioms found")
+    public static let allLevels = L10nText(ko: "전체", ja: "すべて", zh: "全部", en: "All")
     public static let kankenHubSubtitle = L10nText(
         ko: "출제 유형별 연습", ja: "出題形式ごとの練習", zh: "按题型练习", en: "Practice by exam section")
     public static let kankenReadingDesc = L10nText(

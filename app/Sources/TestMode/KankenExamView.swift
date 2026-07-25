@@ -132,6 +132,7 @@ public struct KankenExamView: View {
         case .writing: L.kankenWritingDesc[appLanguage]
         case .context: L.kankenContextDesc[appLanguage]
         case .strokes: L.kankenStrokesDesc[appLanguage]
+        case .yojijukugo: L.kankenYojiDesc[appLanguage]
         case .comingSoon: L.kankenComingSoon[appLanguage]
         }
     }
@@ -196,7 +197,7 @@ public struct KankenExamView: View {
 
     private func questionCard(_ item: KankenQuestion) -> some View {
         VStack(spacing: 10) {
-            Text(promptLabel(item.type))
+            Text(item.label ?? promptLabel(item.type))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
             promptText(item)
                 .font(.kawaiiJP(promptSize(item.prompt), weight: .bold)).japaneseGlyphs()
@@ -229,6 +230,7 @@ public struct KankenExamView: View {
         case .writing: L.kankenWritingDesc[appLanguage]
         case .context: L.kankenContextDesc[appLanguage]
         case .strokes: L.kankenStrokesDesc[appLanguage]
+        case .yojijukugo: L.kankenYojiDesc[appLanguage]
         case .comingSoon: ""
         }
     }
