@@ -11,7 +11,8 @@ import SharedModels
 public struct WordDictionaryFeature {
     @ObservableState
     public struct State: Equatable {
-        public var level: String = "N5"
+        /// Current level, seeded from the active exam (JLPT "N5" / 漢検 "10級").
+        public var level: String = ExamType.current.defaultLevel
         public var words: [WordEntry] = []          // current level's words
         public var searchText = ""
         public var searchResults: [WordEntry] = []

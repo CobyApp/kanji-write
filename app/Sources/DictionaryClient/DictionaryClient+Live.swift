@@ -294,12 +294,16 @@ extension DictionaryClient: DependencyKey {
         },
         quizWords: { level, limit in
             let queue = try openBundledDatabase()
+            // Pick the level column from the requested level's format: JLPT levels
+            // are "N1"…"N5", 漢検 levels are "10級"…"1級" / "準2級". The column name
+            // is a controlled constant (not user input), so interpolation is safe.
+            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
             return try await queue.read { db -> [WordEntry] in
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT DISTINCT w.id, w.surface, w.reading_kana FROM word w
                     JOIN word_kanji wk ON wk.word_id = w.id
                     JOIN kanji k ON k.id = wk.kanji_id
-                    WHERE k.jlpt_level = ?
+                    WHERE k.\(column) = ?
                     ORDER BY w.is_common DESC, w.id
                     LIMIT ?
                     """, arguments: [level, limit])
