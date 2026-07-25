@@ -8,7 +8,11 @@ import SharedModels
 public struct KanjiDetailFeature {
     @ObservableState
     public struct State: Equatable {
-        public let kanji: Kanji
+        public var kanji: Kanji
+        /// The list this detail was opened from + the current position, so prev/
+        /// next can step through it without returning to the list.
+        public var siblings: [Kanji]
+        public var index: Int
         public var glosses: [String: String] = [:]
         public var words: IdentifiedArrayOf<WordEntry> = []
         public var sentences: [ExampleSentence] = []
@@ -17,13 +21,22 @@ public struct KanjiDetailFeature {
         public var isLoading = false
         public var addedToReview = false
         public var isBookmarked = false
-        public init(kanji: Kanji) { self.kanji = kanji }
+
+        public init(kanji: Kanji, siblings: [Kanji] = [], index: Int = 0) {
+            self.kanji = kanji
+            self.siblings = siblings.isEmpty ? [kanji] : siblings
+            self.index = siblings.isEmpty ? 0 : index
+        }
+
+        public var hasPrev: Bool { index > 0 }
+        public var hasNext: Bool { index < siblings.count - 1 }
     }
 
     public enum Action: Equatable {
         case onAppear
         case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String])
         case bookmarkLoaded(Bool)
+        case showSibling(delta: Int)   // prev (-1) / next (+1)
         case writeTapped
         case wordTapped(WordEntry)  // delegate → parent pushes the word detail
         case relationTapped(String) // an antonym/related surface → resolve → word
@@ -45,22 +58,22 @@ public struct KanjiDetailFeature {
             case .onAppear:
                 guard state.glosses.isEmpty else { return .none }
                 state.isLoading = true
-                let id = state.kanji.id
-                return .run { send in
-                    async let glosses = dictionaryClient.glosses(id)
-                    async let words = dictionaryClient.words(id, 12)
-                    async let sentences = dictionaryClient.sentences(id, 3)
-                    async let relations = dictionaryClient.relations(id, 20)
-                    async let strokes = dictionaryClient.strokeOrder(id)
-                    await send(.loaded(
-                        (try? await glosses) ?? [:],
-                        (try? await words) ?? [],
-                        (try? await sentences) ?? [],
-                        (try? await relations) ?? [],
-                        (try? await strokes) ?? []
-                    ))
-                    await send(.bookmarkLoaded(await kanjiBookmarkStore.load().contains(id)))
-                }
+                return load(state.kanji.id)
+
+            case let .showSibling(delta):
+                let new = state.index + delta
+                guard state.siblings.indices.contains(new) else { return .none }
+                state.index = new
+                state.kanji = state.siblings[new]
+                // Reset the previous kanji's loaded content and re-fetch.
+                state.glosses = [:]
+                state.words = []
+                state.sentences = []
+                state.relations = []
+                state.strokePaths = []
+                state.addedToReview = false
+                state.isLoading = true
+                return load(state.kanji.id)
             case let .loaded(glosses, words, sentences, relations, strokePaths):
                 state.isLoading = false
                 state.glosses = glosses
@@ -116,6 +129,26 @@ public struct KanjiDetailFeature {
                 state.addedToReview = true
                 return .none
             }
+        }
+    }
+
+    /// Fetch a kanji's detail content (glosses / words / sentences / relations /
+    /// strokes) plus its bookmark state.
+    private func load(_ id: Int) -> Effect<Action> {
+        .run { send in
+            async let glosses = dictionaryClient.glosses(id)
+            async let words = dictionaryClient.words(id, 12)
+            async let sentences = dictionaryClient.sentences(id, 3)
+            async let relations = dictionaryClient.relations(id, 20)
+            async let strokes = dictionaryClient.strokeOrder(id)
+            await send(.loaded(
+                (try? await glosses) ?? [:],
+                (try? await words) ?? [],
+                (try? await sentences) ?? [],
+                (try? await relations) ?? [],
+                (try? await strokes) ?? []
+            ))
+            await send(.bookmarkLoaded(await kanjiBookmarkStore.load().contains(id)))
         }
     }
 }

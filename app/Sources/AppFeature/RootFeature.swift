@@ -143,14 +143,23 @@ public struct RootFeature {
                 state.path.append(.yojiDictionary(YojiDictionaryFeature.State()))
                 return .none
 
-            // Word dictionary → drill into a selected word's detail.
-            case let .path(.element(id: _, action: .wordDictionary(.wordSelected(word)))):
-                state.path.append(.word(WordDetailFeature.State(word: word)))
+            // Word dictionary → drill into a selected word's detail, carrying the
+            // visible list for prev/next.
+            case let .path(.element(id: id, action: .wordDictionary(.wordSelected(word)))):
+                var siblings: [WordEntry] = []
+                if case let .wordDictionary(dict)? = state.path[id: id] {
+                    siblings = dict.isSearching ? dict.visibleResults : dict.visibleWords
+                }
+                let idx = siblings.firstIndex(of: word) ?? 0
+                state.path.append(.word(WordDetailFeature.State(word: word, siblings: siblings, index: idx)))
                 return .none
 
             // 四字熟語 dictionary → idiom detail; idiom detail → a constituent kanji.
-            case let .path(.element(id: _, action: .yojiDictionary(.yojiSelected(yoji)))):
-                state.path.append(.yojiDetail(YojiDetailFeature.State(yoji: yoji)))
+            case let .path(.element(id: id, action: .yojiDictionary(.yojiSelected(yoji)))):
+                var siblings: [Yojijukugo] = []
+                if case let .yojiDictionary(dict)? = state.path[id: id] { siblings = dict.visible }
+                let idx = siblings.firstIndex(of: yoji) ?? 0
+                state.path.append(.yojiDetail(YojiDetailFeature.State(yoji: yoji, siblings: siblings, index: idx)))
                 return .none
             case let .path(.element(id: _, action: .yojiDetail(.kanjiTapped(kanji)))):
                 state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
@@ -169,8 +178,11 @@ public struct RootFeature {
                     .kanjiList(KanjiListPathFeature.State(
                         title: level.label, kanji: items, glosses: state.review.glosses)))
                 return .none
-            case let .path(.element(id: _, action: .dictionary(.kanjiSelected(kanji)))):
-                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
+            case let .path(.element(id: id, action: .dictionary(.kanjiSelected(kanji)))):
+                var siblings: [Kanji] = []
+                if case let .dictionary(dict)? = state.path[id: id] { siblings = dict.searchResults }
+                let idx = siblings.firstIndex(of: kanji) ?? 0
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji, siblings: siblings, index: idx)))
                 return .none
 
             case let .wordReview(.wordTapped(word)):
@@ -233,9 +245,13 @@ public struct RootFeature {
                 state.sessionPath.append(.writing(KanjiWritingFeature.State(kanji: detail.kanji)))
                 return .none
 
-            // Dictionary drill routing.
-            case let .path(.element(id: _, action: .kanjiList(.kanjiTapped(kanji)))):
-                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
+            // Dictionary drill routing. Carry the level's kanji list into the
+            // detail so it can step prev/next without returning to the list.
+            case let .path(.element(id: id, action: .kanjiList(.kanjiTapped(kanji)))):
+                var siblings: [Kanji] = []
+                if case let .kanjiList(list)? = state.path[id: id] { siblings = list.kanji }
+                let idx = siblings.firstIndex(of: kanji) ?? 0
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji, siblings: siblings, index: idx)))
                 return .none
             case let .path(.element(id: _, action: .kanji(.wordTapped(word)))):
                 state.path.append(.word(WordDetailFeature.State(word: word)))
