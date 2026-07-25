@@ -1,62 +1,150 @@
 import Foundation
 
-/// How a question renders in the player: a radical pick (kanji glyph + 部首
-/// options) vs. a sentence prompt (reading / orthography / context). Also tags a
-/// stored `KankenQuestion` so the 오답노트 knows how to draw it.
+/// How a question renders / is generated in the player. Sections whose type is
+/// `.comingSoon` are shown for structural accuracy (they exist on the real paper)
+/// but aren't yet backed by data, so they aren't playable.
 public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codable {
     case reading          // 読み / 漢字読み — sentence, answer is a reading
     case radical          // 部首 — kanji glyph, options are 部首 glyphs
     case writing          // 書き取り / 表記 — sentence, answer is a kanji spelling
     case context          // 文脈規定 — sentence cloze
+    case strokes          // 画数 — kanji glyph, answer is the stroke count
+    case comingSoon       // real 大問, curated data not ready yet (not playable)
 
     /// Reading answers get slightly larger option type than kanji/word answers.
     public var isReading: Bool { self == .reading }
 }
 
-/// One selectable section of an exam's question paper — its label, the 大問 marker
-/// shown on the card, how its questions render, and where they come from (a bank
-/// `kind`, or the radical generator when `kind` is nil). Exam-specific: JLPT and
-/// 漢検 expose different section lists (see `ExamType.sections`).
+/// A raw kanji + its stroke count, the input to the 画数 question generator.
+public struct StrokeItem: Equatable, Sendable {
+    public let kanjiID: Int
+    public let literal: String
+    public let strokeCount: Int
+    public init(kanjiID: Int, literal: String, strokeCount: Int) {
+        self.kanjiID = kanjiID
+        self.literal = literal
+        self.strokeCount = strokeCount
+    }
+}
+
+/// One 大問 (question section) of an exam paper at a given level — its label, the
+/// 大問 marker, how its questions render/generate, its bank `kind`, and whether it
+/// is playable yet. The section list is level-specific (see `ExamType.sections`),
+/// mirroring the real per-level paper structure.
 public struct ExamSection: Equatable, Sendable, Identifiable {
-    public let id: String            // stable per section, unique within an exam
-    public let numeral: String       // 大問 marker ("一" / "1" …)
+    public let id: String            // stable per section, unique within a level
+    public var numeral: String       // 大問 marker ("一" / "1" …), assigned by order
     public let jaTitle: String       // section name as printed on the exam
     public let renderType: KankenQuestionType
-    public let kind: String?         // bank kind to query; nil = radical-generated
+    public let kind: String?         // bank kind to query; nil = generated / n/a
+    public let available: Bool       // playable now (data-backed) vs. 준비 중
 
     public init(id: String, numeral: String, jaTitle: String,
-                renderType: KankenQuestionType, kind: String?) {
+                renderType: KankenQuestionType, kind: String?, available: Bool) {
         self.id = id
         self.numeral = numeral
         self.jaTitle = jaTitle
         self.renderType = renderType
         self.kind = kind
+        self.available = available
     }
 }
 
 extension ExamType {
-    /// The exam-question hub's section list. Only sections backed by real, vetted
-    /// data ship today; curated ones (四字熟語 etc.) are added in Phase 2.
-    public var sections: [ExamSection] {
+    /// The exam paper's 大問 list for a specific level, in paper order — the real
+    /// per-level structure (漢検 級 / JLPT レベル). Data-backed sections are playable;
+    /// the rest are shown for accuracy and marked 준비 중.
+    public func sections(for level: String) -> [ExamSection] {
+        var list = self == .kanken ? Self.kankenSections(level) : Self.jlptSections(level)
+        let numerals = self.numerals(count: list.count)
+        for i in list.indices { list[i].numeral = numerals[i] }
+        return list
+    }
+
+    /// 大問 markers in paper order: 漢検 uses Japanese numerals, JLPT uses 問題 numbers.
+    private func numerals(count: Int) -> [String] {
         switch self {
         case .kanken:
-            return [
-                ExamSection(id: "reading", numeral: "一", jaTitle: "読み",
-                            renderType: .reading, kind: "reading"),
-                ExamSection(id: "radical", numeral: "二", jaTitle: "部首",
-                            renderType: .radical, kind: nil),
-                ExamSection(id: "writing", numeral: "九", jaTitle: "書き取り",
-                            renderType: .writing, kind: "orthography"),
-            ]
+            let kanji = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
+            return (0..<count).map { $0 < kanji.count ? kanji[$0] : "\($0 + 1)" }
         case .jlpt:
-            return [
-                ExamSection(id: "reading", numeral: "1", jaTitle: "漢字読み",
-                            renderType: .reading, kind: "reading"),
-                ExamSection(id: "orthography", numeral: "2", jaTitle: "表記",
-                            renderType: .writing, kind: "orthography"),
-                ExamSection(id: "context", numeral: "3", jaTitle: "文脈規定",
-                            renderType: .context, kind: "context"),
-            ]
+            return (0..<count).map { "\($0 + 1)" }
+        }
+    }
+
+    // MARK: Section catalog
+
+    /// A data-backed, playable section.
+    private static func live(_ id: String, _ ja: String, _ type: KankenQuestionType,
+                             _ kind: String?) -> ExamSection {
+        ExamSection(id: id, numeral: "", jaTitle: ja, renderType: type, kind: kind, available: true)
+    }
+    /// A real 大問 whose curated data isn't ready — shown for structure, not playable.
+    private static func soon(_ id: String, _ ja: String) -> ExamSection {
+        ExamSection(id: id, numeral: "", jaTitle: ja, renderType: .comingSoon, kind: nil, available: false)
+    }
+    private static var reading: ExamSection { live("reading", "読み", .reading, "reading") }
+    private static var writing: ExamSection { live("writing", "書き取り", .writing, "orthography") }
+    private static var radical: ExamSection { live("radical", "部首", .radical, nil) }
+    private static var strokes: ExamSection { live("strokes", "画数", .strokes, nil) }
+
+    /// 漢検 10級〜2級 papers (準1級/1級 use 表外漢字 not yet in the dictionary).
+    private static func kankenSections(_ level: String) -> [ExamSection] {
+        switch level {
+        case "10級":
+            return [reading, soon("hitsujun", "筆順"), strokes,
+                    soon("hantai", "反対のことば"), writing]
+        case "9級":
+            return [reading, soon("hitsujun", "筆順"), strokes, soon("okuri", "送りがな"),
+                    soon("hantai", "反対のことば"), writing]
+        case "8級":
+            return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
+                    soon("okuri", "送りがな"), soon("taigi", "対義語"),
+                    soon("doon", "同音異字"), writing]
+        case "7級":
+            return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
+                    soon("okuri", "送りがな"), soon("taigi", "対義語"),
+                    soon("doon", "同音異字"), soon("sanji", "三字熟語"), writing]
+        case "6級":
+            return [reading, soon("onkun", "音読み・訓読み"), radical, strokes,
+                    soon("okuri", "送りがな"), soon("taigirui", "対義語・類義語"),
+                    soon("doonkun", "同音・同訓異字"), soon("tsukuri", "熟語作り"), writing]
+        case "5級":
+            return [reading, radical, strokes, soon("okuri", "送りがな"),
+                    soon("taigirui", "対義語・類義語"), soon("kousei", "熟語の構成"),
+                    soon("onkun", "音読み・訓読み"), soon("yoji", "四字熟語"),
+                    soon("doonkun", "同音・同訓異字"), writing]
+        case "4級", "3級":
+            return [reading, soon("doonkun", "同音・同訓異字"), soon("shikibetsu", "漢字識別"),
+                    soon("kousei", "熟語の構成"), radical, soon("taigirui", "対義語・類義語"),
+                    soon("okuri", "漢字と送りがな"), soon("yoji", "四字熟語"),
+                    soon("goji", "誤字訂正"), writing]
+        case "準2級", "2級":
+            return [reading, radical, soon("kousei", "熟語の構成"), soon("yoji", "四字熟語"),
+                    soon("taigirui", "対義語・類義語"), soon("doonkun", "同音・同訓異字"),
+                    soon("goji", "誤字訂正"), soon("okuri", "漢字と送りがな"), writing]
+        default:
+            return [reading, radical, writing]
+        }
+    }
+
+    /// JLPT N5〜N1 文字・語彙 sections (問題1〜, per the official 大問のねらい).
+    private static func jlptSections(_ level: String) -> [ExamSection] {
+        let reading = live("reading", "漢字読み", .reading, "reading")
+        let hyoki = live("orthography", "表記", .writing, "orthography")
+        let bunmyaku = live("context", "文脈規定", .context, "context")
+        switch level {
+        case "N5":
+            return [reading, hyoki, bunmyaku, soon("iikae", "言い換え類義")]
+        case "N4", "N3":
+            return [reading, hyoki, bunmyaku, soon("iikae", "言い換え類義"), soon("youhou", "用法")]
+        case "N2":
+            return [reading, hyoki, soon("gokeisei", "語形成"), bunmyaku,
+                    soon("iikae", "言い換え類義"), soon("youhou", "用法")]
+        case "N1":
+            return [reading, bunmyaku, soon("iikae", "言い換え類義"), soon("youhou", "用法")]
+        default:
+            return [reading, hyoki, bunmyaku]
         }
     }
 }

@@ -200,6 +200,8 @@ public enum L {
     public static let jlptHub = L10nText(ko: "JLPT 문제", ja: "JLPT問題", zh: "JLPT题库", en: "JLPT exam")
     public static let kankenContextDesc = L10nText(
         ko: "문맥에 맞는 단어", ja: "文脈に合う語", zh: "符合文意的词", en: "The word that fits the sentence")
+    public static let kankenStrokesDesc = L10nText(
+        ko: "한자의 총획수", ja: "総画数", zh: "总笔画数", en: "The kanji's stroke count")
     public static let kankenHubSubtitle = L10nText(
         ko: "출제 유형별 연습", ja: "出題形式ごとの練習", zh: "按题型练习", en: "Practice by exam section")
     public static let kankenReadingDesc = L10nText(

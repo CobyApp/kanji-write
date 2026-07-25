@@ -49,6 +49,9 @@ public struct DictionaryClient: Sendable {
     /// Kanji + their radical for a level — the input to the 部首 question generator
     /// (distractors are drawn from the pool of real radicals).
     public var examRadicalItems: @Sendable (_ level: String, _ limit: Int) async throws -> [RadicalItem]
+    /// Kanji + their stroke count for a level — the input to the 画数 question
+    /// generator (distractors are nearby counts).
+    public var examStrokeItems: @Sendable (_ level: String, _ limit: Int) async throws -> [StrokeItem]
 }
 
 extension DictionaryClient: TestDependencyKey {
