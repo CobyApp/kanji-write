@@ -53,9 +53,9 @@ public struct WorksheetView: View {
     /// Holds keyboard focus on the deck so ←/→ arrow keys drive prev/next.
     @FocusState private var deckFocused: Bool
 
-    /// The write card (trace over the stroke guide) is an Apple-Pencil activity,
-    /// so it's only part of the deck on iPad.
-    private var showWrite: Bool { Platform.isPad }
+    /// The write card (trace over the stroke guide) is part of the deck on every
+    /// device — finger tracing works on iPhone too.
+    private var showWrite: Bool { true }
 
     /// The kinds of study card, in deck order. `quiz(i)` is the i-th recall quiz
     /// for the current kanji.
