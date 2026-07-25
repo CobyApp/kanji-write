@@ -543,6 +543,34 @@ extension DictionaryClient: DependencyKey {
                                  relation: $0["relation"], level: $0["kanken_level"])
                 }
             }
+        },
+        examOnKun: { level, limit in
+            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [OnKunItem] in
+                let kanjiRows = try Row.fetchAll(db, sql: """
+                    SELECT id, literal FROM kanji WHERE \(column) = ?
+                    ORDER BY RANDOM() LIMIT ?
+                    """, arguments: [level, limit])
+                var out: [OnKunItem] = []
+                for kr in kanjiRows {
+                    let kid: Int = kr["id"]
+                    let rrows = try Row.fetchAll(db, sql: """
+                        SELECT lang_axis, value FROM reading
+                        WHERE kanji_id = ? AND lang_axis IN ('on','kun') AND is_common = 1
+                        """, arguments: [kid])
+                    var on: [String] = [], kun: [String] = []
+                    for rr in rrows {
+                        let axis: String = rr["lang_axis"], value: String = rr["value"]
+                        // Strip kanjidic okurigana dots (つ.ぐ → つぐ) for kun display.
+                        if axis == "on" { on.append(value) }
+                        else { kun.append(value.replacingOccurrences(of: ".", with: "")) }
+                    }
+                    out.append(OnKunItem(kanjiID: kid, literal: kr["literal"],
+                                         onReadings: on, kunReadings: kun))
+                }
+                return out
+            }
         }
     )
 

@@ -208,6 +208,8 @@ public enum L {
         ko: "올바른 오쿠리가나 표기", ja: "正しい送りがな", zh: "正确的送假名", en: "The correct okurigana")
     public static let kankenTaigiruiDesc = L10nText(
         ko: "대의어·유의어 고르기", ja: "対義語・類義語", zh: "反义词·近义词", en: "Antonym / synonym")
+    public static let kankenOnKunDesc = L10nText(
+        ko: "음독·훈독 고르기", ja: "音読み・訓読み", zh: "音读·训读", en: "On / kun reading")
     public static let yojiDictionary = L10nText(
         ko: "사자성어 사전", ja: "四字熟語辞典", zh: "四字成语词典", en: "Idiom dictionary")
     public static let yojiSearchPrompt = L10nText(
