@@ -130,6 +130,7 @@ struct HomeView: View {
                 .padding(.bottom, 56)
                 .readableWidth(sizeClass)
             }
+            .scrollIndicators(.hidden)
             // Settings opens from a round button aligned to the top-right of the
             // capped content (not the screen edge). Same CircleButton style as
             // every close ✕; in-content so it responds on Mac Catalyst.

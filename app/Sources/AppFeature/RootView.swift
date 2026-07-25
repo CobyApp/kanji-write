@@ -230,14 +230,12 @@ private struct WordDictionaryView: View {
     @Bindable var store: StoreOf<WordDictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("dictGridMode") private var gridMode = false
+    @AppStorage("examType") private var examType: ExamType = .jlpt
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
     private var searchBinding: Binding<String> {
         Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
-    }
-    private var levelBinding: Binding<String> {
-        Binding(get: { store.level }, set: { store.send(.levelSelected($0)) })
     }
     private var gridColumns: [GridItem] {
         [GridItem(.adaptive(minimum: sizeClass == .compact ? 120 : 150), spacing: 12)]
@@ -250,12 +248,7 @@ private struct WordDictionaryView: View {
                 wordList(store.searchResults)
             } else {
                 VStack(spacing: 12) {
-                    Picker("", selection: levelBinding) {
-                        ForEach(["N5", "N4", "N3", "N2", "N1"], id: \.self) { Text($0).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 16).padding(.top, 12)
-                    .readableWidth(sizeClass)
+                    levelChips
                     wordList(store.words)
                 }
             }
@@ -272,6 +265,32 @@ private struct WordDictionaryView: View {
             .background(Palette.background)
         }
         .task { store.send(.onAppear) }
+    }
+
+    /// A horizontal scrolling row of level chips — handles 漢検's ten levels
+    /// (10級〜1級) without the cramping a segmented picker would force on iPhone.
+    private var levelChips: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                ForEach(examType.levels, id: \.self) { level in
+                    let selected = store.level == level
+                    Button { store.send(.levelSelected(level)) } label: {
+                        Text(level)
+                            .font(.kawaii(14, weight: .bold))
+                            .foregroundStyle(selected ? .white : Palette.ink)
+                            .padding(.horizontal, 16).padding(.vertical, 8)
+                            .background(selected ? Palette.accent : Palette.card)
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(
+                                selected ? .clear : Palette.ink.opacity(0.10), lineWidth: 1))
+                    }
+                    .buttonStyle(.bouncy)
+                }
+            }
+            .padding(.horizontal, 16).padding(.top, 12)
+        }
+        .scrollIndicators(.hidden)
+        .readableWidth(sizeClass)
     }
 
     @ViewBuilder
