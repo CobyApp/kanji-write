@@ -108,6 +108,8 @@ private func sessionView(_ store: StoreOf<RootFeature.Session>) -> some View {
         PracticeView(store: s)
     case let .quiz(s):
         QuizView(store: s)
+    case let .kanken(s):
+        KankenExamView(store: s)
     }
 }
 

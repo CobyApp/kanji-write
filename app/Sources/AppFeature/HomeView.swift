@@ -239,6 +239,7 @@ struct HomeView: View {
             // row, all with the same spacing (no side-by-side cards).
             VStack(spacing: 12) {
                 studyLauncher
+                if examType == .kanken { kankenButton }
                 dictionaryButton
                 wordDictionaryButton
                 wordbookButton
@@ -300,6 +301,7 @@ struct HomeView: View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                   spacing: 12) {
             studyLauncher
+            if examType == .kanken { kankenButton }
             dictionaryButton
             wordDictionaryButton
             // Free handwriting is an Apple-Pencil activity → iPad only. Placed
@@ -423,6 +425,15 @@ struct HomeView: View {
         launcher(icon: "character.book.closed", title: L.kanjiDictionary[appLanguage],
                  subtitle: L.searchPrompt[appLanguage], count: nil,
                  soft: Palette.skySoft, accent: Palette.sky) { store.send(.openDictionary) }
+    }
+
+    /// 칸켄 문제 허브 — real-exam-shaped practice by section. 漢검 전용.
+    private var kankenButton: some View {
+        launcher(icon: "checklist", title: L.kankenHub[appLanguage],
+                 subtitle: L.kankenHubSubtitle[appLanguage], count: nil,
+                 soft: Palette.lavenderSoft, accent: Palette.lavender) {
+            store.send(.startKanken(level: targetLevel))
+        }
     }
 
     private var wordDictionaryButton: some View {
