@@ -338,13 +338,36 @@ struct HomeView: View {
     /// The full plan editor, shown in the plan sheet. Both fields are live-linked:
     /// change the daily count and the goal date follows; change the goal date and
     /// the daily count follows. Pick whichever is easier to think about.
+    /// A pill for one exam level, filled when it's the target.
+    private func levelChip(_ level: String) -> some View {
+        let selected = targetLevel == level
+        return Button { targetLevel = level } label: {
+            Text(level)
+                .font(.kawaii(14, weight: .bold)).monospacedDigit()
+                .foregroundStyle(selected ? .white : Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity).padding(.vertical, 9)
+                .background(selected ? Palette.accent : Palette.card)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(selected ? Color.clear : Palette.ink.opacity(0.1), lineWidth: 1))
+        }
+        .buttonStyle(.bouncy)
+    }
+
     private var planEditor: some View {
         VStack(alignment: .leading, spacing: 16) {
             SectionHeader(L.studyPlan[appLanguage], accent: Palette.sky)
-            Picker(L.targetLevel[appLanguage], selection: $targetLevel) {
-                ForEach(examType.levels, id: \.self) { Text($0).tag($0) }
+            // Level chips wrap to as many rows as needed — a segmented control is
+            // too cramped for 漢検's 10 levels on iPhone.
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L.targetLevel[appLanguage])
+                    .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 56), spacing: 8)], spacing: 8) {
+                    ForEach(examType.levels, id: \.self) { level in
+                        levelChip(level)
+                    }
+                }
             }
-            .pickerStyle(.segmented)
 
             // 시작 위치 — where in the level to begin (skip kanji already known),
             // so a returning learner can start mid-level instead of from the top.
