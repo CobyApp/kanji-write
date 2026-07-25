@@ -276,7 +276,7 @@ public struct WorksheetView: View {
     private var deckHeader: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("\(min(store.index + 1, store.queue.count)) / \(store.queue.count) · \(targetLevel)")
+                Text("\(store.deckPosition) / \(store.deckTotal) · \(targetLevel)")
                     .font(.kawaii(14, weight: .bold)).monospacedDigit()
                     .foregroundStyle(Palette.inkSoft)
                 Spacer()
