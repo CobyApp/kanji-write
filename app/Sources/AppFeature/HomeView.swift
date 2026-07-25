@@ -242,6 +242,7 @@ struct HomeView: View {
                 kankenButton
                 dictionaryButton
                 wordDictionaryButton
+                expressionDictionaryButton
                 if examType == .kanken { yojiDictionaryButton }
                 wordbookButton
             }
@@ -305,6 +306,7 @@ struct HomeView: View {
             kankenButton
             dictionaryButton
             wordDictionaryButton
+            expressionDictionaryButton
             // Free handwriting is an Apple-Pencil activity → iPad only. Placed
             // second-from-last, just before the 단어장.
             if Platform.isPad {
@@ -450,12 +452,18 @@ struct HomeView: View {
     }
 
     private var wordDictionaryButton: some View {
-        // Distinct hue per launcher — study/quiz/practice run warm
-        // (pink · coral · butter), the three references run cool (sky · mint ·
-        // lavender) so no two tiles share a color.
+        // Every launcher gets its own hue so no two tiles clash (pink · lavender ·
+        // sky · mint · teal · coral · butter · grape across the full set).
         launcher(icon: "text.book.closed", title: L.wordDictionary[appLanguage],
                  subtitle: L.wordSearchPrompt[appLanguage], count: nil,
                  soft: Palette.mintSoft, accent: Palette.mint) { store.send(.openWordDictionary) }
+    }
+
+    /// 표현사전 — 慣用句・phrases split out of the word dictionary.
+    private var expressionDictionaryButton: some View {
+        launcher(icon: "quote.opening", title: L.expressionDictionary[appLanguage],
+                 subtitle: L.expressionSub[appLanguage], count: nil,
+                 soft: Palette.tealSoft, accent: Palette.teal) { store.send(.openExpressionDictionary) }
     }
 
     /// The 단어장 (saved collection) — opens the bulk-manage overlay for the
@@ -465,7 +473,7 @@ struct HomeView: View {
         return launcher(icon: "bookmark.fill", title: L.wordbook[appLanguage],
                         subtitle: "\(L.kanji[appLanguage]) \(bookmarkedKanji.count) · \(L.words[appLanguage]) \(store.wordReview.words.count)",
                         count: total > 0 ? total : nil,
-                        soft: Palette.coralSoft, accent: Palette.coral) {
+                        soft: Palette.grapeSoft, accent: Palette.grape) {
             store.send(.setShowWordbook(true))
         }
     }
