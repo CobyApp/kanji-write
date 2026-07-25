@@ -145,7 +145,6 @@ public struct KankenExamView: View {
     @ViewBuilder
     private var player: some View {
         VStack(spacing: 0) {
-            playerHeader
             if store.isFinished {
                 resultCard
             } else if let item = store.current {
@@ -168,30 +167,20 @@ public struct KankenExamView: View {
         }
     }
 
-    private var playerHeader: some View {
+    /// The single top strip during a section: a subtle back-to-hub chevron, the
+    /// section title, and the progress count — all folded into the one bar (no
+    /// separate header row above it).
+    private var progress: some View {
         HStack(spacing: 10) {
             Button { store.send(.exitToHub) } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "chevron.left").font(.system(size: 14, weight: .bold))
-                    Text(L.backToHub[appLanguage]).font(.kawaii(15, weight: .bold))
-                }
-                .foregroundStyle(Palette.inkSoft)
+                Image(systemName: "chevron.left").font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Palette.inkSoft)
             }
             .buttonStyle(.plain)
-            Spacer()
             Text(store.sessionTitle)
-                .font(.kawaiiJP(16, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-            Spacer()
-            // Balances the back button so the title stays centered.
-            Color.clear.frame(width: 60, height: 1)
-        }
-        .padding(.horizontal, 16).padding(.vertical, 8)
-        .readableWidth(sizeClass)
-    }
-
-    private var progress: some View {
-        HStack(spacing: 8) {
-            Spacer()
+                .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
             Text("\(store.mastered) / \(store.total)")
                 .font(.kawaii(15, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
         }
@@ -330,11 +319,19 @@ public struct KankenExamView: View {
     }
 
     private var emptyCard: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 14) {
             Image(systemName: store.isWrongNote ? "checkmark.seal.fill" : "tray")
                 .font(.system(size: 44)).foregroundStyle(store.isWrongNote ? Palette.mint : Palette.inkSoft)
             Text(store.isWrongNote ? L.wrongNoteEmpty[appLanguage] : L.kankenSectionEmpty[appLanguage])
                 .font(.kawaii(16)).foregroundStyle(Palette.inkSoft).multilineTextAlignment(.center)
+            Button { store.send(.exitToHub) } label: {
+                Text(L.backToHub[appLanguage])
+                    .font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.ink)
+                    .padding(.horizontal, 22).padding(.vertical, 10)
+                    .background(Palette.card).clipShape(Capsule())
+                    .overlay(Capsule().stroke(Palette.ink.opacity(0.10), lineWidth: 1))
+            }
+            .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 40)
         .roundedCard().padding(16)

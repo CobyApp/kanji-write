@@ -21,6 +21,10 @@ public enum Palette {
     public static let skySoft = Color(hex: 0xDCEEFF)
     public static let coral = Color(hex: 0xFFAF87)
     public static let coralSoft = Color(hex: 0xFFE8D8)
+    public static let teal = Color(hex: 0x74D6CE)
+    public static let tealSoft = Color(hex: 0xD8F4F1)
+    public static let grape = Color(hex: 0xD98CC8)
+    public static let grapeSoft = Color(hex: 0xF6E1F1)
 
     // Text
     public static let ink = Color(hex: 0x6B5563)
