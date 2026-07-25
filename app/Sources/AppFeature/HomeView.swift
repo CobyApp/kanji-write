@@ -446,7 +446,7 @@ struct HomeView: View {
     private var yojiDictionaryButton: some View {
         launcher(icon: "quote.bubble", title: L.yojiDictionary[appLanguage],
                  subtitle: L.kankenYojiDesc[appLanguage], count: nil,
-                 soft: Palette.coralSoft, accent: Palette.coral) {
+                 soft: Palette.grapeSoft, accent: Palette.grape) {
             store.send(.openYojiDictionary)
         }
     }
@@ -463,7 +463,7 @@ struct HomeView: View {
     private var expressionDictionaryButton: some View {
         launcher(icon: "quote.opening", title: L.expressionDictionary[appLanguage],
                  subtitle: L.expressionSub[appLanguage], count: nil,
-                 soft: Palette.tealSoft, accent: Palette.teal) { store.send(.openExpressionDictionary) }
+                 soft: Palette.coralSoft, accent: Palette.coral) { store.send(.openExpressionDictionary) }
     }
 
     /// The 단어장 (saved collection) — opens the bulk-manage overlay for the
@@ -473,7 +473,7 @@ struct HomeView: View {
         return launcher(icon: "bookmark.fill", title: L.wordbook[appLanguage],
                         subtitle: "\(L.kanji[appLanguage]) \(bookmarkedKanji.count) · \(L.words[appLanguage]) \(store.wordReview.words.count)",
                         count: total > 0 ? total : nil,
-                        soft: Palette.grapeSoft, accent: Palette.grape) {
+                        soft: Palette.tealSoft, accent: Palette.teal) {
             store.send(.setShowWordbook(true))
         }
     }

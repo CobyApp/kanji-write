@@ -83,7 +83,7 @@ private struct SessionCover: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .safeAreaInset(edge: .top) {
                     HStack {
-                        CircleButton("xmark") { store.send(.session(.dismiss)) }
+                        CircleButton("xmark") { closeTapped() }
                             .accessibilityLabel(L.close[appLanguage])
                         Spacer()
                     }
@@ -96,6 +96,16 @@ private struct SessionCover: View {
         }
         .tint(Palette.accent)
         .background(Palette.background.ignoresSafeArea())
+    }
+
+    /// The ✕ is context-aware for the 칸켄 hub: while playing a section it steps
+    /// back to the section list; otherwise (hub, other sessions) it closes.
+    private func closeTapped() {
+        if case let .kanken(kanken) = sessionStore.case, kanken.isPlaying {
+            kanken.send(.exitToHub)
+        } else {
+            store.send(.session(.dismiss))
+        }
     }
 }
 
