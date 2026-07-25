@@ -167,16 +167,11 @@ public struct KankenExamView: View {
         }
     }
 
-    /// The single top strip during a section: a subtle back-to-hub chevron, the
-    /// section title, and the progress count — all folded into the one bar (no
-    /// separate header row above it).
+    /// The one top strip during a section: the section title and the progress
+    /// count. Exiting is handled by the session's ✕ (top-left), so there's no
+    /// separate back control here.
     private var progress: some View {
         HStack(spacing: 10) {
-            Button { store.send(.exitToHub) } label: {
-                Image(systemName: "chevron.left").font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Palette.inkSoft)
-            }
-            .buttonStyle(.plain)
             Text(store.sessionTitle)
                 .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                 .lineLimit(1).minimumScaleFactor(0.7)
