@@ -306,6 +306,8 @@ public enum L {
     public static let writeRetest = L10nText(ko: "다시 테스트", ja: "もう一度", zh: "再测一次", en: "Test again")
     public static let writeNewRange = L10nText(ko: "범위 다시 선택", ja: "範囲を選び直す", zh: "重新选范围", en: "Pick new range")
     public static let unitCount = L10nText(ko: "자", ja: "字", zh: "字", en: "")
+    public static let thisLevelKanji = L10nText(
+        ko: "이번 급수 한자", ja: "この級の漢字", zh: "本级汉字", en: "Kanji in this level")
     public static let testChoosePrompt = L10nText(
         ko: "뜻에 맞는 한자를 고르세요", ja: "意味に合う漢字を選ぼう", zh: "选择对应意思的汉字",
         en: "Pick the kanji for this meaning")

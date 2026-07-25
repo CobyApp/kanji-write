@@ -385,6 +385,28 @@ struct HomeView: View {
                 }
             }
 
+            // How many kanji this 급수 has — shown prominently so the learner sees
+            // the level's size at a glance while planning.
+            HStack(spacing: 12) {
+                Image(systemName: "character.book.closed.fill")
+                    .font(.system(size: 20, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Palette.sky).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                Text(L.thisLevelKanji[appLanguage])
+                    .font(.kawaii(15, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                Spacer(minLength: 0)
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("\(levelTotal)")
+                        .font(.kawaii(30, weight: .bold)).monospacedDigit().foregroundStyle(Palette.sky)
+                        .contentTransition(.numericText()).animation(.snappy, value: levelTotal)
+                    Text(L.unitCount[appLanguage])
+                        .font(.kawaii(16, weight: .bold)).foregroundStyle(Palette.sky)
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(Palette.skySoft)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
             // 시작 위치 — where in the level to begin (skip kanji already known),
             // so a returning learner can start mid-level instead of from the top.
             VStack(alignment: .leading, spacing: 6) {
