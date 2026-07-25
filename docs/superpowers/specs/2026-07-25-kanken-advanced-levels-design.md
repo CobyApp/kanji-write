@@ -37,6 +37,10 @@ The allocation source currently contains three advanced categories:
 - `1級`: advanced characters assigned to level 1
 - `1/準1級`: variants that belong to both examinations
 
+The pinned upstream CSV currently contains 4,177 advanced rows: 3,806 Unicode
+text rows and 371 image-only variants. The build must use the pinned CSV row
+counts and hash rather than the repository README because those counts differ.
+
 Level membership must be modeled separately from the kanji record. A join table
 allows a character or variant to belong to both `準1級` and `1級` without
 duplicating its study and review identity.
@@ -83,6 +87,23 @@ detail, card, and quiz screens do not need separate fallback logic.
 
 Glyph assets are not treated as stroke-order data. A static outline cannot be
 used to invent stroke order.
+
+Image-only variants cannot be selected automatically. The allocation source,
+Kanjipedia, and GlyphWiki share no authoritative variant identifier. The
+pipeline may generate candidates, but it only accepts a pinned manifest whose
+GlyphWiki name, revision, SHA-256, match basis, and verification status have
+been reviewed.
+
+## Staged Delivery
+
+The first delivery includes all 3,806 Unicode advanced rows, normalized shared
+membership, glyph-backed data structures, candidate-generation tooling, and
+strict manifest validation. It does not expose an image-only variant until its
+open glyph mapping has been verified.
+
+The second delivery incrementally adds the 371 image-only variants from a
+reviewed manifest. This staging prevents unverified look-alike glyphs from
+being taught while allowing accurate advanced-level study to ship first.
 
 ## Pipeline
 
@@ -177,10 +198,12 @@ static glyph.
 ## Success Criteria
 
 - Users can select `準1級` and `1級` anywhere Kanken levels are selected.
-- Both levels contain validated study items from the vetted allocation source.
+- Both levels contain all validated Unicode study items from the pinned
+  allocation source in the first delivery.
 - Shared variants appear in both levels without duplicate review records.
-- Every advanced item has an accurate Unicode glyph or a verified open glyph
-  asset, plus readings and meanings through its own or canonical record.
+- No image-only variant is exposed without a verified open glyph asset.
+- The candidate report accounts for all 371 image-only rows, and the second
+  delivery can add verified rows without changing the database schema or app.
 - Writing is available only when verified stroke paths exist.
 - A clean pipeline build reproduces all existing JLPT and Kanken data and the
   bundled database passes pipeline and app integration tests.
