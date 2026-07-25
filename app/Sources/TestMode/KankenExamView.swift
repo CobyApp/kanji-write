@@ -34,7 +34,7 @@ public struct KankenExamView: View {
         ScrollView {
             VStack(spacing: 14) {
                 header
-                ForEach(examType.sections) { section in
+                ForEach(examType.sections(for: store.level)) { section in
                     sectionCard(section)
                 }
                 wrongNoteCard
@@ -61,27 +61,37 @@ public struct KankenExamView: View {
         .padding(.top, 8).padding(.bottom, 4)
     }
 
+    @ViewBuilder
     private func sectionCard(_ section: ExamSection) -> some View {
-        Button { store.send(.selectSection(section)) } label: {
+        Button { if section.available { store.send(.selectSection(section)) } } label: {
             HStack(spacing: 14) {
                 Text(section.numeral)
-                    .font(.kawaiiJP(22, weight: .bold)).foregroundStyle(.white)
+                    .font(.kawaiiJP(20, weight: .bold)).foregroundStyle(.white)
                     .frame(width: 44, height: 44)
-                    .background(Palette.accent)
+                    .background(section.available ? Palette.accent : Palette.inkSoft.opacity(0.5))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(section.jaTitle)
                         .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                    Text(sectionDesc(section.renderType))
+                    Text(section.available ? sectionDesc(section.renderType) : L.kankenComingSoon[appLanguage])
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                if section.available {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                } else {
+                    Text(L.kankenComingSoon[appLanguage])
+                        .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.inkSoft)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Palette.inkSoft.opacity(0.12)).clipShape(Capsule())
+                }
             }
             .roundedCard()
         }
         .buttonStyle(.bouncy)
+        .disabled(!section.available)
+        .opacity(section.available ? 1 : 0.6)
     }
 
     private var wrongNoteCard: some View {
@@ -121,6 +131,8 @@ public struct KankenExamView: View {
         case .radical: L.kankenRadicalDesc[appLanguage]
         case .writing: L.kankenWritingDesc[appLanguage]
         case .context: L.kankenContextDesc[appLanguage]
+        case .strokes: L.kankenStrokesDesc[appLanguage]
+        case .comingSoon: L.kankenComingSoon[appLanguage]
         }
     }
 
@@ -216,6 +228,8 @@ public struct KankenExamView: View {
         case .radical: L.kankenRadicalDesc[appLanguage]
         case .writing: L.kankenWritingDesc[appLanguage]
         case .context: L.kankenContextDesc[appLanguage]
+        case .strokes: L.kankenStrokesDesc[appLanguage]
+        case .comingSoon: ""
         }
     }
 

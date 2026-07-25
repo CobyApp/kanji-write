@@ -177,11 +177,15 @@ public struct KankenExamFeature {
         state.started = false
         let level = state.level
         let language = state.language
+        let unit = L.strokesUnit[language]
         return .run { send in
             let questions: [KankenQuestion]
             if let kind = section.kind {
                 let bank = (try? await dictionaryClient.examQuestions(level, kind, 20)) ?? []
                 questions = bank.map { KankenQuestion.from($0, type: section.renderType, language: language) }
+            } else if section.renderType == .strokes {
+                let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
+                questions = KankenQuestion.strokeQuiz(items, count: 15, unit: unit)
             } else {
                 let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
                 questions = KankenQuestion.radicalQuiz(items, count: 15)
@@ -217,6 +221,26 @@ extension KankenQuestion {
                 id: "\(KankenQuestionType.radical.rawValue):\(item.kanjiID):r", type: .radical,
                 kanjiID: item.kanjiID, prompt: item.literal, focus: nil,
                 options: options, answer: item.radical, explanation: nil))
+        }
+        return out
+    }
+
+    /// Builds 画数 questions: show the kanji, pick its total stroke count from four
+    /// choices. Distractors are nearby counts (±4) so the choice is non-trivial.
+    static func strokeQuiz(_ items: [StrokeItem], count: Int, unit: String) -> [KankenQuestion] {
+        var out: [KankenQuestion] = []
+        for (index, item) in items.prefix(count).enumerated() {
+            var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 7))
+            let answer = "\(item.strokeCount)\(unit)"
+            let nearby = (max(1, item.strokeCount - 4)...(item.strokeCount + 4))
+                .filter { $0 != item.strokeCount }.map { "\($0)\(unit)" }
+            let distractors = nearby.shuffled(using: &rng).prefix(3)
+            guard distractors.count == 3 else { continue }
+            let options = (Array(distractors) + [answer]).shuffled(using: &rng)
+            out.append(KankenQuestion(
+                id: "\(KankenQuestionType.strokes.rawValue):\(item.kanjiID):s", type: .strokes,
+                kanjiID: item.kanjiID, prompt: item.literal, focus: nil,
+                options: options, answer: answer, explanation: nil))
         }
         return out
     }

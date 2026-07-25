@@ -438,6 +438,20 @@ extension DictionaryClient: DependencyKey {
                     return RadicalItem(kanjiID: row["id"], literal: row["literal"], radical: glyph)
                 }
             }
+        },
+        examStrokeItems: { level, limit in
+            let queue = try openBundledDatabase()
+            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            return try await queue.read { db -> [StrokeItem] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, literal, stroke_count FROM kanji
+                    WHERE \(column) = ? AND stroke_count > 0
+                    ORDER BY RANDOM()
+                    LIMIT ?
+                    """, arguments: [level, limit])
+                return rows.map { StrokeItem(
+                    kanjiID: $0["id"], literal: $0["literal"], strokeCount: $0["stroke_count"]) }
+            }
         }
     )
 
