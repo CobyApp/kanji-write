@@ -9,10 +9,44 @@ public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codab
     case writing          // 書き取り / 表記 — sentence, answer is a kanji spelling
     case context          // 文脈規定 — sentence cloze
     case strokes          // 画数 — kanji glyph, answer is the stroke count
+    case yojijukugo       // 四字熟語 — idiom glyph, answer is its reading / meaning
     case comingSoon       // real 大問, curated data not ready yet (not playable)
 
     /// Reading answers get slightly larger option type than kanji/word answers.
     public var isReading: Bool { self == .reading }
+    /// Renders as a centered glyph (kanji / idiom) rather than a sentence.
+    public var isGlyphPrompt: Bool { self == .radical || self == .strokes || self == .yojijukugo }
+}
+
+/// A 四字熟語 (four-character idiom): the idiom, its full kana reading, meanings,
+/// and the 漢検 級 it's classified under. Powers the 四字熟語 exam section and the
+/// 사자성어 dictionary.
+public struct Yojijukugo: Equatable, Identifiable, Sendable {
+    public let id: Int
+    public let yoji: String
+    public let reading: String
+    public let meaningJa: String?
+    public let meaningKo: String?
+    public let level: String
+
+    public init(id: Int, yoji: String, reading: String,
+                meaningJa: String?, meaningKo: String?, level: String) {
+        self.id = id
+        self.yoji = yoji
+        self.reading = reading
+        self.meaningJa = meaningJa
+        self.meaningKo = meaningKo
+        self.level = level
+    }
+
+    /// The meaning in the app language, falling back Japanese → Korean.
+    public func meaning(_ language: AppLanguage) -> String? {
+        switch language {
+        case .ko: meaningKo ?? meaningJa
+        case .ja: meaningJa ?? meaningKo
+        default: meaningJa ?? meaningKo
+        }
+    }
 }
 
 /// A raw kanji + its stroke count, the input to the 画数 question generator.
@@ -87,6 +121,7 @@ extension ExamType {
     private static var writing: ExamSection { live("writing", "書き取り", .writing, "orthography") }
     private static var radical: ExamSection { live("radical", "部首", .radical, nil) }
     private static var strokes: ExamSection { live("strokes", "画数", .strokes, nil) }
+    private static var yoji: ExamSection { live("yoji", "四字熟語", .yojijukugo, nil) }
 
     /// 漢検 10級〜2級 papers (準1級/1級 use 表外漢字 not yet in the dictionary).
     private static func kankenSections(_ level: String) -> [ExamSection] {
@@ -112,15 +147,15 @@ extension ExamType {
         case "5級":
             return [reading, radical, strokes, soon("okuri", "送りがな"),
                     soon("taigirui", "対義語・類義語"), soon("kousei", "熟語の構成"),
-                    soon("onkun", "音読み・訓読み"), soon("yoji", "四字熟語"),
+                    soon("onkun", "音読み・訓読み"), yoji,
                     soon("doonkun", "同音・同訓異字"), writing]
         case "4級", "3級":
             return [reading, soon("doonkun", "同音・同訓異字"), soon("shikibetsu", "漢字識別"),
                     soon("kousei", "熟語の構成"), radical, soon("taigirui", "対義語・類義語"),
-                    soon("okuri", "漢字と送りがな"), soon("yoji", "四字熟語"),
+                    soon("okuri", "漢字と送りがな"), yoji,
                     soon("goji", "誤字訂正"), writing]
         case "準2級", "2級":
-            return [reading, radical, soon("kousei", "熟語の構成"), soon("yoji", "四字熟語"),
+            return [reading, radical, soon("kousei", "熟語の構成"), yoji,
                     soon("taigirui", "対義語・類義語"), soon("doonkun", "同音・同訓異字"),
                     soon("goji", "誤字訂正"), soon("okuri", "漢字と送りがな"), writing]
         default:
@@ -161,10 +196,12 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
     public let options: [String]
     public let answer: String        // the correct option's text
     public let explanation: String?
+    public let label: String?        // overrides the type's prompt label (e.g. 読み/意味)
 
     public init(
         id: String, type: KankenQuestionType, kanjiID: Int, prompt: String,
-        focus: String? = nil, options: [String], answer: String, explanation: String? = nil
+        focus: String? = nil, options: [String], answer: String,
+        explanation: String? = nil, label: String? = nil
     ) {
         self.id = id
         self.type = type
@@ -174,6 +211,7 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
         self.options = options
         self.answer = answer
         self.explanation = explanation
+        self.label = label
     }
 }
 

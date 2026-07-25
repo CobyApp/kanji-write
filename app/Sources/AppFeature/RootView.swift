@@ -130,6 +130,8 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
         DictionaryPathView(store: s)
     case let .wordDictionary(s):
         WordDictionaryView(store: s)
+    case let .yojiDictionary(s):
+        YojiDictionaryView(store: s)
     }
 }
 
@@ -362,6 +364,116 @@ private struct WordDictionaryView: View {
             .roundedCard()
         }
         .buttonStyle(.bouncy)
+    }
+}
+
+// MARK: - 사자성어(四字熟語) dictionary
+
+/// The 四字熟語 dictionary: a per-級 chip filter + search, each row showing the
+/// idiom with its reading and meaning. Read-only (no drill-in).
+private struct YojiDictionaryView: View {
+    @Bindable var store: StoreOf<YojiDictionaryFeature>
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dismiss) private var dismiss
+
+    private var searchBinding: Binding<String> {
+        Binding(get: { store.searchText }, set: { store.send(.searchChanged($0)) })
+    }
+
+    var body: some View {
+        ZStack {
+            Palette.background.ignoresSafeArea()
+            VStack(spacing: 12) {
+                if !store.isSearching { levelChips }
+                list
+            }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top) {
+            VStack(spacing: 10) {
+                NavHeader(title: L.yojiDictionary[appLanguage], onBack: { dismiss() })
+                SearchField(text: searchBinding, placeholder: L.yojiSearchPrompt[appLanguage])
+                    .padding(.horizontal, 16)
+                    .readableWidth(sizeClass)
+            }
+            .padding(.bottom, 6)
+            .background(Palette.background)
+        }
+        .task { store.send(.onAppear) }
+    }
+
+    /// A horizontal chip row: 전체 + each 級 present in the data.
+    private var levelChips: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                chip(L.allLevels[appLanguage], selected: store.level == nil) {
+                    store.send(.levelSelected(nil))
+                }
+                ForEach(store.levels, id: \.self) { level in
+                    chip(level, selected: store.level == level) {
+                        store.send(.levelSelected(level))
+                    }
+                }
+            }
+            .padding(.horizontal, 16).padding(.top, 12)
+        }
+        .scrollIndicators(.hidden)
+        .readableWidth(sizeClass)
+    }
+
+    private func chip(_ title: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.kawaii(14, weight: .bold))
+                .foregroundStyle(selected ? .white : Palette.ink)
+                .padding(.horizontal, 16).padding(.vertical, 8)
+                .background(selected ? Palette.accent : Palette.card)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(
+                    selected ? .clear : Palette.ink.opacity(0.10), lineWidth: 1))
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    @ViewBuilder
+    private var list: some View {
+        ScrollView {
+            if store.visible.isEmpty {
+                Text(L.noYojiFound[appLanguage])
+                    .font(.kawaii(15)).foregroundStyle(Palette.inkSoft).padding(.top, 40)
+            } else {
+                LazyVStack(spacing: 10) {
+                    ForEach(store.visible) { yoji in row(yoji) }
+                }
+                .padding(16)
+                .readableWidth(sizeClass)
+            }
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private func row(_ yoji: Yojijukugo) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(yoji.yoji)
+                    .font(.kawaiiJP(24, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                Text(yoji.reading)
+                    .font(.kawaii(13)).foregroundStyle(Palette.pink)
+                Spacer(minLength: 0)
+                Text(yoji.level)
+                    .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.lavender)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Palette.lavenderSoft).clipShape(Capsule())
+            }
+            if let meaning = yoji.meaning(appLanguage), !meaning.isEmpty {
+                Text(meaning)
+                    .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .roundedCard()
     }
 }
 

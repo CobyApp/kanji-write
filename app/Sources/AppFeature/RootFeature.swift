@@ -22,6 +22,7 @@ public struct RootFeature {
         case writing(KanjiWritingFeature)
         case dictionary(DictionaryFeature)
         case wordDictionary(WordDictionaryFeature)
+        case yojiDictionary(YojiDictionaryFeature)
     }
 
     /// A full-screen study session launched from Home.
@@ -71,6 +72,7 @@ public struct RootFeature {
         case levelSelected(KanjiLevel)
         case openDictionary
         case openWordDictionary
+        case openYojiDictionary
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case startStudy
@@ -129,6 +131,10 @@ public struct RootFeature {
 
             case .openWordDictionary:
                 state.path.append(.wordDictionary(WordDictionaryFeature.State()))
+                return .none
+
+            case .openYojiDictionary:
+                state.path.append(.yojiDictionary(YojiDictionaryFeature.State()))
                 return .none
 
             // Word dictionary → drill into a selected word's detail.

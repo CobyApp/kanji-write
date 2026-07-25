@@ -452,8 +452,57 @@ extension DictionaryClient: DependencyKey {
                 return rows.map { StrokeItem(
                     kanjiID: $0["id"], literal: $0["literal"], strokeCount: $0["stroke_count"]) }
             }
+        },
+        examYojijukugo: { level, limit in
+            // 四字熟語 are cumulative: a 級's paper draws from that 級 and easier.
+            let ranks = ["5級": 1, "4級": 2, "3級": 3, "準2級": 4, "2級": 5]
+            guard let target = ranks[level] else { return [] }  // JLPT → no 四字熟語
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [Yojijukugo] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, yoji, reading, meaning_ja, meaning_ko, kanken_level
+                    FROM yojijukugo
+                    WHERE (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2
+                           WHEN '3級' THEN 3 WHEN '準2級' THEN 4 WHEN '2級' THEN 5
+                           ELSE 99 END) <= ?
+                    ORDER BY RANDOM() LIMIT ?
+                    """, arguments: [target, limit])
+                return rows.map(Self.makeYoji)
+            }
+        },
+        allYojijukugo: {
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [Yojijukugo] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, yoji, reading, meaning_ja, meaning_ko, kanken_level
+                    FROM yojijukugo
+                    ORDER BY (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2
+                              WHEN '3級' THEN 3 WHEN '準2級' THEN 4 WHEN '2級' THEN 5
+                              ELSE 99 END), id
+                    """)
+                return rows.map(Self.makeYoji)
+            }
+        },
+        searchYojijukugo: { query, limit in
+            let queue = try openBundledDatabase()
+            let q = "%\(query)%"
+            return try await queue.read { db -> [Yojijukugo] in
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, yoji, reading, meaning_ja, meaning_ko, kanken_level
+                    FROM yojijukugo
+                    WHERE yoji LIKE ? OR reading LIKE ? OR meaning_ja LIKE ? OR meaning_ko LIKE ?
+                    LIMIT ?
+                    """, arguments: [q, q, q, q, limit])
+                return rows.map(Self.makeYoji)
+            }
         }
     )
+
+    private static func makeYoji(_ row: Row) -> Yojijukugo {
+        Yojijukugo(id: row["id"], yoji: row["yoji"], reading: row["reading"],
+                   meaningJa: row["meaning_ja"], meaningKo: row["meaning_ko"],
+                   level: row["kanken_level"])
+    }
 
     /// The bundled dictionary DB, opened once and shared. A `DatabaseQueue` is
     /// thread-safe and long-lived, so every endpoint reuses this single
