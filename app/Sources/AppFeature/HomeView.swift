@@ -22,7 +22,6 @@ struct HomeView: View {
     @AppStorage("lastQuizDay") private var lastQuizDay = -1
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showPlan = false
-    @State private var showStudyDoneConfirm = false
     @State private var wordbookTab = 0          // 0: 한자, 1: 단어
     @State private var flashcards: [FlashcardItem] = []   // non-empty → card session shown
 
@@ -80,12 +79,9 @@ struct HomeView: View {
         remainingNew(order: levelOrder, records: store.review.records.elements, startIndex: studyStartIndex)
     }
 
-    /// Today's new-kanji goal has been met (and there's still more to pull from).
-    /// `session.newIDs` is now empty once the quota is met, so gate on the total
-    /// remaining instead.
-    private var studyDoneToday: Bool {
-        newPerDay > 0 && doneToday >= newPerDay && remaining > 0
-    }
+    /// Today's goal completion for display — capped at the goal so pulling ahead
+    /// never shows a nonsensical "10/5". The raw `doneToday` still drives logic.
+    private var doneTodayCapped: Int { min(doneToday, newPerDay) }
     /// Today's quiz has already been completed.
     private var quizTakenToday: Bool { lastQuizDay == store.review.today }
 
@@ -93,11 +89,9 @@ struct HomeView: View {
     /// confirmation (pull tomorrow's study forward / take the pending quiz);
     /// otherwise enter study directly.
     private func startStudyTapped() {
-        if studyDoneToday {
-            showStudyDoneConfirm = true
-        } else {
-            store.send(.startStudy(pullAhead: false))
-        }
+        // Below today's goal → finish the remaining quota. Goal already met →
+        // seamlessly study ahead with a fresh batch (no repeated confirmation).
+        store.send(.startStudy(pullAhead: doneToday >= newPerDay))
     }
 
     /// The next never-seen kanji in the level (what the widget/watch previews).
@@ -111,7 +105,7 @@ struct HomeView: View {
         let next = nextKanji
         let meaning = next.flatMap { kanjiGloss(store.review.glosses[$0.id] ?? [:], appLanguage) } ?? ""
         let snapshot = StudySnapshot(
-            level: targetLevel, dailyGoal: newPerDay, doneToday: doneToday, streak: streak,
+            level: targetLevel, dailyGoal: newPerDay, doneToday: doneTodayCapped, streak: streak,
             remaining: remaining, learned: learnedInLevel, total: levelTotal,
             nextGlyph: next?.literal ?? "", nextMeaning: meaning, language: appLanguage.rawValue)
         StudySnapshotStore.save(snapshot)          // → home-screen widget (App Group)
@@ -159,13 +153,6 @@ struct HomeView: View {
         }
         .animation(.easeOut(duration: 0.2), value: flashcards.isEmpty)
         .toolbar(.hidden, for: .navigationBar)
-        .confirmationDialog(L.studyDoneTitle[appLanguage], isPresented: $showStudyDoneConfirm,
-                            titleVisibility: .visible) {
-            Button(L.studyPullTomorrow[appLanguage]) { store.send(.startStudy(pullAhead: true)) }
-            Button(L.cancel[appLanguage], role: .cancel) {}
-        } message: {
-            Text(L.studyDoneMessage[appLanguage])
-        }
         .task {
             // Keep the plan's level valid for the current exam (guards against a
             // stale JLPT level lingering after switching to 漢検, or vice versa).
@@ -280,9 +267,9 @@ struct HomeView: View {
 
     private var goalChip: some View {
         VStack(spacing: 6) {
-            Text("\(doneToday)/\(newPerDay)")
+            Text("\(doneTodayCapped)/\(newPerDay)")
                 .font(.kawaii(20, weight: .bold)).monospacedDigit().foregroundStyle(Palette.mint)
-                .contentTransition(.numericText()).animation(.snappy, value: doneToday)
+                .contentTransition(.numericText()).animation(.snappy, value: doneTodayCapped)
             Capsule().fill(Palette.mintSoft).frame(height: 6)
                 .overlay(alignment: .leading) {
                     GeometryReader { geo in
