@@ -1,7 +1,7 @@
 import SharedModels
 import SwiftUI
 
-/// The canonical kanji row: pastel glyph tile + meaning · JLPT level · stroke
+/// The canonical kanji row: pastel glyph tile + meaning · exam level · stroke
 /// count, then 음(on)/훈(kun) reading chips, with a chevron. Shared so the 한자
 /// section in a word's detail looks identical to a row in the 한자사전.
 public struct KanjiListRow: View {
@@ -10,6 +10,9 @@ public struct KanjiListRow: View {
     private let tint: (soft: Color, accent: Color)
     private let language: AppLanguage
     private let onSelect: () -> Void
+    // The level tag follows the exam the learner picked — showing N2 while they
+    // study for the 漢検 (or a 級 in JLPT mode) is just noise.
+    @AppStorage("examType") private var examType: ExamType = .jlpt
 
     public init(kanji: Kanji, meaning: String?, tint: (soft: Color, accent: Color),
                 language: AppLanguage, onSelect: @escaping () -> Void) {
@@ -32,7 +35,7 @@ public struct KanjiListRow: View {
                                 .font(.kawaii(15, weight: .bold, language: language))
                                 .foregroundStyle(Palette.ink)
                         }
-                        if let level = kanji.jlptLevel {
+                        if let level = kanji.level(for: examType) {
                             Text(level).font(.kawaii(11, weight: .bold))
                                 .foregroundStyle(Palette.inkSoft)
                                 .padding(.horizontal, 6).padding(.vertical, 1)
