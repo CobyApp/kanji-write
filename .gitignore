@@ -38,6 +38,10 @@ app/Tuist/.build/
 # Curated verified glyph manifest and deterministic pending report
 !data-pipeline/sources/kanken_glyph_map.csv
 !data-pipeline/sources/kanken_glyph_candidates.csv
+# Reviewer decision sheet for the image-only variants. The probe JSON and the
+# fetched SVGs stay untracked — the manifest pins revision + sha256, so both are
+# reproducible from it.
+!data-pipeline/sources/kanken_glyph_review.csv
 
 # Local scratch (question-generation batches, temp scripts) — never commit
 scratch/
