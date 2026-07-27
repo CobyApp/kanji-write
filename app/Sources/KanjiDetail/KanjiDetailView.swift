@@ -7,6 +7,7 @@ import WritingCanvas
 public struct KanjiDetailView: View {
     @Bindable public var store: StoreOf<KanjiDetailFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("examType") private var examType: ExamType = .jlpt
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -42,7 +43,42 @@ public struct KanjiDetailView: View {
             }
             .background(Palette.background)
         }
+        .safeAreaInset(edge: .bottom) {
+            if store.siblings.count > 1 { siblingNav }
+        }
         .task { store.send(.onAppear) }
+    }
+
+    /// Prev/next through the list this kanji was opened from — step to the
+    /// neighbouring kanji without returning to the list.
+    private var siblingNav: some View {
+        HStack(spacing: 12) {
+            siblingButton(L.prev[appLanguage], icon: "chevron.left",
+                          enabled: store.hasPrev) { store.send(.showSibling(delta: -1)) }
+            siblingButton(L.next[appLanguage], icon: "chevron.right", trailingIcon: true,
+                          enabled: store.hasNext) { store.send(.showSibling(delta: 1)) }
+        }
+        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 6)
+        .readableWidth(sizeClass)
+        .background(Palette.background)
+    }
+
+    private func siblingButton(_ title: String, icon: String, trailingIcon: Bool = false,
+                               enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if !trailingIcon { Image(systemName: icon).font(.system(size: 13, weight: .bold)) }
+                Text(title).font(.kawaii(16, weight: .bold, language: appLanguage))
+                if trailingIcon { Image(systemName: icon).font(.system(size: 13, weight: .bold)) }
+            }
+            .foregroundStyle(enabled ? .white : Palette.inkSoft)
+            .frame(maxWidth: .infinity).padding(.vertical, 13)
+            .background(enabled ? Palette.accent : Palette.card)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(enabled ? .clear : Palette.ink.opacity(0.08), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 
     private var header: some View {
@@ -55,11 +91,9 @@ public struct KanjiDetailView: View {
                     .font(.kawaii(24, weight: .bold, language: appLanguage))
                     .foregroundStyle(Palette.ink)
                 HStack(spacing: 8) {
-                    if let grade = store.kanji.grade {
-                        CandyChip("学\(grade)", soft: Palette.butterSoft, accent: Palette.butter)
-                    }
-                    if let jlpt = store.kanji.jlptLevel {
-                        CandyChip(jlpt, soft: Palette.skySoft, accent: Palette.sky)
+                    // The level tag follows the active exam — 漢検 급수 or JLPT レベル.
+                    if let level = store.kanji.level(for: examType) {
+                        CandyChip(level, soft: Palette.skySoft, accent: Palette.sky)
                     }
                     if let radical = store.kanji.radicalGlyph {
                         CandyChip("\(L.radical[appLanguage]) \(radical)",

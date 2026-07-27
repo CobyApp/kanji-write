@@ -10,7 +10,10 @@ import SharedModels
 public struct WordDetailFeature {
     @ObservableState
     public struct State: Equatable {
-        public let word: WordEntry
+        public var word: WordEntry
+        /// The list this detail was opened from + position, for prev/next.
+        public var siblings: [WordEntry]
+        public var index: Int
         public var sentences: [ExampleSentence] = []
         public var kanji: [Kanji] = []
         /// KanjiVG stroke-order guides for the word's kanji (kanji id → path d's),
@@ -22,12 +25,21 @@ public struct WordDetailFeature {
         public var isLoading = false
         public var loaded = false
         public var addedToWordbook = false
-        public init(word: WordEntry) { self.word = word }
+
+        public init(word: WordEntry, siblings: [WordEntry] = [], index: Int = 0) {
+            self.word = word
+            self.siblings = siblings.isEmpty ? [word] : siblings
+            self.index = siblings.isEmpty ? 0 : index
+        }
+
+        public var hasPrev: Bool { index > 0 }
+        public var hasNext: Bool { index < siblings.count - 1 }
     }
 
     public enum Action: Equatable {
         case onAppear
         case loaded([ExampleSentence], [Kanji], [Int: [String]], [Int: [String: String]])
+        case showSibling(delta: Int)
         case kanjiTapped(Kanji)  // delegate → parent pushes the kanji detail
         case addToWordbook
         case markedAddedToWordbook
@@ -45,19 +57,22 @@ public struct WordDetailFeature {
             case .onAppear:
                 guard !state.loaded else { return .none }
                 state.isLoading = true
-                let id = state.word.id
-                return .run { send in
-                    async let sentencesTask = dictionaryClient.sentencesForWord(id, 5)
-                    let kanji = (try? await dictionaryClient.kanjiForWord(id)) ?? []
-                    var strokes: [Int: [String]] = [:]
-                    var glosses: [Int: [String: String]] = [:]
-                    for k in kanji {
-                        strokes[k.id] = (try? await dictionaryClient.strokeOrder(k.id)) ?? []
-                        glosses[k.id] = (try? await dictionaryClient.glosses(k.id)) ?? [:]
-                    }
-                    let sentences = (try? await sentencesTask) ?? []
-                    await send(.loaded(sentences, kanji, strokes, glosses))
-                }
+                return load(state.word.id)
+
+            case let .showSibling(delta):
+                let new = state.index + delta
+                guard state.siblings.indices.contains(new) else { return .none }
+                state.index = new
+                state.word = state.siblings[new]
+                state.loaded = false
+                state.sentences = []
+                state.kanji = []
+                state.strokesByID = [:]
+                state.glossesByID = [:]
+                state.addedToWordbook = false
+                state.isLoading = true
+                return load(state.word.id)
+
             case let .loaded(sentences, kanji, strokes, glosses):
                 state.isLoading = false
                 state.loaded = true
@@ -89,6 +104,22 @@ public struct WordDetailFeature {
                 state.addedToWordbook = true
                 return .none
             }
+        }
+    }
+
+    /// Fetch a word's example sentences and its constituent kanji (+ strokes/glosses).
+    private func load(_ id: Int) -> Effect<Action> {
+        .run { send in
+            async let sentencesTask = dictionaryClient.sentencesForWord(id, 5)
+            let kanji = (try? await dictionaryClient.kanjiForWord(id)) ?? []
+            var strokes: [Int: [String]] = [:]
+            var glosses: [Int: [String: String]] = [:]
+            for k in kanji {
+                strokes[k.id] = (try? await dictionaryClient.strokeOrder(k.id)) ?? []
+                glosses[k.id] = (try? await dictionaryClient.glosses(k.id)) ?? [:]
+            }
+            let sentences = (try? await sentencesTask) ?? []
+            await send(.loaded(sentences, kanji, strokes, glosses))
         }
     }
 }
