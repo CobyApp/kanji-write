@@ -1,23 +1,160 @@
+import SharedModels
 import XCTest
 
 @testable import DictionaryClient
 
 final class DictionaryClientTests: XCTestCase {
+    func testMembershipTablePreservesMissingMembershipAsEmpty() {
+        XCTAssertEqual(
+            DictionaryClient.resolvedKankenMemberships(
+                kanjiID: 1,
+                kankenLevel: "準1級",
+                membershipsByID: [:],
+                membershipTableExists: true
+            ),
+            []
+        )
+    }
+
+    func testLegacyDatabaseFallsBackToIntroductionLevel() {
+        XCTAssertEqual(
+            DictionaryClient.resolvedKankenMemberships(
+                kanjiID: 1,
+                kankenLevel: "準1級",
+                membershipsByID: [:],
+                membershipTableExists: false
+            ),
+            ["準1級"]
+        )
+    }
+
+    func testLevelPredicatesUseMembershipForKankenAndEqualityForJLPT() {
+        XCTAssertEqual(DictionaryClient.kanjiLevelPredicate("N5"), "k.jlpt_level = ?")
+
+        let kankenPredicate = DictionaryClient.kanjiLevelPredicate("準1級")
+        XCTAssertTrue(kankenPredicate.contains("FROM kanken_membership km"))
+        XCTAssertTrue(kankenPredicate.contains("km.level_label = ?"))
+        XCTAssertFalse(kankenPredicate.contains("k.kanken_level"))
+    }
+
     func testLiveReadsBundledKanji() async throws {
         let client = DictionaryClient.liveValue
         let kanji = try await client.allKanji()
 
-        // The bundled DB is the full jōyō set (2,136 kanji).
-        XCTAssertEqual(kanji.count, 2136)
+        XCTAssertGreaterThan(kanji.count, 2136)
 
         let yama = try XCTUnwrap(kanji.first { $0.literal == "山" })
         XCTAssertEqual(yama.strokeCount, 3)
         XCTAssertEqual(yama.jlptLevel, "N5")
+        XCTAssertTrue(yama.hasVerifiedStrokeOrder)
         XCTAssertTrue(yama.onReadings.contains("サン"))
         XCTAssertTrue(yama.kunReadings.contains("やま"))
         // Radical plumbing: DB radical index → KANGXI glyph.
         XCTAssertEqual(yama.radical, 46)
         XCTAssertEqual(yama.radicalGlyph, "山")
+    }
+
+    func testLiveLoadsKankenMemberships() async throws {
+        let kanji = try await DictionaryClient.liveValue.allKanji()
+        let legacyCounts = [
+            "10級": 80, "9級": 160, "8級": 200, "7級": 202, "6級": 193,
+            "5級": 191, "4級": 313, "3級": 284, "準2級": 328, "2級": 185,
+        ]
+
+        for (level, expectedCount) in legacyCounts {
+            XCTAssertEqual(
+                kanji.filter { $0.belongs(to: level, exam: .kanken) }.count,
+                expectedCount,
+                level
+            )
+        }
+
+        let pre1IDs = Set(
+            kanji.filter { $0.belongs(to: "準1級", exam: .kanken) }.map(\.id)
+        )
+        let level1IDs = Set(
+            kanji.filter { $0.belongs(to: "1級", exam: .kanken) }.map(\.id)
+        )
+        XCTAssertFalse(pre1IDs.isEmpty)
+        XCTAssertFalse(level1IDs.isEmpty)
+        XCTAssertFalse(pre1IDs.intersection(level1IDs).isEmpty)
+    }
+
+    func testLiveLoadsWritingCapabilityIndependentlyOfStrokeCount() async throws {
+        let kanji = try await DictionaryClient.liveValue.allKanji()
+        let advanced = kanji.filter {
+            $0.belongs(to: "準1級", exam: .kanken)
+                || $0.belongs(to: "1級", exam: .kanken)
+        }
+
+        XCTAssertTrue(advanced.contains { !$0.hasVerifiedStrokeOrder && $0.strokeCount > 0 })
+    }
+
+    func testLiveAdvancedKankenItemQueriesStayWithinMembershipScope() async throws {
+        let client = DictionaryClient.liveValue
+        let kanji = try await client.allKanji()
+
+        for level in ["準1級", "1級"] {
+            let memberIDs = Set(
+                kanji.filter { $0.belongs(to: level, exam: .kanken) }.map(\.id)
+            )
+            let radicals = try await client.examRadicalItems(level, 10_000)
+            let strokes = try await client.examStrokeItems(level, 10_000)
+            let onKun = try await client.examOnKun(level, 10_000)
+            let words = try await client.quizWords(level, 20)
+            let okurigana = try await client.examOkurigana(level, 20)
+
+            XCTAssertFalse(radicals.isEmpty, level)
+            XCTAssertFalse(strokes.isEmpty, level)
+            XCTAssertFalse(onKun.isEmpty, level)
+            XCTAssertTrue(radicals.allSatisfy { memberIDs.contains($0.kanjiID) }, level)
+            XCTAssertTrue(strokes.allSatisfy { memberIDs.contains($0.kanjiID) }, level)
+            XCTAssertTrue(onKun.allSatisfy { memberIDs.contains($0.kanjiID) }, level)
+            try await assertWords(words, containAnyKanjiIn: memberIDs, client: client, level: level)
+            try await assertWords(okurigana, containAnyKanjiIn: memberIDs, client: client, level: level)
+
+            let questions = try await client.examQuestions(level, "reading", 10_000)
+            if level == "準1級" {
+                // This scope currently has no authored questions. The static
+                // predicate test above provides non-vacuous SQL-path coverage.
+                XCTAssertTrue(questions.isEmpty)
+            } else {
+                XCTAssertFalse(questions.isEmpty)
+                XCTAssertTrue(questions.allSatisfy { memberIDs.contains($0.kanjiID) })
+            }
+        }
+    }
+
+    func testLiveJLPTItemQueriesStayWithinExactLevelScope() async throws {
+        let client = DictionaryClient.liveValue
+        let kanji = try await client.allKanji()
+        let level = "N5"
+        let memberIDs = Set(kanji.filter { $0.jlptLevel == level }.map(\.id))
+        let radicals = try await client.examRadicalItems(level, 10_000)
+        let strokes = try await client.examStrokeItems(level, 10_000)
+        let onKun = try await client.examOnKun(level, 10_000)
+        let questions = try await client.examQuestions(level, "reading", 10_000)
+
+        XCTAssertFalse(radicals.isEmpty)
+        XCTAssertFalse(strokes.isEmpty)
+        XCTAssertFalse(onKun.isEmpty)
+        XCTAssertFalse(questions.isEmpty)
+        XCTAssertTrue(radicals.allSatisfy { memberIDs.contains($0.kanjiID) })
+        XCTAssertTrue(strokes.allSatisfy { memberIDs.contains($0.kanjiID) })
+        XCTAssertTrue(onKun.allSatisfy { memberIDs.contains($0.kanjiID) })
+        XCTAssertTrue(questions.allSatisfy { memberIDs.contains($0.kanjiID) })
+        try await assertWords(
+            try await client.quizWords(level, 20),
+            containAnyKanjiIn: memberIDs,
+            client: client,
+            level: level
+        )
+        try await assertWords(
+            try await client.examOkurigana(level, 20),
+            containAnyKanjiIn: memberIDs,
+            client: client,
+            level: level
+        )
     }
 
     func testLiveReadsJLPTQuestionsForKanji() async throws {
@@ -121,5 +258,25 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertFalse(relations.isEmpty)
         XCTAssertTrue(relations.allSatisfy { $0.type == "antonym" || $0.type == "related" })
         XCTAssertTrue(relations.allSatisfy { !$0.surface.isEmpty })
+    }
+
+    private func assertWords(
+        _ words: [WordEntry],
+        containAnyKanjiIn memberIDs: Set<Int>,
+        client: DictionaryClient,
+        level: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) async throws {
+        XCTAssertFalse(words.isEmpty, level, file: file, line: line)
+        for word in words {
+            let wordKanjiIDs = Set(try await client.kanjiForWord(word.id).map(\.id))
+            XCTAssertFalse(
+                wordKanjiIDs.isDisjoint(with: memberIDs),
+                "\(level): \(word.surface)",
+                file: file,
+                line: line
+            )
+        }
     }
 }

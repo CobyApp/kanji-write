@@ -3,8 +3,16 @@ import XCTest
 
 @testable import Review
 
-private func k(_ id: Int, strokes: Int, grade: Int?, jlpt: String?) -> Kanji {
+private func k(
+    _ id: Int,
+    strokes: Int,
+    grade: Int?,
+    jlpt: String?,
+    kanken: String? = nil,
+    memberships: [String] = []
+) -> Kanji {
     Kanji(id: id, literal: "x", strokeCount: strokes, grade: grade, jlptLevel: jlpt,
+          kankenLevel: kanken, kankenMemberships: memberships,
           onReadings: [], kunReadings: [])
 }
 
@@ -17,6 +25,20 @@ final class CurriculumTests: XCTestCase {
         XCTAssertEqual(studyOrder(input, exam: .jlpt, level: "N5").map(\.id), [3, 1])
         // nil level = all.
         XCTAssertEqual(studyOrder(input, exam: .jlpt, level: nil).count, 3)
+    }
+
+    func testKankenStudyOrderScopeUsesMemberships() {
+        let input = [
+            k(1, strokes: 8, grade: nil, jlpt: nil, kanken: "準1級",
+              memberships: ["準1級", "1級"]),
+            k(2, strokes: 4, grade: nil, jlpt: nil, kanken: "1級",
+              memberships: ["1級"]),
+            k(3, strokes: 2, grade: 1, jlpt: "N5", kanken: "10級",
+              memberships: ["10級"]),
+        ]
+
+        XCTAssertEqual(studyOrder(input, exam: .kanken, level: "準1級").map(\.id), [1])
+        XCTAssertEqual(studyOrder(input, exam: .kanken, level: "1級").map(\.id), [1, 2])
     }
 
     func testRemainingNewAndDaysToFinish() {

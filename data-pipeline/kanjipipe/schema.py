@@ -6,9 +6,51 @@ CREATE TABLE kanji (
     stroke_count INTEGER NOT NULL,
     grade        INTEGER,
     jlpt_level   TEXT,
+    kanken_level TEXT,
+    has_verified_stroke_order INTEGER NOT NULL DEFAULT 0
+        CHECK(has_verified_stroke_order IN (0, 1)),
     freq_rank    INTEGER,
     radical      INTEGER
 );
+
+CREATE TABLE kanken_membership (
+    kanji_id              INTEGER NOT NULL REFERENCES kanji(id),
+    level_label           TEXT NOT NULL,
+    source_classification TEXT NOT NULL,
+    UNIQUE(kanji_id, level_label)
+);
+
+CREATE INDEX idx_kanken_membership_level
+    ON kanken_membership(level_label, kanji_id);
+
+CREATE TABLE glyph_asset (
+    id             INTEGER PRIMARY KEY,
+    provider       TEXT NOT NULL,
+    glyph_name     TEXT NOT NULL,
+    revision       TEXT NOT NULL,
+    sha256         TEXT NOT NULL,
+    source_url     TEXT NOT NULL,
+    license_url    TEXT NOT NULL,
+    local_svg_name TEXT NOT NULL,
+    UNIQUE(provider, glyph_name, revision),
+    UNIQUE(sha256),
+    UNIQUE(local_svg_name)
+);
+
+CREATE TABLE kanji_variant (
+    id                 INTEGER PRIMARY KEY,
+    canonical_kanji_id INTEGER NOT NULL REFERENCES kanji(id),
+    glyph_asset_id     INTEGER REFERENCES glyph_asset(id),
+    source_ct_id       TEXT NOT NULL,
+    source_ce_id       TEXT NOT NULL UNIQUE,
+    variant_kind       TEXT NOT NULL,
+    literal            TEXT,
+    codepoint          INTEGER,
+    CHECK(literal IS NOT NULL OR glyph_asset_id IS NOT NULL)
+);
+
+CREATE INDEX idx_kanji_variant_canonical
+    ON kanji_variant(canonical_kanji_id);
 
 CREATE TABLE reading (
     id        INTEGER PRIMARY KEY,
@@ -100,6 +142,30 @@ CREATE TABLE relation (
 
 CREATE INDEX idx_relation_a ON relation(word_id_a);
 CREATE INDEX idx_relation_b ON relation(word_id_b);
+
+CREATE TABLE yojijukugo (
+    id           INTEGER PRIMARY KEY,
+    yoji         TEXT NOT NULL UNIQUE,
+    reading      TEXT NOT NULL,
+    meaning_ja   TEXT,
+    meaning_ko   TEXT,
+    kanken_level TEXT NOT NULL
+);
+
+CREATE INDEX idx_yojijukugo_level ON yojijukugo(kanken_level);
+
+CREATE TABLE taigirui (
+    id             INTEGER PRIMARY KEY,
+    word           TEXT NOT NULL,
+    word_reading   TEXT NOT NULL,
+    answer         TEXT NOT NULL,
+    answer_reading TEXT NOT NULL,
+    relation       TEXT NOT NULL CHECK(relation IN ('対義', '類義')),
+    kanken_level   TEXT NOT NULL,
+    UNIQUE(word, answer, relation)
+);
+
+CREATE INDEX idx_taigirui_level ON taigirui(kanken_level);
 
 CREATE TABLE jlpt_question (
     id          INTEGER PRIMARY KEY,

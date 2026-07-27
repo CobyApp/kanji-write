@@ -2,8 +2,7 @@ import SharedModels
 
 // Pure browse helpers shared by the app shell (RootView). The old
 // KanjiListFeature reducer + view were retired with the NavigationSplitView
-// refactor; only this level/search logic remains. Kanji are organized by JLPT
-// level only (N5…N1).
+// refactor; only this level/search logic remains.
 
 /// A browsable JLPT level (N5…N1).
 public struct KanjiLevel: Equatable, Hashable, Identifiable, Sendable {
@@ -21,7 +20,7 @@ public func levels(for exam: ExamType = .current) -> [KanjiLevel] {
 
 /// The kanji belonging to a level of the given exam.
 public func kanjiIn(_ all: [Kanji], in level: KanjiLevel, exam: ExamType = .current) -> [Kanji] {
-    all.filter { $0.level(for: exam) == level.level }
+    all.filter { $0.belongs(to: level.level, exam: exam) }
 }
 
 /// Free-text match: the literal, any on/kun reading (kun dots ignored), or the
