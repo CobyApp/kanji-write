@@ -1,0 +1,565 @@
+{
+  "version": 1,
+  "description": "Independently worded factual metadata for Kanken Unicode rows not fully covered by pinned open sources. Kanjipedia URLs are verification references only; no Kanjipedia text or images are copied.",
+  "entries": [
+    {
+      "literal": "檔",
+      "readings": [
+        {
+          "axis": "on",
+          "value": "トウ"
+        },
+        {
+          "axis": "kun",
+          "value": "かまち"
+        }
+      ],
+      "englishGlosses": [],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0005236000",
+          "url": "https://www.kanjipedia.jp/kanji/0005236000",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+6A94",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=6A94",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "慠",
+      "readings": [],
+      "englishGlosses": [
+        "haughty; look down on"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0007445400",
+          "url": "https://www.kanjipedia.jp/kanji/0007445400",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1563940",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1563940&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "檋",
+      "readings": [],
+      "englishGlosses": [
+        "snowshoe; spiked walking aid"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0001584500",
+          "url": "https://www.kanjipedia.jp/kanji/0001584500",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2002100",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2002100&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "癴",
+      "readings": [],
+      "englishGlosses": [
+        "cramp; contract"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0007320700",
+          "url": "https://www.kanjipedia.jp/kanji/0007320700",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+7674",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=7674",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "籡",
+      "readings": [],
+      "englishGlosses": [
+        "loom temple; tenter"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2832648",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2832648&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0003716400",
+          "url": "https://www.kanjipedia.jp/kanji/0003716400",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    },
+    {
+      "literal": "粏",
+      "readings": [],
+      "englishGlosses": [
+        "fermented rice-bran paste; bran mash"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0004404900",
+          "url": "https://www.kanjipedia.jp/kanji/0004404900",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+7C8F",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=7C8F",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "苆",
+      "readings": [],
+      "englishGlosses": [
+        "plaster-reinforcing fibre"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0003796600",
+          "url": "https://www.kanjipedia.jp/kanji/0003796600",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+82C6",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=82C6",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "蝲",
+      "readings": [],
+      "englishGlosses": [
+        "scorpion; crayfish component"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0007046000",
+          "url": "https://www.kanjipedia.jp/kanji/0007046000",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1059040",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1059040&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "踑",
+      "readings": [],
+      "englishGlosses": [
+        "footprint; track; cross-legged sitting"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0001277100",
+          "url": "https://www.kanjipedia.jp/kanji/0001277100",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1581330",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1581330&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "躮",
+      "readings": [],
+      "englishGlosses": [
+        "one's son (humble)"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0003944900",
+          "url": "https://www.kanjipedia.jp/kanji/0003944900",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1585440",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1585440&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "鎺",
+      "readings": [],
+      "englishGlosses": [
+        "sword-blade collar"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2542230",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2542230&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+93BA",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=93BA",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "驎",
+      "readings": [],
+      "englishGlosses": [
+        "piebald horse; excellent horse"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1575200",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1575200&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+9A4E",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=9A4E",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "魸",
+      "readings": [],
+      "englishGlosses": [
+        "catfish"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0005399300",
+          "url": "https://www.kanjipedia.jp/kanji/0005399300",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1574880",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1574880&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "鮇",
+      "readings": [],
+      "englishGlosses": [
+        "freshwater char"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0000271800",
+          "url": "https://www.kanjipedia.jp/kanji/0000271800",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1839090",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1839090&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "鮱",
+      "readings": [],
+      "englishGlosses": [
+        "adult mullet"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0000548900",
+          "url": "https://www.kanjipedia.jp/kanji/0000548900",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1574850",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1574850&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "鮲",
+      "readings": [],
+      "englishGlosses": [
+        "flathead fish; razor clam"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0002394700",
+          "url": "https://www.kanjipedia.jp/kanji/0002394700",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "Unicode Unihan 17.0.0",
+          "sourceId": "U+9BB2",
+          "url": "https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=9BB2",
+          "license": "Unicode License v3",
+          "relationship": "direct_character"
+        }
+      ]
+    },
+    {
+      "literal": "鯐",
+      "readings": [],
+      "englishGlosses": [
+        "young striped mullet"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0003805700",
+          "url": "https://www.kanjipedia.jp/kanji/0003805700",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2674880",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2674880&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "鰘",
+      "readings": [],
+      "englishGlosses": [
+        "mackerel scad"
+      ],
+      "provenance": [
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0006665100",
+          "url": "https://www.kanjipedia.jp/kanji/0006665100",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        },
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2271830",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2271830&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        }
+      ]
+    },
+    {
+      "literal": "鰙",
+      "readings": [],
+      "englishGlosses": [
+        "Japanese pond smelt"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1951420",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1951420&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0005712600",
+          "url": "https://www.kanjipedia.jp/kanji/0005712600",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    },
+    {
+      "literal": "鰚",
+      "readings": [],
+      "englishGlosses": [
+        "fish called haraka"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2191600",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2191600&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0005716900",
+          "url": "https://www.kanjipedia.jp/kanji/0005716900",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    },
+    {
+      "literal": "鱩",
+      "readings": [],
+      "englishGlosses": [
+        "sailfin sandfish"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1575000",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1575000&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0005677300",
+          "url": "https://www.kanjipedia.jp/kanji/0005677300",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    },
+    {
+      "literal": "鵇",
+      "readings": [],
+      "englishGlosses": [
+        "crested ibis"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1944260",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1944260&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "direct_character"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0005295500",
+          "url": "https://www.kanjipedia.jp/kanji/0005295500",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    },
+    {
+      "literal": "鵥",
+      "readings": [],
+      "englishGlosses": [
+        "Eurasian jay"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "1769380",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=1769380&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0000940100",
+          "url": "https://www.kanjipedia.jp/kanji/0000940100",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    },
+    {
+      "literal": "鶎",
+      "readings": [],
+      "englishGlosses": [
+        "goldcrest"
+      ],
+      "provenance": [
+        {
+          "source": "EDRDG JMdict",
+          "sourceId": "2107110",
+          "url": "https://www.edrdg.org/jmwsgi/edform.py?a=2&q=2107110&svc=jmdict",
+          "license": "CC BY-SA 4.0",
+          "relationship": "indirect_lexical_anchor"
+        },
+        {
+          "source": "Kanjipedia",
+          "sourceId": "0001331400",
+          "url": "https://www.kanjipedia.jp/kanji/0001331400",
+          "license": "All Rights Reserved; factual verification only",
+          "relationship": "verification_only"
+        }
+      ]
+    }
+  ]
+}

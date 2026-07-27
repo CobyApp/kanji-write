@@ -7,11 +7,43 @@ import XCTest
 
 private extension Kanji {
     static let yama = Kanji(id: 1, literal: "山", strokeCount: 3, grade: 1,
-                            jlptLevel: "N5", onReadings: ["サン"], kunReadings: ["やま"])
+                            jlptLevel: "N5", hasVerifiedStrokeOrder: true,
+                            onReadings: ["サン"], kunReadings: ["やま"])
+    static let withoutStrokeData = Kanji(
+        id: 2, literal: "亞", strokeCount: 8, grade: nil, jlptLevel: nil,
+        kankenLevel: "準1級", kankenMemberships: ["準1級", "1級"],
+        hasVerifiedStrokeOrder: false, onReadings: ["ア"], kunReadings: [])
 }
 
 @MainActor
 final class KanjiWritingFeatureTests: XCTestCase {
+    func testWritingAvailabilityRequiresVerifiedStrokePaths() {
+        XCTAssertTrue(KanjiWritingFeature.State(kanji: .yama).isWritingAvailable)
+        XCTAssertFalse(KanjiWritingFeature.State(kanji: .withoutStrokeData).isWritingAvailable)
+    }
+
+    func testOnAppearDoesNotLoadWritingDataWhenUnavailable() async {
+        let strokeOrderCalled = LockIsolated(false)
+        let drawingCalled = LockIsolated(false)
+        let store = TestStore(initialState: KanjiWritingFeature.State(kanji: .withoutStrokeData)) {
+            KanjiWritingFeature()
+        } withDependencies: {
+            $0.dictionaryClient.strokeOrder = { _ in
+                strokeOrderCalled.setValue(true)
+                return []
+            }
+            $0.drawingStore.loadDrawing = { _ in
+                drawingCalled.setValue(true)
+                return nil
+            }
+        }
+
+        await store.send(.onAppear)
+
+        XCTAssertFalse(strokeOrderCalled.value)
+        XCTAssertFalse(drawingCalled.value)
+    }
+
     func testOnAppearLoadsStrokePaths() async {
         let store = TestStore(initialState: KanjiWritingFeature.State(kanji: .yama)) {
             KanjiWritingFeature()

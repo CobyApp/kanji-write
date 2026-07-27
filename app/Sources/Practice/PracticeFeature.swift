@@ -33,7 +33,10 @@ public struct PracticeFeature {
         public init() {}
 
         /// The level's kanji in study order (JLPT → strokes → id).
-        public var levelKanji: [Kanji] { studyOrder(kanji.elements, exam: ExamType.current, level: level) }
+        public var levelKanji: [Kanji] {
+            studyOrder(kanji.elements, exam: ExamType.current, level: level)
+                .filter(\.hasVerifiedStrokeOrder)
+        }
         public var levelCount: Int { levelKanji.count }
         /// Largest valid start index.
         public var maxStart: Int { max(0, levelCount - 1) }

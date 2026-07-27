@@ -35,6 +35,9 @@ app/Tuist/.build/
 !data-pipeline/sources/sentence_glosses.jsonl
 # Agent-authored JLPT question bank (curated output) — keep it
 !data-pipeline/sources/jlpt_questions.jsonl
+# Curated verified glyph manifest and deterministic pending report
+!data-pipeline/sources/kanken_glyph_map.csv
+!data-pipeline/sources/kanken_glyph_candidates.csv
 
 # Local scratch (question-generation batches, temp scripts) — never commit
 scratch/

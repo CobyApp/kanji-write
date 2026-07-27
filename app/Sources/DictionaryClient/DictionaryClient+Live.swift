@@ -13,28 +13,53 @@ extension DictionaryClient: DependencyKey {
                     FROM kanji
                     ORDER BY id
                     """)
-                return try kanjiRows.map { row in
+                var readingsByID: [Int: (on: [String], kun: [String])] = [:]
+                for row in try Row.fetchAll(db, sql: """
+                    SELECT kanji_id, lang_axis, value
+                    FROM reading
+                    WHERE lang_axis IN ('on', 'kun')
+                    ORDER BY kanji_id, id
+                    """) {
+                    let id: Int = row["kanji_id"]
+                    let axis: String = row["lang_axis"]
+                    let value: String = row["value"]
+                    if axis == "on" {
+                        readingsByID[id, default: ([], [])].on.append(value)
+                    } else {
+                        readingsByID[id, default: ([], [])].kun.append(value)
+                    }
+                }
+
+                var membershipsByID: [Int: [String]] = [:]
+                let membershipTableExists = try db.tableExists("kanken_membership")
+                if membershipTableExists {
+                    for row in try Row.fetchAll(db, sql: """
+                        SELECT kanji_id, level_label
+                        FROM kanken_membership
+                        ORDER BY kanji_id, level_label
+                        """) {
+                        let id: Int = row["kanji_id"]
+                        let level: String = row["level_label"]
+                        membershipsByID[id, default: []].append(level)
+                    }
+                }
+                let writingCapableIDs = Set(try Int.fetchAll(db, sql: """
+                    SELECT DISTINCT kanji_id FROM stroke_order
+                    """))
+
+                return kanjiRows.map { row in
                     let id: Int = row["id"]
                     let grade: Int? = row["grade"]
                     let jlpt: String? = row["jlpt_level"]
                     let kanken: String? = row["kanken_level"]
                     let radical: Int? = row["radical"]
-
-                    // NOTE: N+1 by design for the 2-row scaffold DB; replace with a single
-                    // grouped query (or JOIN) when loading the full kanji set.
-                    let readingRows = try Row.fetchAll(db, sql: """
-                        SELECT lang_axis, value FROM reading
-                        WHERE kanji_id = ? AND lang_axis IN ('on', 'kun')
-                        """, arguments: [id])
-
-                    var onReadings: [String] = []
-                    var kunReadings: [String] = []
-                    for r in readingRows {
-                        let axis: String = r["lang_axis"]
-                        let value: String = r["value"]
-                        if axis == "on" { onReadings.append(value) }
-                        else { kunReadings.append(value) }
-                    }
+                    let readings = readingsByID[id] ?? ([], [])
+                    let memberships = Self.resolvedKankenMemberships(
+                        kanjiID: id,
+                        kankenLevel: kanken,
+                        membershipsByID: membershipsByID,
+                        membershipTableExists: membershipTableExists
+                    )
 
                     return Kanji(
                         id: id,
@@ -43,8 +68,10 @@ extension DictionaryClient: DependencyKey {
                         grade: grade,
                         jlptLevel: jlpt,
                         kankenLevel: kanken,
-                        onReadings: onReadings,
-                        kunReadings: kunReadings,
+                        kankenMemberships: memberships,
+                        hasVerifiedStrokeOrder: writingCapableIDs.contains(id),
+                        onReadings: readings.on,
+                        kunReadings: readings.kun,
                         radical: radical
                     )
                 }
@@ -294,16 +321,13 @@ extension DictionaryClient: DependencyKey {
         },
         quizWords: { level, limit in
             let queue = try openBundledDatabase()
-            // Pick the level column from the requested level's format: JLPT levels
-            // are "N1"…"N5", 漢検 levels are "10級"…"1級" / "準2級". The column name
-            // is a controlled constant (not user input), so interpolation is safe.
-            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let predicate = Self.kanjiLevelPredicate(level)
             return try await queue.read { db -> [WordEntry] in
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT DISTINCT w.id, w.surface, w.reading_kana FROM word w
                     JOIN word_kanji wk ON wk.word_id = w.id
                     JOIN kanji k ON k.id = wk.kanji_id
-                    WHERE k.\(column) = ?
+                    WHERE \(predicate)
                     ORDER BY w.is_common DESC, w.id
                     LIMIT ?
                     """, arguments: [level, limit])
@@ -386,9 +410,7 @@ extension DictionaryClient: DependencyKey {
         },
         examQuestions: { level, kind, limit in
             let queue = try openBundledDatabase()
-            // "N5" → jlpt_level; "10級" → kanken_level. Column name is a controlled
-            // constant (not user input), so interpolation is safe.
-            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let predicate = Self.kanjiLevelPredicate(level)
             return try await queue.read { db -> [JLPTQuestion] in
                 // Questions for kanji at the level, of the requested kind.
                 // RANDOM() so each practice run draws a fresh set.
@@ -397,7 +419,7 @@ extension DictionaryClient: DependencyKey {
                            q.answer, q.explanations, q.focus
                     FROM jlpt_question q
                     JOIN kanji k ON k.id = q.kanji_id
-                    WHERE k.\(column) = ? AND q.kind = ?
+                    WHERE \(predicate) AND q.kind = ?
                     ORDER BY RANDOM()
                     LIMIT ?
                     """, arguments: [level, kind, limit])
@@ -422,13 +444,13 @@ extension DictionaryClient: DependencyKey {
         },
         examRadicalItems: { level, limit in
             let queue = try openBundledDatabase()
-            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let predicate = Self.kanjiLevelPredicate(level)
             return try await queue.read { db -> [RadicalItem] in
                 // `radical` is a KANGXI index (Int 1…214); map it to its 部首 glyph
                 // for display. Kanji whose radical index has no glyph are skipped.
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT id, literal, radical FROM kanji
-                    WHERE \(column) = ? AND radical IS NOT NULL AND radical > 0
+                    SELECT k.id, k.literal, k.radical FROM kanji k
+                    WHERE \(predicate) AND k.radical IS NOT NULL AND k.radical > 0
                     ORDER BY RANDOM()
                     LIMIT ?
                     """, arguments: [level, limit])
@@ -441,11 +463,11 @@ extension DictionaryClient: DependencyKey {
         },
         examStrokeItems: { level, limit in
             let queue = try openBundledDatabase()
-            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let predicate = Self.kanjiLevelPredicate(level)
             return try await queue.read { db -> [StrokeItem] in
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT id, literal, stroke_count FROM kanji
-                    WHERE \(column) = ? AND stroke_count > 0
+                    SELECT k.id, k.literal, k.stroke_count FROM kanji k
+                    WHERE \(predicate) AND k.stroke_count > 0
                     ORDER BY RANDOM()
                     LIMIT ?
                     """, arguments: [level, limit])
@@ -530,7 +552,7 @@ extension DictionaryClient: DependencyKey {
         },
         examOkurigana: { level, limit in
             let queue = try openBundledDatabase()
-            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let predicate = Self.kanjiLevelPredicate(level)
             return try await queue.read { db -> [WordEntry] in
                 // Single-kanji stem + trailing kana (送りがな shape). GLOB anchors a
                 // kanji at the start and a hiragana at the end; the Swift generator
@@ -539,7 +561,7 @@ extension DictionaryClient: DependencyKey {
                     SELECT DISTINCT w.id, w.surface, w.reading_kana FROM word w
                     JOIN word_kanji wk ON wk.word_id = w.id
                     JOIN kanji k ON k.id = wk.kanji_id
-                    WHERE k.\(column) = ? AND w.is_common = 1
+                    WHERE \(predicate) AND w.is_common = 1
                       AND w.surface GLOB '[一-龠][ぁ-ん]*'
                       AND LENGTH(w.surface) <= 5
                     ORDER BY RANDOM() LIMIT ?
@@ -577,11 +599,11 @@ extension DictionaryClient: DependencyKey {
             }
         },
         examOnKun: { level, limit in
-            let column = level.hasPrefix("N") ? "jlpt_level" : "kanken_level"
+            let predicate = Self.kanjiLevelPredicate(level)
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [OnKunItem] in
                 let kanjiRows = try Row.fetchAll(db, sql: """
-                    SELECT id, literal FROM kanji WHERE \(column) = ?
+                    SELECT k.id, k.literal FROM kanji k WHERE \(predicate)
                     ORDER BY RANDOM() LIMIT ?
                     """, arguments: [level, limit])
                 var out: [OnKunItem] = []
@@ -610,6 +632,30 @@ extension DictionaryClient: DependencyKey {
         Yojijukugo(id: row["id"], yoji: row["yoji"], reading: row["reading"],
                    meaningJa: row["meaning_ja"], meaningKo: row["meaning_ko"],
                    level: row["kanken_level"])
+    }
+
+    static func resolvedKankenMemberships(
+        kanjiID: Int,
+        kankenLevel: String?,
+        membershipsByID: [Int: [String]],
+        membershipTableExists: Bool
+    ) -> [String] {
+        if membershipTableExists {
+            return membershipsByID[kanjiID] ?? []
+        }
+        return kankenLevel.map { [$0] } ?? []
+    }
+
+    static func kanjiLevelPredicate(_ level: String) -> String {
+        if level.hasPrefix("N") {
+            return "k.jlpt_level = ?"
+        }
+        return """
+            EXISTS (
+                SELECT 1 FROM kanken_membership km
+                WHERE km.kanji_id = k.id AND km.level_label = ?
+            )
+            """
     }
 
     /// The bundled dictionary DB, opened once and shared. A `DatabaseQueue` is
