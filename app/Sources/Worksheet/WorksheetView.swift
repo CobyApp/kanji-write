@@ -243,6 +243,10 @@ public struct WorksheetView: View {
                 // One card at a time (prev·next / arrow keys drive it — no swipe,
                 // which also frees the write canvas from a page-swipe conflict).
                 // Cards cross-fade + pop instead of sliding.
+                //
+                // The ZStack takes all the leftover height so the header stays
+                // pinned to the top and the nav buttons to the bottom; only the
+                // card floats (centred) as its content changes size.
                 ZStack {
                     cardShell { currentCard(kanji) }
                         .id(card)
@@ -250,6 +254,7 @@ public struct WorksheetView: View {
                             insertion: .scale(scale: 0.90).combined(with: .opacity),
                             removal: .scale(scale: 1.04).combined(with: .opacity)))
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .animation(.spring(response: 0.34, dampingFraction: 0.82), value: card)
                 // Reset to the first card on a new kanji WITHOUT animating, and
                 // clear the previous tracing.
