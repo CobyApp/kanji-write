@@ -429,3 +429,38 @@ def test_load_llm_glosses_inserts_native_glosses_with_source():
 
     # the unstored literal produced no rows
     assert conn.execute("SELECT COUNT(*) FROM gloss WHERE lang='ko'").fetchone()[0] == 1
+
+
+def _compat(literal: str, codepoint: int, stroke_count: int):
+    """A CJK Compatibility Ideograph entry (U+F900–FAFF)."""
+    return Kanji(literal=literal, codepoint=codepoint, stroke_count=stroke_count,
+                 grade=None, freq_rank=None, radical=113, jlpt_level=None,
+                 readings=[Reading("on", "シン")], glosses=[Gloss("en", "god")])
+
+
+def test_compat_ideograph_borrows_unified_strokes_when_counts_agree():
+    # 神 U+FA19 is canonically equivalent to 神 U+795E; when the unified glyph has
+    # the same number of strokes it is the same shape, so the paths carry over.
+    conn = init_db(":memory:")
+    load_kanji(conn, [_compat("神", 0xFA19, 9)])
+
+    load_stroke_order(conn, {0x795E: [f"d{i}" for i in range(1, 10)]})
+
+    assert conn.execute("SELECT COUNT(*) FROM stroke_order").fetchone()[0] == 9
+    assert conn.execute(
+        "SELECT has_verified_stroke_order FROM kanji WHERE literal = '神'"
+    ).fetchone() == (1,)
+
+
+def test_compat_ideograph_refuses_unified_strokes_when_counts_differ():
+    # 隆 U+F9DC is the 17-stroke printed form; the unified 隆 U+9686 has 11. The
+    # shapes genuinely differ, so borrowing would teach the wrong stroke order.
+    conn = init_db(":memory:")
+    load_kanji(conn, [_compat("隆", 0xF9DC, 17)])
+
+    load_stroke_order(conn, {0x9686: [f"d{i}" for i in range(1, 12)]})
+
+    assert conn.execute("SELECT COUNT(*) FROM stroke_order").fetchone()[0] == 0
+    assert conn.execute(
+        "SELECT has_verified_stroke_order FROM kanji WHERE literal = '隆'"
+    ).fetchone() == (0,)
