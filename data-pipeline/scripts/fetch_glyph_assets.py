@@ -149,19 +149,29 @@ def candidate_names(parent: str) -> list[tuple[str, str]]:
 # --- network -----------------------------------------------------------------
 
 
-def _get(url: str, *, binary: bool = False):
+def _get(url: str, *, binary: bool = False, attempts: int = 4):
+    """Fetch a URL, treating 404 as "absent" and retrying transient failures.
+
+    GlyphWiki occasionally answers 502/503 under load; a run over thousands of
+    glyphs will hit that, so back off and retry rather than losing the batch.
+    """
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            payload = response.read()
-    except urllib.error.HTTPError as error:
-        if error.code == 404:
-            return None
-        raise
-    except urllib.error.URLError:
-        return None
-    time.sleep(REQUEST_PAUSE)
-    return payload if binary else payload.decode("utf-8")
+    for attempt in range(1, attempts + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                payload = response.read()
+            time.sleep(REQUEST_PAUSE)
+            return payload if binary else payload.decode("utf-8")
+        except urllib.error.HTTPError as error:
+            if error.code == 404:
+                return None  # the glyph genuinely does not exist
+            if error.code not in (429, 500, 502, 503, 504) or attempt == attempts:
+                return None
+        except (urllib.error.URLError, TimeoutError, OSError):
+            if attempt == attempts:
+                return None
+        time.sleep(REQUEST_PAUSE * 4 * attempt)  # linear back-off
+    return None
 
 
 def probe_glyph(name: str) -> str | None:
@@ -228,22 +238,45 @@ def cmd_fetch(args: argparse.Namespace) -> int:
         targets = targets[: args.limit]
     total = sum(len(e.candidates) for e in targets)
     print(f"fetching {total} candidate SVGs…")
-    done = 0
+
+    def checkpoint() -> None:
+        PROBE_JSON.write_text(
+            json.dumps([asdict(e) for e in entries], ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    done = skipped = failed = 0
     for entry in targets:
         for candidate in entry.candidates:
-            svg = _get(GLYPHWIKI_SVG.format(name=candidate.glyph_name), binary=True)
             done += 1
+            # Resume: keep anything already downloaded and hashed.
+            local = GLYPH_DIR / f"{candidate.glyph_name}.svg"
+            if candidate.sha256 and local.exists():
+                skipped += 1
+                continue
+            if local.exists():  # fetched before a crash lost the hash
+                svg = local.read_bytes()
+            else:
+                svg = _get(GLYPHWIKI_SVG.format(name=candidate.glyph_name), binary=True)
             if not svg:
+                failed += 1
                 print(f"  [{done}/{total}] {candidate.glyph_name}: no SVG")
                 continue
+            # GlyphWiki serves an empty <svg> for placeholder entries; such a
+            # glyph would render blank, so drop it rather than offer it.
+            if b"<path" not in svg:
+                failed += 1
+                local.unlink(missing_ok=True)
+                print(f"  [{done}/{total}] {candidate.glyph_name}: blank glyph, skipped")
+                continue
             candidate.sha256 = hashlib.sha256(svg).hexdigest()
-            candidate.local_svg_name = f"{candidate.glyph_name}.svg"
-            (GLYPH_DIR / candidate.local_svg_name).write_bytes(svg)
-            print(f"  [{done}/{total}] {candidate.glyph_name} @r{candidate.revision}")
-    PROBE_JSON.write_text(
-        json.dumps([asdict(e) for e in entries], ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+            candidate.local_svg_name = local.name
+            local.write_bytes(svg)
+            if done % 50 == 0:
+                checkpoint()
+                print(f"  [{done}/{total}] … {candidate.glyph_name} @r{candidate.revision}")
+    checkpoint()
+    print(f"fetched {done - skipped - failed}, reused {skipped}, failed {failed}")
     print(f"\nSVGs → {GLYPH_DIR}")
     _write_review_csv(entries)
     print(f"review sheet stub → {REVIEW_CSV}")
