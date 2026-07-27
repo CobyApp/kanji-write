@@ -111,15 +111,12 @@ def iou(a: np.ndarray, b: np.ndarray) -> float:
 # --- reference images --------------------------------------------------------
 
 
-def fetch_reference(url: str, dest: Path) -> bytes | None:
-    if dest.exists():
-        return dest.read_bytes()
+def _try_url(url: str) -> bytes | None:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     for attempt in range(1, 4):
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
                 payload = response.read()
-            dest.write_bytes(payload)
             time.sleep(0.25)
             return payload
         except urllib.error.HTTPError as error:
@@ -128,6 +125,26 @@ def fetch_reference(url: str, dest: Path) -> bytes | None:
         except Exception:
             pass
         time.sleep(0.6 * attempt)
+    return None
+
+
+def fetch_reference(url: str, dest: Path) -> bytes | None:
+    """Fetch the dictionary's reference bitmap, preferring the largest size.
+
+    The CSV links some entries at /60/ (120px), which is too coarse to tell a
+    one-stroke variant apart. Kanjipedia serves the same glyph at /180/ (360px),
+    so try that first and fall back to whatever the CSV gave.
+    """
+    if dest.exists():
+        return dest.read_bytes()
+    candidates = [url]
+    if "/kanji/60/" in url:
+        candidates.insert(0, url.replace("/kanji/60/", "/kanji/180/"))
+    for candidate in candidates:
+        payload = _try_url(candidate)
+        if payload:
+            dest.write_bytes(payload)
+            return payload
     return None
 
 
