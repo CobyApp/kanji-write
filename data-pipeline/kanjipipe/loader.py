@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import unicodedata
 from pathlib import Path
 
 from kanjipipe.ingest.kanken import memberships_for
@@ -164,13 +165,39 @@ def load_taigirui(
     conn.commit()
 
 
+def _canonical_strokes(
+    codepoint: int,
+    stroke_count: int | None,
+    strokes_by_codepoint: dict[int, list[str]],
+) -> list[str]:
+    """Stroke paths for a CJK Compatibility Ideograph, via its unified form.
+
+    Compatibility ideographs (U+F900–FAFF) are canonically equivalent to a
+    unified character that KanjiVG does cover, so the unified glyph's strokes can
+    stand in — but only sometimes. Many of these exist precisely because the
+    printed form differs (隆 U+F9DC is 17 strokes against the unified 11), and
+    borrowing there would teach the wrong stroke order. Require the stroke counts
+    to agree before substituting; otherwise leave the kanji without stroke data.
+    """
+    canonical = unicodedata.normalize("NFC", chr(codepoint))
+    if len(canonical) != 1 or ord(canonical) == codepoint:
+        return []
+    paths = strokes_by_codepoint.get(ord(canonical), [])
+    if not paths or stroke_count is None or len(paths) != stroke_count:
+        return []
+    return paths
+
+
 def load_stroke_order(
     conn: sqlite3.Connection,
     strokes_by_codepoint: dict[int, list[str]],
 ) -> None:
-    rows = conn.execute("SELECT id, codepoint FROM kanji").fetchall()
-    for kanji_id, codepoint in rows:
-        for ordinal, path_d in enumerate(strokes_by_codepoint.get(codepoint, []), start=1):
+    rows = conn.execute("SELECT id, codepoint, stroke_count FROM kanji").fetchall()
+    for kanji_id, codepoint, stroke_count in rows:
+        paths = strokes_by_codepoint.get(codepoint, [])
+        if not paths:
+            paths = _canonical_strokes(codepoint, stroke_count, strokes_by_codepoint)
+        for ordinal, path_d in enumerate(paths, start=1):
             conn.execute(
                 "INSERT INTO stroke_order (kanji_id, ordinal, path_d) "
                 "VALUES (?, ?, ?)",
