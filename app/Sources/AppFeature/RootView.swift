@@ -526,7 +526,38 @@ private struct YojiDetailView: View {
             NavHeader(title: L.yojiDictionary[appLanguage], onBack: { dismiss() })
                 .background(Palette.background)
         }
+        .safeAreaInset(edge: .bottom) {
+            if store.siblings.count > 1 {
+                HStack(spacing: 12) {
+                    yojiNavButton(L.prev[appLanguage], icon: "chevron.left", trailingIcon: false,
+                                  enabled: store.hasPrev) { store.send(.showSibling(delta: -1)) }
+                    yojiNavButton(L.next[appLanguage], icon: "chevron.right", trailingIcon: true,
+                                  enabled: store.hasNext) { store.send(.showSibling(delta: 1)) }
+                }
+                .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 6)
+                .readableWidth(sizeClass)
+                .background(Palette.background)
+            }
+        }
         .task { store.send(.onAppear) }
+    }
+
+    private func yojiNavButton(_ title: String, icon: String, trailingIcon: Bool,
+                               enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if !trailingIcon { Image(systemName: icon).font(.system(size: 13, weight: .bold)) }
+                Text(title).font(.kawaii(16, weight: .bold, language: appLanguage))
+                if trailingIcon { Image(systemName: icon).font(.system(size: 13, weight: .bold)) }
+            }
+            .foregroundStyle(enabled ? .white : Palette.inkSoft)
+            .frame(maxWidth: .infinity).padding(.vertical, 13)
+            .background(enabled ? Palette.accent : Palette.card)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(enabled ? .clear : Palette.ink.opacity(0.08), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 
     private var headerCard: some View {

@@ -89,14 +89,25 @@ public struct YojiDictionaryFeature {
 public struct YojiDetailFeature {
     @ObservableState
     public struct State: Equatable {
-        public let yoji: Yojijukugo
+        public var yoji: Yojijukugo
+        public var siblings: [Yojijukugo]
+        public var index: Int
         public var kanji: [Kanji] = []
-        public init(yoji: Yojijukugo) { self.yoji = yoji }
+
+        public init(yoji: Yojijukugo, siblings: [Yojijukugo] = [], index: Int = 0) {
+            self.yoji = yoji
+            self.siblings = siblings.isEmpty ? [yoji] : siblings
+            self.index = siblings.isEmpty ? 0 : index
+        }
+
+        public var hasPrev: Bool { index > 0 }
+        public var hasNext: Bool { index < siblings.count - 1 }
     }
 
     public enum Action: Equatable {
         case onAppear
         case loaded([Kanji])
+        case showSibling(delta: Int)
         case kanjiTapped(Kanji)   // delegate → parent pushes the kanji detail
     }
 
@@ -108,16 +119,26 @@ public struct YojiDetailFeature {
             switch action {
             case .onAppear:
                 guard state.kanji.isEmpty else { return .none }
-                let yoji = state.yoji.yoji
-                return .run { send in
-                    await send(.loaded((try? await dictionaryClient.kanjiForYoji(yoji)) ?? []))
-                }
+                return load(state.yoji.yoji)
             case let .loaded(kanji):
                 state.kanji = kanji
                 return .none
+            case let .showSibling(delta):
+                let new = state.index + delta
+                guard state.siblings.indices.contains(new) else { return .none }
+                state.index = new
+                state.yoji = state.siblings[new]
+                state.kanji = []
+                return load(state.yoji.yoji)
             case .kanjiTapped:
                 return .none  // handled by the parent (navigation)
             }
+        }
+    }
+
+    private func load(_ yoji: String) -> Effect<Action> {
+        .run { send in
+            await send(.loaded((try? await dictionaryClient.kanjiForYoji(yoji)) ?? []))
         }
     }
 }
