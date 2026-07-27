@@ -19,10 +19,17 @@ broken or guessed character.
 
 ## Not to be confused with: kanji missing stroke order
 
-Separately, **265 real Unicode kanji** at 準1級/1級 (133 + 132) have no
-per-stroke data, because KanjiVG does not cover them (verified: 0 of the 265
-appear among KanjiVG's 6,699 glyphs). `has_verified_stroke_order = 0` marks
-these, and the app disables writing practice for them with a clear notice.
+Separately, **252 real Unicode kanji** at 準1級/1級 have no per-stroke data,
+because KanjiVG does not cover them (0 of them appear among KanjiVG's 6,699
+glyphs). `has_verified_stroke_order = 0` marks these, and the app disables
+writing practice for them with a clear notice.
+
+It was 265 before `load_stroke_order` learned one safe fallback. 77 of those are
+CJK Compatibility Ideographs (U+F900–FAFF), canonically equivalent to a unified
+character KanjiVG *does* cover — but that equivalence is not a licence to copy
+strokes. Many exist because the printed form differs (隆 U+F9DC is 17 strokes to
+the unified 11), so the loader borrows the unified paths **only when the stroke
+counts agree**: 13 kanji fixed, 63 correctly refused.
 
 **GlyphWiki cannot fix that gap.** Its SVGs are a *single filled outline path*
 (山, a 3-stroke kanji, comes back as one `<path>`), so they can render a glyph
