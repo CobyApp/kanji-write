@@ -249,16 +249,20 @@ struct HomeView: View {
             planButton.popIn(delay: 0.16)
             if levelComplete { levelCompleteCard.popIn(delay: 0.18) }
             // iPhone is a single narrow column — every launcher is a full-width
-            // row, all with the same spacing (no side-by-side cards).
-            VStack(spacing: 12) {
-                studyLauncher
-                kankenButton
-                dictionaryButton
-                wordDictionaryButton
-                expressionDictionaryButton
-                practiceButton
-                if examType == .kanken { yojiDictionaryButton }
-                wordbookButton
+            // row, grouped by purpose so eight tiles don't read as one flat list.
+            VStack(spacing: 22) {
+                launcherSection(L.sectionStudy[appLanguage], Palette.pink) {
+                    studyLauncher; kankenButton; practiceButton
+                }
+                launcherSection(L.sectionDictionaries[appLanguage], Palette.sky) {
+                    dictionaryButton
+                    wordDictionaryButton
+                    expressionDictionaryButton
+                    if examType == .kanken { yojiDictionaryButton }
+                }
+                launcherSection(L.sectionCollection[appLanguage], Palette.teal) {
+                    wordbookButton
+                }
             }
             .popIn(delay: 0.22)
         }
@@ -315,16 +319,40 @@ struct HomeView: View {
 
     /// The four launchers as a 2-column grid (iPad).
     private var launchersGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
-                  spacing: 12) {
-            studyLauncher
-            kankenButton
-            dictionaryButton
-            wordDictionaryButton
-            expressionDictionaryButton
-            practiceButton
-            if examType == .kanken { yojiDictionaryButton }
-            wordbookButton
+        VStack(spacing: 22) {
+            launcherSection(L.sectionStudy[appLanguage], Palette.pink, grid: true) {
+                studyLauncher; kankenButton; practiceButton
+            }
+            launcherSection(L.sectionDictionaries[appLanguage], Palette.sky, grid: true) {
+                dictionaryButton
+                wordDictionaryButton
+                expressionDictionaryButton
+                if examType == .kanken { yojiDictionaryButton }
+            }
+            launcherSection(L.sectionCollection[appLanguage], Palette.teal, grid: true) {
+                wordbookButton
+            }
+        }
+    }
+
+    /// A titled group of launchers — one header plus its tiles, stacked on iPhone
+    /// and two-up on iPad. Grouping by purpose (학습 / 사전 / 보관함) keeps the eight
+    /// entries scannable instead of one long undifferentiated list.
+    @ViewBuilder
+    private func launcherSection<C: View>(
+        _ title: String, _ accent: Color, grid: Bool = false,
+        @ViewBuilder content: () -> C
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title, accent: accent)
+            if grid {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                    spacing: 12
+                ) { content() }
+            } else {
+                VStack(spacing: 12) { content() }
+            }
         }
     }
 

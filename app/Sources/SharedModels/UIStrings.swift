@@ -51,6 +51,10 @@ public enum L {
     public static let noWordsFound = L10nText(
         ko: "단어를 찾을 수 없어요", ja: "単語が見つかりません", zh: "找不到单词", en: "No words found")
     public static let startStudy = L10nText(ko: "학습 시작", ja: "学習を始める", zh: "开始学习", en: "Start studying")
+    // Home groups its launchers so the daily-use ones come first.
+    public static let sectionStudy = L10nText(ko: "학습", ja: "学習", zh: "学习", en: "Study")
+    public static let sectionDictionaries = L10nText(ko: "사전", ja: "辞書", zh: "词典", en: "Dictionaries")
+    public static let sectionCollection = L10nText(ko: "보관함", ja: "コレクション", zh: "收藏", en: "Collection")
     // Level completion → advance to the next 급수. "{level}" is replaced at display.
     public static let levelCompleteTitle = L10nText(
         ko: "{level} 완료!", ja: "{level} 完了！", zh: "{level} 完成！", en: "{level} complete!")
