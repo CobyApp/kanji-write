@@ -76,10 +76,13 @@ public struct PracticeView: View {
                 .padding(.top, 8)
 
                 settingCard(L.targetLevel[appLanguage]) {
-                    Picker("", selection: levelBinding) {
-                        ForEach(levels, id: \.self) { Text($0).tag($0) }
+                    // A segmented control crams 漢検's ten 級 into one row; chips
+                    // wrap onto as many rows as needed (same as the study plan).
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 8)], spacing: 8) {
+                        ForEach(levels, id: \.self) { level in
+                            levelChip(level)
+                        }
                     }
-                    .pickerStyle(.segmented)
                 }
                 settingCard(L.writeCount[appLanguage]) {
                     Picker("", selection: countBinding) {
@@ -108,6 +111,33 @@ public struct PracticeView: View {
             }
             .padding(20)
         }
+    }
+
+    /// A square tile that fills the width it's given. Driving the shape from a
+    /// clear spacer keeps both comparison boxes the same size — `aspectRatio` on a
+    /// Text collapses to the glyph's intrinsic height instead of going square.
+    private func squareBox<C: View>(_ fill: Color, @ViewBuilder _ content: () -> C) -> some View {
+        Color.clear
+            .aspectRatio(1, contentMode: .fit)
+            .overlay { content() }
+            .background(fill)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+
+    private func levelChip(_ level: String) -> some View {
+        let selected = store.level == level
+        return Button { store.send(.levelSelected(level)) } label: {
+            Text(level)
+                .font(.kawaii(14, weight: .bold))
+                .foregroundStyle(selected ? .white : Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity).padding(.vertical, 9)
+                .background(selected ? Palette.accent : Palette.background)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(
+                    selected ? .clear : Palette.ink.opacity(0.10), lineWidth: 1))
+        }
+        .buttonStyle(.bouncy)
     }
 
     private func settingCard<C: View>(_ title: String, @ViewBuilder _ inner: () -> C) -> some View {
@@ -217,8 +247,13 @@ public struct PracticeView: View {
 
     // MARK: Review — my answer vs the real kanji
 
+    /// One comparison per row on a phone. Each cell holds two side-by-side boxes
+    /// (my writing vs the answer), so squeezing two cells into a narrow width made
+    /// them overlap — a phone gets the full width for one comparison instead.
     private var reviewColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: sizeClass == .compact ? 150 : 190), spacing: 14)]
+        sizeClass == .compact
+            ? [GridItem(.flexible(), spacing: 14)]
+            : [GridItem(.adaptive(minimum: 240), spacing: 14)]
     }
 
     private var reviewView: some View {
@@ -261,23 +296,24 @@ public struct PracticeView: View {
                     .font(.kawaii(13, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
-            HStack(spacing: 8) {
+            // Both boxes share the row evenly and stay square, so the pair fits
+            // whatever width the cell gets instead of forcing a fixed 176pt.
+            HStack(spacing: 10) {
                 VStack(spacing: 3) {
-                    myWriting(index)
-                        .frame(width: 84, height: 84)
-                        .background(Palette.background)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    squareBox(Palette.background) { myWriting(index) }
                     Text(L.writeMine[appLanguage]).font(.kawaii(10)).foregroundStyle(Palette.inkSoft)
                 }
                 VStack(spacing: 3) {
-                    Text(kanji.literal)
-                        .font(.kawaiiJP(58, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                        .frame(width: 84, height: 84)
-                        .background(Palette.mintSoft.opacity(0.5))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    squareBox(Palette.mintSoft.opacity(0.5)) {
+                        Text(kanji.literal)
+                            .font(.kawaiiJP(58, weight: .bold)).japaneseGlyphs()
+                            .foregroundStyle(Palette.ink)
+                            .minimumScaleFactor(0.5)
+                    }
                     Text(L.writeAnswer[appLanguage]).font(.kawaii(10)).foregroundStyle(Palette.mint)
                 }
             }
+            .frame(maxWidth: 320)  // keep the pair from ballooning on a wide cell
         }
         .padding(12).roundedCard()
     }
