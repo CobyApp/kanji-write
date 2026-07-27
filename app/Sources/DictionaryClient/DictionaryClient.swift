@@ -44,7 +44,7 @@ public struct DictionaryClient: Sendable {
     public var jlptQuestions: @Sendable (_ kanjiIDs: [Int], _ perKanji: Int) async throws -> [JLPTQuestion]
     /// Pre-authored questions of one kind (reading / orthography / context) for
     /// kanji at the given level — the source for the exam hub's sections. The
-    /// level's format picks the column: "N5" → jlpt_level, "10級" → kanken_level.
+    /// level's format selects JLPT equality or Kanken membership filtering.
     public var examQuestions: @Sendable (_ level: String, _ kind: String, _ limit: Int) async throws -> [JLPTQuestion]
     /// Kanji + their radical for a level — the input to the 部首 question generator
     /// (distractors are drawn from the pool of real radicals).

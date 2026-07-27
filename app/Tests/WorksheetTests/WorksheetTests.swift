@@ -5,8 +5,15 @@ import XCTest
 
 @testable import Worksheet
 
-private func k(_ id: Int, literal: String = "x", strokes: Int = 1, level: String? = "N5") -> Kanji {
+private func k(
+    _ id: Int,
+    literal: String = "x",
+    strokes: Int = 1,
+    level: String? = "N5",
+    hasVerifiedStrokeOrder: Bool = false
+) -> Kanji {
     Kanji(id: id, literal: literal, strokeCount: strokes, grade: 1, jlptLevel: level,
+          hasVerifiedStrokeOrder: hasVerifiedStrokeOrder,
           onReadings: ["オン"], kunReadings: ["くん"])
 }
 
@@ -69,10 +76,63 @@ final class WorksheetQueueTests: XCTestCase {
         let queue = buildWorksheetQueue(records: records, kanji: [k(1), k(2)], today: 0, newPerDay: 7)
         XCTAssertTrue(queue.isEmpty)
     }
+
+    func testQueueKeepsKanjiWithoutWritingDataStudyable() {
+        let unavailable = k(1, literal: "亞", strokes: 8, hasVerifiedStrokeOrder: false)
+
+        let queue = buildWorksheetQueue(
+            records: [], kanji: [unavailable], today: 0, newPerDay: 7
+        )
+
+        XCTAssertEqual(queue.map(\.id), [unavailable.id])
+    }
 }
 
 @MainActor
 final class WorksheetFeatureReducerTests: XCTestCase {
+    func testAdvancedKankenDoesNotLoadJLPTQuestions() async {
+        let previousExam = UserDefaults.standard.string(forKey: "examType")
+        UserDefaults.standard.set(ExamType.kanken.rawValue, forKey: "examType")
+        defer {
+            if let previousExam {
+                UserDefaults.standard.set(previousExam, forKey: "examType")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "examType")
+            }
+        }
+
+        let jlptQuestionsCalled = LockIsolated(false)
+        let advanced = Kanji(
+            id: 1, literal: "亞", strokeCount: 8, grade: nil, jlptLevel: nil,
+            kankenLevel: "準1級", kankenMemberships: ["準1級", "1級"],
+            hasVerifiedStrokeOrder: false, onReadings: ["ア"], kunReadings: []
+        )
+        let store = TestStore(initialState: WorksheetFeature.State()) {
+            WorksheetFeature()
+        } withDependencies: {
+            $0.date = .constant(Date(timeIntervalSince1970: 100 * 86_400))
+            $0.reviewStore.loadRecords = { [] }
+            $0.dictionaryClient.allKanji = { [advanced] }
+            $0.dictionaryClient.words = { _, _ in [] }
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.strokeOrder = { _ in [] }
+            $0.dictionaryClient.glosses = { _ in [:] }
+            $0.dictionaryClient.verbs = { _, _ in [] }
+            $0.dictionaryClient.jlptQuestions = { _, _ in
+                jlptQuestionsCalled.setValue(true)
+                return []
+            }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.onAppear(newPerDay: 1, level: "準1級", startIndex: 0))
+        await store.receive(\.loaded)
+        await store.receive(\.contentLoaded)
+
+        XCTAssertFalse(jlptQuestionsCalled.value)
+        XCTAssertTrue(store.state.jlptQuestions.isEmpty)
+    }
+
     func testNextAdvancesAndReloadsContent() async {
         let store = TestStore(initialState: WorksheetFeature.State()) {
             WorksheetFeature()

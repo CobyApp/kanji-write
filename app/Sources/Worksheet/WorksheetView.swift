@@ -395,8 +395,14 @@ public struct WorksheetView: View {
     private func strokeCard(_ kanji: Kanji) -> some View {
         let glyphSize: CGFloat = sizeClass == .compact ? 230 : 210
         return studyCard(L.strokeOrder[appLanguage], "scribble.variable", Palette.mint) {
-            Group {
-                if store.strokePaths.isEmpty {
+            VStack(spacing: 14) {
+                if !kanji.hasVerifiedStrokeOrder {
+                    PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
+                               size: glyphSize, fontSize: glyphSize * 0.62)
+                    Text(L.strokeOrderUnavailable[appLanguage])
+                        .font(.kawaii(15, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.inkSoft)
+                } else if store.strokePaths.isEmpty {
                     PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
                                size: glyphSize, fontSize: glyphSize * 0.62)
                 } else {
@@ -416,31 +422,39 @@ public struct WorksheetView: View {
         let side: CGFloat = sizeClass == .compact ? 260 : 320
         return studyCard(L.worksheetWrite[appLanguage], "hand.draw", Palette.butter) {
             VStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(Palette.background)
-                    // Trace a faint glyph in the selected Japanese font, so what
-                    // you trace matches the kanji shown everywhere else.
-                    Text(kanji.literal)
-                        .font(.kawaiiJP(side * 0.66, weight: .bold))
-                        .japaneseGlyphs()
-                        .foregroundStyle(Palette.ink.opacity(0.14))
-                    PencilCanvasView(drawing: $writeDrawing).padding(8)
-                }
-                .frame(width: side, height: side)
-                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Palette.butter.opacity(0.35), lineWidth: 1.5))
-                Button { writeDrawing = PKDrawing() } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 13, weight: .bold))
-                        Text(L.clear[appLanguage]).font(.kawaii(14, weight: .bold))
+                if kanji.hasVerifiedStrokeOrder {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .fill(Palette.background)
+                        // Trace a faint glyph in the selected Japanese font, so what
+                        // you trace matches the kanji shown everywhere else.
+                        Text(kanji.literal)
+                            .font(.kawaiiJP(side * 0.66, weight: .bold))
+                            .japaneseGlyphs()
+                            .foregroundStyle(Palette.ink.opacity(0.14))
+                        PencilCanvasView(drawing: $writeDrawing).padding(8)
                     }
-                    .foregroundStyle(Palette.butter)
-                    .padding(.horizontal, 16).padding(.vertical, 8)
-                    .background(Palette.butterSoft).clipShape(Capsule())
+                    .frame(width: side, height: side)
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(Palette.butter.opacity(0.35), lineWidth: 1.5))
+                    Button { writeDrawing = PKDrawing() } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 13, weight: .bold))
+                            Text(L.clear[appLanguage]).font(.kawaii(14, weight: .bold))
+                        }
+                        .foregroundStyle(Palette.butter)
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .background(Palette.butterSoft).clipShape(Capsule())
+                    }
+                    .buttonStyle(.bouncy)
+                } else {
+                    PastelTile(kanji.literal, soft: Palette.butterSoft, accent: Palette.butter,
+                               size: side, fontSize: side * 0.62)
+                    Text(L.strokeOrderUnavailable[appLanguage])
+                        .font(.kawaii(15, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.inkSoft)
                 }
-                .buttonStyle(.bouncy)
             }
             .frame(maxWidth: .infinity)
         }

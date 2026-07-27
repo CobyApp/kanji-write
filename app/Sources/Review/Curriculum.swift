@@ -59,7 +59,7 @@ public func studyOrder(_ kanji: [Kanji], exam: ExamType) -> [Kanji] {
 /// Study order scoped to a single level of the exam (nil = all levels).
 public func studyOrder(_ kanji: [Kanji], exam: ExamType, level: String?) -> [Kanji] {
     guard let level else { return studyOrder(kanji, exam: exam) }
-    return studyOrder(kanji.filter { $0.level(for: exam) == level }, exam: exam)
+    return studyOrder(kanji.filter { $0.belongs(to: level, exam: exam) }, exam: exam)
 }
 
 /// How many kanji in `order` (from `startIndex` onward) have not been started yet.

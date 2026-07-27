@@ -1,0 +1,7 @@
+字種ID,字項ID,漢字テキスト,字体,漢検級
+CT-yama,CE-yama,山,標準字体,10級
+CT-gaku,CE-gaku,学,標準字体,9級
+CT-asia,CE-asia,亞,旧字,1/準1級
+CT-asia-duplicate,CE-asia-duplicate,亞,旧字,1級
+CT-image,CE-image,,旧字でない異体字,1級
+CT-outside,CE-outside,龠,標準字体,配当外

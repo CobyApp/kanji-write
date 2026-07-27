@@ -164,7 +164,9 @@ public struct WorksheetFeature {
                     state.hasLoaded = true
                     return .none
                 }
-                return prefetch(state.queue)
+                let isAdvancedKanken = ExamType.current == .kanken
+                    && state.targetLevel.map { ["準1級", "1級"].contains($0) } == true
+                return prefetch(state.queue, includeJLPTQuestions: !isAdvancedKanken)
 
             case let .contentLoaded(content):
                 state.content = content
@@ -225,7 +227,7 @@ public struct WorksheetFeature {
 
     /// Prefetches words / sentences / stroke guide / meanings for every kanji in
     /// today's queue at once, so advancing cards is instant (no load flicker).
-    private func prefetch(_ queue: [Kanji]) -> Effect<Action> {
+    private func prefetch(_ queue: [Kanji], includeJLPTQuestions: Bool) -> Effect<Action> {
         .run { send in
             var result: [Int: CardContent] = [:]
             for kanji in queue {
@@ -236,12 +238,14 @@ public struct WorksheetFeature {
                 async let sentencesTask = try? await dictionaryClient.sentences(id, 3)
                 async let glossesTask = try? await dictionaryClient.glosses(id)
                 async let verbsTask = try? await dictionaryClient.verbs(id, 6)
-                async let questionsTask = try? await dictionaryClient.jlptQuestions([id], 3)
+                let questions = includeJLPTQuestions
+                    ? (try? await dictionaryClient.jlptQuestions([id], 3)) ?? []
+                    : []
                 let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
                 result[id] = CardContent(
                     words: await wordsTask ?? [], sentences: await sentencesTask ?? [],
                     strokePaths: paths, glosses: await glossesTask ?? [:],
-                    verbs: await verbsTask ?? [], jlptQuestions: await questionsTask ?? [])
+                    verbs: await verbsTask ?? [], jlptQuestions: questions)
             }
             await send(.contentLoaded(result))
         }

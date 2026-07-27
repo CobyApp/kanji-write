@@ -8,7 +8,7 @@ FIXTURE = Path(__file__).parent / "fixtures" / "kanjidic2_sample.xml"
 
 def test_parses_all_characters():
     kanji = parse_kanjidic2(FIXTURE)
-    assert [k.literal for k in kanji] == ["山", "学", "龠"]
+    assert [k.literal for k in kanji] == ["山", "学", "龠", "亞"]
 
 
 def test_extracts_core_fields():

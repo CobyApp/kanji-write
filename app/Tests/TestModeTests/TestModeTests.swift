@@ -44,6 +44,36 @@ final class QuizItemUnderlineTests: XCTestCase {
     }
 }
 
+final class AdvancedKankenSectionTests: XCTestCase {
+    func testPreFirstSectionsMatchOfficialPaperOrder() {
+        let sections = ExamType.kanken.sections(for: "準1級")
+
+        XCTAssertEqual(
+            sections.map(\.jaTitle),
+            [
+                "読み", "表外の読み", "熟語の読み・一字訓読み", "共通の漢字", "書き取り",
+                "誤字訂正", "四字熟語", "対義語・類義語", "故事・諺", "文章題",
+            ]
+        )
+        XCTAssertEqual(sections.map(\.numeral), ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"])
+        XCTAssertTrue(sections.allSatisfy { !$0.available })
+    }
+
+    func testFirstSectionsMatchOfficialPaperOrder() {
+        let sections = ExamType.kanken.sections(for: "1級")
+
+        XCTAssertEqual(
+            sections.map(\.jaTitle),
+            [
+                "読み", "書き取り", "語選択", "四字熟語", "熟字訓・当て字",
+                "音読み・訓読み", "対義語・類義語", "故事・諺", "文章題",
+            ]
+        )
+        XCTAssertEqual(sections.map(\.numeral), ["一", "二", "三", "四", "五", "六", "七", "八", "九"])
+        XCTAssertTrue(sections.allSatisfy { !$0.available })
+    }
+}
+
 @MainActor
 final class QuizFeatureTests: XCTestCase {
     private func question(_ id: Int, kanji: Int, answer: Int = 0) -> JLPTQuestion {

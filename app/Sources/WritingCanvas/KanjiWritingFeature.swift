@@ -12,6 +12,7 @@ public struct KanjiWritingFeature {
         public var showGuide = true
         public var savedDrawingData: Data?
         public var recognition: RecognitionResult?
+        public var isWritingAvailable: Bool { kanji.hasVerifiedStrokeOrder }
         public init(kanji: Kanji) { self.kanji = kanji }
     }
 
@@ -35,6 +36,7 @@ public struct KanjiWritingFeature {
         Reduce { state, action in
             switch action {
             case .onAppear:
+                guard state.isWritingAvailable else { return .none }
                 let id = state.kanji.id
                 return .run { send in
                     async let drawingData = drawingStore.loadDrawing(id)

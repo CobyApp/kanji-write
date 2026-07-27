@@ -168,7 +168,7 @@ extension ExamType {
     private static var taigirui: ExamSection { live("taigirui", "対義語・類義語", .taigirui, nil) }
     private static var onkun: ExamSection { live("onkun", "音読み・訓読み", .onkun, nil) }
 
-    /// 漢検 10級〜2級 papers (準1級/1級 use 表外漢字 not yet in the dictionary).
+    /// 漢検 papers in official 大問 order.
     private static func kankenSections(_ level: String) -> [ExamSection] {
         switch level {
         case "10級":
@@ -203,6 +203,31 @@ extension ExamType {
             return [reading, radical, soon("kousei", "熟語の構成"), yoji,
                     taigirui, soon("doonkun", "同音・同訓異字"),
                     soon("goji", "誤字訂正"), okuri("漢字と送りがな"), writing]
+        case "準1級":
+            return [
+                soon("reading", "読み"),
+                soon("hyogai-reading", "表外の読み"),
+                soon("jukugo-reading", "熟語の読み・一字訓読み"),
+                soon("common-kanji", "共通の漢字"),
+                soon("writing", "書き取り"),
+                soon("goji", "誤字訂正"),
+                soon("yoji", "四字熟語"),
+                soon("taigirui", "対義語・類義語"),
+                soon("koji-kotowaza", "故事・諺"),
+                soon("passage", "文章題"),
+            ]
+        case "1級":
+            return [
+                soon("reading", "読み"),
+                soon("writing", "書き取り"),
+                soon("word-selection", "語選択"),
+                soon("yoji", "四字熟語"),
+                soon("jukujikun-ateji", "熟字訓・当て字"),
+                soon("onkun", "音読み・訓読み"),
+                soon("taigirui", "対義語・類義語"),
+                soon("koji-kotowaza", "故事・諺"),
+                soon("passage", "文章題"),
+            ]
         default:
             return [reading, radical, writing]
         }

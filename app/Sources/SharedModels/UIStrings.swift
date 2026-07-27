@@ -316,6 +316,9 @@ public enum L {
 
     // Writing
     public static let strokes = L10nText(ko: "획수", ja: "画数", zh: "笔画", en: "Strokes")
+    public static let strokeOrderUnavailable = L10nText(
+        ko: "획순 데이터가 없어요", ja: "筆順データがありません",
+        zh: "暂无笔顺数据", en: "No stroke-order data")
     public static let correct = L10nText(ko: "정답!", ja: "正解！", zh: "正确！", en: "Correct!")
     public static let recognized = L10nText(ko: "인식", ja: "認識", zh: "识别", en: "Recognized")
 

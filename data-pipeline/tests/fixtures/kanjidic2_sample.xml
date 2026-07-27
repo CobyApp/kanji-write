@@ -60,4 +60,19 @@
     </rmgroup>
   </reading_meaning>
 </character>
+<character>
+  <literal>亞</literal>
+  <codepoint><cp_value cp_type="ucs">4e9e</cp_value></codepoint>
+  <radical><rad_value rad_type="classical">7</rad_value></radical>
+  <misc>
+    <stroke_count>8</stroke_count>
+  </misc>
+  <reading_meaning>
+    <rmgroup>
+      <reading r_type="ja_on">ア</reading>
+      <meaning>Asia</meaning>
+      <meaning>rank next</meaning>
+    </rmgroup>
+  </reading_meaning>
+</character>
 </kanjidic2>
