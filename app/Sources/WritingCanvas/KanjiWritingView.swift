@@ -35,28 +35,37 @@ public struct KanjiWritingView: View {
 
     public var body: some View {
         VStack(spacing: 8) {
-            Text("\(L.strokes[appLanguage]) \(strokeCountStatus(expected: store.strokePaths.count, drawn: drawing.strokes.count))")
-                .font(.headline)
-                .monospacedDigit()
-            ZStack {
-                if store.showGuide {
-                    GuideStrokesView(paths: store.strokePaths)
+            if store.isWritingAvailable {
+                Text("\(L.strokes[appLanguage]) \(strokeCountStatus(expected: store.strokePaths.count, drawn: drawing.strokes.count))")
+                    .font(.headline)
+                    .monospacedDigit()
+                ZStack {
+                    if store.showGuide {
+                        GuideStrokesView(paths: store.strokePaths)
+                    }
+                    PencilCanvasView(drawing: $drawing)
                 }
-                PencilCanvasView(drawing: $drawing)
-            }
-            .aspectRatio(1, contentMode: .fit)
-            .background(Color(.secondarySystemBackground))
-            if let recognition = store.recognition {
-                VStack(spacing: 4) {
-                    Text(recognition.matched ? L.correct[appLanguage] : L.gradeAgain[appLanguage])
-                        .font(.title2.bold())
-                        .foregroundStyle(recognition.matched ? Color.green : Color.red)
-                    if let candidate = recognition.candidates.first {
-                        Text("\(L.recognized[appLanguage]): \(candidate)")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                .aspectRatio(1, contentMode: .fit)
+                .background(Color(.secondarySystemBackground))
+                if let recognition = store.recognition {
+                    VStack(spacing: 4) {
+                        Text(recognition.matched ? L.correct[appLanguage] : L.gradeAgain[appLanguage])
+                            .font(.title2.bold())
+                            .foregroundStyle(recognition.matched ? Color.green : Color.red)
+                        if let candidate = recognition.candidates.first {
+                            Text("\(L.recognized[appLanguage]): \(candidate)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
+            } else {
+                Image(systemName: "pencil.slash")
+                    .font(.system(size: 42))
+                    .foregroundStyle(.secondary)
+                Text(L.strokeOrderUnavailable[appLanguage])
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding()
@@ -65,7 +74,9 @@ public struct KanjiWritingView: View {
             NavHeader(title: store.kanji.literal) { dismiss() }
                 .background(Palette.background)
         }
-        .safeAreaInset(edge: .bottom) { actionBar }
+        .safeAreaInset(edge: .bottom) {
+            if store.isWritingAvailable { actionBar }
+        }
         .task { store.send(.onAppear) }
         .onChange(of: store.savedDrawingData) { _, data in
             if let data, let restored = try? PKDrawing(data: data) {

@@ -25,6 +25,7 @@ class Kanji:
     freq_rank: int | None
     radical: int | None     # classical radical number
     jlpt_level: str | None = None  # 'N5'..'N1'
+    kanken_level: str | None = None  # introduction-level compatibility value
     readings: list[Reading] = field(default_factory=list)
     glosses: list[Gloss] = field(default_factory=list)
 
@@ -56,6 +57,29 @@ class LlmGloss:
     ko: str | None = None
     ja: str | None = None
     zh: str | None = None
+
+
+@dataclass(frozen=True)
+class KankenAllocation:
+    ct_id: str
+    ce_id: str
+    literal: str | None
+    variant_kind: str
+    source_level: str
+
+
+@dataclass(frozen=True)
+class GlyphAsset:
+    ce_id: str
+    canonical_literal: str
+    glyph_name: str
+    match_basis: str
+    provider: str
+    revision: str
+    sha256: str
+    source_url: str
+    license_url: str
+    local_svg_name: str
 
 
 @dataclass

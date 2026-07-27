@@ -1,19 +1,49 @@
 # kanjipipe/loader.py
 from __future__ import annotations
 
+import json
 import sqlite3
+from pathlib import Path
 
-from kanjipipe.models import JlptQuestion, Kanji, LlmGloss, Relation, Sentence, Word
+from kanjipipe.ingest.kanken import memberships_for
+from kanjipipe.models import (
+    JlptQuestion,
+    Kanji,
+    KankenAllocation,
+    LlmGloss,
+    Relation,
+    Sentence,
+    Word,
+)
+
+KANKEN_LEVEL_ORDER = (
+    "10級",
+    "9級",
+    "8級",
+    "7級",
+    "6級",
+    "5級",
+    "4級",
+    "3級",
+    "準2級",
+    "2級",
+    "準1級",
+    "1級",
+)
+KANKEN_LEVEL_RANK = {
+    level: rank for rank, level in enumerate(KANKEN_LEVEL_ORDER)
+}
 
 
 def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
     for k in kanji:
         cur = conn.execute(
             "INSERT INTO kanji "
-            "(literal, codepoint, stroke_count, grade, jlpt_level, freq_rank, radical) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "(literal, codepoint, stroke_count, grade, jlpt_level, kanken_level, "
+            "freq_rank, radical) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (k.literal, k.codepoint, k.stroke_count, k.grade,
-             k.jlpt_level, k.freq_rank, k.radical),
+             k.jlpt_level, k.kanken_level, k.freq_rank, k.radical),
         )
         kanji_id = cur.lastrowid
         for r in k.readings:
@@ -30,6 +60,110 @@ def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
     conn.commit()
 
 
+def load_kanken_memberships(
+    conn: sqlite3.Connection,
+    allocations: list[KankenAllocation],
+) -> None:
+    kanji_by_literal = {
+        literal: (kanji_id, kanken_level)
+        for kanji_id, literal, kanken_level in conn.execute(
+            "SELECT id, literal, kanken_level FROM kanji"
+        )
+    }
+    missing_literals = {
+        allocation.literal
+        for allocation in allocations
+        if allocation.literal is not None
+        and allocation.literal not in kanji_by_literal
+    }
+    if missing_literals:
+        missing = ", ".join(sorted(missing_literals))
+        raise ValueError(f"Kanken allocation not present in selected inventory: {missing}")
+
+    introduction_by_kanji_id: dict[int, str] = {}
+    for allocation in allocations:
+        if allocation.literal is None:
+            continue
+        kanji_id, existing_level = kanji_by_literal[allocation.literal]
+        for level_label in memberships_for(allocation.source_level):
+            conn.execute(
+                "INSERT OR IGNORE INTO kanken_membership "
+                "(kanji_id, level_label, source_classification) VALUES (?, ?, ?)",
+                (kanji_id, level_label, allocation.source_level),
+            )
+        introduction_level = (
+            "準1級" if allocation.source_level == "1/準1級"
+            else allocation.source_level
+        )
+        candidates = [
+            level
+            for level in (
+                introduction_by_kanji_id.get(kanji_id),
+                existing_level,
+                introduction_level,
+            )
+            if level in KANKEN_LEVEL_RANK
+        ]
+        introduction_by_kanji_id[kanji_id] = min(
+            candidates,
+            key=KANKEN_LEVEL_RANK.__getitem__,
+        )
+
+    for kanji_id, introduction_level in introduction_by_kanji_id.items():
+        conn.execute(
+            "UPDATE kanji SET kanken_level = ? WHERE id = ?",
+            (introduction_level, kanji_id),
+        )
+    conn.commit()
+
+
+def load_yojijukugo(
+    conn: sqlite3.Connection,
+    path: str | Path,
+) -> None:
+    entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    conn.executemany(
+        "INSERT INTO yojijukugo "
+        "(yoji, reading, meaning_ja, meaning_ko, kanken_level) "
+        "VALUES (?, ?, ?, ?, ?)",
+        [
+            (
+                entry["yoji"],
+                entry["reading"],
+                entry.get("meaningJa"),
+                entry.get("meaningKo"),
+                entry["level"],
+            )
+            for entry in entries
+        ],
+    )
+    conn.commit()
+
+
+def load_taigirui(
+    conn: sqlite3.Connection,
+    path: str | Path,
+) -> None:
+    entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    conn.executemany(
+        "INSERT INTO taigirui "
+        "(word, word_reading, answer, answer_reading, relation, kanken_level) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        [
+            (
+                entry["word"],
+                entry["wordReading"],
+                entry["answer"],
+                entry["answerReading"],
+                entry["relation"],
+                entry["level"],
+            )
+            for entry in entries
+        ],
+    )
+    conn.commit()
+
+
 def load_stroke_order(
     conn: sqlite3.Connection,
     strokes_by_codepoint: dict[int, list[str]],
@@ -42,6 +176,10 @@ def load_stroke_order(
                 "VALUES (?, ?, ?)",
                 (kanji_id, ordinal, path_d),
             )
+    conn.execute(
+        "UPDATE kanji SET has_verified_stroke_order = EXISTS ("
+        "SELECT 1 FROM stroke_order s WHERE s.kanji_id = kanji.id)"
+    )
     conn.commit()
 
 

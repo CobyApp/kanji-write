@@ -1,9 +1,84 @@
 # tests/test_build_db.py
 from pathlib import Path
 
+import pytest
+
 from kanjipipe.build_db import build
+from kanjipipe.filters import select_study_inventory
+from kanjipipe.models import Gloss, Kanji, KankenAllocation, Reading
+from kanjipipe.validate import KankenCountPolicy
 
 FIX = Path(__file__).parent / "fixtures"
+RESOURCES = Path(__file__).parents[2] / "app/Sources/DictionaryClient/Resources"
+FIXTURE_KANKEN_COUNT_POLICY = KankenCountPolicy(
+    legacy_memberships={"10級": 1, "9級": 1},
+    unicode_advanced=1,
+    image_pending=1,
+    advanced_memberships={"準1級": 1, "1級": 1},
+    shared_advanced=1,
+)
+
+
+def _kanji(literal: str, grade: int | None) -> Kanji:
+    return Kanji(
+        literal=literal,
+        codepoint=ord(literal),
+        stroke_count=1,
+        grade=grade,
+        freq_rank=None,
+        radical=None,
+        readings=[Reading("on", "ア")],
+        glosses=[Gloss("en", "sample")],
+    )
+
+
+def _allocation(
+    literal: str | None,
+    level: str,
+    ce_id: str = "CE-unicode",
+) -> KankenAllocation:
+    return KankenAllocation(
+        ct_id="CT-sample",
+        ce_id=ce_id,
+        literal=literal,
+        variant_kind="標準字体",
+        source_level=level,
+    )
+
+
+def test_inventory_keeps_joyo_and_unicode_advanced_only():
+    selected = select_study_inventory(
+        [_kanji("山", 1), _kanji("亞", None), _kanji("齷", None)],
+        [
+            _allocation("亞", "準1級"),
+            _allocation(None, "1級", ce_id="CE-image"),
+        ],
+    )
+
+    assert [item.literal for item in selected] == ["山", "亞"]
+
+
+def test_build_reports_unknown_kanken_levels_deterministically(tmp_path):
+    kanken = tmp_path / "kanken.csv"
+    kanken.write_text(
+        "字種ID,字項ID,漢字テキスト,字体,漢検級\n"
+        "CT-1,CE-1,山,標準字体,超級\n"
+        "CT-2,CE-2,学,標準字体,特級\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="unknown Kanken level: 特級"):
+        build(
+            kanjidic2_path=FIX / "kanjidic2_sample.xml",
+            jlpt_path=FIX / "jlpt_sample.json",
+            kanjivg_path=FIX / "kanjivg_sample.xml",
+            jmdict_path=FIX / "jmdict_sample.xml",
+            sentences_path=FIX / "sentences_sample.csv",
+            links_path=FIX / "links_sample.csv",
+            kanken_path=kanken,
+            unihan_path=None,
+            out_path=str(tmp_path / "kanji.sqlite"),
+        )
 
 
 def test_build_produces_sqlite_with_strokes(tmp_path):
@@ -15,21 +90,60 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
         jmdict_path=FIX / "jmdict_sample.xml",
         sentences_path=FIX / "sentences_sample.csv",
         links_path=FIX / "links_sample.csv",
+        kanken_path=FIX / "kanken_build_sample.csv",
         llm_glosses_path=FIX / "llm_glosses_sample.jsonl",
         word_ko_path=FIX / "word_glosses_ko_sample.jsonl",
         word_jazh_path=FIX / "word_glosses_jazh_sample.jsonl",
+        yojijukugo_path=RESOURCES / "yojijukugo.source.json",
+        taigirui_path=RESOURCES / "taigirui.source.json",
+        unihan_path=None,
+        kanken_count_policy=FIXTURE_KANKEN_COUNT_POLICY,
         out_path=str(out),
     )
     assert out.exists()
-    assert report["total"] == 2          # 山, 学 — 龠 filtered out
+    assert report["total"] == 3          # 山, 学, 亞 — 龠 filtered out
     assert report["missing_reading"] == 0
     assert report["missing_en"] == 0
-    assert report["missing_stroke_order"] == 0
+    assert report["missing_stroke_order"] == 1
+    assert report["kanken_unicode_advanced"] == 1
+    assert report["kanken_image_pending"] == 1
+    assert report["missing_kanken_membership"] == 0
+    assert report["missing_advanced_inventory"] == 0
+    assert report["missing_advanced_reading"] == 0
+    assert report["missing_advanced_meaning"] == 0
+    assert report["stroke_capability_mismatch"] == 0
 
     import sqlite3
     with sqlite3.connect(out) as conn:
         literals = {r[0] for r in conn.execute("SELECT literal FROM kanji")}
-        assert literals == {"山", "学"}
+        assert literals == {"山", "学", "亞"}
+        assert conn.execute(
+            "SELECT COUNT(*) FROM kanken_membership WHERE level_label = '準1級'"
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM kanken_membership WHERE level_label = '1級'"
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM stroke_order so "
+            "JOIN kanji k ON so.kanji_id = k.id WHERE k.literal = '亞'"
+        ).fetchone()[0] == 0
+        capabilities = dict(conn.execute(
+            "SELECT literal, has_verified_stroke_order FROM kanji"
+        ))
+        assert capabilities == {"山": 1, "学": 1, "亞": 0}
+        assert conn.execute(
+            "SELECT reading, meaning_ja, meaning_ko, kanken_level "
+            "FROM yojijukugo WHERE yoji = '悪口雑言'"
+        ).fetchone() == (
+            "あっこうぞうごん",
+            "口ぎたなくさんざんに悪口を言うこと。",
+            "온갖 욕설을 마구 퍼붓는 것.",
+            "5級",
+        )
+        assert conn.execute(
+            "SELECT word_reading, answer, answer_reading, relation, kanken_level "
+            "FROM taigirui WHERE word = '進級'"
+        ).fetchone() == ("しんきゅう", "留年", "りゅうねん", "対義", "5級")
         yama_strokes = conn.execute(
             "SELECT so.path_d FROM stroke_order so JOIN kanji k ON so.kanji_id = k.id "
             "WHERE k.literal = '山' ORDER BY so.ordinal").fetchall()
@@ -84,3 +198,26 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
             "WHERE w.surface = '山' AND wg.lang = 'zh'").fetchone()
         assert word_zh == ("山",)
     conn.close()
+
+
+def test_build_uses_canonical_kanken_count_policy_by_default(tmp_path):
+    with pytest.raises(
+        ValueError,
+        match="kanken_unicode_advanced expected 3806, got 1",
+    ):
+        build(
+            kanjidic2_path=FIX / "kanjidic2_sample.xml",
+            jlpt_path=FIX / "jlpt_sample.json",
+            kanjivg_path=FIX / "kanjivg_sample.xml",
+            jmdict_path=FIX / "jmdict_sample.xml",
+            sentences_path=FIX / "sentences_sample.csv",
+            links_path=FIX / "links_sample.csv",
+            kanken_path=FIX / "kanken_build_sample.csv",
+            llm_glosses_path=FIX / "llm_glosses_sample.jsonl",
+            word_ko_path=FIX / "word_glosses_ko_sample.jsonl",
+            word_jazh_path=FIX / "word_glosses_jazh_sample.jsonl",
+            yojijukugo_path=RESOURCES / "yojijukugo.source.json",
+            taigirui_path=RESOURCES / "taigirui.source.json",
+            unihan_path=None,
+            out_path=str(tmp_path / "kanji.sqlite"),
+        )

@@ -1,13 +1,36 @@
 # tests/test_loader.py
+import pytest
+
 from kanjipipe.db import init_db
-from kanjipipe.loader import load_kanji, load_llm_glosses, load_relations, load_sentence_glosses, load_sentence_words, load_sentences, load_stroke_order, load_word_jazh_glosses, load_word_ko_glosses, load_words
-from kanjipipe.models import Gloss, Kanji, LlmGloss, Reading, Relation, Sentence, Word
+from kanjipipe.loader import (
+    load_kanji,
+    load_kanken_memberships,
+    load_llm_glosses,
+    load_relations,
+    load_sentence_glosses,
+    load_sentence_words,
+    load_sentences,
+    load_stroke_order,
+    load_word_jazh_glosses,
+    load_word_ko_glosses,
+    load_words,
+)
+from kanjipipe.models import (
+    Gloss,
+    Kanji,
+    KankenAllocation,
+    LlmGloss,
+    Reading,
+    Relation,
+    Sentence,
+    Word,
+)
 
 
 def _yama():
     return Kanji(
         literal="山", codepoint=0x5C71, stroke_count=3, grade=1,
-        freq_rank=360, radical=46, jlpt_level="N5",
+        freq_rank=360, radical=46, jlpt_level="N5", kanken_level="10級",
         readings=[Reading("on", "サン"), Reading("kun", "やま"),
                   Reading("pinyin", "shan1"), Reading("eum", "산")],
         glosses=[Gloss("en", "mountain")],
@@ -19,9 +42,9 @@ def test_inserts_kanji_with_readings_and_glosses():
     load_kanji(conn, [_yama()])
 
     row = conn.execute(
-        "SELECT literal, stroke_count, grade, jlpt_level, freq_rank, radical "
+        "SELECT literal, stroke_count, grade, jlpt_level, kanken_level, freq_rank, radical "
         "FROM kanji").fetchone()
-    assert row == ("山", 3, 1, "N5", 360, 46)
+    assert row == ("山", 3, 1, "N5", "10級", 360, 46)
 
     reading_count = conn.execute(
         "SELECT COUNT(*) FROM reading").fetchone()[0]
@@ -41,6 +64,88 @@ def test_foreign_keys_link_children_to_parent():
     assert linked == 4
 
 
+def _advanced_kanji(literal: str) -> Kanji:
+    return Kanji(
+        literal=literal,
+        codepoint=ord(literal),
+        stroke_count=8,
+        grade=None,
+        freq_rank=None,
+        radical=7,
+    )
+
+
+def _allocation(literal: str | None, level: str) -> KankenAllocation:
+    return KankenAllocation(
+        ct_id="CT-000002",
+        ce_id="CE-000003",
+        literal=literal,
+        variant_kind="旧字",
+        source_level=level,
+    )
+
+
+def test_shared_allocation_loads_two_memberships_with_pre1_intro_level():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_advanced_kanji("亞")])
+
+    load_kanken_memberships(conn, [_allocation("亞", "1/準1級")])
+
+    memberships = conn.execute(
+        "SELECT level_label, source_classification "
+        "FROM kanken_membership ORDER BY level_label"
+    ).fetchall()
+    assert memberships == [
+        ("1級", "1/準1級"),
+        ("準1級", "1/準1級"),
+    ]
+    assert conn.execute(
+        "SELECT kanken_level FROM kanji WHERE literal = '亞'"
+    ).fetchone() == ("準1級",)
+
+
+@pytest.mark.parametrize(
+    "levels",
+    [
+        ("5級", "1級"),
+        ("1級", "5級"),
+    ],
+)
+def test_duplicate_literal_keeps_earliest_introduction_level_regardless_of_order(
+    levels: tuple[str, str],
+):
+    conn = init_db(":memory:")
+    load_kanji(conn, [_advanced_kanji("缶")])
+
+    load_kanken_memberships(
+        conn,
+        [_allocation("缶", level) for level in levels],
+    )
+
+    memberships = conn.execute(
+        "SELECT level_label FROM kanken_membership ORDER BY level_label"
+    ).fetchall()
+    assert memberships == [("1級",), ("5級",)]
+    assert conn.execute(
+        "SELECT kanken_level FROM kanji WHERE literal = '缶'"
+    ).fetchone() == ("5級",)
+
+
+def test_unicode_allocation_absent_from_inventory_is_rejected():
+    conn = init_db(":memory:")
+
+    with pytest.raises(ValueError, match="not present in selected inventory: 亞"):
+        load_kanken_memberships(conn, [_allocation("亞", "準1級")])
+
+
+def test_image_only_allocation_is_deferred_without_membership():
+    conn = init_db(":memory:")
+
+    load_kanken_memberships(conn, [_allocation(None, "1級")])
+
+    assert conn.execute("SELECT COUNT(*) FROM kanken_membership").fetchone() == (0,)
+
+
 def test_load_stroke_order_links_by_codepoint_in_order():
     conn = init_db(":memory:")
     load_kanji(conn, [_yama()])  # 山, codepoint 0x5C71
@@ -52,6 +157,9 @@ def test_load_stroke_order_links_by_codepoint_in_order():
         "JOIN kanji k ON so.kanji_id = k.id WHERE k.literal = '山' "
         "ORDER BY ordinal").fetchall()
     assert rows == [(1, "d1"), (2, "d2"), (3, "d3")]
+    assert conn.execute(
+        "SELECT has_verified_stroke_order FROM kanji WHERE literal = '山'"
+    ).fetchone() == (1,)
 
 
 def test_load_stroke_order_skips_kanji_absent_from_map():
@@ -60,6 +168,9 @@ def test_load_stroke_order_skips_kanji_absent_from_map():
     load_stroke_order(conn, {})  # no strokes provided
     count = conn.execute("SELECT COUNT(*) FROM stroke_order").fetchone()[0]
     assert count == 0
+    assert conn.execute(
+        "SELECT has_verified_stroke_order FROM kanji WHERE literal = '山'"
+    ).fetchone() == (0,)
 
 
 def _gaku():

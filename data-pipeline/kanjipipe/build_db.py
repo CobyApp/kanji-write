@@ -4,8 +4,20 @@ import os
 from pathlib import Path
 
 from kanjipipe.db import init_db
-from kanjipipe.filters import filter_joyo
+from kanjipipe.filters import (
+    advanced_coverage,
+    select_study_inventory,
+)
 from kanjipipe.ingest.jlpt import merge_jlpt
+from kanjipipe.ingest.kanken import (
+    VALID_LEVELS,
+    memberships_for,
+    parse_kanken_allocations,
+)
+from kanjipipe.ingest.kanken_supplement import (
+    DEFAULT_SUPPLEMENT_PATH,
+    parse_kanken_supplement,
+)
 from kanjipipe.ingest.kanjidic2 import parse_kanjidic2
 from kanjipipe.ingest.jmdict import parse_jmdict
 from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
@@ -14,12 +26,23 @@ from kanjipipe.ingest.jlpt_questions import parse_jlpt_questions
 from kanjipipe.ingest.llm_glosses import parse_llm_glosses
 from kanjipipe.ingest.sentence_glosses import parse_sentence_glosses
 from kanjipipe.ingest.tatoeba import parse_tatoeba
+from kanjipipe.ingest.unihan import parse_unihan
 from kanjipipe.ingest.word_glosses import parse_word_glosses, parse_word_jazh
 from kanjipipe.loader import (
-    load_jlpt_questions, load_kanji, load_llm_glosses, load_relations,
-    load_sentence_glosses, load_sentence_words, load_sentences, load_stroke_order,
-    load_word_jazh_glosses, load_word_ko_glosses, load_words)
-from kanjipipe.validate import assert_core_gates
+    load_jlpt_questions, load_kanji, load_kanken_memberships, load_llm_glosses,
+    load_relations, load_sentence_glosses, load_sentence_words, load_sentences,
+    load_stroke_order, load_taigirui, load_word_jazh_glosses,
+    load_word_ko_glosses, load_words, load_yojijukugo)
+from kanjipipe.validate import (
+    PRODUCTION_KANKEN_COUNT_POLICY,
+    KankenCountPolicy,
+    assert_core_gates,
+)
+
+RESOURCE_DIR = (
+    Path(__file__).resolve().parents[2]
+    / "app/Sources/DictionaryClient/Resources"
+)
 
 
 def build(
@@ -30,14 +53,46 @@ def build(
     sentences_path: str | Path,
     links_path: str | Path,
     out_path: str,
+    kanken_path: str | Path = "sources/kanken.csv",
     llm_glosses_path: str | Path | None = None,
     word_ko_path: str | Path | None = None,
     word_jazh_path: str | Path | None = None,
     sentence_glosses_path: str | Path | None = None,
     jlpt_questions_path: str | Path | None = None,
+    yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
+    taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
+    unihan_path: str | Path | None = "sources/Unihan.zip",
+    kanken_supplement_path: str | Path = DEFAULT_SUPPLEMENT_PATH,
+    kanken_count_policy: KankenCountPolicy = PRODUCTION_KANKEN_COUNT_POLICY,
 ) -> dict[str, int]:
     kanji = parse_kanjidic2(kanjidic2_path)
-    kanji = filter_joyo(kanji)
+    allocations = parse_kanken_allocations(kanken_path)
+    for source_level in sorted({row.source_level for row in allocations}):
+        if source_level not in VALID_LEVELS and source_level != "配当外":
+            memberships_for(source_level)
+    unihan = parse_unihan(unihan_path) if unihan_path is not None else {}
+    supplements = parse_kanken_supplement(kanken_supplement_path)
+    kanji = select_study_inventory(
+        kanji,
+        allocations,
+        unihan=unihan,
+        supplements=supplements,
+    )
+    inventory_report = advanced_coverage(kanji, allocations)
+    if any(inventory_report.values()):
+        raise ValueError(
+            "advanced metadata coverage failed: "
+            + ", ".join(
+                f"{key}={value}"
+                for key, value in inventory_report.items()
+                if value
+            )
+        )
+    supported_allocations = [
+        allocation
+        for allocation in allocations
+        if allocation.source_level in VALID_LEVELS
+    ]
     merge_jlpt(kanji, jlpt_path)
     strokes = parse_kanjivg(kanjivg_path)
     words = parse_jmdict(jmdict_path)
@@ -49,6 +104,7 @@ def build(
     conn = init_db(out_path)
     try:
         load_kanji(conn, kanji)
+        load_kanken_memberships(conn, supported_allocations)
         if llm_glosses_path is not None and os.path.exists(llm_glosses_path):
             load_llm_glosses(conn, parse_llm_glosses(llm_glosses_path))
         load_stroke_order(conn, strokes)
@@ -64,7 +120,18 @@ def build(
             load_sentence_glosses(conn, parse_sentence_glosses(sentence_glosses_path))
         if jlpt_questions_path is not None and os.path.exists(jlpt_questions_path):
             load_jlpt_questions(conn, parse_jlpt_questions(jlpt_questions_path))
-        report = assert_core_gates(conn)  # raises if a gate fails
+        if yojijukugo_path is not None:
+            load_yojijukugo(conn, yojijukugo_path)
+        if taigirui_path is not None:
+            load_taigirui(conn, taigirui_path)
+        report = assert_core_gates(
+            conn,
+            kanken_allocations=allocations,
+            kanken_count_policy=kanken_count_policy,
+            missing_advanced_inventory=inventory_report[
+                "missing_advanced_inventory"
+            ],
+        )  # raises if a gate fails
     finally:
         conn.close()  # always release the handle, even on gate failure
     return report
@@ -83,16 +150,35 @@ def main() -> None:
     parser.add_argument("--word-jazh", default="sources/word_glosses_jazh.jsonl")
     parser.add_argument("--sentence-glosses", default="sources/sentence_glosses.jsonl")
     parser.add_argument("--jlpt-questions", default="sources/jlpt_questions.jsonl")
+    parser.add_argument("--kanken", default="sources/kanken.csv")
+    parser.add_argument("--unihan", default="sources/Unihan.zip")
+    parser.add_argument(
+        "--kanken-supplement",
+        default=str(DEFAULT_SUPPLEMENT_PATH),
+    )
+    parser.add_argument(
+        "--yojijukugo",
+        default=str(RESOURCE_DIR / "yojijukugo.source.json"),
+    )
+    parser.add_argument(
+        "--taigirui",
+        default=str(RESOURCE_DIR / "taigirui.source.json"),
+    )
     parser.add_argument("--out", default="out/kanji.sqlite")
     args = parser.parse_args()
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     report = build(args.kanjidic2, args.jlpt, args.kanjivg, args.jmdict,
                    args.sentences, args.links, args.out,
+                   kanken_path=args.kanken,
                    llm_glosses_path=args.llm_glosses,
                    word_ko_path=args.word_ko,
                    word_jazh_path=args.word_jazh,
                    sentence_glosses_path=args.sentence_glosses,
-                   jlpt_questions_path=args.jlpt_questions)
+                   jlpt_questions_path=args.jlpt_questions,
+                   yojijukugo_path=args.yojijukugo,
+                   taigirui_path=args.taigirui,
+                   unihan_path=args.unihan,
+                   kanken_supplement_path=args.kanken_supplement)
     print(f"built {args.out}: {report}")
 
 
