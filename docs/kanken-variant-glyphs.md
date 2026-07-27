@@ -62,6 +62,29 @@ a glance.
 revision, sha256, and GlyphWiki source + license URLs. Output is accepted by
 `validate.parse_verified_glyph_manifest` (verified end-to-end).
 
+## Candidate ranking
+
+`scripts/match_glyph_candidates.py` makes the review pass faster:
+
+```bash
+.venv/bin/python3 scripts/match_glyph_candidates.py score  # fetch refs + rank
+.venv/bin/python3 scripts/match_glyph_candidates.py sheet  # ranked review sheet
+.venv/bin/python3 scripts/match_glyph_candidates.py apply  # clear winners only
+```
+
+It fetches each entry's Kanjipedia bitmap, rasterises every candidate, and scores
+them by IoU over normalised binary masks. It also **collapses candidates that
+render identically** — GlyphWiki aliases several names to one shape — which cuts
+the comparisons from 2,579 to 1,138, and sorts doubtful entries first in
+`out/glyph_match_review.html`.
+
+**The score is advisory, not decisive.** Across the 338 entries with a real
+choice, median best IoU is 0.358 and median margin 0.018; only 7 clear a 0.10
+margin. A 旧字 differs from its parent by a stroke or two, while the dictionary's
+bitmap differs from GlyphWiki's outlines in weight and style far more than that,
+so stroke weight swamps the distinguishing detail. Ranking narrows the field;
+the final call stays human.
+
 ## Why review is not skipped
 
 Several candidates usually resolve for the same parent — for 扱 alone,
