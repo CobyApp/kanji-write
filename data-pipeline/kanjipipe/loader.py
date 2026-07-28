@@ -223,6 +223,15 @@ def load_words(
     vocabulary.
     """
     advanced = frozenset(advanced_literals or ())
+    # word.id is an autoincrement rowid, and word_glosses_ko.jsonl /
+    # word_glosses_jazh.jsonl address words by exactly that id. Interleaving the
+    # uncommon words into JMdict order shifts every id after the first one and
+    # repoints all those glosses at the wrong entries — 学校 came out meaning
+    # "정면 폭". Load the common words first, in their original order, so their
+    # ids match what the gloss files were written against; uncommon vocabulary
+    # is appended after the last of them.
+    words = ([w for w in words if w.is_common]
+             + [w for w in words if not w.is_common])
     kanji_id_by_literal = {
         literal: kanji_id
         for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")

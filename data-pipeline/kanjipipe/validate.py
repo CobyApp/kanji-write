@@ -399,6 +399,20 @@ def assert_core_gates(
     if report["missing_advanced_meaning"]:
         problems.append(
             f"{report['missing_advanced_meaning']} advanced kanji missing meaning")
+    # word_glosses_{ko,jazh}.jsonl address words by autoincrement id, and were
+    # written against the common-word set alone. If an uncommon word carries one
+    # of those glosses, ids have shifted and every gloss after the shift now
+    # names the wrong word — a silent, repo-wide corruption of the 단어사전.
+    misaligned = conn.execute(
+        "SELECT COUNT(*) FROM word w JOIN word_gloss g ON g.word_id = w.id "
+        "WHERE w.is_common = 0 AND g.lang IN ('ko', 'ja', 'zh')"
+    ).fetchone()[0]
+    report["misaligned_word_glosses"] = misaligned
+    if misaligned:
+        problems.append(
+            f"{misaligned} uncommon words carry a curated gloss — word ids have "
+            "shifted, so the gloss files no longer line up")
+
     if problems:
         raise ValueError("coverage gate failed: " + "; ".join(problems))
     return report

@@ -50,6 +50,24 @@ def test_reading_question_never_offers_another_valid_reading_of_the_same_word():
     assert "りゅうせき" not in q["options"]
 
 
+def test_reading_question_needs_a_compound_not_a_bare_kanji():
+    # 漢検 大問1 always asks for the reading of a 熟語 (or a kanji plus its
+    # okurigana). A bare 兌 against く/と/ぶ/だ is a one-mora coin flip.
+    word = WordRow(surface="兌", reading="と", en="exchange")
+    assert build_reading_question(
+        word, literal="兌", level="1級",
+        other_readings=["く", "ぶ", "だ"], forbidden={"と"}, rng=_rng()) is None
+
+
+def test_reading_question_rejects_an_over_long_surface():
+    # 皇學館大学 is a university, not vocabulary the paper tests.
+    word = WordRow(surface="皇學館大学", reading="こうがっかんだいがく", en="Kogakkan University")
+    assert build_reading_question(
+        word, literal="學", level="1級",
+        other_readings=["かいじょうじえいたい", "とうようひなこうもり", "かくせんあんざんがん"],
+        forbidden={"こうがっかんだいがく"}, rng=_rng()) is None
+
+
 def test_reading_question_dropped_when_distractors_run_out():
     word = WordRow(surface="顰蹙", reading="ひんしゅく", en="frowning")
     assert build_reading_question(
@@ -117,6 +135,13 @@ def test_orthography_skips_reduplicated_words():
     assert build_orthography_question(
         word, literal="侃", level="1級", candidates=["佞", "俑", "偃"],
         real_surfaces={"侃侃諤諤"}, rng=_rng()) is None
+
+
+def test_orthography_rejects_an_over_long_surface():
+    word = WordRow(surface="皇學館大学", reading="こうがっかんだいがく", en="Kogakkan University")
+    assert build_orthography_question(
+        word, literal="學", level="1級", candidates=["斈", "壆", "覺"],
+        real_surfaces={"皇學館大学"}, rng=_rng()) is None
 
 
 def test_orthography_skips_single_character_words():
