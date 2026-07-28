@@ -40,13 +40,23 @@ public struct PracticeItem: Equatable, Identifiable {
         self.strokeOrderKanjiID = strokeOrderKanjiID
     }
 }
+/// The setup choices worth surviving the sheet being dismissed. Someone working
+/// through 1級 200 kanji at a time should not have to re-pick the level and
+/// re-drag the range every single session.
+public struct PracticeSettings: Equatable, Codable, Sendable {
+    public var mode: String
+    public var level: String
+    public var start: Int
+    public var end: Int
+}
+
 @Reducer
 public struct PracticeFeature {
     @ObservableState
     public struct State: Equatable {
         public enum Phase: Equatable { case setup, testing, review }
         /// 한자쓰기 vs 단어쓰기 — same flow, different thing to write.
-        public enum Mode: String, Equatable, CaseIterable { case kanji, word }
+        public enum Mode: String, Equatable, CaseIterable { case kanji, word, yoji }
         public var phase: Phase = .setup
         public var mode: Mode = .kanji
 
@@ -55,11 +65,16 @@ public struct PracticeFeature {
         public var glossesByID: [Int: [String: String]] = [:]
         /// Level vocabulary for 단어쓰기, reloaded when the level changes.
         public var words: [WordEntry] = []
+        /// Level 四字熟語 for 사자성어쓰기.
+        public var yojijukugo: [Yojijukugo] = []
 
         /// Chosen level + range.
         public var level = "N5"
-        public var start = 0        // 0-based index within levelKanji
-        public var count = 20       // how many to test
+        /// Inclusive 0-based range within levelItems. `count` follows from it —
+        /// picking "51st to 80th" is how you actually resume a long 級, and a
+        /// start-plus-length control makes you do that arithmetic yourself.
+        public var start = 0
+        public var end = 19
 
         /// What is being tested this run, in study order.
         public var questions: [PracticeItem] = []
@@ -69,9 +84,33 @@ public struct PracticeFeature {
         /// 힌트: the answer kanji and its stroke order, hidden until asked for.
         /// Reset on every navigation so the next question starts covered.
         public var hintShown = false
-        public var hintStrokes: [String] = []
+        /// nil until the fetch returns. Empty means the fetch came back with no
+        /// stroke data — the two must not look alike, or the fallback glyph
+        /// flashes for a frame before the animation replaces it.
+        public var hintStrokes: [String]?
 
         public init() {}
+
+        /// Back to the first 20, for when the level or mode changes and the old
+        /// indices no longer mean anything.
+        mutating func resetRange() {
+            start = 0
+            end = 19
+            clampRange()
+        }
+
+        /// Keep the range inside the level, which can shrink under it when the
+        /// level or mode changes.
+        ///
+        /// Does nothing while the level looks empty: 단어/사자성어 load their
+        /// data asynchronously, so clamping against a not-yet-loaded list
+        /// collapses the range to 1~1 and it never grows back.
+        mutating func clampRange() {
+            guard levelCount > 0 else { return }
+            let last = levelCount - 1
+            start = min(start, last)
+            end = min(max(end, start), last)
+        }
 
         /// The level's kanji in study order (JLPT → strokes → id).
         public var levelKanji: [Kanji] {
@@ -87,6 +126,14 @@ public struct PracticeFeature {
                         id: k.id, answer: k.literal, glosses: glossesByID[k.id] ?? [:],
                         onReadings: k.onReadings, kunReadings: k.kunReadings,
                         strokeOrderKanjiID: k.id)
+                }
+            case .yoji:
+                return yojijukugo.map { y in
+                    PracticeItem(
+                        id: y.id, answer: y.yoji,
+                        glosses: ["ja": y.meaningJa, "ko": y.meaningKo]
+                            .compactMapValues { $0 },
+                        reading: y.reading)
                 }
             case .word:
                 // Single-kanji entries would just be the 한자쓰기 test again.
@@ -106,22 +153,26 @@ public struct PracticeFeature {
         public var levelCount: Int { levelItems.count }
         /// Largest valid start index.
         public var maxStart: Int { max(0, levelCount - 1) }
+        /// How many items the chosen range covers.
+        public var count: Int { max(0, min(end, levelCount - 1) - start + 1) }
         public var current: PracticeItem? {
             questions.indices.contains(index) ? questions[index] : nil
         }
         public var isLast: Bool { index >= questions.count - 1 }
         /// Exclusive range end (clamped) for the summary label.
-        public var rangeEnd: Int { min(start + count, levelCount) }
+        public var rangeEnd: Int { min(end + 1, levelCount) }
     }
 
     public enum Action: Equatable {
         case onAppear
         case loaded([Kanji], [Int: [String: String]])
+        case restored(PracticeSettings)
         case levelSelected(String)
         case modeSelected(State.Mode)
         case wordsLoaded([WordEntry])
+        case yojiLoaded([Yojijukugo])
         case setStart(Double)
-        case setCount(Int)
+        case setEnd(Double)
         case startTest
         case saveDrawing(Data)   // commit the current canvas into `drawings`
         case next
@@ -134,11 +185,51 @@ public struct PracticeFeature {
 
     @Dependency(\.dictionaryClient) var dictionaryClient
 
+    static let settingsKey = "practiceSettings"
+
+    /// Remember the setup for next time. UserDefaults is the right home: it is
+    /// a UI preference, not study data, and losing it costs nothing.
+    private func persist(_ state: State) -> Effect<Action> {
+        let settings = PracticeSettings(
+            mode: state.mode.rawValue, level: state.level,
+            start: state.start, end: state.end)
+        return .run { _ in
+            if let data = try? JSONEncoder().encode(settings) {
+                UserDefaults.standard.set(data, forKey: Self.settingsKey)
+            }
+        }
+    }
+
+    private func restoreSettings() -> Effect<Action> {
+        .run { send in
+            guard let data = UserDefaults.standard.data(forKey: Self.settingsKey),
+                  let settings = try? JSONDecoder().decode(PracticeSettings.self, from: data)
+            else { return }
+            await send(.restored(settings))
+        }
+    }
+
     /// 단어쓰기 needs the level's vocabulary; 한자쓰기 already has every kanji.
     private func loadWords(_ level: String) -> Effect<Action> {
         .run { send in
             let words = (try? await dictionaryClient.quizWords(level, 400)) ?? []
             await send(.wordsLoaded(words))
+        }
+    }
+
+    private func loadYoji(_ level: String) -> Effect<Action> {
+        .run { send in
+            let items = (try? await dictionaryClient.examYojijukugo(level, 400)) ?? []
+            await send(.yojiLoaded(items))
+        }
+    }
+
+    /// Whichever extra dataset the mode needs; 한자쓰기 needs none.
+    private func loadFor(_ mode: State.Mode, _ level: String) -> Effect<Action> {
+        switch mode {
+        case .kanji: return .none
+        case .word: return loadWords(level)
+        case .yoji: return loadYoji(level)
         }
     }
 
@@ -149,13 +240,23 @@ public struct PracticeFeature {
             switch action {
             case .onAppear:
                 guard state.kanji.isEmpty else { return .none }
-                return .run { send in
-                    let all = (try? await dictionaryClient.allKanji()) ?? []
-                    let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
-                    await send(.loaded(all, glosses))
-                }
+                return .merge(
+                    .run { send in
+                        let all = (try? await dictionaryClient.allKanji()) ?? []
+                        let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
+                        await send(.loaded(all, glosses))
+                    },
+                    restoreSettings())
+
+            case let .restored(settings):
+                state.mode = State.Mode(rawValue: settings.mode) ?? .kanji
+                state.level = settings.level
+                state.start = settings.start
+                state.end = settings.end
+                return loadFor(state.mode, settings.level)
 
             case let .loaded(all, glosses):
+                defer { state.clampRange() }
                 state.kanji = IdentifiedArray(uniqueElements: all)
                 state.glossesByID = glosses
                 // Keep the chosen level valid for the current exam (e.g. after
@@ -167,25 +268,33 @@ public struct PracticeFeature {
 
             case let .levelSelected(level):
                 state.level = level
-                state.start = 0          // reset range to the top of the new level
-                return state.mode == .word ? loadWords(level) : .none
+                state.resetRange()       // a new level's range starts at the top
+                return .merge(persist(state), loadFor(state.mode, level))
+
+            case let .setEnd(value):
+                state.end = min(Int(value.rounded()), max(0, state.levelCount - 1))
+                // Dragging the end below the start would invert the range.
+                state.start = min(state.start, state.end)
+                return persist(state)
 
             case let .setStart(value):
-                state.start = max(0, min(Int(value), state.maxStart))
-                return .none
-
-            case let .setCount(count):
-                state.count = count
-                return .none
+                state.start = max(0, min(Int(value.rounded()), state.maxStart))
+                state.end = max(state.end, state.start)
+                return persist(state)
 
             case let .modeSelected(mode):
                 state.mode = mode
-                state.start = 0
-                return mode == .word ? loadWords(state.level) : .none
+                state.resetRange()
+                return .merge(persist(state), loadFor(mode, state.level))
 
             case let .wordsLoaded(words):
                 state.words = words
-                state.start = min(state.start, max(0, state.levelCount - 1))
+                state.clampRange()
+                return .none
+
+            case let .yojiLoaded(items):
+                state.yojijukugo = items
+                state.clampRange()
                 return .none
 
             case .startTest:
@@ -197,7 +306,7 @@ public struct PracticeFeature {
                 state.index = 0
                 state.drawings = [:]
                 state.hintShown = false
-                state.hintStrokes = []
+                state.hintStrokes = nil
                 state.phase = .testing
                 return .none
 
@@ -207,8 +316,14 @@ public struct PracticeFeature {
 
             case .toggleHint:
                 state.hintShown.toggle()
-                guard state.hintShown, state.hintStrokes.isEmpty,
-                      let id = state.current?.strokeOrderKanjiID else { return .none }
+                guard state.hintShown, state.hintStrokes == nil else { return .none }
+                guard let id = state.current?.strokeOrderKanjiID else {
+                    // A word or an idiom has no single stroke-order animation.
+                    // Resolve to "none available" now rather than leaving the
+                    // hint spinning on a fetch that will never be made.
+                    state.hintStrokes = []
+                    return .none
+                }
                 return .run { [id] send in
                     let paths = (try? await dictionaryClient.strokeOrder(id)) ?? []
                     await send(.hintStrokesLoaded(paths))
@@ -221,13 +336,13 @@ public struct PracticeFeature {
             case .next:
                 if state.index < state.questions.count - 1 { state.index += 1 }
                 state.hintShown = false
-                state.hintStrokes = []
+                state.hintStrokes = nil
                 return .none
 
             case .prev:
                 if state.index > 0 { state.index -= 1 }
                 state.hintShown = false
-                state.hintStrokes = []
+                state.hintStrokes = nil
                 return .none
 
             case .finish:

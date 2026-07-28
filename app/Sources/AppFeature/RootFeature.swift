@@ -78,7 +78,7 @@ public struct RootFeature {
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case startStudy(pullAhead: Bool)
-        case startPractice
+        case startPractice(mode: PracticeFeature.State.Mode)
         case startQuiz(level: String, planned: [Int])
         case startKanken(level: String)
         case path(StackActionOf<Path>)
@@ -195,9 +195,11 @@ public struct RootFeature {
                 state.sessionPath.removeAll()
                 state.session = .worksheet(WorksheetFeature.State(pullAhead: pullAhead))
                 return .none
-            case .startPractice:
+            case let .startPractice(mode):
                 state.sessionPath.removeAll()
-                state.session = .practice(PracticeFeature.State())
+                var practice = PracticeFeature.State()
+                practice.mode = mode
+                state.session = .practice(practice)
                 return .none
             case let .startQuiz(level, planned):
                 state.sessionPath.removeAll()

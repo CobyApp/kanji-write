@@ -59,9 +59,8 @@ final class AdvancedKankenSectionTests: XCTestCase {
         // 読み and 書き取り are backed by the generated 準1級 bank; the rest still
         // need curated data and stay 준비 중.
         XCTAssertEqual(
-            sections.filter(\.available).map(\.jaTitle), ["読み", "書き取り"])
-        XCTAssertEqual(
-            sections.filter(\.available).map(\.kind), ["reading", "orthography"])
+            sections.filter(\.available).map(\.jaTitle),
+            ["読み", "書き取り", "四字熟語", "対義語・類義語"])
     }
 
     func testFirstSectionsMatchOfficialPaperOrder() {
@@ -79,7 +78,7 @@ final class AdvancedKankenSectionTests: XCTestCase {
         // alongside the two bank-backed sections.
         XCTAssertEqual(
             sections.filter(\.available).map(\.jaTitle),
-            ["読み", "書き取り", "音読み・訓読み"])
+            ["読み", "書き取り", "四字熟語", "音読み・訓読み", "対義語・類義語"])
     }
 }
 

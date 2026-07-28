@@ -24,8 +24,9 @@ public struct PracticeView: View {
     /// The current question's canvas.
     @State private var drawing = PKDrawing()
 
-    /// Fixed canvas side, matched by the review capture rect so nothing clips.
-    private let canvasSide: CGFloat = 320
+    /// The canvas's actual side, measured at layout time and reused as the
+    /// review's capture rect so the saved drawing never clips or rescales.
+    @State private var canvasSide: CGFloat = 320
 
     private var levels: [String] { examType.levels }
     private let countOptions = [10, 20, 30, 50]
@@ -56,25 +57,92 @@ public struct PracticeView: View {
     private var modeBinding: Binding<PracticeFeature.State.Mode> {
         Binding(get: { store.mode }, set: { store.send(.modeSelected($0)) })
     }
-    private var countBinding: Binding<Int> {
-        Binding(get: { store.count }, set: { store.send(.setCount($0)) })
-    }
     private var startBinding: Binding<Double> {
         Binding(get: { Double(store.start) }, set: { store.send(.setStart($0)) })
     }
+    private var endBinding: Binding<Double> {
+        Binding(get: { Double(store.end) }, set: { store.send(.setEnd($0)) })
+    }
+
+    private var modeSubtitle: String {
+        switch store.mode {
+        case .kanji: L.practiceSub[appLanguage]
+        case .word: L.wordWriteSub[appLanguage]
+        case .yoji: L.yojiWriteSub[appLanguage]
+        }
+    }
+
+    private var modeTitle: String {
+        switch store.mode {
+        case .kanji: L.writeTestTitle[appLanguage]
+        case .word: L.wordWriteTestTitle[appLanguage]
+        case .yoji: L.yojiWriteTestTitle[appLanguage]
+        }
+    }
 
     private var rangeSummary: String {
-        "\(store.level) · \(store.start + 1)~\(store.rangeEnd) · \(store.rangeEnd - store.start)\(L.unitCount[appLanguage])"
+        "\(store.start + 1) ~ \(store.rangeEnd) · \(store.count)\(L.unitCount[appLanguage])"
+    }
+
+    /// How many items this 級 holds, which is what tells you whether a range is
+    /// a dent or the whole thing.
+    private var levelTotalCard: some View {
+        HStack(spacing: 14) {
+            Image(systemName: store.mode == .kanji ? "character.book.closed.fill" : "text.book.closed.fill")
+                .font(.system(size: 18, weight: .bold)).foregroundStyle(Palette.sky)
+                .frame(width: 44, height: 44)
+                .background(Palette.skySoft).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            Text(totalLabel)
+                .font(.kawaii(15, weight: .bold, language: appLanguage))
+                .foregroundStyle(Palette.ink)
+            Spacer()
+            Text("\(store.levelCount)")
+                .font(.kawaii(26, weight: .bold)).monospacedDigit().foregroundStyle(Palette.sky)
+            Text(L.unitCount[appLanguage])
+                .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.sky)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .background(Palette.skySoft.opacity(0.45))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private var promptLabel: String {
+        switch store.mode {
+        case .kanji: L.writeTestPrompt[appLanguage]
+        case .word: L.wordWriteTestPrompt[appLanguage]
+        case .yoji: L.yojiWriteTestPrompt[appLanguage]
+        }
+    }
+
+    private var totalLabel: String {
+        switch store.mode {
+        case .kanji: L.writeLevelKanjiTotal[appLanguage]
+        case .word: L.writeLevelWordTotal[appLanguage]
+        case .yoji: L.writeLevelYojiTotal[appLanguage]
+        }
+    }
+
+    private func rangeSlider(_ label: String, _ value: Binding<Double>,
+                             _ tint: Color) -> some View {
+        HStack(spacing: 12) {
+            Text(label)
+                .font(.kawaii(12, weight: .bold, language: appLanguage))
+                .foregroundStyle(Palette.inkSoft).frame(width: 34, alignment: .leading)
+            Slider(value: value, in: 0...Double(max(1, store.maxStart)), step: 1)
+                .tint(tint)
+            Text("\(Int(value.wrappedValue) + 1)")
+                .font(.kawaii(14, weight: .bold)).monospacedDigit()
+                .foregroundStyle(Palette.ink).frame(width: 46, alignment: .trailing)
+        }
     }
 
     private var setupView: some View {
         ScrollView {
             VStack(spacing: 20) {
                 VStack(spacing: 6) {
-                    Text(store.mode == .word ? L.wordWriteTestTitle[appLanguage]
-                                             : L.writeTestTitle[appLanguage])
+                    Text(modeTitle)
                         .font(.kawaii(24, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
-                    Text(L.practiceSub[appLanguage])
+                    Text(modeSubtitle)
                         .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 }
                 .padding(.top, 8)
@@ -83,6 +151,7 @@ public struct PracticeView: View {
                     Picker("", selection: modeBinding) {
                         Text(L.writeModeKanji[appLanguage]).tag(PracticeFeature.State.Mode.kanji)
                         Text(L.writeModeWord[appLanguage]).tag(PracticeFeature.State.Mode.word)
+                        Text(L.writeModeYoji[appLanguage]).tag(PracticeFeature.State.Mode.yoji)
                     }
                     .pickerStyle(.segmented)
                 }
@@ -95,18 +164,18 @@ public struct PracticeView: View {
                         }
                     }
                 }
-                settingCard(L.writeCount[appLanguage]) {
-                    Picker("", selection: countBinding) {
-                        ForEach(countOptions, id: \.self) { Text("\($0)").tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                }
-                settingCard(L.writeStartPos[appLanguage]) {
-                    VStack(spacing: 8) {
-                        Slider(value: startBinding, in: 0...Double(max(1, store.maxStart)))
-                            .tint(Palette.accent)
+                levelTotalCard
+                settingCard(L.writeRange[appLanguage]) {
+                    VStack(spacing: 10) {
+                        // Two sliders, not start-plus-length: picking "the 51st
+                        // to the 80th" is how you resume a long 級, and a count
+                        // control makes the learner do that arithmetic.
+                        rangeSlider(L.writeRangeFrom[appLanguage], startBinding,
+                                    Palette.accent)
+                        rangeSlider(L.writeRangeTo[appLanguage], endBinding,
+                                    Palette.lavender)
                         Text(rangeSummary)
-                            .font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.lavender)
+                            .font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.lavender)
                     }
                 }
 
@@ -163,9 +232,10 @@ public struct PracticeView: View {
 
     // MARK: Testing — write from the hint
 
-    /// Progress on top, buttons on the bottom, only the question scrolls. The
-    /// canvas alone is 320pt, so on a phone a single scrolling column pushed the
-    /// nav buttons off the screen entirely.
+    /// Everything on one screen, no scrolling: the canvas is sized from the
+    /// space the fixed parts leave over rather than being a constant that
+    /// pushes the buttons off a phone. Writing is the task — having to scroll
+    /// to find the canvas, or to reach 다음, interrupts it.
     private var testingView: some View {
         VStack(spacing: 0) {
             HStack {
@@ -174,29 +244,32 @@ public struct PracticeView: View {
                 Spacer()
                 Text(store.level).font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.inkSoft)
             }
-            .padding(.horizontal, 16).padding(.vertical, 12)
+            .padding(.horizontal, 16).padding(.vertical, 10)
 
-            ScrollView {
-                if let item = store.current {
-                    VStack(spacing: 14) {
-                        hintCard(item)
-                        // The hint takes the canvas's place rather than opening
-                        // another card below it: the stroke order belongs where
-                        // you were just writing, at the same size, so you can
-                        // compare it against what you did and then try again.
+            if let item = store.current {
+                hintCard(item).padding(.horizontal, 16)
+
+                GeometryReader { geo in
+                    let side = max(160, min(geo.size.width - 32, geo.size.height - 12))
+                    ZStack {
                         if store.hintShown {
-                            hintBoard(item)
+                            hintBoard(item, side: side)
                         } else {
-                            canvasCard
+                            canvasCard(side: side)
                         }
-                        hintToggle
                     }
-                    .padding(.horizontal, 16).padding(.bottom, 16)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // The review renders the drawing against this same rect, so
+                    // the capture has to track whatever size we ended up with.
+                    .onAppear { canvasSide = side }
+                    .onChange(of: side) { _, new in canvasSide = new }
                 }
-            }
-            .scrollIndicators(.hidden)
+                .padding(.vertical, 6)
 
-            navButtons.padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12)
+                hintToggle.padding(.bottom, 6)
+            }
+
+            navButtons.padding(.horizontal, 16).padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { loadDrawing() }
@@ -205,8 +278,7 @@ public struct PracticeView: View {
 
     private func hintCard(_ item: PracticeItem) -> some View {
         VStack(spacing: 10) {
-            Text(store.mode == .word ? L.wordWriteTestPrompt[appLanguage]
-                                     : L.writeTestPrompt[appLanguage])
+            Text(promptLabel)
                 .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
             if let meaning = localizedGloss(item.glosses, appLanguage), !meaning.isEmpty {
                 Text(meaning)
@@ -230,12 +302,12 @@ public struct PracticeView: View {
         .frame(maxWidth: .infinity).roundedCard()
     }
 
-    private var canvasCard: some View {
+    private func canvasCard(side: CGFloat) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Palette.card)
             PencilCanvasView(drawing: $drawing).padding(10)
         }
-        .frame(width: canvasSide, height: canvasSide)
+        .frame(width: side, height: side)
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
             .stroke(Palette.ink.opacity(0.08), lineWidth: 1.5))
         .overlay(alignment: .bottomTrailing) {
@@ -278,14 +350,11 @@ public struct PracticeView: View {
         }
     }
 
-    /// 힌트 보기 / 숨기기. Revealing clears the canvas, since the answer is
-    /// about to be shown and keeping a half-remembered attempt underneath it
-    /// only invites tracing.
+    /// 힌트 보기 / 숨기기. The attempt is kept: the hint covers the canvas
+    /// rather than sitting beside it, so there is nothing to trace from, and
+    /// wiping the work would cost the learner their answer for a peek.
     private var hintToggle: some View {
-        Button {
-            if !store.hintShown { clearDrawing() }
-            store.send(.toggleHint)
-        } label: {
+        Button { store.send(.toggleHint) } label: {
             HStack(spacing: 8) {
                 Image(systemName: store.hintShown ? "eye.slash.fill" : "eye.fill")
                     .font(.system(size: 13, weight: .bold))
@@ -301,27 +370,27 @@ public struct PracticeView: View {
 
     /// The answer in the canvas's own footprint: a stroke-order animation for a
     /// single kanji, the glyphs themselves for a word.
-    private func hintBoard(_ item: PracticeItem) -> some View {
+    private func hintBoard(_ item: PracticeItem, side: CGFloat) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Palette.card)
-            if store.hintStrokes.isEmpty {
+            switch store.hintStrokes {
+            case .none:
+                // Still fetching. Showing the glyph here and swapping it for
+                // the animation a frame later is the flicker.
+                ProgressView().tint(Palette.grape)
+            case .some(let paths) where paths.isEmpty:
                 Text(item.answer)
                     .font(.kawaiiJP(item.answer.count > 2 ? 78 : 150, weight: .bold))
                     .japaneseGlyphs().foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.4).padding(16)
-            } else {
-                StrokeOrderPlayer(paths: store.hintStrokes).padding(10)
+            case .some(let paths):
+                StrokeOrderPlayer(paths: paths).padding(10)
             }
         }
-        .frame(width: canvasSide, height: canvasSide)
+        .frame(width: side, height: side)
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
             .stroke(Palette.grape.opacity(0.35), lineWidth: 1.5))
         .transition(.opacity)
-    }
-
-    private func clearDrawing() {
-        drawing = PKDrawing()
-        store.send(.saveDrawing(PKDrawing().dataRepresentation()))
     }
 
     private func loadDrawing() {

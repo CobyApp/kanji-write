@@ -128,13 +128,18 @@ final class RootFeatureTests: XCTestCase {
         }
     }
 
-    func testStartPracticePresentsPracticeSession() async {
-        let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
-        store.exhaustivity = .off
+    func testStartPracticePresentsPracticeSessionInTheRequestedMode() async {
+        // The home screen has a tile per writing test, so the mode has to
+        // survive the hop into the session rather than always opening 한자.
+        for mode in PracticeFeature.State.Mode.allCases {
+            let store = TestStore(initialState: RootFeature.State()) { RootFeature() }
+            store.exhaustivity = .off
 
-        await store.send(.startPractice)
-        guard case .practice = store.state.session else {
-            return XCTFail("expected a practice session")
+            await store.send(.startPractice(mode: mode))
+            guard case let .practice(practice) = store.state.session else {
+                return XCTFail("expected a practice session")
+            }
+            XCTAssertEqual(practice.mode, mode)
         }
     }
 
