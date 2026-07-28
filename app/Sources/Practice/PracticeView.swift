@@ -26,7 +26,6 @@ public struct PracticeView: View {
 
     /// Fixed canvas side, matched by the review capture rect so nothing clips.
     private let canvasSide: CGFloat = 320
-    private static let hintAnchor = "hint"
 
     private var levels: [String] { examType.levels }
     private let countOptions = [10, 20, 30, 50]
@@ -177,72 +176,31 @@ public struct PracticeView: View {
             }
             .padding(.horizontal, 16).padding(.vertical, 12)
 
-            ScrollViewReader { proxy in
-                ScrollView {
-                    if let item = store.current {
-                        VStack(spacing: 14) {
-                            hintCard(item)
+            ScrollView {
+                if let item = store.current {
+                    VStack(spacing: 14) {
+                        hintCard(item)
+                        // The hint takes the canvas's place rather than opening
+                        // another card below it: the stroke order belongs where
+                        // you were just writing, at the same size, so you can
+                        // compare it against what you did and then try again.
+                        if store.hintShown {
+                            hintBoard(item)
+                        } else {
                             canvasCard
-                            hintReveal(item).id(Self.hintAnchor)
                         }
-                        .padding(.horizontal, 16).padding(.bottom, 16)
+                        hintToggle
                     }
-                }
-                .scrollIndicators(.hidden)
-                // The canvas is tall enough that the revealed hint opens below
-                // the fold; bring it to the reader rather than making them hunt.
-                .onChange(of: store.hintShown) { _, shown in
-                    guard shown else { return }
-                    withAnimation(.easeOut(duration: 0.3)) {
-                        proxy.scrollTo(Self.hintAnchor, anchor: .bottom)
-                    }
+                    .padding(.horizontal, 16).padding(.bottom, 16)
                 }
             }
+            .scrollIndicators(.hidden)
 
             navButtons.padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { loadDrawing() }
         .onChange(of: store.index) { _, _ in loadDrawing() }
-    }
-
-    /// 힌트 보기 — reveals the answer kanji and its stroke order, and hides it
-    /// again on a second tap.
-    @ViewBuilder private func hintReveal(_ item: PracticeItem) -> some View {
-        VStack(spacing: 12) {
-            Button { store.send(.toggleHint) } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: store.hintShown ? "eye.slash.fill" : "eye.fill")
-                        .font(.system(size: 13, weight: .bold))
-                    Text(store.hintShown ? L.hintHide[appLanguage] : L.hintShow[appLanguage])
-                        .font(.kawaii(14, weight: .bold, language: appLanguage))
-                }
-                .foregroundStyle(Palette.grape)
-                .padding(.horizontal, 18).padding(.vertical, 10)
-                .background(Palette.grapeSoft).clipShape(Capsule())
-            }
-            .buttonStyle(.bouncy)
-
-            if store.hintShown {
-                VStack(spacing: 10) {
-                    if store.hintStrokes.isEmpty {
-                        // No verified stroke order for this kanji — still show
-                        // the glyph rather than an empty card.
-                        // No stroke-order animation (a multi-kanji word, or a
-                        // kanji without verified strokes) — show the answer.
-                        Text(item.answer)
-                            .font(.kawaiiJP(item.answer.count > 2 ? 56 : 96, weight: .bold))
-                            .foregroundStyle(Palette.ink)
-                            .minimumScaleFactor(0.5).lineLimit(1)
-                    } else {
-                        StrokeOrderPlayer(paths: store.hintStrokes)
-                    }
-                }
-                .frame(maxWidth: .infinity).roundedCard()
-                .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            }
-        }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: store.hintShown)
     }
 
     private func hintCard(_ item: PracticeItem) -> some View {
@@ -318,6 +276,52 @@ public struct PracticeView: View {
             }
             .buttonStyle(.bouncy)
         }
+    }
+
+    /// 힌트 보기 / 숨기기. Revealing clears the canvas, since the answer is
+    /// about to be shown and keeping a half-remembered attempt underneath it
+    /// only invites tracing.
+    private var hintToggle: some View {
+        Button {
+            if !store.hintShown { clearDrawing() }
+            store.send(.toggleHint)
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: store.hintShown ? "eye.slash.fill" : "eye.fill")
+                    .font(.system(size: 13, weight: .bold))
+                Text(store.hintShown ? L.hintHide[appLanguage] : L.hintShow[appLanguage])
+                    .font(.kawaii(14, weight: .bold, language: appLanguage))
+            }
+            .foregroundStyle(Palette.grape)
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .background(Palette.grapeSoft).clipShape(Capsule())
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    /// The answer in the canvas's own footprint: a stroke-order animation for a
+    /// single kanji, the glyphs themselves for a word.
+    private func hintBoard(_ item: PracticeItem) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Palette.card)
+            if store.hintStrokes.isEmpty {
+                Text(item.answer)
+                    .font(.kawaiiJP(item.answer.count > 2 ? 78 : 150, weight: .bold))
+                    .japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.4).padding(16)
+            } else {
+                StrokeOrderPlayer(paths: store.hintStrokes).padding(10)
+            }
+        }
+        .frame(width: canvasSide, height: canvasSide)
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .stroke(Palette.grape.opacity(0.35), lineWidth: 1.5))
+        .transition(.opacity)
+    }
+
+    private func clearDrawing() {
+        drawing = PKDrawing()
+        store.send(.saveDrawing(PKDrawing().dataRepresentation()))
     }
 
     private func loadDrawing() {
