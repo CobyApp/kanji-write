@@ -55,6 +55,10 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("batches", nargs="+")
     parser.add_argument("--write", action="store_true")
+    parser.add_argument(
+        "--keep-existing", action="store_true",
+        help="a batch that re-states an existing gloss differently is not an "
+             "error; keep the curated one and count the divergences")
     args = parser.parse_args()
 
     existing: dict[str, dict] = {}
@@ -67,6 +71,7 @@ def main() -> int:
 
     problems: list[str] = []
     added = {lang: 0 for lang in LANGS}
+    kept = 0
     seen = 0
     for path in args.batches:
         for entry in json.loads(Path(path).read_text(encoding="utf-8")):
@@ -90,8 +95,12 @@ def main() -> int:
                     continue
                 current = target.get(lang)
                 if current and current != value:
-                    problems.append(
-                        f"{path}: {literal} {lang} already {current!r}, batch says {value!r}")
+                    if args.keep_existing:
+                        kept += 1
+                    else:
+                        problems.append(
+                            f"{path}: {literal} {lang} already {current!r}, "
+                            f"batch says {value!r}")
                     continue
                 if not current:
                     target[lang] = value
@@ -99,6 +108,8 @@ def main() -> int:
 
     print(f"batch entries: {seen}")
     print("added: " + ", ".join(f"{lang}={added[lang]}" for lang in LANGS))
+    if kept:
+        print(f"kept curated over {kept} differing restatements")
     if problems:
         print(f"\nPROBLEMS ({len(problems)}):", file=sys.stderr)
         for problem in problems[:20]:
