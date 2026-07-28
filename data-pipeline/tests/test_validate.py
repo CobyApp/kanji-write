@@ -11,6 +11,7 @@ from kanjipipe.loader import (
 )
 from kanjipipe.models import Gloss, Kanji, KankenAllocation, LlmGloss, Reading, Word
 from kanjipipe.validate import (
+    question_defects,
     PRODUCTION_KANKEN_COUNT_POLICY,
     KankenCountPolicy,
     assert_core_gates,
@@ -472,3 +473,49 @@ def test_gate_rejects_shifted_word_ids():
 
     with pytest.raises(ValueError, match="word ids have shifted"):
         assert_core_gates(conn)
+
+
+def _question_db():
+    conn = init_db(":memory:")
+    conn.execute("INSERT INTO kanji (id, literal, codepoint, stroke_count) "
+                 "VALUES (1, '極', 26997, 12)")
+    return conn
+
+
+def _add_question(conn, kind, prompt, options, answer, focus=None):
+    import json as _json
+    conn.execute(
+        "INSERT INTO jlpt_question (kanji_id, level, kind, prompt, options, answer, "
+        "explanations, focus) VALUES (1, 'N2', ?, ?, ?, ?, '{}', ?)",
+        (kind, prompt, _json.dumps(options, ensure_ascii=False), answer, focus))
+    conn.commit()
+
+
+def test_reading_question_must_show_its_kanji():
+    conn = _question_db()
+    _add_question(conn, "reading", "これはごく普通の出来事だ。",
+                  ["ごく", "きょく", "こく", "ごぐ"], 0)
+    assert "reading question does not show its kanji" in question_defects(conn)
+
+
+def test_reading_question_tolerates_the_answer_kana_occurring_by_chance():
+    # 敵/てき really does occur inside 戦ってきた; flagging that hides real faults.
+    conn = _question_db()
+    _add_question(conn, "reading", "これは<u>極</u>普通の出来事だ。",
+                  ["ごく", "きょく", "こく", "ごぐ"], 0)
+    assert question_defects(conn) == {}
+
+
+def test_fill_in_the_blank_must_not_print_its_answer():
+    conn = _question_db()
+    _add_question(conn, "context", "極端な例だが（　）めて難しい。",
+                  ["極", "局", "曲", "玉"], 0)
+    assert "answer kanji visible in prompt" in question_defects(conn)
+
+
+def test_duplicate_and_short_option_sets_are_reported():
+    conn = _question_db()
+    _add_question(conn, "reading", "<u>極</u>楽", ["ごく", "ごく", "こく"], 0)
+    defects = question_defects(conn)
+    assert "duplicate options" in defects
+    assert "fewer than four options" in defects
