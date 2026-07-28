@@ -60,6 +60,7 @@ def build(
     word_jazh_path: str | Path | None = None,
     sentence_glosses_path: str | Path | None = None,
     jlpt_questions_path: str | Path | None = None,
+    advanced_questions_path: str | Path | None = None,
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
@@ -132,6 +133,12 @@ def build(
             load_sentence_glosses(conn, parse_sentence_glosses(sentence_glosses_path))
         if jlpt_questions_path is not None and os.path.exists(jlpt_questions_path):
             load_jlpt_questions(conn, parse_jlpt_questions(jlpt_questions_path))
+        # The 準1級/1級 bank is generated from this same database by
+        # scripts/generate_advanced_questions.py, then read back on the next
+        # build. Same table, same shape — only the provenance differs.
+        if (advanced_questions_path is not None
+                and os.path.exists(advanced_questions_path)):
+            load_jlpt_questions(conn, parse_jlpt_questions(advanced_questions_path))
         if yojijukugo_path is not None:
             load_yojijukugo(conn, yojijukugo_path)
         if taigirui_path is not None:
@@ -162,6 +169,8 @@ def main() -> None:
     parser.add_argument("--word-jazh", default="sources/word_glosses_jazh.jsonl")
     parser.add_argument("--sentence-glosses", default="sources/sentence_glosses.jsonl")
     parser.add_argument("--jlpt-questions", default="sources/jlpt_questions.jsonl")
+    parser.add_argument("--advanced-questions",
+                        default="sources/kanken_advanced_questions.jsonl")
     parser.add_argument("--kanken", default="sources/kanken.csv")
     parser.add_argument("--unihan", default="sources/Unihan.zip")
     parser.add_argument(
@@ -187,6 +196,7 @@ def main() -> None:
                    word_jazh_path=args.word_jazh,
                    sentence_glosses_path=args.sentence_glosses,
                    jlpt_questions_path=args.jlpt_questions,
+                   advanced_questions_path=args.advanced_questions,
                    yojijukugo_path=args.yojijukugo,
                    taigirui_path=args.taigirui,
                    unihan_path=args.unihan,

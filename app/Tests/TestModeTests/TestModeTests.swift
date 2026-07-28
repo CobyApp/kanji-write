@@ -56,7 +56,12 @@ final class AdvancedKankenSectionTests: XCTestCase {
             ]
         )
         XCTAssertEqual(sections.map(\.numeral), ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"])
-        XCTAssertTrue(sections.allSatisfy { !$0.available })
+        // 読み and 書き取り are backed by the generated 準1級 bank; the rest still
+        // need curated data and stay 준비 중.
+        XCTAssertEqual(
+            sections.filter(\.available).map(\.jaTitle), ["読み", "書き取り"])
+        XCTAssertEqual(
+            sections.filter(\.available).map(\.kind), ["reading", "orthography"])
     }
 
     func testFirstSectionsMatchOfficialPaperOrder() {
@@ -70,7 +75,11 @@ final class AdvancedKankenSectionTests: XCTestCase {
             ]
         )
         XCTAssertEqual(sections.map(\.numeral), ["一", "二", "三", "四", "五", "六", "七", "八", "九"])
-        XCTAssertTrue(sections.allSatisfy { !$0.available })
+        // 音読み・訓読み is generated from the readings table, so it is playable
+        // alongside the two bank-backed sections.
+        XCTAssertEqual(
+            sections.filter(\.available).map(\.jaTitle),
+            ["読み", "書き取り", "音読み・訓読み"])
     }
 }
 
