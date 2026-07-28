@@ -62,6 +62,7 @@ def build(
     jlpt_questions_path: str | Path | None = None,
     advanced_questions_path: str | Path | None = None,
     doonkun_questions_path: str | Path | None = None,
+    shikibetsu_questions_path: str | Path | None = None,
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
@@ -144,6 +145,10 @@ def build(
         if (doonkun_questions_path is not None
                 and os.path.exists(doonkun_questions_path)):
             load_jlpt_questions(conn, parse_jlpt_questions(doonkun_questions_path))
+        # 漢字識別 — three words sharing one missing kanji.
+        if (shikibetsu_questions_path is not None
+                and os.path.exists(shikibetsu_questions_path)):
+            load_jlpt_questions(conn, parse_jlpt_questions(shikibetsu_questions_path))
         if yojijukugo_path is not None:
             load_yojijukugo(conn, yojijukugo_path)
         if taigirui_path is not None:
@@ -178,6 +183,8 @@ def main() -> None:
                         default="sources/kanken_advanced_questions.jsonl")
     parser.add_argument("--doonkun-questions",
                         default="sources/kanken_doonkun_questions.jsonl")
+    parser.add_argument("--shikibetsu-questions",
+                        default="sources/kanken_shikibetsu_questions.jsonl")
     parser.add_argument("--kanken", default="sources/kanken.csv")
     parser.add_argument("--unihan", default="sources/Unihan.zip")
     parser.add_argument(
@@ -205,6 +212,7 @@ def main() -> None:
                    jlpt_questions_path=args.jlpt_questions,
                    advanced_questions_path=args.advanced_questions,
                    doonkun_questions_path=args.doonkun_questions,
+                   shikibetsu_questions_path=args.shikibetsu_questions,
                    yojijukugo_path=args.yojijukugo,
                    taigirui_path=args.taigirui,
                    unihan_path=args.unihan,
