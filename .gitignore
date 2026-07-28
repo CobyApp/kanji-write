@@ -48,3 +48,5 @@ scratch/
 !data-pipeline/sources/kanken_advanced_questions.jsonl
 !data-pipeline/sources/kanken_doonkun_questions.jsonl
 !data-pipeline/sources/kanken_shikibetsu_questions.jsonl
+!data-pipeline/sources/kanken_derived_questions.jsonl
+!data-pipeline/sources/kanken_authored_questions.jsonl

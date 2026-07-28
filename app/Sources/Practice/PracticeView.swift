@@ -57,12 +57,6 @@ public struct PracticeView: View {
     private var modeBinding: Binding<PracticeFeature.State.Mode> {
         Binding(get: { store.mode }, set: { store.send(.modeSelected($0)) })
     }
-    private var startBinding: Binding<Double> {
-        Binding(get: { Double(store.start) }, set: { store.send(.setStart($0)) })
-    }
-    private var endBinding: Binding<Double> {
-        Binding(get: { Double(store.end) }, set: { store.send(.setEnd($0)) })
-    }
 
     private var modeSubtitle: String {
         switch store.mode {
@@ -122,18 +116,11 @@ public struct PracticeView: View {
         }
     }
 
-    private func rangeSlider(_ label: String, _ value: Binding<Double>,
-                             _ tint: Color) -> some View {
-        HStack(spacing: 12) {
-            Text(label)
-                .font(.kawaii(12, weight: .bold, language: appLanguage))
-                .foregroundStyle(Palette.inkSoft).frame(width: 34, alignment: .leading)
-            Slider(value: value, in: 0...Double(max(1, store.maxStart)), step: 1)
-                .tint(tint)
-            Text("\(Int(value.wrappedValue) + 1)")
-                .font(.kawaii(14, weight: .bold)).monospacedDigit()
-                .foregroundStyle(Palette.ink).frame(width: 46, alignment: .trailing)
-        }
+    private var rangeLow: Binding<Int> {
+        Binding(get: { store.start }, set: { store.send(.setStart(Double($0))) })
+    }
+    private var rangeHigh: Binding<Int> {
+        Binding(get: { store.end }, set: { store.send(.setEnd(Double($0))) })
     }
 
     private var setupView: some View {
@@ -166,14 +153,14 @@ public struct PracticeView: View {
                 }
                 levelTotalCard
                 settingCard(L.writeRange[appLanguage]) {
-                    VStack(spacing: 10) {
-                        // Two sliders, not start-plus-length: picking "the 51st
-                        // to the 80th" is how you resume a long 級, and a count
-                        // control makes the learner do that arithmetic.
-                        rangeSlider(L.writeRangeFrom[appLanguage], startBinding,
-                                    Palette.accent)
-                        rangeSlider(L.writeRangeTo[appLanguage], endBinding,
-                                    Palette.lavender)
+                    VStack(spacing: 4) {
+                        // One interval, one control. Picking "the 51st to the
+                        // 80th" is how you resume a long 級; start-plus-count
+                        // makes the learner do that arithmetic, and two separate
+                        // sliders draw a single range as two unrelated dots.
+                        RangeSlider(low: rangeLow, high: rangeHigh,
+                                    in: 0...max(1, store.maxStart),
+                                    accent: Palette.lavender)
                         Text(rangeSummary)
                             .font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.lavender)
                     }
