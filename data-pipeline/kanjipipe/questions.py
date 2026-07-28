@@ -88,11 +88,14 @@ def _explanations(
 ) -> dict[str, str]:
     meaning_en = f" ({word.en})" if word.en else ""
     meaning_ko = f"({word.ko})" if word.ko else ""
+    # The app offers ko/ja/zh/en; leaving one out drops the reader into another
+    # language mid-quiz, so all four are always written.
     if kind == "reading":
         return {
             "ko": f"「{surface}」는 {reading}로 읽습니다{meaning_ko}. "
                   f"{literal}이(가) 쓰인 낱말입니다.",
             "ja": f"「{surface}」は {reading} と読みます。{literal} を用いた語です。",
+            "zh": f"「{surface}」读作 {reading}。这是使用 {literal} 的词。",
             "en": f"「{surface}」is read {reading}{meaning_en}. "
                   f"It is written with {literal}.",
         }
@@ -100,6 +103,7 @@ def _explanations(
         "ko": f"{reading}는 「{surface}」로 씁니다{meaning_ko}. "
               f"빈칸에 들어갈 한자는 {literal}입니다.",
         "ja": f"{reading} は「{surface}」と書きます。空欄に入る漢字は {literal} です。",
+        "zh": f"{reading} 写作「{surface}」。填入空格的汉字是 {literal}。",
         "en": f"{reading} is written 「{surface}」{meaning_en}. "
               f"The kanji for the blank is {literal}.",
     }

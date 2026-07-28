@@ -195,12 +195,14 @@ def test_no_question_leaks_its_answer_in_the_prompt():
 
 
 def test_questions_carry_explanations_for_every_supported_language():
+    """The app offers ko/ja/zh/en, so an explanation must exist in all four —
+    a missing one silently falls back to another language mid-quiz."""
     word = WordRow(surface="顰蹙", reading="ひんしゅく", en="frowning", ko="빈축")
     q = build_reading_question(
         word, literal="顰", level="1級",
         other_readings=["けんお", "ぶじょく", "そしり"],
         forbidden={"ひんしゅく"}, rng=_rng())
-    assert set(q["explanations"]) >= {"ko", "ja", "en"}
+    assert set(q["explanations"]) >= {"ko", "ja", "zh", "en"}
     assert all(text.strip() for text in q["explanations"].values())
 
 

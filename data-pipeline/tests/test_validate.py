@@ -500,8 +500,10 @@ def _add_question(conn, kind, prompt, options, answer, focus=None):
     import json as _json
     conn.execute(
         "INSERT INTO jlpt_question (kanji_id, level, kind, prompt, options, answer, "
-        "explanations, focus) VALUES (1, 'N2', ?, ?, ?, ?, '{}', ?)",
-        (kind, prompt, _json.dumps(options, ensure_ascii=False), answer, focus))
+        "explanations, focus) VALUES (1, 'N2', ?, ?, ?, ?, ?, ?)",
+        (kind, prompt, _json.dumps(options, ensure_ascii=False), answer,
+         # All four supported languages, or the gate reports them missing.
+         _json.dumps({lang: "x" for lang in ("ko", "ja", "zh", "en")}), focus))
     conn.commit()
 
 
@@ -533,3 +535,15 @@ def test_duplicate_and_short_option_sets_are_reported():
     defects = question_defects(conn)
     assert "duplicate options" in defects
     assert "fewer than four options" in defects
+
+
+def test_gate_reports_a_question_missing_a_supported_language():
+    import json as _json
+    conn = _question_db()
+    conn.execute(
+        "INSERT INTO jlpt_question (kanji_id, level, kind, prompt, options, answer, "
+        "explanations, focus) VALUES (1, 'N2', 'reading', '<u>極</u>楽', ?, 0, ?, NULL)",
+        (_json.dumps(["ごく", "きょく", "こく", "ごぐ"]),
+         _json.dumps({"ko": "…", "ja": "…", "en": "…"})))   # no zh
+    conn.commit()
+    assert "missing zh explanation" in question_defects(conn)
