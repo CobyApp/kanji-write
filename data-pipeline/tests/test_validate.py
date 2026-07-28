@@ -100,9 +100,11 @@ def test_production_kanken_count_policy_is_canonical():
             "2級": 185,
         },
         unicode_advanced=3806,
+        stored_unicode_advanced=3800,
         image_pending=371,
         advanced_memberships={"準1級": 1248, "1級": 2955},
         shared_advanced=397,
+        stored_advanced_memberships={"準1級": 1248, "1級": 2552},
     )
 
 
@@ -114,9 +116,11 @@ def test_kanken_count_gate_measures_allocations_and_loaded_memberships():
     fixture_policy = KankenCountPolicy(
         legacy_memberships={},
         unicode_advanced=1,
+        stored_unicode_advanced=1,
         image_pending=1,
         advanced_memberships={"準1級": 1, "1級": 1},
         shared_advanced=1,
+        stored_advanced_memberships={"準1級": 1, "1級": 0},
     )
 
     report = assert_core_gates(
@@ -128,8 +132,8 @@ def test_kanken_count_gate_measures_allocations_and_loaded_memberships():
     assert report["kanken_unicode_advanced"] == 1
     assert report["kanken_image_pending"] == 1
     assert report["kanken_pre1_memberships"] == 1
-    assert report["kanken_level1_memberships"] == 1
-    assert report["kanken_shared_advanced"] == 1
+    assert report["kanken_level1_memberships"] == 0   # stored at 準1級 only
+    assert report["kanken_shared_advanced"] == 0
 
 
 def test_kanken_count_gate_rejects_mismatched_parsed_shared_distribution():
@@ -140,9 +144,11 @@ def test_kanken_count_gate_rejects_mismatched_parsed_shared_distribution():
     wrong_policy = KankenCountPolicy(
         legacy_memberships={},
         unicode_advanced=1,
+        stored_unicode_advanced=1,
         image_pending=1,
         advanced_memberships={"準1級": 1, "1級": 1},
         shared_advanced=0,
+        stored_advanced_memberships={"準1級": 1, "1級": 1},
     )
 
     with pytest.raises(
@@ -167,9 +173,11 @@ def test_kanken_count_gate_rejects_mismatched_loaded_advanced_distribution():
     policy = KankenCountPolicy(
         legacy_memberships={},
         unicode_advanced=1,
+        stored_unicode_advanced=1,
         image_pending=1,
         advanced_memberships={"準1級": 1, "1級": 1},
         shared_advanced=1,
+        stored_advanced_memberships={"準1級": 1, "1級": 0},
     )
 
     with pytest.raises(
@@ -191,9 +199,11 @@ def test_kanken_count_gate_rejects_mismatched_parsed_allocation_counts():
     wrong_policy = KankenCountPolicy(
         legacy_memberships={},
         unicode_advanced=2,
+        stored_unicode_advanced=2,
         image_pending=1,
         advanced_memberships={"準1級": 1, "1級": 1},
         shared_advanced=1,
+        stored_advanced_memberships={"準1級": 1, "1級": 0},
     )
 
     with pytest.raises(
@@ -224,9 +234,11 @@ def test_kanken_count_gate_rejects_mismatched_loaded_legacy_counts():
     wrong_policy = KankenCountPolicy(
         legacy_memberships={"10級": 2},
         unicode_advanced=0,
+        stored_unicode_advanced=0,
         image_pending=0,
         advanced_memberships={"準1級": 0, "1級": 0},
         shared_advanced=0,
+        stored_advanced_memberships={"準1級": 0, "1級": 0},
     )
 
     with pytest.raises(
@@ -272,9 +284,11 @@ def test_advanced_row_allows_capability_gaps_but_requires_source_content():
         kanken_count_policy=KankenCountPolicy(
             legacy_memberships={},
             unicode_advanced=1,
+            stored_unicode_advanced=1,
             image_pending=2,
             advanced_memberships={"準1級": 1, "1級": 1},
             shared_advanced=1,
+            stored_advanced_memberships={"準1級": 1, "1級": 0},
         ),
     )
 

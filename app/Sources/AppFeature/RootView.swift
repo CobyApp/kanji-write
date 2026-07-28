@@ -216,7 +216,7 @@ private struct DictionaryPathView: View {
                                 .roundedCard()
                             }
                             .buttonStyle(.bouncy)
-                            .popIn(delay: Double(index) * 0.05)
+                            .popInRow(index, step: 0.05)
                         }
                     }
                     .padding(16)
@@ -618,7 +618,7 @@ struct KanjiCardList: View {
                     LazyVGrid(columns: gridColumns, spacing: 12) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { index, kanji in
                             gridCell(kanji, tint: Palette.tint(index))
-                                .popIn(delay: min(Double(index), 8) * 0.03)
+                                .popInRow(index)
                         }
                     }
                     .padding(16)
@@ -630,7 +630,7 @@ struct KanjiCardList: View {
                                          meaning: kanjiGloss(glosses[kanji.id] ?? [:], appLanguage),
                                          tint: Palette.tint(index),
                                          language: appLanguage) { onSelect(kanji) }
-                                .popIn(delay: min(Double(index), 6) * 0.04)
+                                .popInRow(index, step: 0.04)
                         }
                     }
                     .padding(16)

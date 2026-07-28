@@ -85,7 +85,7 @@ def _allocation(literal: str | None, level: str) -> KankenAllocation:
     )
 
 
-def test_shared_allocation_loads_two_memberships_with_pre1_intro_level():
+def test_shared_allocation_lands_only_at_its_introduction_level():
     conn = init_db(":memory:")
     load_kanji(conn, [_advanced_kanji("亞")])
 
@@ -95,10 +95,10 @@ def test_shared_allocation_loads_two_memberships_with_pre1_intro_level():
         "SELECT level_label, source_classification "
         "FROM kanken_membership ORDER BY level_label"
     ).fetchall()
-    assert memberships == [
-        ("1級", "1/準1級"),
-        ("準1級", "1/準1級"),
-    ]
+    # The source marks these "1/準1級"; they are introduced at 準1級, and a
+    # second 1級 row would make 1級 the only level that carries other levels'
+    # kanji.
+    assert memberships == [("準1級", "1/準1級")]
     assert conn.execute(
         "SELECT kanken_level FROM kanji WHERE literal = '亞'"
     ).fetchone() == ("準1級",)
@@ -125,7 +125,7 @@ def test_duplicate_literal_keeps_earliest_introduction_level_regardless_of_order
     memberships = conn.execute(
         "SELECT level_label FROM kanken_membership ORDER BY level_label"
     ).fetchall()
-    assert memberships == [("1級",), ("5級",)]
+    assert memberships == [("5級",)]
     assert conn.execute(
         "SELECT kanken_level FROM kanji WHERE literal = '缶'"
     ).fetchone() == ("5級",)
@@ -208,6 +208,32 @@ def test_load_words_word_without_joyo_kanji_has_no_links():
     load_words(conn, [Word(surface="校", reading_kana="こう", en_glosses=["school"])])
     assert conn.execute("SELECT COUNT(*) FROM word").fetchone()[0] == 1
     assert conn.execute("SELECT COUNT(*) FROM word_kanji").fetchone()[0] == 0
+
+
+def test_each_kanji_belongs_to_exactly_one_level():
+    """A 級 lists the kanji introduced at it — nothing carried over.
+
+    That held everywhere except 1級, which also carried the 397 kanji the source
+    marks "1/準1級" and six jōyō characters that have a second, unrelated 1級
+    allocation (芸 is both the 7級 character and a 1級 one sharing its glyph).
+    So 1級 looked cumulative while every other level did not.
+    """
+    conn = init_db(":memory:")
+    load_kanji(conn, [_advanced_kanji("亞"), _advanced_kanji("芸")])
+
+    load_kanken_memberships(conn, [
+        _allocation("亞", "1/準1級"),
+        # 芸 is introduced at 7級, then allocated again at 1級 as its own glyph.
+        _allocation("芸", "7級"),
+        _allocation("芸", "1級"),
+    ])
+
+    rows = dict(conn.execute(
+        "SELECT k.literal, (SELECT group_concat(level_label) FROM kanken_membership m "
+        " WHERE m.kanji_id = k.id) FROM kanji k"))
+    assert rows == {"亞": "準1級", "芸": "7級"}      # not "準1級,1級" / "7級,1級"
+    assert dict(conn.execute("SELECT literal, kanken_level FROM kanji")) == {
+        "亞": "準1級", "芸": "7級"}
 
 
 def test_common_words_keep_their_ids_when_uncommon_ones_are_added():

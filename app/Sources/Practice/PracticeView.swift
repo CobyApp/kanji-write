@@ -26,6 +26,7 @@ public struct PracticeView: View {
 
     /// Fixed canvas side, matched by the review capture rect so nothing clips.
     private let canvasSide: CGFloat = 320
+    private static let hintAnchor = "hint"
 
     private var levels: [String] { examType.levels }
     private let countOptions = [10, 20, 30, 50]
@@ -53,6 +54,9 @@ public struct PracticeView: View {
     private var levelBinding: Binding<String> {
         Binding(get: { store.level }, set: { store.send(.levelSelected($0)) })
     }
+    private var modeBinding: Binding<PracticeFeature.State.Mode> {
+        Binding(get: { store.mode }, set: { store.send(.modeSelected($0)) })
+    }
     private var countBinding: Binding<Int> {
         Binding(get: { store.count }, set: { store.send(.setCount($0)) })
     }
@@ -68,13 +72,21 @@ public struct PracticeView: View {
         ScrollView {
             VStack(spacing: 20) {
                 VStack(spacing: 6) {
-                    Text(L.writeTestTitle[appLanguage])
+                    Text(store.mode == .word ? L.wordWriteTestTitle[appLanguage]
+                                             : L.writeTestTitle[appLanguage])
                         .font(.kawaii(24, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
                     Text(L.practiceSub[appLanguage])
                         .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 }
                 .padding(.top, 8)
 
+                settingCard(L.writeWhat[appLanguage]) {
+                    Picker("", selection: modeBinding) {
+                        Text(L.writeModeKanji[appLanguage]).tag(PracticeFeature.State.Mode.kanji)
+                        Text(L.writeModeWord[appLanguage]).tag(PracticeFeature.State.Mode.word)
+                    }
+                    .pickerStyle(.segmented)
+                }
                 settingCard(L.targetLevel[appLanguage]) {
                     // A segmented control crams 漢検's ten 級 into one row; chips
                     // wrap onto as many rows as needed (same as the study plan).
@@ -152,38 +164,109 @@ public struct PracticeView: View {
 
     // MARK: Testing — write from the hint
 
+    /// Progress on top, buttons on the bottom, only the question scrolls. The
+    /// canvas alone is 320pt, so on a phone a single scrolling column pushed the
+    /// nav buttons off the screen entirely.
     private var testingView: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 0) {
             HStack {
                 Text("\(store.index + 1) / \(store.questions.count)")
                     .font(.kawaii(14, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
                 Spacer()
                 Text(store.level).font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.inkSoft)
             }
-            if let kanji = store.current {
-                hintCard(kanji)
-                canvasCard
-                navButtons
+            .padding(.horizontal, 16).padding(.vertical, 12)
+
+            ScrollViewReader { proxy in
+                ScrollView {
+                    if let item = store.current {
+                        VStack(spacing: 14) {
+                            hintCard(item)
+                            canvasCard
+                            hintReveal(item).id(Self.hintAnchor)
+                        }
+                        .padding(.horizontal, 16).padding(.bottom, 16)
+                    }
+                }
+                .scrollIndicators(.hidden)
+                // The canvas is tall enough that the revealed hint opens below
+                // the fold; bring it to the reader rather than making them hunt.
+                .onChange(of: store.hintShown) { _, shown in
+                    guard shown else { return }
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        proxy.scrollTo(Self.hintAnchor, anchor: .bottom)
+                    }
+                }
             }
-            Spacer(minLength: 0)
+
+            navButtons.padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 12)
         }
-        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { loadDrawing() }
         .onChange(of: store.index) { _, _ in loadDrawing() }
     }
 
-    private func hintCard(_ kanji: Kanji) -> some View {
+    /// 힌트 보기 — reveals the answer kanji and its stroke order, and hides it
+    /// again on a second tap.
+    @ViewBuilder private func hintReveal(_ item: PracticeItem) -> some View {
+        VStack(spacing: 12) {
+            Button { store.send(.toggleHint) } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: store.hintShown ? "eye.slash.fill" : "eye.fill")
+                        .font(.system(size: 13, weight: .bold))
+                    Text(store.hintShown ? L.hintHide[appLanguage] : L.hintShow[appLanguage])
+                        .font(.kawaii(14, weight: .bold, language: appLanguage))
+                }
+                .foregroundStyle(Palette.grape)
+                .padding(.horizontal, 18).padding(.vertical, 10)
+                .background(Palette.grapeSoft).clipShape(Capsule())
+            }
+            .buttonStyle(.bouncy)
+
+            if store.hintShown {
+                VStack(spacing: 10) {
+                    if store.hintStrokes.isEmpty {
+                        // No verified stroke order for this kanji — still show
+                        // the glyph rather than an empty card.
+                        // No stroke-order animation (a multi-kanji word, or a
+                        // kanji without verified strokes) — show the answer.
+                        Text(item.answer)
+                            .font(.kawaiiJP(item.answer.count > 2 ? 56 : 96, weight: .bold))
+                            .foregroundStyle(Palette.ink)
+                            .minimumScaleFactor(0.5).lineLimit(1)
+                    } else {
+                        StrokeOrderPlayer(paths: store.hintStrokes)
+                    }
+                }
+                .frame(maxWidth: .infinity).roundedCard()
+                .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: store.hintShown)
+    }
+
+    private func hintCard(_ item: PracticeItem) -> some View {
         VStack(spacing: 10) {
-            Text(L.writeTestPrompt[appLanguage])
+            Text(store.mode == .word ? L.wordWriteTestPrompt[appLanguage]
+                                     : L.writeTestPrompt[appLanguage])
                 .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-            if let meaning = localizedGloss(store.glossesByID[kanji.id] ?? [:], appLanguage), !meaning.isEmpty {
+            if let meaning = localizedGloss(item.glosses, appLanguage), !meaning.isEmpty {
                 Text(meaning)
                     .font(.kawaii(26, weight: .bold, language: appLanguage))
                     .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
             }
             VStack(spacing: 6) {
-                if !kanji.onReadings.isEmpty { readingLine(L.onReading[appLanguage], kanji.onReadings, Palette.sky) }
-                if !kanji.kunReadings.isEmpty { readingLine(L.kunReading[appLanguage], kanji.kunReadings, Palette.mint) }
+                // A word is pinned by its kana reading; a single kanji by its
+                // 음/훈 lines, since it has no one reading in isolation.
+                if let reading = item.reading, !reading.isEmpty {
+                    readingLine(L.reading[appLanguage], [reading], Palette.lavender)
+                }
+                if !item.onReadings.isEmpty {
+                    readingLine(L.onReading[appLanguage], item.onReadings, Palette.sky)
+                }
+                if !item.kunReadings.isEmpty {
+                    readingLine(L.kunReading[appLanguage], item.kunReadings, Palette.mint)
+                }
             }
         }
         .frame(maxWidth: .infinity).roundedCard()
@@ -263,8 +346,8 @@ public struct PracticeView: View {
                     .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
                     .padding(.top, 8)
                 LazyVGrid(columns: reviewColumns, spacing: 14) {
-                    ForEach(Array(store.questions.enumerated()), id: \.element.id) { index, kanji in
-                        reviewCell(index, kanji)
+                    ForEach(Array(store.questions.enumerated()), id: \.element.id) { index, item in
+                        reviewCell(index, item)
                     }
                 }
                 HStack(spacing: 12) {
@@ -289,9 +372,9 @@ public struct PracticeView: View {
         }
     }
 
-    private func reviewCell(_ index: Int, _ kanji: Kanji) -> some View {
+    private func reviewCell(_ index: Int, _ item: PracticeItem) -> some View {
         VStack(spacing: 8) {
-            if let meaning = localizedGloss(store.glossesByID[kanji.id] ?? [:], appLanguage), !meaning.isEmpty {
+            if let meaning = localizedGloss(item.glosses, appLanguage), !meaning.isEmpty {
                 Text(meaning)
                     .font(.kawaii(13, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
@@ -305,10 +388,14 @@ public struct PracticeView: View {
                 }
                 VStack(spacing: 3) {
                     squareBox(Palette.mintSoft.opacity(0.5)) {
-                        Text(kanji.literal)
-                            .font(.kawaiiJP(58, weight: .bold)).japaneseGlyphs()
+                        // A word needs a smaller face than a lone kanji to fit
+                        // the same square.
+                        Text(item.answer)
+                            .font(.kawaiiJP(item.answer.count > 1 ? 34 : 58, weight: .bold))
+                            .japaneseGlyphs()
                             .foregroundStyle(Palette.ink)
-                            .minimumScaleFactor(0.5)
+                            .lineLimit(1).minimumScaleFactor(0.4)
+                            .padding(.horizontal, 4)
                     }
                     Text(L.writeAnswer[appLanguage]).font(.kawaii(10)).foregroundStyle(Palette.mint)
                 }

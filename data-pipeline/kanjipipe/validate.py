@@ -26,8 +26,16 @@ class KankenCountPolicy:
     legacy_memberships: dict[str, int]
     unicode_advanced: int
     image_pending: int
+    # What the allocation source says. "1/準1級" counts toward both levels
+    # there, so 397 kanji are shared — that is a fact about the source and is
+    # still worth guarding.
     advanced_memberships: dict[str, int]
     shared_advanced: int
+    stored_unicode_advanced: int
+    # What we actually store. A kanji belongs to exactly one 級 — the level it
+    # is introduced at — so nothing is shared and 1級 holds only its own.
+    stored_advanced_memberships: dict[str, int]
+    stored_shared_advanced: int = 0
 
 
 PRODUCTION_KANKEN_COUNT_POLICY = KankenCountPolicy(
@@ -45,8 +53,13 @@ PRODUCTION_KANKEN_COUNT_POLICY = KankenCountPolicy(
     },
     unicode_advanced=3806,
     image_pending=371,
+    # 缶・芸・欠・弁・予・余 have a second, unrelated 1級 allocation on top of
+    # their jōyō one. They are stored at their jōyō level, so the advanced
+    # inventory is 1248 + 2552 and does not include them.
+    stored_unicode_advanced=3800,
     advanced_memberships={"準1級": 1248, "1級": 2955},
     shared_advanced=397,
+    stored_advanced_memberships={"準1級": 1248, "1級": 2552},
 )
 
 
@@ -366,11 +379,11 @@ def assert_core_gates(
                 f"got {parsed_unicode_advanced}"
             )
         if report["kanken_unicode_advanced"] != (
-            kanken_count_policy.unicode_advanced
+            kanken_count_policy.stored_unicode_advanced
         ):
             problems.append(
                 "loaded kanken_unicode_advanced expected "
-                f"{kanken_count_policy.unicode_advanced}, "
+                f"{kanken_count_policy.stored_unicode_advanced}, "
                 f"got {report['kanken_unicode_advanced']}"
             )
         if image_pending != kanken_count_policy.image_pending:
@@ -388,6 +401,9 @@ def assert_core_gates(
                 problems.append(
                     f"parsed {level} memberships expected {expected}, got {parsed}"
                 )
+        for level, expected in (
+            kanken_count_policy.stored_advanced_memberships.items()
+        ):
             loaded = report[report_keys[level]]
             if loaded != expected:
                 problems.append(
@@ -403,11 +419,11 @@ def assert_core_gates(
                 f"{kanken_count_policy.shared_advanced}, got {parsed_shared}"
             )
         if report["kanken_shared_advanced"] != (
-            kanken_count_policy.shared_advanced
+            kanken_count_policy.stored_shared_advanced
         ):
             problems.append(
                 "loaded shared advanced memberships expected "
-                f"{kanken_count_policy.shared_advanced}, "
+                f"{kanken_count_policy.stored_shared_advanced}, "
                 f"got {report['kanken_shared_advanced']}"
             )
         for level, expected in kanken_count_policy.legacy_memberships.items():

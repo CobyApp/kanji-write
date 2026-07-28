@@ -300,6 +300,20 @@ public enum L {
     public static let writeTestStart = L10nText(ko: "테스트 시작", ja: "テスト開始", zh: "开始测验", en: "Start test")
     public static let writeTestPrompt = L10nText(
         ko: "이 뜻의 한자를 써보세요", ja: "この意味の漢字を書こう", zh: "写出这个意思的汉字", en: "Write the kanji for this meaning")
+    public static let reading = L10nText(ko: "읽기", ja: "読み", zh: "读音", en: "Reading")
+    public static let writeWhat = L10nText(
+        ko: "무엇을 쓸까요", ja: "何を書く", zh: "写什么", en: "What to write")
+    public static let writeModeKanji = L10nText(ko: "한자", ja: "漢字", zh: "汉字", en: "Kanji")
+    public static let writeModeWord = L10nText(ko: "단어", ja: "単語", zh: "单词", en: "Word")
+    public static let wordWriteTestTitle = L10nText(
+        ko: "단어쓰기 테스트", ja: "単語書きテスト", zh: "单词书写测验", en: "Word writing test")
+    public static let wordWriteTestPrompt = L10nText(
+        ko: "이 뜻의 단어를 써보세요", ja: "この意味の単語を書こう",
+        zh: "写出这个意思的单词", en: "Write the word for this meaning")
+    public static let hintShow = L10nText(
+        ko: "힌트 보기", ja: "ヒントを見る", zh: "查看提示", en: "Show hint")
+    public static let hintHide = L10nText(
+        ko: "힌트 숨기기", ja: "ヒントを隠す", zh: "隐藏提示", en: "Hide hint")
     public static let writeStartPos = L10nText(ko: "시작 위치", ja: "開始位置", zh: "起始位置", en: "Start from")
     public static let writeCount = L10nText(ko: "문항 수", ja: "問題数", zh: "题数", en: "Questions")
     public static let writeSeeResult = L10nText(ko: "결과 보기", ja: "結果を見る", zh: "查看结果", en: "See result")

@@ -132,13 +132,22 @@ public struct FloatingBlobs: View {
 /// Springy pop-in on appear (scale + fade), optionally staggered by `delay`.
 private struct PopIn: ViewModifier {
     let delay: Double
-    @State private var shown = false
+    @State private var shown: Bool
+
+    init(delay: Double, animated: Bool) {
+        self.delay = delay
+        // Start visible when the entrance is off, so the row paints on its very
+        // first frame instead of fading up from nothing.
+        _shown = State(initialValue: !animated)
+    }
+
     func body(content: Content) -> some View {
         content
             .scaleEffect(shown ? 1 : 0.82)
             .opacity(shown ? 1 : 0)
             .onAppear {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.62).delay(delay)) {
+                guard !shown else { return }
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.72).delay(delay)) {
                     shown = true
                 }
             }
@@ -147,7 +156,22 @@ private struct PopIn: ViewModifier {
 
 extension View {
     /// Springy scale+fade entrance. Stagger a list by passing increasing delays.
-    public func popIn(delay: Double = 0) -> some View { modifier(PopIn(delay: delay)) }
+    ///
+    /// Pass `animated: false` for anything that can appear as a result of
+    /// scrolling. In a `LazyVStack` a row is built the moment it scrolls into
+    /// view, so an entrance animation there starts every row at opacity 0 —
+    /// scroll quickly and you outrun it, leaving a screen of blank rows.
+    /// The entrance is for the first paint, not for scrolling.
+    public func popIn(delay: Double = 0, animated: Bool = true) -> some View {
+        modifier(PopIn(delay: delay, animated: animated))
+    }
+
+    /// Entrance for a row at `index`: animated only for the rows already on
+    /// screen at first paint, instant for everything scrolling in behind them.
+    public func popInRow(_ index: Int, step: Double = 0.03,
+                         onscreen: Int = 12) -> some View {
+        popIn(delay: Double(min(index, onscreen)) * step, animated: index < onscreen)
+    }
 }
 
 /// A slow, gentle scale pulse — subtle "breathing" for hero elements.
