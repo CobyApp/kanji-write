@@ -47,3 +47,4 @@ app/Tuist/.build/
 scratch/
 !data-pipeline/sources/kanken_advanced_questions.jsonl
 !data-pipeline/sources/kanken_doonkun_questions.jsonl
+!data-pipeline/sources/kanken_shikibetsu_questions.jsonl

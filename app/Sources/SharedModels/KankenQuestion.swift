@@ -172,6 +172,11 @@ extension ExamType {
     private static func doon(_ ja: String) -> ExamSection {
         live("doonkun", ja, .writing, "doonkun")
     }
+    /// 漢字識別 — three words missing the same kanji; pick the one that fits
+    /// all three. Blank-fill with kanji options, so it renders like 書き取り.
+    private static var shikibetsu: ExamSection {
+        live("shikibetsu", "漢字識別", .writing, "shikibetsu")
+    }
 
     /// 漢検 papers in official 大問 order.
     private static func kankenSections(_ level: String) -> [ExamSection] {
@@ -200,7 +205,7 @@ extension ExamType {
                     onkun, yoji,
                     doon("同音・同訓異字"), writing]
         case "4級", "3級":
-            return [reading, doon("同音・同訓異字"), soon("shikibetsu", "漢字識別"),
+            return [reading, doon("同音・同訓異字"), shikibetsu,
                     soon("kousei", "熟語の構成"), radical, taigirui,
                     okuri("漢字と送りがな"), yoji,
                     soon("goji", "誤字訂正"), writing]
