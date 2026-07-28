@@ -81,17 +81,20 @@ def load_kanken_memberships(
         missing = ", ".join(sorted(missing_literals))
         raise ValueError(f"Kanken allocation not present in selected inventory: {missing}")
 
+    # A 級 lists the kanji introduced at it, and nothing carried over — that is
+    # how every level from 10級 to 準2級 already behaved. Writing one membership
+    # row per allocation broke it for 1級 alone, which then also carried the 397
+    # kanji the source marks "1/準1級" plus six jōyō characters that have a
+    # second, unrelated 1級 allocation (芸 is the 7級 character and a separate
+    # 1級 one sharing its glyph). So resolve the introduction level first, then
+    # write exactly one membership per kanji.
     introduction_by_kanji_id: dict[int, str] = {}
+    classification_by_kanji_id: dict[int, str] = {}
     for allocation in allocations:
         if allocation.literal is None:
             continue
         kanji_id, existing_level = kanji_by_literal[allocation.literal]
-        for level_label in memberships_for(allocation.source_level):
-            conn.execute(
-                "INSERT OR IGNORE INTO kanken_membership "
-                "(kanji_id, level_label, source_classification) VALUES (?, ?, ?)",
-                (kanji_id, level_label, allocation.source_level),
-            )
+        memberships_for(allocation.source_level)  # rejects unknown level labels
         introduction_level = (
             "準1級" if allocation.source_level == "1/準1級"
             else allocation.source_level
@@ -105,15 +108,21 @@ def load_kanken_memberships(
             )
             if level in KANKEN_LEVEL_RANK
         ]
-        introduction_by_kanji_id[kanji_id] = min(
-            candidates,
-            key=KANKEN_LEVEL_RANK.__getitem__,
-        )
+        resolved = min(candidates, key=KANKEN_LEVEL_RANK.__getitem__)
+        if introduction_by_kanji_id.get(kanji_id) != resolved:
+            classification_by_kanji_id[kanji_id] = allocation.source_level
+        introduction_by_kanji_id[kanji_id] = resolved
 
     for kanji_id, introduction_level in introduction_by_kanji_id.items():
         conn.execute(
             "UPDATE kanji SET kanken_level = ? WHERE id = ?",
             (introduction_level, kanji_id),
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO kanken_membership "
+            "(kanji_id, level_label, source_classification) VALUES (?, ?, ?)",
+            (kanji_id, introduction_level,
+             classification_by_kanji_id.get(kanji_id, introduction_level)),
         )
     conn.commit()
 

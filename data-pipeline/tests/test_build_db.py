@@ -14,9 +14,13 @@ RESOURCES = Path(__file__).parents[2] / "app/Sources/DictionaryClient/Resources"
 FIXTURE_KANKEN_COUNT_POLICY = KankenCountPolicy(
     legacy_memberships={"10級": 1, "9級": 1},
     unicode_advanced=1,
+    stored_unicode_advanced=1,
     image_pending=1,
     advanced_memberships={"準1級": 1, "1級": 1},
     shared_advanced=1,
+    # 亞 is a "1/準1級" allocation: the source counts it at both levels, but it
+    # is stored once, at 準1級.
+    stored_advanced_memberships={"準1級": 1, "1級": 0},
 )
 
 
@@ -121,9 +125,11 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
         assert conn.execute(
             "SELECT COUNT(*) FROM kanken_membership WHERE level_label = '準1級'"
         ).fetchone()[0] == 1
+        # 亞 is a "1/準1級" allocation, stored at its introduction level only,
+        # so 1級 does not also carry it.
         assert conn.execute(
             "SELECT COUNT(*) FROM kanken_membership WHERE level_label = '1級'"
-        ).fetchone()[0] == 1
+        ).fetchone()[0] == 0
         assert conn.execute(
             "SELECT COUNT(*) FROM stroke_order so "
             "JOIN kanji k ON so.kanji_id = k.id WHERE k.literal = '亞'"

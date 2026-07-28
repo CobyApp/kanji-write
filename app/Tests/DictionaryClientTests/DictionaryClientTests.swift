@@ -77,7 +77,11 @@ final class DictionaryClientTests: XCTestCase {
         )
         XCTAssertFalse(pre1IDs.isEmpty)
         XCTAssertFalse(level1IDs.isEmpty)
-        XCTAssertFalse(pre1IDs.intersection(level1IDs).isEmpty)
+        // Every 級 lists the kanji introduced at it and nothing carried over, so
+        // the two advanced levels are disjoint — 1級 used to also carry the 397
+        // kanji the source marks "1/準1級", which made it the only cumulative
+        // level in the app.
+        XCTAssertTrue(pre1IDs.intersection(level1IDs).isEmpty)
     }
 
     func testLiveLoadsWritingCapabilityIndependentlyOfStrokeCount() async throws {
