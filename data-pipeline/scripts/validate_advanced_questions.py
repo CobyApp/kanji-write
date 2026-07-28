@@ -60,7 +60,7 @@ def main() -> int:
             problems["not an advanced kanji"].append(where)
         if q["focus"] not in clean:
             problems["focus not in prompt"].append(where)
-        for lang in ("ko", "ja", "en"):
+        for lang in ("ko", "ja", "zh", "en"):
             if not q["explanations"].get(lang, "").strip():
                 problems[f"missing {lang} explanation"].append(where)
 

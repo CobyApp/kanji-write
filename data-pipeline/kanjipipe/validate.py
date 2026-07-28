@@ -183,10 +183,18 @@ def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
     def note(name: str, case: str) -> None:
         defects.setdefault(name, []).append(case)
 
+    def q_explanations(raw: str | None) -> dict[str, str]:
+        try:
+            parsed = json.loads(raw or "{}")
+        except ValueError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+
     rows = conn.execute(
         "SELECT q.id, k.literal, q.level, q.kind, q.prompt, q.options, q.answer, "
-        "q.focus FROM jlpt_question q JOIN kanji k ON k.id = q.kanji_id")
-    for qid, literal, level, kind, prompt, options_json, answer, focus in rows:
+        "q.focus, q.explanations FROM jlpt_question q JOIN kanji k ON k.id = q.kanji_id")
+    for (qid, literal, level, kind, prompt, options_json, answer, focus,
+         row_explanations) in rows:
         clean = _UNDERLINE.sub("", prompt)
         where = f"[{qid}] {kind}/{level} 「{literal}」 {clean[:36]}"
         try:
@@ -205,6 +213,12 @@ def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
             continue
         if focus and focus not in clean:
             note("focus not in prompt", where)
+        # The app offers ko/ja/zh/en. A question missing one of them drops the
+        # reader into a different language for that explanation alone.
+        explanations = q_explanations(row_explanations)
+        for lang in ("ko", "ja", "zh", "en"):
+            if not explanations.get(lang, "").strip():
+                note(f"missing {lang} explanation", where)
         if kind == "reading" and literal not in clean:
             note("reading question does not show its kanji", f"{where} → {literal}")
         if kind in _WRITE_KINDS and str(options[answer]) in clean:
