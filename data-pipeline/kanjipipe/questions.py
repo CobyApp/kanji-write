@@ -167,8 +167,13 @@ def build_orthography_question(
     candidates: list[str],
     real_surfaces: set[str],
     rng: random.Random,
+    kind: str = "orthography",
 ) -> dict | None:
     """書き取り: blank the target kanji, pick it from four.
+
+    `kind` selects which 大問 the question belongs to. 同音・同訓異字
+    ("doonkun") is the identical shape with a homophone candidate pool — the
+    reading is then no help and only the meaning picks the answer out.
 
     The surrounding characters are what pin the answer, so single-character
     words are skipped, and a candidate is rejected when substituting it spells
@@ -202,7 +207,7 @@ def build_orthography_question(
     return {
         "literal": literal,
         "level": level,
-        "kind": "orthography",
+        "kind": kind,
         "prompt": f"{word.reading}　—　<u>{blanked}</u>",
         "options": options,
         "answer": options.index(literal),
