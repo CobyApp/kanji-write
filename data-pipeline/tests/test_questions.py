@@ -152,6 +152,32 @@ def test_orthography_skips_single_character_words():
         real_surfaces={"顰"}, rng=_rng()) is None
 
 
+def test_orthography_can_be_tagged_as_a_homophone_question():
+    """同音異字 is the same blank-fill with a different candidate pool.
+
+    The distractors are kanji that share the answer's 音読み, so the reading in
+    the prompt no longer narrows it down and only the meaning does.
+    """
+    word = WordRow(surface="公園", reading="こうえん", en="park")
+    q = build_orthography_question(
+        word, literal="公", level="8級", kind="doonkun",
+        candidates=["講", "耕", "鉱"],
+        real_surfaces={"公園"}, rng=_rng())
+
+    assert q is not None
+    assert q["kind"] == "doonkun"
+    assert q["options"][q["answer"]] == "公"
+    assert "□園" in q["prompt"]
+
+
+def test_orthography_defaults_to_the_writing_kind():
+    word = WordRow(surface="公園", reading="こうえん", en="park")
+    q = build_orthography_question(
+        word, literal="公", level="8級", candidates=["講", "耕", "鉱"],
+        real_surfaces={"公園"}, rng=_rng())
+    assert q["kind"] == "orthography"
+
+
 # ── shared invariants ───────────────────────────────────────────────────────
 
 def test_no_question_leaks_its_answer_in_the_prompt():
