@@ -1,5 +1,6 @@
 # kanjipipe/validate.py
 import csv
+import json
 import re
 import sqlite3
 from dataclasses import dataclass
@@ -143,6 +144,59 @@ _LEGACY_KANKEN_MEMBERSHIP = (
 )
 _JOYO_RECORD = "k.grade IN (1, 2, 3, 4, 5, 6, 8)"
 _ADVANCED_SOURCE_LEVELS = {"準1級", "1/準1級", "1級"}
+
+
+_UNDERLINE = re.compile(r"</?u>")
+# Kinds whose options are kanji the learner must supply, so showing the answer
+# anywhere in the prompt gives it away.
+_WRITE_KINDS = ("orthography", "context")
+
+
+def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
+    """Structural faults in the question bank, grouped by kind of fault.
+
+    The two content rules are asymmetric, which is easy to get backwards:
+
+    * A 読み question must *show* its kanji — you cannot ask how 極 is read in a
+      sentence that spells it ごく. Testing instead whether the kana answer
+      appears in the prompt is useless here: 敵/てき occurs inside 戦ってきた by
+      coincidence, and eleven such false positives drown the real faults.
+    * A 書き取り / 文脈 question must *hide* its kanji, since the options are
+      kanji and the prompt would otherwise contain the answer (「紅葉して木の
+      （　）が…」 with 葉 as the answer).
+    """
+    defects: dict[str, list[str]] = {}
+
+    def note(name: str, case: str) -> None:
+        defects.setdefault(name, []).append(case)
+
+    rows = conn.execute(
+        "SELECT q.id, k.literal, q.level, q.kind, q.prompt, q.options, q.answer, "
+        "q.focus FROM jlpt_question q JOIN kanji k ON k.id = q.kanji_id")
+    for qid, literal, level, kind, prompt, options_json, answer, focus in rows:
+        clean = _UNDERLINE.sub("", prompt)
+        where = f"[{qid}] {kind}/{level} 「{literal}」 {clean[:36]}"
+        try:
+            options = json.loads(options_json)
+        except (TypeError, ValueError):
+            note("unparseable options", where)
+            continue
+        if len(options) < 4:
+            note("fewer than four options", where)
+        if len(set(options)) != len(options):
+            note("duplicate options", where)
+        if any(not str(o).strip() for o in options):
+            note("blank option", where)
+        if not isinstance(answer, int) or not 0 <= answer < len(options):
+            note("answer out of range", where)
+            continue
+        if focus and focus not in clean:
+            note("focus not in prompt", where)
+        if kind == "reading" and literal not in clean:
+            note("reading question does not show its kanji", f"{where} → {literal}")
+        if kind in _WRITE_KINDS and str(options[answer]) in clean:
+            note("answer kanji visible in prompt", f"{where} → {options[answer]}")
+    return defects
 
 
 def coverage_report(
@@ -412,6 +466,15 @@ def assert_core_gates(
         problems.append(
             f"{misaligned} uncommon words carry a curated gloss — word ids have "
             "shifted, so the gloss files no longer line up")
+
+    defects = question_defects(conn)
+    report["question_defects"] = sum(len(v) for v in defects.values())
+    if defects:
+        detail = "; ".join(
+            f"{name}: {len(cases)} (e.g. {cases[0]})"
+            for name, cases in sorted(defects.items())
+        )
+        problems.append(f"question bank defects — {detail}")
 
     if problems:
         raise ValueError("coverage gate failed: " + "; ".join(problems))
