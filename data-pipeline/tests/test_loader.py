@@ -210,6 +210,34 @@ def test_load_words_word_without_joyo_kanji_has_no_links():
     assert conn.execute("SELECT COUNT(*) FROM word_kanji").fetchone()[0] == 0
 
 
+def test_common_words_keep_their_ids_when_uncommon_ones_are_added():
+    """word_glosses_ko.jsonl addresses words by autoincrement id.
+
+    So inserting uncommon words in JMdict order — interleaved among the common
+    ones — silently repoints every later gloss at the wrong word (学校 came out
+    meaning "정면 폭"). Common words must keep the ids they had before uncommon
+    vocabulary existed, which means loading them first, in their original order.
+    """
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama(), _gaku()])
+
+    load_words(
+        conn,
+        [
+            Word(surface="山", reading_kana="やま", en_glosses=["mountain"]),
+            Word(surface="山学", reading_kana="やまがく", is_common=False,
+                 en_glosses=["obscure"]),
+            Word(surface="学", reading_kana="がく", en_glosses=["study"]),
+        ],
+        advanced_literals={"学"},
+    )
+
+    ids = dict(conn.execute("SELECT surface, id FROM word"))
+    assert ids["山"] == 1
+    assert ids["学"] == 2          # NOT 3 — the uncommon word must not displace it
+    assert ids["山学"] == 3
+
+
 def test_uncommon_word_links_only_to_the_advanced_kanji_that_justified_it():
     """An uncommon word is pulled in for its 準1級/1級 kanji, so it must not
     surface under the everyday kanji it happens to also contain — otherwise a

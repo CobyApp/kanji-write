@@ -460,3 +460,15 @@ def test_native_gloss_present_drops_the_count():
     load_stroke_order(conn, {0x5C71: ["d1"]})
     load_llm_glosses(conn, [LlmGloss(literal="山", ko="메 산")])
     assert assert_core_gates(conn)["kanji_without_native_gloss"] == 0
+
+
+def test_gate_rejects_shifted_word_ids():
+    """A gloss landing on an uncommon word means ids moved under the gloss files."""
+    conn = init_db(":memory:")
+    conn.execute("INSERT INTO word (id, surface, reading_kana, is_common) "
+                 "VALUES (1, '山学', 'やまがく', 0)")
+    conn.execute("INSERT INTO word_gloss (word_id, lang, text) VALUES (1, 'ko', '학교')")
+    conn.commit()
+
+    with pytest.raises(ValueError, match="word ids have shifted"):
+        assert_core_gates(conn)

@@ -113,14 +113,12 @@ final class DictionaryClientTests: XCTestCase {
             try await assertWords(words, containAnyKanjiIn: memberIDs, client: client, level: level)
             try await assertWords(okurigana, containAnyKanjiIn: memberIDs, client: client, level: level)
 
-            let questions = try await client.examQuestions(level, "reading", 10_000)
-            if level == "準1級" {
-                // This scope currently has no authored questions. The static
-                // predicate test above provides non-vacuous SQL-path coverage.
-                XCTAssertTrue(questions.isEmpty)
-            } else {
-                XCTAssertFalse(questions.isEmpty)
-                XCTAssertTrue(questions.allSatisfy { memberIDs.contains($0.kanjiID) })
+            // Both advanced scopes are backed by the generated bank now.
+            for kind in ["reading", "orthography"] {
+                let questions = try await client.examQuestions(level, kind, 10_000)
+                XCTAssertFalse(questions.isEmpty, "\(level) \(kind)")
+                XCTAssertTrue(questions.allSatisfy { memberIDs.contains($0.kanjiID) },
+                              "\(level) \(kind)")
             }
         }
     }

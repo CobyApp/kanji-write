@@ -19,6 +19,8 @@ import random
 from dataclasses import dataclass
 
 _OPTION_COUNT = 4
+# 漢検 熟語 run two to four characters; longer JMdict surfaces are names.
+_MAX_COMPOUND = 4
 
 # Classic 漢検 traps: a dropped/added dakuten, a lost long vowel, a missing
 # gemination. Each maps a kana to the one a careless reader confuses it with.
@@ -119,6 +121,12 @@ def build_reading_question(
     """
     if not _is_kana(word.reading):
         return None
+    if not 2 <= len(word.surface) <= _MAX_COMPOUND:
+        # 漢検 大問1 asks for the reading of a 熟語, or of a kanji with its
+        # okurigana. A bare kanji collapses to a one-mora guess; past four
+        # characters JMdict is mostly proper nouns and set phrases (皇學館大学,
+        # 単于都護府), which the paper never asks about.
+        return None
     banned = forbidden | {word.reading}
     # Readings of neighbouring vocabulary are far more convincing than a
     # perturbation, so they carry the question. A perturbation is allowed to
@@ -166,7 +174,9 @@ def build_orthography_question(
     words are skipped, and a candidate is rejected when substituting it spells
     another word that exists — that would be a second defensible answer.
     """
-    if len(word.surface) < 2 or literal not in word.surface:
+    if not 2 <= len(word.surface) <= _MAX_COMPOUND:
+        return None
+    if literal not in word.surface:
         return None
     if word.surface.count(literal) > 1:
         # 侃侃諤諤 and friends: blank one and the other still spells the answer.

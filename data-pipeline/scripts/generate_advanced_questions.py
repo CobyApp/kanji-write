@@ -110,6 +110,9 @@ def main() -> int:
             stats["kanji_without_words"] += 1
             continue
         made_reading = made_ortho = 0
+        # Two- and three-kanji compounds are what the paper actually asks about,
+        # so try those first; the DB order alone puts bare single kanji in front.
+        words = sorted(words, key=lambda w: abs(len(w.surface) - 2))
         for word in words:
             neighbours = by_shape.get(_shape(word.surface, word.reading), [])
             if len(neighbours) < 8:  # too rare a shape to draw from safely
