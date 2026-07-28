@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -26,25 +27,27 @@ def _has(text: str, lo: str, hi: str) -> bool:
 def script_problem(lang: str, text: str) -> str | None:
     """Catch a gloss written partly in the wrong script.
 
-    Batch authoring slips in ways that read fine at a glance — a Cyrillic 'т'
-    inside たちあおい, an English word left inside a Chinese sentence. Both
-    happened; neither is visible without looking at the codepoints.
+    Batch authoring slips in ways that read fine at a glance — a Cyrillic "т"
+    inside たちあおい, an English word left mid-sentence in 「human心がむごく悪い」.
+    Neither is visible without looking at the codepoints.
+
+    The rules are deliberately narrow, because the 5,531 curated glosses already
+    in the file show what legitimate output looks like: a Japanese gloss can be
+    an all-kanji noun phrase (顔、表情), and Latin does appear in formulas and
+    units (水 → H₂O, 斤 → 600g). So requiring kana, or banning Latin outright,
+    would reject correct work. A run of three or more Latin letters is the thing
+    that only happens when an English word was left behind.
     """
     if _has(text, "Ѐ", "ӿ"):
         return "contains Cyrillic"
     if _has(text, "가", "힯") and lang != "ko":
         return "contains Hangul"
-    if lang == "zh":
-        if _has(text, "぀", "ゟ") or _has(text, "゠", "ヿ"):
-            return "contains kana"
-        if any("a" <= ch.lower() <= "z" for ch in text):
-            return "contains Latin letters"
     if lang == "ko" and not _has(text, "가", "힯"):
         return "no Hangul"
-    if lang == "ja" and not (
-        _has(text, "぀", "ゟ") or _has(text, "゠", "ヿ")
-    ):
-        return "no kana"
+    if lang == "zh" and (_has(text, "぀", "ゟ") or _has(text, "゠", "ヿ")):
+        return "contains kana"
+    if re.search(r"[A-Za-z]{3}", text):
+        return "contains an English word"
     return None
 
 
