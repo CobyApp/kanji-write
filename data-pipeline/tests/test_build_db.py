@@ -1,4 +1,5 @@
 # tests/test_build_db.py
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -221,3 +222,54 @@ def test_build_uses_canonical_kanken_count_policy_by_default(tmp_path):
             unihan_path=None,
             out_path=str(tmp_path / "kanji.sqlite"),
         )
+
+
+def test_build_pulls_uncommon_vocabulary_for_advanced_kanji(tmp_path):
+    """準1級/1級 kanji must gain vocabulary even from uncommon JMdict entries.
+
+    Regression guard: the advanced literal set was once derived from
+    `Kanji.kanken_level`, which is still None at that point in the build, so the
+    widening silently did nothing and the advanced exam sections stayed empty.
+    """
+    jmdict = tmp_path / "jmdict.xml"
+    jmdict.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n<JMdict>'
+        # common, ordinary kanji — kept as always
+        '<entry><k_ele><keb>山</keb><ke_pri>news1</ke_pri></k_ele>'
+        '<r_ele><reb>やま</reb></r_ele><sense><gloss>mountain</gloss></sense></entry>'
+        # uncommon, but written with 亞 (準1級) — must now be kept
+        '<entry><k_ele><keb>亞流</keb></k_ele>'
+        '<r_ele><reb>ありゅう</reb></r_ele><sense><gloss>epigone</gloss></sense></entry>'
+        # uncommon and no advanced kanji — must stay out
+        '<entry><k_ele><keb>山岳</keb></k_ele>'
+        '<r_ele><reb>さんがく</reb></r_ele><sense><gloss>mountains</gloss></sense></entry>',
+        encoding="utf-8")
+    jmdict.write_text(jmdict.read_text(encoding="utf-8") + "</JMdict>", encoding="utf-8")
+
+    out = tmp_path / "kanji.sqlite"
+    build(
+        kanjidic2_path=FIX / "kanjidic2_sample.xml",
+        jlpt_path=FIX / "jlpt_sample.json",
+        kanjivg_path=FIX / "kanjivg_sample.xml",
+        jmdict_path=jmdict,
+        sentences_path=FIX / "sentences_sample.csv",
+        links_path=FIX / "links_sample.csv",
+        kanken_path=FIX / "kanken_build_sample.csv",
+        llm_glosses_path=FIX / "llm_glosses_sample.jsonl",
+        yojijukugo_path=RESOURCES / "yojijukugo.source.json",
+        taigirui_path=RESOURCES / "taigirui.source.json",
+        unihan_path=None,
+        kanken_count_policy=FIXTURE_KANKEN_COUNT_POLICY,
+        out_path=str(out),
+    )
+
+    con = sqlite3.connect(out)
+    surfaces = {row[0] for row in con.execute("SELECT surface FROM word")}
+    assert surfaces == {"山", "亞流"}
+    assert con.execute(
+        "SELECT is_common FROM word WHERE surface = '亞流'").fetchone()[0] == 0
+    # …and it is actually reachable from the advanced kanji, which is the point.
+    linked = con.execute(
+        "SELECT w.surface FROM word w JOIN word_kanji wk ON wk.word_id = w.id "
+        "JOIN kanji k ON k.id = wk.kanji_id WHERE k.literal = '亞'").fetchall()
+    assert [row[0] for row in linked] == ["亞流"]

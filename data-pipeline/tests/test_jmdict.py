@@ -11,6 +11,27 @@ def test_keeps_only_common_entries_with_kanji():
     assert [w.surface for w in words] == ["山", "学校"]  # 山岳 (no pri) + これ (no keb) dropped
 
 
+def test_keeps_uncommon_entry_when_it_carries_a_requested_kanji():
+    # 準1級/1級 kanji barely appear in common vocabulary, so the exam sections
+    # would have no material without widening the filter for those kanji only.
+    words = parse_jmdict(FIXTURE, extra_literals={"岳"})
+    assert [w.surface for w in words] == ["山", "学校", "山岳"]
+
+
+def test_uncommon_entry_is_flagged_not_common():
+    words = parse_jmdict(FIXTURE, extra_literals={"岳"})
+    by_surface = {w.surface: w for w in words}
+    assert by_surface["山岳"].is_common is False
+    assert by_surface["山"].is_common is True
+
+
+def test_extra_literals_do_not_pull_in_unrelated_uncommon_entries():
+    # 山岳 carries neither 校 nor 学 as a *requested* kanji, so it stays out.
+    assert [w.surface for w in parse_jmdict(FIXTURE, extra_literals={"校"})] == ["山", "学校"]
+    # …and with no request at all the filter is common-only, as before.
+    assert [w.surface for w in parse_jmdict(FIXTURE)] == ["山", "学校"]
+
+
 def test_extracts_reading_and_english_glosses():
     yama = next(w for w in parse_jmdict(FIXTURE) if w.surface == "山")
     assert yama.reading_kana == "やま"
