@@ -45,3 +45,4 @@ app/Tuist/.build/
 
 # Local scratch (question-generation batches, temp scripts) — never commit
 scratch/
+!data-pipeline/sources/kanken_advanced_questions.jsonl

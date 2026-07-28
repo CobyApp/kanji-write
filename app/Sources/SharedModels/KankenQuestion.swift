@@ -205,11 +205,11 @@ extension ExamType {
                     soon("goji", "誤字訂正"), okuri("漢字と送りがな"), writing]
         case "準1級":
             return [
-                soon("reading", "読み"),
+                reading,
                 soon("hyogai-reading", "表外の読み"),
                 soon("jukugo-reading", "熟語の読み・一字訓読み"),
                 soon("common-kanji", "共通の漢字"),
-                soon("writing", "書き取り"),
+                writing,
                 soon("goji", "誤字訂正"),
                 soon("yoji", "四字熟語"),
                 soon("taigirui", "対義語・類義語"),
@@ -218,12 +218,12 @@ extension ExamType {
             ]
         case "1級":
             return [
-                soon("reading", "読み"),
-                soon("writing", "書き取り"),
+                reading,
+                writing,
                 soon("word-selection", "語選択"),
                 soon("yoji", "四字熟語"),
                 soon("jukujikun-ateji", "熟字訓・当て字"),
-                soon("onkun", "音読み・訓読み"),
+                onkun,
                 soon("taigirui", "対義語・類義語"),
                 soon("koji-kotowaza", "故事・諺"),
                 soon("passage", "文章題"),
