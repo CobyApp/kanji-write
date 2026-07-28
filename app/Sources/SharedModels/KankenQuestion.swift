@@ -177,65 +177,78 @@ extension ExamType {
     private static var shikibetsu: ExamSection {
         live("shikibetsu", "漢字識別", .writing, "shikibetsu")
     }
+    private static var sanji: ExamSection { live("sanji", "三字熟語", .writing, "sanji") }
+    private static var kyotsu: ExamSection {
+        live("common-kanji", "共通の漢字", .writing, "kyotsu")
+    }
+    /// 反対のことば / 対義語 — the answer is a whole word, so it renders like
+    /// 対義語・類義語 rather than as a single-kanji blank.
+    private static func hantai(_ id: String, _ ja: String, _ kind: String) -> ExamSection {
+        live(id, ja, .taigirui, kind)
+    }
+    private static func authored(_ id: String, _ ja: String, _ kind: String,
+                                 _ type: KankenQuestionType = .writing) -> ExamSection {
+        live(id, ja, type, kind)
+    }
 
     /// 漢検 papers in official 大問 order.
     private static func kankenSections(_ level: String) -> [ExamSection] {
         switch level {
         case "10級":
             return [reading, soon("hitsujun", "筆順"), strokes,
-                    soon("hantai", "反対のことば"), writing]
+                    hantai("hantai", "反対のことば", "hantai"), writing]
         case "9級":
             return [reading, soon("hitsujun", "筆順"), strokes, okuri("送りがな"),
-                    soon("hantai", "反対のことば"), writing]
+                    hantai("hantai", "反対のことば", "hantai"), writing]
         case "8級":
             return [reading, onkun, radical, strokes,
-                    okuri("送りがな"), soon("taigi", "対義語"),
+                    okuri("送りがな"), hantai("taigi", "対義語", "taigi"),
                     doon("同音異字"), writing]
         case "7級":
             return [reading, onkun, radical, strokes,
-                    okuri("送りがな"), soon("taigi", "対義語"),
-                    doon("同音異字"), soon("sanji", "三字熟語"), writing]
+                    okuri("送りがな"), hantai("taigi", "対義語", "taigi"),
+                    doon("同音異字"), sanji, writing]
         case "6級":
             return [reading, onkun, radical, strokes,
                     okuri("送りがな"), soon("taigirui", "対義語・類義語"),
-                    doon("同音・同訓異字"), soon("tsukuri", "熟語作り"), writing]
+                    doon("同音・同訓異字"), authored("tsukuri", "熟語作り", "tsukuri"), writing]
         case "5級":
             return [reading, radical, strokes, okuri("送りがな"),
-                    taigirui, soon("kousei", "熟語の構成"),
+                    taigirui, authored("kousei", "熟語の構成", "kousei"),
                     onkun, yoji,
                     doon("同音・同訓異字"), writing]
         case "4級", "3級":
             return [reading, doon("同音・同訓異字"), shikibetsu,
-                    soon("kousei", "熟語の構成"), radical, taigirui,
+                    authored("kousei", "熟語の構成", "kousei"), radical, taigirui,
                     okuri("漢字と送りがな"), yoji,
-                    soon("goji", "誤字訂正"), writing]
+                    authored("goji", "誤字訂正", "goji"), writing]
         case "準2級", "2級":
-            return [reading, radical, soon("kousei", "熟語の構成"), yoji,
+            return [reading, radical, authored("kousei", "熟語の構成", "kousei"), yoji,
                     taigirui, doon("同音・同訓異字"),
-                    soon("goji", "誤字訂正"), okuri("漢字と送りがな"), writing]
+                    authored("goji", "誤字訂正", "goji"), okuri("漢字と送りがな"), writing]
         case "準1級":
             return [
                 reading,
-                soon("hyogai-reading", "表外の読み"),
+                authored("hyogai-reading", "表外の読み", "hyogai", .reading),
                 soon("jukugo-reading", "熟語の読み・一字訓読み"),
-                soon("common-kanji", "共通の漢字"),
+                kyotsu,
                 writing,
-                soon("goji", "誤字訂正"),
+                authored("goji", "誤字訂正", "goji"),
                 yoji,
                 taigirui,
-                soon("koji-kotowaza", "故事・諺"),
+                authored("koji-kotowaza", "故事・諺", "kotowaza"),
                 soon("passage", "文章題"),
             ]
         case "1級":
             return [
                 reading,
                 writing,
-                soon("word-selection", "語選択"),
+                authored("word-selection", "語選択", "goselect"),
                 yoji,
                 soon("jukujikun-ateji", "熟字訓・当て字"),
                 onkun,
                 taigirui,
-                soon("koji-kotowaza", "故事・諺"),
+                authored("koji-kotowaza", "故事・諺", "kotowaza"),
                 soon("passage", "文章題"),
             ]
         default:

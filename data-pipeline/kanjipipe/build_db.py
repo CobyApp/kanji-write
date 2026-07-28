@@ -63,6 +63,8 @@ def build(
     advanced_questions_path: str | Path | None = None,
     doonkun_questions_path: str | Path | None = None,
     shikibetsu_questions_path: str | Path | None = None,
+    derived_questions_path: str | Path | None = None,
+    authored_questions_path: str | Path | None = None,
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
@@ -149,6 +151,14 @@ def build(
         if (shikibetsu_questions_path is not None
                 and os.path.exists(shikibetsu_questions_path)):
             load_jlpt_questions(conn, parse_jlpt_questions(shikibetsu_questions_path))
+        # 三字熟語 / 反対のことば / 対義語 / 共通の漢字, derived from the corpus.
+        if (derived_questions_path is not None
+                and os.path.exists(derived_questions_path)):
+            load_jlpt_questions(conn, parse_jlpt_questions(derived_questions_path))
+        # The sections that needed written sentences or a semantic judgement.
+        if (authored_questions_path is not None
+                and os.path.exists(authored_questions_path)):
+            load_jlpt_questions(conn, parse_jlpt_questions(authored_questions_path))
         if yojijukugo_path is not None:
             load_yojijukugo(conn, yojijukugo_path)
         if taigirui_path is not None:
@@ -185,6 +195,10 @@ def main() -> None:
                         default="sources/kanken_doonkun_questions.jsonl")
     parser.add_argument("--shikibetsu-questions",
                         default="sources/kanken_shikibetsu_questions.jsonl")
+    parser.add_argument("--derived-questions",
+                        default="sources/kanken_derived_questions.jsonl")
+    parser.add_argument("--authored-questions",
+                        default="sources/kanken_authored_questions.jsonl")
     parser.add_argument("--kanken", default="sources/kanken.csv")
     parser.add_argument("--unihan", default="sources/Unihan.zip")
     parser.add_argument(
@@ -213,6 +227,8 @@ def main() -> None:
                    advanced_questions_path=args.advanced_questions,
                    doonkun_questions_path=args.doonkun_questions,
                    shikibetsu_questions_path=args.shikibetsu_questions,
+                   derived_questions_path=args.derived_questions,
+                   authored_questions_path=args.authored_questions,
                    yojijukugo_path=args.yojijukugo,
                    taigirui_path=args.taigirui,
                    unihan_path=args.unihan,

@@ -162,7 +162,13 @@ _ADVANCED_SOURCE_LEVELS = {"準1級", "1/準1級", "1級"}
 _UNDERLINE = re.compile(r"</?u>")
 # Kinds whose options are kanji the learner must supply, so showing the answer
 # anywhere in the prompt gives it away.
-_WRITE_KINDS = ("orthography", "context", "doonkun", "shikibetsu")
+_WRITE_KINDS = (
+    "orthography", "context", "doonkun", "shikibetsu",
+    # Derived and authored sections whose options are the answer itself, so the
+    # prompt must never contain it.
+    "sanji", "kyotsu", "hantai", "taigi", "kousei", "tsukuri", "goselect",
+    "kotowaza", "jukujikun", "hyogai",
+)
 
 
 def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
