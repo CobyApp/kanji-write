@@ -210,6 +210,42 @@ def test_load_words_word_without_joyo_kanji_has_no_links():
     assert conn.execute("SELECT COUNT(*) FROM word_kanji").fetchone()[0] == 0
 
 
+def test_uncommon_word_links_only_to_the_advanced_kanji_that_justified_it():
+    """An uncommon word is pulled in for its 準1級/1級 kanji, so it must not
+    surface under the everyday kanji it happens to also contain — otherwise a
+    10級 word list fills up with things like 「ランブル鞭毛虫症」.
+    """
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama(), _gaku()])  # 山 (everyday), 学 (stands in for advanced)
+
+    load_words(
+        conn,
+        [Word(surface="山学", reading_kana="やまがく", is_common=False,
+              en_glosses=["obscure"])],
+        advanced_literals={"学"},
+    )
+
+    links = conn.execute(
+        "SELECT k.literal FROM word_kanji wk JOIN kanji k ON k.id = wk.kanji_id"
+    ).fetchall()
+    assert links == [("学",)]
+
+
+def test_common_word_still_links_to_every_seeded_kanji():
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama(), _gaku()])
+
+    load_words(
+        conn,
+        [Word(surface="山学", reading_kana="やまがく", en_glosses=["common"])],
+        advanced_literals={"学"},
+    )
+
+    links = {row[0] for row in conn.execute(
+        "SELECT k.literal FROM word_kanji wk JOIN kanji k ON k.id = wk.kanji_id")}
+    assert links == {"山", "学"}
+
+
 def test_load_sentences_caps_per_kanji_and_prefers_short():
     conn = init_db(":memory:")
     load_kanji(conn, [_yama()])  # 山

@@ -210,7 +210,19 @@ def load_stroke_order(
     conn.commit()
 
 
-def load_words(conn: sqlite3.Connection, words: list["Word"]) -> None:
+def load_words(
+    conn: sqlite3.Connection,
+    words: list["Word"],
+    advanced_literals: frozenset[str] | set[str] | None = None,
+) -> None:
+    """Link words to the kanji they are written with.
+
+    Uncommon words only enter the corpus to give 準1級/1級 kanji something to
+    practise on, so they are linked to those kanji alone. Linking them to the
+    everyday kanji they also contain would bury a 10級 word list under obscure
+    vocabulary.
+    """
+    advanced = frozenset(advanced_literals or ())
     kanji_id_by_literal = {
         literal: kanji_id
         for kanji_id, literal in conn.execute("SELECT id, literal FROM kanji")
@@ -228,6 +240,8 @@ def load_words(conn: sqlite3.Connection, words: list["Word"]) -> None:
             )
         linked: set[int] = set()
         for char in word.surface:
+            if not word.is_common and char not in advanced:
+                continue
             kanji_id = kanji_id_by_literal.get(char)
             if kanji_id is not None and kanji_id not in linked:
                 conn.execute(

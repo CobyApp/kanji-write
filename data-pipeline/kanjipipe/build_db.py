@@ -5,6 +5,7 @@ from pathlib import Path
 
 from kanjipipe.db import init_db
 from kanjipipe.filters import (
+    ADVANCED_KANKEN_LEVELS,
     advanced_coverage,
     select_study_inventory,
 )
@@ -95,7 +96,18 @@ def build(
     ]
     merge_jlpt(kanji, jlpt_path)
     strokes = parse_kanjivg(kanjivg_path)
-    words = parse_jmdict(jmdict_path)
+    # 準1級/1級 kanji are rare enough that common-only JMdict leaves most of them
+    # with no vocabulary at all, and therefore no 読み/書き exam material. Widen
+    # the filter for exactly those kanji — every other level stays common-only.
+    # The level lives on the allocations, not on the Kanji rows — `kanken_level`
+    # is only filled in later by load_kanken_memberships.
+    inventory_literals = {entry.literal for entry in kanji}
+    advanced_literals = frozenset(
+        allocation.literal for allocation in allocations
+        if allocation.source_level in ADVANCED_KANKEN_LEVELS
+        and allocation.literal in inventory_literals
+    )
+    words = parse_jmdict(jmdict_path, extra_literals=advanced_literals)
     relations = parse_jmdict_relations(jmdict_path)
     sentences = parse_tatoeba(sentences_path, links_path)
 
@@ -108,7 +120,7 @@ def build(
         if llm_glosses_path is not None and os.path.exists(llm_glosses_path):
             load_llm_glosses(conn, parse_llm_glosses(llm_glosses_path))
         load_stroke_order(conn, strokes)
-        load_words(conn, words)
+        load_words(conn, words, advanced_literals=advanced_literals)
         load_relations(conn, relations)
         if word_ko_path is not None and os.path.exists(word_ko_path):
             load_word_ko_glosses(conn, parse_word_glosses(word_ko_path))
