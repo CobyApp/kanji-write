@@ -221,8 +221,8 @@ extension ExamType {
                 soon("common-kanji", "共通の漢字"),
                 writing,
                 soon("goji", "誤字訂正"),
-                soon("yoji", "四字熟語"),
-                soon("taigirui", "対義語・類義語"),
+                yoji,
+                taigirui,
                 soon("koji-kotowaza", "故事・諺"),
                 soon("passage", "文章題"),
             ]
@@ -231,10 +231,10 @@ extension ExamType {
                 reading,
                 writing,
                 soon("word-selection", "語選択"),
-                soon("yoji", "四字熟語"),
+                yoji,
                 soon("jukujikun-ateji", "熟字訓・当て字"),
                 onkun,
-                soon("taigirui", "対義語・類義語"),
+                taigirui,
                 soon("koji-kotowaza", "故事・諺"),
                 soon("passage", "文章題"),
             ]

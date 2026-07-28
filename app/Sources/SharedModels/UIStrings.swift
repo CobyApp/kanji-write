@@ -53,6 +53,7 @@ public enum L {
     public static let startStudy = L10nText(ko: "학습 시작", ja: "学習を始める", zh: "开始学习", en: "Start studying")
     // Home groups its launchers so the daily-use ones come first.
     public static let sectionStudy = L10nText(ko: "학습", ja: "学習", zh: "学习", en: "Study")
+    public static let sectionTests = L10nText(ko: "테스트", ja: "テスト", zh: "测验", en: "Tests")
     public static let sectionDictionaries = L10nText(ko: "사전", ja: "辞書", zh: "词典", en: "Dictionaries")
     public static let sectionCollection = L10nText(ko: "보관함", ja: "コレクション", zh: "收藏", en: "Collection")
     // Level completion → advance to the next 급수. "{level}" is replaced at display.
@@ -215,8 +216,15 @@ public enum L {
         zh: "暂无需要复习的内容\n学习后再来吧", en: "Nothing to review yet\nStudy first, then come back")
 
     // 칸켄 / JLPT 문제 허브 (exam question hub)
-    public static let kankenHub = L10nText(ko: "칸켄 문제", ja: "漢検問題", zh: "汉检题库", en: "Kanken exam")
-    public static let jlptHub = L10nText(ko: "JLPT 문제", ja: "JLPT問題", zh: "JLPT题库", en: "JLPT exam")
+    // Named for what it is: practice organised by the paper's 大問, drawn from
+    // the whole selected level. It is not a timed sitting, which is why it
+    // belongs under 학습 rather than beside the writing tests.
+    public static let kankenHub = L10nText(
+        ko: "칸켄 유형별 학습", ja: "漢検 出題形式別の学習",
+        zh: "汉检题型学习", en: "Study by Kanken section")
+    public static let jlptHub = L10nText(
+        ko: "JLPT 유형별 학습", ja: "JLPT 出題形式別の学習",
+        zh: "JLPT题型学习", en: "Study by JLPT section")
     public static let kankenContextDesc = L10nText(
         ko: "문맥에 맞는 단어", ja: "文脈に合う語", zh: "符合文意的词", en: "The word that fits the sentence")
     public static let kankenStrokesDesc = L10nText(
@@ -310,6 +318,31 @@ public enum L {
     public static let wordWriteTestPrompt = L10nText(
         ko: "이 뜻의 단어를 써보세요", ja: "この意味の単語を書こう",
         zh: "写出这个意思的单词", en: "Write the word for this meaning")
+    public static let wordWriteSub = L10nText(
+        ko: "급수·범위별 단어 쓰기", ja: "級・範囲別の単語書き",
+        zh: "按级别范围书写单词", en: "Write words by level and range")
+    public static let yojiWriteSub = L10nText(
+        ko: "급수별 사자성어 쓰기", ja: "級別の四字熟語書き",
+        zh: "按级别书写四字成语", en: "Write idioms by level")
+    public static let writeModeYoji = L10nText(
+        ko: "사자성어", ja: "四字熟語", zh: "四字成语", en: "Idiom")
+    public static let yojiWriteTestTitle = L10nText(
+        ko: "사자성어쓰기 테스트", ja: "四字熟語書きテスト",
+        zh: "四字成语书写测验", en: "Idiom writing test")
+    public static let yojiWriteTestPrompt = L10nText(
+        ko: "이 뜻의 사자성어를 써보세요", ja: "この意味の四字熟語を書こう",
+        zh: "写出这个意思的四字成语", en: "Write the idiom for this meaning")
+    public static let writeLevelYojiTotal = L10nText(
+        ko: "이 급수 사자성어", ja: "この級の四字熟語", zh: "本级四字成语",
+        en: "Idioms at this level")
+    public static let writeRange = L10nText(
+        ko: "출제 범위", ja: "出題範囲", zh: "出题范围", en: "Range")
+    public static let writeRangeFrom = L10nText(ko: "부터", ja: "から", zh: "从", en: "From")
+    public static let writeRangeTo = L10nText(ko: "까지", ja: "まで", zh: "到", en: "To")
+    public static let writeLevelKanjiTotal = L10nText(
+        ko: "이 급수 한자", ja: "この級の漢字", zh: "本级汉字", en: "Kanji at this level")
+    public static let writeLevelWordTotal = L10nText(
+        ko: "이 급수 단어", ja: "この級の単語", zh: "本级单词", en: "Words at this level")
     public static let hintShow = L10nText(
         ko: "힌트 보기", ja: "ヒントを見る", zh: "查看提示", en: "Show hint")
     public static let hintHide = L10nText(
