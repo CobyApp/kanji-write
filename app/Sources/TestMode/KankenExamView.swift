@@ -2,6 +2,7 @@ import ComposableArchitecture
 import DesignSystem
 import SharedModels
 import SwiftUI
+import WritingCanvas
 
 /// The 칸켄 문제 허브 screen: a hub listing the 漢検 exam sections (읽기 / 부수 /
 /// 쓰기) plus the 오답노트, and — once a section is picked — a mastery-loop
@@ -218,6 +219,7 @@ public struct KankenExamView: View {
         case .okurigana: L.kankenOkuriDesc[appLanguage]
         case .taigirui: L.kankenTaigiruiDesc[appLanguage]
         case .onkun: L.kankenOnKunDesc[appLanguage]
+        case .hitsujun: L.kankenHitsujunDesc[appLanguage]
         case .comingSoon: L.kankenComingSoon[appLanguage]
         }
     }
@@ -268,10 +270,17 @@ public struct KankenExamView: View {
         VStack(spacing: 10) {
             Text(item.label ?? promptLabel(item.type))
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
-            promptText(item)
-                .font(.kawaiiJP(promptSize(item.prompt), weight: .bold)).japaneseGlyphs()
-                .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+            if let paths = item.strokePaths, let marked = item.markedStroke {
+                // 筆順 cannot be asked in text: the question is "this stroke,
+                // where does it come?", so the stroke has to be pointed at.
+                MarkedStrokeGlyph(paths: paths, marked: marked)
+                    .frame(width: 180, height: 180)
+            } else {
+                promptText(item)
+                    .font(.kawaiiJP(promptSize(item.prompt), weight: .bold)).japaneseGlyphs()
+                    .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 22).padding(.horizontal, 12)
         .roundedCard()
@@ -303,6 +312,7 @@ public struct KankenExamView: View {
         case .okurigana: L.kankenOkuriDesc[appLanguage]
         case .taigirui: L.kankenTaigiruiDesc[appLanguage]
         case .onkun: L.kankenOnKunDesc[appLanguage]
+        case .hitsujun: L.kankenHitsujunDesc[appLanguage]
         case .comingSoon: ""
         }
     }

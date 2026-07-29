@@ -237,6 +237,9 @@ public struct KankenExamFeature {
             let relationOnly = section.id == "taigi" ? "対義" : nil
             let items = (try? await dictionaryClient.examTaigirui(level, relationOnly, 40)) ?? []
             built = KankenQuestion.taigiruiQuiz(items, count: perSection)
+        } else if section.renderType == .hitsujun {
+            let items = (try? await dictionaryClient.examStrokeOrderItems(level, 60)) ?? []
+            built = KankenQuestion.hitsujunQuiz(items, count: perSection, unit: unit)
         } else if section.renderType == .onkun {
             let items = (try? await dictionaryClient.examOnKun(level, 40)) ?? []
             built = KankenQuestion.onKunQuiz(items, count: perSection)
@@ -294,6 +297,35 @@ extension KankenQuestion {
                 id: "\(KankenQuestionType.strokes.rawValue):\(item.kanjiID):s", type: .strokes,
                 kanjiID: item.kanjiID, prompt: item.literal, focus: nil,
                 options: options, answer: answer, explanation: nil))
+        }
+        return out
+    }
+
+    /// Builds 筆順 questions: the glyph is drawn with one stroke marked, and the
+    /// answer is where that stroke falls in writing order. The strokes travel on
+    /// the question so a 오답노트 entry still renders without another query.
+    ///
+    /// The marked stroke is never the first or the last: those are guessable from
+    /// the shape alone, which tests recognition rather than stroke order.
+    static func hitsujunQuiz(_ items: [StrokeOrderItem], count: Int,
+                             unit: String) -> [KankenQuestion] {
+        var out: [KankenQuestion] = []
+        for (index, item) in items.enumerated() where out.count < count {
+            let total = item.paths.count
+            guard total >= 4 else { continue }
+            var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 11))
+            let interior = Array(1..<(total - 1))
+            guard let marked = interior.shuffled(using: &rng).first else { continue }
+            let answer = "\(marked + 1)\(unit)"
+            let others = (1...total).filter { $0 != marked + 1 }.map { "\($0)\(unit)" }
+            let distractors = others.shuffled(using: &rng).prefix(3)
+            guard distractors.count == 3 else { continue }
+            let options = (Array(distractors) + [answer]).shuffled(using: &rng)
+            out.append(KankenQuestion(
+                id: "\(KankenQuestionType.hitsujun.rawValue):\(item.kanjiID):\(marked)",
+                type: .hitsujun, kanjiID: item.kanjiID, prompt: item.literal,
+                focus: nil, options: options, answer: answer, explanation: nil,
+                strokePaths: item.paths, markedStroke: marked))
         }
         return out
     }
