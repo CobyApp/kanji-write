@@ -152,17 +152,31 @@ public struct PracticeView: View {
                     }
                 }
                 levelTotalCard
-                settingCard(L.writeRange[appLanguage]) {
-                    VStack(spacing: 4) {
-                        // One interval, one control. Picking "the 51st to the
-                        // 80th" is how you resume a long 級; start-plus-count
-                        // makes the learner do that arithmetic, and two separate
-                        // sliders draw a single range as two unrelated dots.
-                        RangeSlider(low: rangeLow, high: rangeHigh,
-                                    in: 0...max(1, store.maxStart),
-                                    accent: Palette.lavender)
-                        Text(rangeSummary)
-                            .font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.lavender)
+                // 四字熟語 only exists from 5級 up, so picking 10級 leaves nothing to
+                // range over. A slider across an empty list drew a handle at each
+                // end and summarised itself as "1 ~ 0"; say so instead.
+                if store.levelCount == 0 {
+                    settingCard(L.writeRange[appLanguage]) {
+                        Text(L.writeLevelEmpty[appLanguage])
+                            .font(.kawaii(14, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 6)
+                    }
+                } else {
+                    settingCard(L.writeRange[appLanguage]) {
+                        VStack(spacing: 4) {
+                            // One interval, one control. Picking "the 51st to the
+                            // 80th" is how you resume a long 級; start-plus-count
+                            // makes the learner do that arithmetic, and two separate
+                            // sliders draw a single range as two unrelated dots.
+                            RangeSlider(low: rangeLow, high: rangeHigh,
+                                        in: 0...max(1, store.maxStart),
+                                        accent: Palette.lavender)
+                            Text(rangeSummary)
+                                .font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.lavender)
+                        }
                     }
                 }
 
@@ -174,7 +188,11 @@ public struct PracticeView: View {
                         .shadow(color: Palette.accent.opacity(0.35), radius: 10, y: 5)
                 }
                 .buttonStyle(.bouncy)
+                // Disabled on an empty 級, and it has to look it — at full
+                // strength the button reads as the next step and the tap just
+                // does nothing.
                 .disabled(store.levelCount == 0)
+                .opacity(store.levelCount == 0 ? 0.4 : 1)
             }
             .padding(20)
         }

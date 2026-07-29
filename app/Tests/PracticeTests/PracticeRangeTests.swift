@@ -56,6 +56,22 @@ final class PracticeRangeTests: XCTestCase {
         XCTAssertTrue(store.state.questions.isEmpty)
     }
 
+    /// 四字熟語 starts at 5級, so 10級 loads an empty list. The range summary read
+    /// "1 ~ 0 · 0" there, because `start` is an index and `rangeEnd`/`count`
+    /// clamp to a list of none — the view now shows an empty notice instead of a
+    /// slider, and these are the numbers that told it to.
+    func testAnEmptyLevelReportsNothingToRangeOver() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        }
+        store.exhaustivity = .off
+        await store.send(.loaded([], [:]))
+
+        XCTAssertEqual(store.state.levelCount, 0)
+        XCTAssertEqual(store.state.count, 0)
+        XCTAssertEqual(store.state.rangeEnd, 0)
+    }
+
     private static var threeKanji: [Kanji] {
         ["山", "川", "空"].enumerated().map { index, literal in
             Kanji(id: index + 1, literal: literal, strokeCount: 3, grade: 1,

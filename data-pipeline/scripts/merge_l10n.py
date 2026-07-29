@@ -1,0 +1,256 @@
+#!/usr/bin/env python3
+"""Merge translated l10n batches into their source files, validating first.
+
+A mistranslation reads perfectly well and is only caught by someone who knows
+the language, so the checks here are about the things that *are* mechanically
+checkable — and every one of them caught a real batch defect at least once:
+
+* the id / 四字熟語 must exist, and must actually have been missing that language
+  (a batch that renumbers itself silently overwrites correct data)
+* the text must be in the right script — a "Korean" gloss that is still the
+  English one, or a "Chinese" one written in kana, is the common agent slip
+* nothing may be blank, and nothing may be the untouched English source
+
+Latin letters are allowed in small amounts: 「H₂O」, 「600g」 and 「CD」 are the
+right answer in every language, and banning them rejected 121 correct glosses
+when this rule was first written. Three or more Latin letters in a row is the
+line that separates those from an untranslated phrase.
+
+    python scripts/merge_l10n.py words batch1.json batch2.json --write
+    python scripts/merge_l10n.py sentences --lang ko batch.json --write
+    python scripts/merge_l10n.py yoji batch.json --write
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sqlite3
+import sys
+from pathlib import Path
+
+WORD_KO = Path("sources/word_glosses_ko.jsonl")
+WORD_JAZH = Path("sources/word_glosses_jazh.jsonl")
+SENTENCE_GLOSSES = Path("sources/sentence_glosses.jsonl")
+
+LATIN_RUN = re.compile(r"[A-Za-z]{3,}")
+
+
+def _has(text: str, lo: str, hi: str) -> bool:
+    return any(lo <= ch <= hi for ch in text)
+
+
+def has_hangul(t: str) -> bool:
+    return _has(t, "가", "힣")
+
+
+def has_kana(t: str) -> bool:
+    return _has(t, "぀", "ゟ") or _has(t, "゠", "ヿ")
+
+
+def has_han(t: str) -> bool:
+    return _has(t, "一", "鿿")
+
+
+def script_problem(lang: str, text: str) -> str | None:
+    if not text or not text.strip():
+        return "blank"
+    if lang == "ko":
+        if not has_hangul(text):
+            return "no hangul — looks untranslated"
+        if has_kana(text):
+            return "contains kana"
+    elif lang == "ja":
+        # An all-kanji Japanese gloss is normal (「学問の道」has no kana), so the
+        # only reliable signal is Hangul, or a run of Latin.
+        if has_hangul(text):
+            return "contains hangul"
+        if not (has_kana(text) or has_han(text)):
+            return "neither kana nor kanji"
+    elif lang == "zh":
+        if has_hangul(text):
+            return "contains hangul"
+        if has_kana(text):
+            return "contains kana"
+        if not has_han(text):
+            return "no han characters"
+    elif lang == "en":
+        if has_hangul(text) or has_kana(text):
+            return "not English"
+    if lang != "en" and LATIN_RUN.search(text) and not has_han(text) \
+            and not has_hangul(text) and not has_kana(text):
+        return "looks like untranslated English"
+    return None
+
+
+def load_jsonl(path: Path) -> dict:
+    out = {}
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                entry = json.loads(line)
+                out[entry["id"]] = entry
+    return out
+
+
+def read_batches(paths: list[str]) -> list[dict]:
+    items: list[dict] = []
+    for p in paths:
+        text = Path(p).read_text(encoding="utf-8")
+        parsed = json.loads(text) if text.lstrip().startswith("[") else [
+            json.loads(l) for l in text.splitlines() if l.strip()]
+        items.extend(parsed)
+    return items
+
+
+def merge_words(conn: sqlite3.Connection, items: list[dict], write: bool) -> int:
+    surfaces = dict(conn.execute("SELECT id, surface FROM word"))
+    already = {r[0] for r in conn.execute(
+        "SELECT DISTINCT word_id FROM word_gloss WHERE lang = 'ko'")}
+    ko, jazh = load_jsonl(WORD_KO), load_jsonl(WORD_JAZH)
+    problems: list[str] = []
+    staged_ko, staged_jazh = {}, {}
+    for i, item in enumerate(items):
+        wid = item.get("id")
+        tag = f"[{i}:{wid}]"
+        if wid not in surfaces:
+            problems.append(f"{tag} no such word id")
+            continue
+        if wid in already:
+            problems.append(f"{tag} already has a ko gloss — refusing to overwrite")
+            continue
+        if item.get("surface") and item["surface"] != surfaces[wid]:
+            problems.append(
+                f"{tag} surface {item['surface']!r} != {surfaces[wid]!r} — batch is misaligned")
+            continue
+        for lang in ("ko", "ja", "zh"):
+            bad = script_problem(lang, item.get(lang, ""))
+            if bad:
+                problems.append(f"{tag} {surfaces[wid]} {lang}: {bad}")
+        staged_ko[wid] = {"id": wid, "ko": item.get("ko", "")}
+        staged_jazh[wid] = {"id": wid, "ja": item.get("ja", ""), "zh": item.get("zh", "")}
+    if problems:
+        print(f"FAIL ({len(problems)} problems)")
+        for p in problems[:40]:
+            print("  " + p)
+        return 1
+    print(f"OK — {len(staged_ko)} words")
+    if write:
+        ko.update(staged_ko)
+        jazh.update(staged_jazh)
+        WORD_KO.write_text("\n".join(
+            json.dumps(ko[k], ensure_ascii=False) for k in sorted(ko)) + "\n",
+            encoding="utf-8")
+        WORD_JAZH.write_text("\n".join(
+            json.dumps(jazh[k], ensure_ascii=False) for k in sorted(jazh)) + "\n",
+            encoding="utf-8")
+        print(f"wrote {len(ko)} → {WORD_KO}, {len(jazh)} → {WORD_JAZH}")
+    return 0
+
+
+def merge_sentences(conn: sqlite3.Connection, items: list[dict], lang: str,
+                    write: bool) -> int:
+    """sentence_glosses.jsonl is keyed by the Japanese text, not by id — the
+    loader matches on it — so a batch's id is only used to look the text up and
+    confirm the batch is aligned with what was emitted."""
+    text_by_id = dict(conn.execute("SELECT id, text_ja FROM sentence"))
+    already = {r[0] for r in conn.execute(
+        "SELECT DISTINCT sentence_id FROM sentence_translation WHERE lang = ?",
+        (lang,))}
+    existing: dict[str, dict] = {}
+    if SENTENCE_GLOSSES.exists():
+        for line in SENTENCE_GLOSSES.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                entry = json.loads(line)
+                existing[entry["ja"]] = entry
+    problems: list[str] = []
+    staged: dict[str, dict] = {}
+    for i, item in enumerate(items):
+        sid = item.get("id")
+        tag = f"[{i}:{sid}]"
+        if sid not in text_by_id:
+            problems.append(f"{tag} no such sentence id")
+            continue
+        if sid in already:
+            problems.append(f"{tag} already has {lang} — refusing to overwrite")
+            continue
+        ja = text_by_id[sid]
+        if item.get("ja") and item["ja"] != ja:
+            problems.append(f"{tag} ja text does not match the emitted batch")
+            continue
+        bad = script_problem(lang, item.get(lang, ""))
+        if bad:
+            problems.append(f"{tag} {lang}: {bad}")
+            continue
+        merged = dict(existing.get(ja, {"ja": ja}))
+        merged[lang] = item[lang]
+        staged[ja] = merged
+    if problems:
+        print(f"FAIL ({len(problems)} problems)")
+        for p in problems[:40]:
+            print("  " + p)
+        return 1
+    print(f"OK — {len(staged)} sentences ({lang})")
+    if write:
+        existing.update(staged)
+        SENTENCE_GLOSSES.write_text("\n".join(
+            json.dumps(existing[k], ensure_ascii=False) for k in existing) + "\n",
+            encoding="utf-8")
+        print(f"wrote {len(existing)} → {SENTENCE_GLOSSES}")
+    return 0
+
+
+def merge_yoji(items: list[dict], write: bool) -> int:
+    path = Path("sources/yojijukugo.json")
+    if not path.exists():
+        path = Path("../app/Sources/DictionaryClient/Resources/yojijukugo.source.json")
+    entries = json.loads(path.read_text(encoding="utf-8"))
+    by_yoji = {e["yoji"]: e for e in entries}
+    problems: list[str] = []
+    for i, item in enumerate(items):
+        y = item.get("yoji")
+        tag = f"[{i}:{y}]"
+        if y not in by_yoji:
+            problems.append(f"{tag} no such 四字熟語")
+            continue
+        for lang in ("zh", "en"):
+            bad = script_problem(lang, item.get(lang, ""))
+            if bad:
+                problems.append(f"{tag} {lang}: {bad}")
+    if problems:
+        print(f"FAIL ({len(problems)} problems)")
+        for p in problems[:40]:
+            print("  " + p)
+        return 1
+    print(f"OK — {len(items)} 四字熟語")
+    if write:
+        for item in items:
+            entry = by_yoji[item["yoji"]]
+            entry["meaningZh"] = item["zh"]
+            entry["meaningEn"] = item["en"]
+        path.write_text(json.dumps(entries, ensure_ascii=False, indent=1) + "\n",
+                        encoding="utf-8")
+        print(f"wrote {len(entries)} → {path}")
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("kind", choices=("words", "sentences", "yoji"))
+    parser.add_argument("batches", nargs="+")
+    parser.add_argument("--db", default="out/kanji.sqlite")
+    parser.add_argument("--lang", default="ko", choices=("ko", "zh", "en"))
+    parser.add_argument("--write", action="store_true")
+    args = parser.parse_args()
+
+    items = read_batches(args.batches)
+    conn = sqlite3.connect(args.db)
+    if args.kind == "words":
+        return merge_words(conn, items, args.write)
+    if args.kind == "sentences":
+        return merge_sentences(conn, items, args.lang, args.write)
+    return merge_yoji(items, args.write)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -149,6 +149,8 @@ CREATE TABLE yojijukugo (
     reading      TEXT NOT NULL,
     meaning_ja   TEXT,
     meaning_ko   TEXT,
+    meaning_zh   TEXT,
+    meaning_en   TEXT,
     kanken_level TEXT NOT NULL
 );
 

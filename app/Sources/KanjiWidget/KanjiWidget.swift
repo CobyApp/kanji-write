@@ -118,8 +118,11 @@ struct KanjiWidget: Widget {
             KanjiWidgetView(entry: entry)
                 .containerBackground(Palette.background, for: .widget)
         }
+        // The widget gallery is drawn by the system before the app runs, so these
+        // two cannot come from `L` like the rest of the chrome — they resolve
+        // through the target's String Catalog against the device language.
         .configurationDisplayName("漢字")
-        .description("오늘 배울 한자와 진도")
+        .description("今日学ぶ漢字と進捗")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

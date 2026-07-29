@@ -482,7 +482,8 @@ extension DictionaryClient: DependencyKey {
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [Yojijukugo] in
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT id, yoji, reading, meaning_ja, meaning_ko, kanken_level
+                    SELECT id, yoji, reading, meaning_ja, meaning_ko,
+                           meaning_zh, meaning_en, kanken_level
                     FROM yojijukugo
                     WHERE (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2
                            WHEN '3級' THEN 3 WHEN '準2級' THEN 4 WHEN '2級' THEN 5
@@ -496,7 +497,8 @@ extension DictionaryClient: DependencyKey {
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [Yojijukugo] in
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT id, yoji, reading, meaning_ja, meaning_ko, kanken_level
+                    SELECT id, yoji, reading, meaning_ja, meaning_ko,
+                           meaning_zh, meaning_en, kanken_level
                     FROM yojijukugo
                     ORDER BY (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2
                               WHEN '3級' THEN 3 WHEN '準2級' THEN 4 WHEN '2級' THEN 5
@@ -542,11 +544,13 @@ extension DictionaryClient: DependencyKey {
             let q = "%\(query)%"
             return try await queue.read { db -> [Yojijukugo] in
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT id, yoji, reading, meaning_ja, meaning_ko, kanken_level
+                    SELECT id, yoji, reading, meaning_ja, meaning_ko,
+                           meaning_zh, meaning_en, kanken_level
                     FROM yojijukugo
-                    WHERE yoji LIKE ? OR reading LIKE ? OR meaning_ja LIKE ? OR meaning_ko LIKE ?
+                    WHERE yoji LIKE ? OR reading LIKE ? OR meaning_ja LIKE ?
+                       OR meaning_ko LIKE ? OR meaning_zh LIKE ? OR meaning_en LIKE ?
                     LIMIT ?
-                    """, arguments: [q, q, q, q, limit])
+                    """, arguments: [q, q, q, q, q, q, limit])
                 return rows.map(Self.makeYoji)
             }
         },
@@ -655,6 +659,7 @@ extension DictionaryClient: DependencyKey {
     private static func makeYoji(_ row: Row) -> Yojijukugo {
         Yojijukugo(id: row["id"], yoji: row["yoji"], reading: row["reading"],
                    meaningJa: row["meaning_ja"], meaningKo: row["meaning_ko"],
+                   meaningZh: row["meaning_zh"], meaningEn: row["meaning_en"],
                    level: row["kanken_level"])
     }
 

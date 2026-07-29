@@ -330,6 +330,7 @@ let project = Project(
                 ],
             ]),
             sources: ["Sources/KanjiWidget/**"],
+            resources: ["Sources/KanjiWidget/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
                 .target(name: "DesignSystem"),
