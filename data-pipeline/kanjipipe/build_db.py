@@ -131,10 +131,13 @@ def build(
         load_stroke_order(conn, strokes)
         load_words(conn, words, advanced_literals=advanced_literals)
         load_relations(conn, relations)
+        word_gloss_mismatches = 0
         if word_ko_path is not None and os.path.exists(word_ko_path):
-            load_word_ko_glosses(conn, parse_word_glosses(word_ko_path))
+            word_gloss_mismatches += load_word_ko_glosses(
+                conn, parse_word_glosses(word_ko_path))
         if word_jazh_path is not None and os.path.exists(word_jazh_path):
-            load_word_jazh_glosses(conn, parse_word_jazh(word_jazh_path))
+            word_gloss_mismatches += load_word_jazh_glosses(
+                conn, parse_word_jazh(word_jazh_path))
         load_sentences(conn, sentences)
         load_sentence_words(conn)  # link sentences to the words they contain
         if sentence_glosses_path is not None and os.path.exists(sentence_glosses_path):
@@ -171,6 +174,7 @@ def build(
             conn,
             kanken_allocations=allocations,
             kanken_count_policy=kanken_count_policy,
+            word_gloss_mismatches=word_gloss_mismatches,
             missing_advanced_inventory=inventory_report[
                 "missing_advanced_inventory"
             ],

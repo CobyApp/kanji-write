@@ -373,21 +373,36 @@ def load_relations(conn: sqlite3.Connection, relations: list["Relation"]) -> Non
 
 
 def load_word_ko_glosses(
-    conn: sqlite3.Connection, entries: list[tuple[int, str]]
-) -> None:
-    for word_id, ko in entries:
+    conn: sqlite3.Connection, entries: list[tuple[int, str, str | None]]
+) -> int:
+    """Attach Korean word glosses, verifying each against the surface the file
+    recorded. Returns how many were dropped for a surface mismatch — the
+    signature of shifted word ids, which the build gate refuses."""
+    surfaces = dict(conn.execute("SELECT id, surface FROM word"))
+    mismatched = 0
+    for word_id, ko, surface in entries:
+        if surface is not None and surfaces.get(word_id) != surface:
+            mismatched += 1
+            continue
         conn.execute(
             "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ko', ?)",
             (word_id, ko),
         )
     conn.commit()
+    return mismatched
 
 
 def load_word_jazh_glosses(
     conn: sqlite3.Connection,
-    entries: list[tuple[int, str | None, str | None]],
-) -> None:
-    for word_id, ja, zh in entries:
+    entries: list[tuple[int, str | None, str | None, str | None]],
+) -> int:
+    """As `load_word_ko_glosses`, for the ja/zh file."""
+    surfaces = dict(conn.execute("SELECT id, surface FROM word"))
+    mismatched = 0
+    for word_id, ja, zh, surface in entries:
+        if surface is not None and surfaces.get(word_id) != surface:
+            mismatched += 1
+            continue
         if ja:
             conn.execute(
                 "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ja', ?)",
@@ -399,6 +414,7 @@ def load_word_jazh_glosses(
                 (word_id, zh),
             )
     conn.commit()
+    return mismatched
 
 
 def load_sentence_glosses(

@@ -149,14 +149,29 @@ def merge_words(conn: sqlite3.Connection, items: list[dict], write: bool) -> int
 
 
 def merge_sentences(conn: sqlite3.Connection, items: list[dict], lang: str,
-                    write: bool) -> int:
-    """sentence_glosses.jsonl is keyed by the Japanese text, not by id — the
-    loader matches on it — so a batch's id is only used to look the text up and
-    confirm the batch is aligned with what was emitted."""
-    text_by_id = dict(conn.execute("SELECT id, text_ja FROM sentence"))
+                    write: bool, inputs: list[str] | None = None) -> int:
+    """sentence_glosses.jsonl is keyed by the Japanese text, not by id, because
+    sentence ids are autoincrement rowids and are not stable: dropping a single
+    sentence at ingest renumbers every later one, and a batch translated against
+    yesterday's build would then attach its text to the wrong sentence. (That is
+    not hypothetical — one blocked sentence shifted 1,500 ids and this check is
+    what caught it.)
+
+    So a batch that carries only ids has to be paired with the input files it was
+    emitted from, via --inputs: those hold the id → Japanese text mapping as of
+    the build that produced them.
+    """
+    ja_by_id: dict[int, str] = {}
+    if inputs:
+        for path in inputs:
+            for entry in json.loads(Path(path).read_text(encoding="utf-8")):
+                ja_by_id[entry["id"]] = entry["ja"]
+    else:
+        ja_by_id = dict(conn.execute("SELECT id, text_ja FROM sentence"))
+    known_text = {r[0] for r in conn.execute("SELECT text_ja FROM sentence")}
     already = {r[0] for r in conn.execute(
-        "SELECT DISTINCT sentence_id FROM sentence_translation WHERE lang = ?",
-        (lang,))}
+        "SELECT DISTINCT s.text_ja FROM sentence s JOIN sentence_translation t "
+        "ON t.sentence_id = s.id WHERE t.lang = ?", (lang,))}
     existing: dict[str, dict] = {}
     if SENTENCE_GLOSSES.exists():
         for line in SENTENCE_GLOSSES.read_text(encoding="utf-8").splitlines():
@@ -165,18 +180,24 @@ def merge_sentences(conn: sqlite3.Connection, items: list[dict], lang: str,
                 existing[entry["ja"]] = entry
     problems: list[str] = []
     staged: dict[str, dict] = {}
+    skipped_present = 0
+    skipped_gone = 0
     for i, item in enumerate(items):
         sid = item.get("id")
         tag = f"[{i}:{sid}]"
-        if sid not in text_by_id:
-            problems.append(f"{tag} no such sentence id")
+        ja = item.get("ja") or ja_by_id.get(sid)
+        if not ja:
+            problems.append(f"{tag} cannot resolve the Japanese text — pass --inputs")
             continue
-        if sid in already:
-            problems.append(f"{tag} already has {lang} — refusing to overwrite")
+        if ja not in known_text:
+            # Dropped at ingest since the batch was emitted (the blocklist), so
+            # its translation has nowhere to go. Not an error.
+            skipped_gone += 1
             continue
-        ja = text_by_id[sid]
-        if item.get("ja") and item["ja"] != ja:
-            problems.append(f"{tag} ja text does not match the emitted batch")
+        if ja in already:
+            # A sentence that gained this language since the batch was emitted
+            # (Tatoeba, or another sentence sharing the same text). Not an error.
+            skipped_present += 1
             continue
         bad = script_problem(lang, item.get(lang, ""))
         if bad:
@@ -190,7 +211,13 @@ def merge_sentences(conn: sqlite3.Connection, items: list[dict], lang: str,
         for p in problems[:40]:
             print("  " + p)
         return 1
-    print(f"OK — {len(staged)} sentences ({lang})")
+    notes = []
+    if skipped_present:
+        notes.append(f"{skipped_present} already had it")
+    if skipped_gone:
+        notes.append(f"{skipped_gone} no longer in the build")
+    print(f"OK — {len(staged)} sentences ({lang})"
+          + (", " + ", ".join(notes) if notes else ""))
     if write:
         existing.update(staged)
         SENTENCE_GLOSSES.write_text("\n".join(
@@ -241,6 +268,10 @@ def main() -> int:
     parser.add_argument("--db", default="out/kanji.sqlite")
     parser.add_argument("--lang", default="ko", choices=("ko", "zh", "en"))
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--inputs", nargs="*",
+                        help="the emitted batch files these outputs came from; "
+                             "they carry the id → Japanese text mapping, which "
+                             "ids alone cannot be trusted for")
     args = parser.parse_args()
 
     items = read_batches(args.batches)
@@ -248,7 +279,7 @@ def main() -> int:
     if args.kind == "words":
         return merge_words(conn, items, args.write)
     if args.kind == "sentences":
-        return merge_sentences(conn, items, args.lang, args.write)
+        return merge_sentences(conn, items, args.lang, args.write, args.inputs)
     return merge_yoji(items, args.write)
 
 

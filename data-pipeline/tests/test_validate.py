@@ -480,15 +480,12 @@ def test_native_gloss_present_drops_the_count():
 
 
 def test_gate_rejects_shifted_word_ids():
-    """A gloss landing on an uncommon word means ids moved under the gloss files."""
+    """The loader counts glosses whose recorded surface is not at the id they
+    claim; any such count means the gloss files no longer line up."""
     conn = init_db(":memory:")
-    conn.execute("INSERT INTO word (id, surface, reading_kana, is_common) "
-                 "VALUES (1, '山学', 'やまがく', 0)")
-    conn.execute("INSERT INTO word_gloss (word_id, lang, text) VALUES (1, 'ko', '학교')")
-    conn.commit()
 
     with pytest.raises(ValueError, match="word ids have shifted"):
-        assert_core_gates(conn)
+        assert_core_gates(conn, word_gloss_mismatches=3)
 
 
 def _question_db():

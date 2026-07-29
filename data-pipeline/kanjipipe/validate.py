@@ -422,6 +422,7 @@ def assert_core_gates(
     kanken_allocations: list[KankenAllocation] | None = None,
     kanken_count_policy: KankenCountPolicy | None = None,
     missing_advanced_inventory: int = 0,
+    word_gloss_mismatches: int = 0,
 ) -> dict[str, int]:
     if (kanken_allocations is None) != (kanken_count_policy is None):
         raise ValueError(
@@ -603,19 +604,19 @@ def assert_core_gates(
     if report["missing_advanced_meaning"]:
         problems.append(
             f"{report['missing_advanced_meaning']} advanced kanji missing meaning")
-    # word_glosses_{ko,jazh}.jsonl address words by autoincrement id, and were
-    # written against the common-word set alone. If an uncommon word carries one
-    # of those glosses, ids have shifted and every gloss after the shift now
-    # names the wrong word — a silent, repo-wide corruption of the 단어사전.
-    misaligned = conn.execute(
-        "SELECT COUNT(*) FROM word w JOIN word_gloss g ON g.word_id = w.id "
-        "WHERE w.is_common = 0 AND g.lang IN ('ko', 'ja', 'zh')"
-    ).fetchone()[0]
-    report["misaligned_word_glosses"] = misaligned
-    if misaligned:
+    # word_glosses_{ko,jazh}.jsonl address words by autoincrement id, which shifts
+    # whenever the word set changes — that once attached 学校's gloss to a word
+    # meaning "frontal width", a silent corruption of the whole 단어사전. Each line
+    # records the word's surface, and the loader checks it; anything that failed
+    # that check means the files no longer line up with the ids they use.
+    #
+    # This used to be checked by proxy — "no uncommon word may carry a curated
+    # gloss" — which held only while the uncommon words were untranslated.
+    report["misaligned_word_glosses"] = word_gloss_mismatches
+    if word_gloss_mismatches:
         problems.append(
-            f"{misaligned} uncommon words carry a curated gloss — word ids have "
-            "shifted, so the gloss files no longer line up")
+            f"{word_gloss_mismatches} word glosses name a surface that is not at "
+            "the id they claim — word ids have shifted")
 
     defects = question_defects(conn)
     report["question_defects"] = sum(len(v) for v in defects.values())
