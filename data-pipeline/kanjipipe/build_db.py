@@ -7,6 +7,7 @@ from kanjipipe.db import init_db
 from kanjipipe.filters import (
     ADVANCED_KANKEN_LEVELS,
     advanced_coverage,
+    apply_korean_readings,
     select_study_inventory,
 )
 from kanjipipe.ingest.jlpt import merge_jlpt
@@ -84,6 +85,9 @@ def build(
         unihan=unihan,
         supplements=supplements,
     )
+    # kanjidic2's korean_h ordering is not the primary-reading order, so Unihan
+    # decides. Runs before the gates, which is the only chance to catch it.
+    apply_korean_readings(kanji, unihan)
     inventory_report = advanced_coverage(kanji, allocations)
     if any(inventory_report.values()):
         raise ValueError(

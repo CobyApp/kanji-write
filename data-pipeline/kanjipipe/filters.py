@@ -13,6 +13,27 @@ def filter_joyo(kanji: list[Kanji]) -> list[Kanji]:
     return [k for k in kanji if k.grade in JOYO_GRADES]
 
 
+def apply_korean_readings(
+    kanji: list[Kanji],
+    unihan: dict[str, UnihanMetadata],
+) -> None:
+    """Replace each kanji's Sino-Korean reading with Unihan's primary one.
+
+    kanjidic2 lists `korean_h` in no particular order, and the pipeline was
+    taking the first — which is the wrong reading for 570 of the 6,352 kanji
+    that have one (阿 as 옥 instead of 아, 丑 as 추 instead of 축). Unihan's
+    kHangul is ordered with the primary first, so it wins wherever it exists;
+    kanjidic2 stays where Unihan is silent, since a wrong-order reading still
+    beats no reading.
+    """
+    for item in kanji:
+        primary = unihan.get(item.literal)
+        if primary is None or not primary.korean_reading:
+            continue
+        item.readings = [r for r in item.readings if r.lang_axis != "eum"]
+        item.readings.append(Reading("eum", primary.korean_reading))
+
+
 def select_study_inventory(
     kanji: list[Kanji],
     allocations: list[KankenAllocation],

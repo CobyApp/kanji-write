@@ -32,14 +32,6 @@
   "level": "5級"
  },
  {
-  "word": "単純",
-  "wordReading": "たんじゅん",
-  "answer": "複雑",
-  "answerReading": "ふくざつ",
-  "relation": "対義",
-  "level": "5級"
- },
- {
   "word": "洋服",
   "wordReading": "ようふく",
   "answer": "和服",
@@ -2070,5 +2062,181 @@
   "answerReading": "はくしき",
   "relation": "類義",
   "level": "準1級"
+ },
+ {
+  "word": "増加",
+  "wordReading": "ぞうか",
+  "answer": "減少",
+  "answerReading": "げんしょう",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "往路",
+  "wordReading": "おうろ",
+  "answer": "復路",
+  "answerReading": "ふくろ",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "永久",
+  "wordReading": "えいきゅう",
+  "answer": "一時",
+  "answerReading": "いちじ",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "好評",
+  "wordReading": "こうひょう",
+  "answer": "不評",
+  "answerReading": "ふひょう",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "直接",
+  "wordReading": "ちょくせつ",
+  "answer": "間接",
+  "answerReading": "かんせつ",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "有能",
+  "wordReading": "ゆうのう",
+  "answer": "無能",
+  "answerReading": "むのう",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "移動",
+  "wordReading": "いどう",
+  "answer": "停止",
+  "answerReading": "ていし",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "再生",
+  "wordReading": "さいせい",
+  "answer": "停止",
+  "answerReading": "ていし",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "和解",
+  "wordReading": "わかい",
+  "answer": "断絶",
+  "answerReading": "だんぜつ",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "永遠",
+  "wordReading": "えいえん",
+  "answer": "永久",
+  "answerReading": "えいきゅう",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "職業",
+  "wordReading": "しょくぎょう",
+  "answer": "職務",
+  "answerReading": "しょくむ",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "報告",
+  "wordReading": "ほうこく",
+  "answer": "通知",
+  "answerReading": "つうち",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "経過",
+  "wordReading": "けいか",
+  "answer": "進行",
+  "answerReading": "しんこう",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "保護",
+  "wordReading": "ほご",
+  "answer": "守護",
+  "answerReading": "しゅご",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "原因",
+  "wordReading": "げんいん",
+  "answer": "理由",
+  "answerReading": "りゆう",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "興行",
+  "wordReading": "こうぎょう",
+  "answer": "公演",
+  "answerReading": "こうえん",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "貿易",
+  "wordReading": "ぼうえき",
+  "answer": "交易",
+  "answerReading": "こうえき",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "独得",
+  "wordReading": "どくとく",
+  "answer": "独自",
+  "answerReading": "どくじ",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "肥大",
+  "wordReading": "ひだい",
+  "answer": "増大",
+  "answerReading": "ぞうだい",
+  "relation": "類義",
+  "level": "6級"
+ },
+ {
+  "word": "能動",
+  "wordReading": "のうどう",
+  "answer": "受動",
+  "answerReading": "じゅどう",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "有益",
+  "wordReading": "ゆうえき",
+  "answer": "無益",
+  "answerReading": "むえき",
+  "relation": "対義",
+  "level": "6級"
+ },
+ {
+  "word": "可能",
+  "wordReading": "かのう",
+  "answer": "不能",
+  "answerReading": "ふのう",
+  "relation": "対義",
+  "level": "6級"
  }
 ]

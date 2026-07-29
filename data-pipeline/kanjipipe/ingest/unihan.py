@@ -22,6 +22,8 @@ class UnihanMetadata:
     on_readings: tuple[str, ...]
     kun_readings: tuple[str, ...]
     definition: str | None
+    # The primary Sino-Korean reading, or None when Unihan lists none.
+    korean_reading: str | None = None
 
 
 def _verify_sha256(path: Path, expected_sha256: str) -> None:
@@ -66,6 +68,7 @@ def parse_unihan(
                         "kDefinition",
                         "kJapaneseOn",
                         "kJapaneseKun",
+                        "kHangul",
                         "kTotalStrokes",
                         "kRSUnicode",
                     }:
@@ -92,5 +95,12 @@ def parse_unihan(
             on_readings=tuple(values.get("kJapaneseOn", "").split()),
             kun_readings=tuple(values.get("kJapaneseKun", "").split()),
             definition=values.get("kDefinition"),
+            # kHangul is "축:0E 추:0N" — space-separated readings each tagged
+            # with a source, primary first. kanjidic2's ordering is not this,
+            # which is why its first korean_h is often the wrong one.
+            korean_reading=(
+                values["kHangul"].split()[0].split(":")[0]
+                if values.get("kHangul") else None
+            ),
         )
     return result
