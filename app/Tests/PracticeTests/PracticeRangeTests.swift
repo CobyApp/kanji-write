@@ -81,3 +81,113 @@ final class PracticeRangeTests: XCTestCase {
         }
     }
 }
+
+@MainActor
+final class PracticeFavoriteTests: XCTestCase {
+    /// A favourite is kept by id per mode, so switching to 단어 and back does not
+    /// lose the starred kanji.
+    func testFavoritesAreKeptPerMode() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        } withDependencies: {
+            $0.practiceFavoriteStore.save = { _ in }
+            // Switching to 단어 loads that level's vocabulary; the favourites
+            // themselves are what this is about.
+            $0.dictionaryClient.quizWords = { _, _ in [] }
+        }
+        store.exhaustivity = .off
+        let kanji = PracticeItem(id: 7, answer: "山", glosses: [:])
+
+        await store.send(.toggleFavorite(kanji))
+        XCTAssertTrue(store.state.isFavorite(kanji))
+
+        await store.send(.modeSelected(.word))
+        XCTAssertEqual(store.state.favoriteCount, 0)
+
+        await store.send(.modeSelected(.kanji))
+        XCTAssertEqual(store.state.favoriteIDs, [7])
+    }
+
+    /// Starring twice removes it — the star is a toggle, not an add button.
+    func testStarringTwiceRemovesTheFavorite() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        } withDependencies: {
+            $0.practiceFavoriteStore.save = { _ in }
+        }
+        store.exhaustivity = .off
+        let item = PracticeItem(id: 3, answer: "川", glosses: [:])
+
+        await store.send(.toggleFavorite(item))
+        await store.send(.toggleFavorite(item))
+
+        XCTAssertFalse(store.state.isFavorite(item))
+        XCTAssertEqual(store.state.favoriteCount, 0)
+    }
+
+    /// In 즐겨찾기 scope the run is the starred list, not a slice of the level —
+    /// a favourite marked at 2級 must still be testable from 準1級.
+    func testFavoriteScopeRunsTheStarredItemsWholesale() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        } withDependencies: {
+            $0.practiceFavoriteStore.save = { _ in }
+        }
+        store.exhaustivity = .off
+        await store.send(.setUseFavorites(true))
+        await store.send(.favoriteItemsLoaded([
+            PracticeItem(id: 1, answer: "山", glosses: [:]),
+            PracticeItem(id: 2, answer: "川", glosses: [:]),
+        ]))
+
+        await store.send(.startTest)
+
+        XCTAssertEqual(store.state.phase, .testing)
+        XCTAssertEqual(store.state.questions.map(\.answer), ["山", "川"])
+        XCTAssertEqual(store.state.runCount, 2)
+    }
+
+    /// Nothing starred yet → the button is inert rather than starting an empty run.
+    func testFavoriteScopeWithNothingStarredDoesNotStart() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        } withDependencies: {
+            $0.practiceFavoriteStore.save = { _ in }
+        }
+        store.exhaustivity = .off
+        await store.send(.setUseFavorites(true))
+
+        await store.send(.startTest)
+
+        XCTAssertEqual(store.state.phase, .setup)
+        XCTAssertEqual(store.state.runCount, 0)
+    }
+}
+
+@MainActor
+final class PracticeScopeRestoreTests: XCTestCase {
+    /// The 즐겨찾기 tile pins the scope before the remembered settings arrive, and
+    /// the restore used to overwrite it — the tile opened on 급수별 every time.
+    func testTheForcedFavoriteScopeSurvivesTheRestore() async {
+        var initial = PracticeFeature.State()
+        initial.useFavorites = true
+        let store = TestStore(initialState: initial) { PracticeFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.restored(PracticeSettings(
+            mode: "kanji", level: "N5", start: 0, end: 19, useFavorites: false)))
+
+        XCTAssertTrue(store.state.useFavorites)
+    }
+
+    /// Opening the writing test normally still restores the remembered scope.
+    func testTheRememberedScopeIsRestoredOtherwise() async {
+        let store = TestStore(initialState: PracticeFeature.State()) { PracticeFeature() }
+        store.exhaustivity = .off
+
+        await store.send(.restored(PracticeSettings(
+            mode: "kanji", level: "N5", start: 0, end: 19, useFavorites: true)))
+
+        XCTAssertTrue(store.state.useFavorites)
+    }
+}

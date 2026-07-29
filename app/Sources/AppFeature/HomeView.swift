@@ -256,6 +256,7 @@ struct HomeView: View {
                 }
                 launcherSection(L.sectionTests[appLanguage], Palette.butter) {
                     practiceButton
+                    favoritesButton
                 }
                 launcherSection(L.sectionDictionaries[appLanguage], Palette.sky) {
                     dictionaryButton
@@ -328,6 +329,7 @@ struct HomeView: View {
             }
             launcherSection(L.sectionTests[appLanguage], Palette.butter, grid: true) {
                 practiceButton
+                favoritesButton
             }
             launcherSection(L.sectionDictionaries[appLanguage], Palette.sky, grid: true) {
                 dictionaryButton
@@ -564,6 +566,18 @@ struct HomeView: View {
                  subtitle: L.practiceSub[appLanguage], count: nil,
                  soft: Palette.butterSoft, accent: Palette.butter) {
             store.send(.startPractice(mode: .kanji))
+        }
+    }
+
+    /// 즐겨찾기 — the writing test over the items starred while checking answers,
+    /// in whichever mode was last used. Its own tile rather than a setting inside
+    /// the test, because "test me on what I keep getting wrong" is the reason you
+    /// open the app, not a variation you configure once you are already there.
+    private var favoritesButton: some View {
+        launcher(icon: "star.fill", title: L.favorites[appLanguage],
+                 subtitle: L.writeFavoriteSub[appLanguage], count: nil,
+                 soft: Palette.butterSoft, accent: Palette.butter) {
+            store.send(.startPractice(mode: .kanji, favorites: true))
         }
     }
 

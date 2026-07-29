@@ -408,6 +408,23 @@ public enum L {
         en: "Idioms at this level")
     public static let writeRange = L10nText(
         ko: "출제 범위", ja: "出題範囲", zh: "出题范围", en: "Range")
+    public static let favorites = L10nText(
+        ko: "즐겨찾기", ja: "お気に入り", zh: "收藏", en: "Favorites")
+    public static let writeScope = L10nText(
+        ko: "출제 대상", ja: "出題の対象", zh: "出题对象", en: "Draw from")
+    public static let writeScopeLevel = L10nText(
+        ko: "급수별", ja: "級ごと", zh: "按等级", en: "By level")
+    public static let writeFavoriteTotal = L10nText(
+        ko: "즐겨찾기한 항목", ja: "お気に入りの項目", zh: "已收藏的条目",
+        en: "Favorited items")
+    public static let writeFavoriteEmpty = L10nText(
+        ko: "즐겨찾기가 비어 있어요\n채점 화면에서 별을 눌러 모아 보세요",
+        ja: "お気に入りは空です\n答え合わせの画面で★を押して集めてね",
+        zh: "收藏还是空的\n在对答案的页面点★收集吧",
+        en: "No favorites yet\nStar them on the review screen")
+    public static let writeFavoriteSub = L10nText(
+        ko: "헷갈린 것만 다시 쓰기", ja: "間違えたものだけ書き直す",
+        zh: "只重写记错的", en: "Rewrite just the ones you missed")
     public static let writeLevelEmpty = L10nText(
         ko: "이 급수에는 아직 출제할 항목이 없어요\n다른 급수를 골라 보세요",
         ja: "この級には出題できる項目がまだありません\n他の級を選んでください",
