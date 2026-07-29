@@ -251,6 +251,9 @@ public enum L {
     public static let kankenHyogaiDesc = L10nText(
         ko: "표외 읽기 고르기", ja: "表外の読みを選ぶ",
         zh: "选择表外读音", en: "Pick the non-standard reading")
+    public static let kankenJukujikunDesc = L10nText(
+        ko: "글자별로 읽지 않는 낱말", ja: "字ごとに読まない語の読み",
+        zh: "整体读法的词", en: "Words read as a whole")
     public static let kankenHantaiDesc = L10nText(
         ko: "반대말 고르기", ja: "反対のことばを選ぶ",
         zh: "选择反义词", en: "Pick the opposite")

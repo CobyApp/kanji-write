@@ -201,6 +201,7 @@ public struct KankenExamView: View {
         case "word-selection": return L.kankenGoselectDesc[appLanguage]
         case "koji-kotowaza": return L.kankenKotowazaDesc[appLanguage]
         case "hyogai-reading": return L.kankenHyogaiDesc[appLanguage]
+        case "jukujikun-ateji": return L.kankenJukujikunDesc[appLanguage]
         case "hantai", "taigi": return L.kankenHantaiDesc[appLanguage]
         default: return sectionDesc(section.renderType)
         }
