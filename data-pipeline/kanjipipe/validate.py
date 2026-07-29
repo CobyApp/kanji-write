@@ -215,12 +215,16 @@ _PLAYABLE: dict[str, tuple[tuple[str, str], ...]] = {
 # looks up with `jlpt_level = ?` rather than through kanken_membership — so the
 # gate has to count them separately or it would never see them at all.
 _PLAYABLE_JLPT: dict[str, tuple[tuple[str, str], ...]] = {
-    "N5": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context")),
-    "N4": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context")),
-    "N3": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context")),
+    "N5": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context"),
+           ("言い換え類義", "iikae")),
+    "N4": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context"),
+           ("言い換え類義", "iikae")),
+    "N3": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context"),
+           ("言い換え類義", "iikae")),
     "N2": (("漢字読み", "reading"), ("表記", "orthography"),
-           ("語形成", "gokeisei"), ("文脈規定", "context")),
-    "N1": (("漢字読み", "reading"), ("文脈規定", "context")),
+           ("語形成", "gokeisei"), ("文脈規定", "context"),
+           ("言い換え類義", "iikae")),
+    "N1": (("漢字読み", "reading"), ("文脈規定", "context"), ("言い換え類義", "iikae")),
 }
 # Below this a 20-question run repeats itself noticeably.
 _MIN_PER_SECTION = 15

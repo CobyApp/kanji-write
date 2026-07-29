@@ -371,7 +371,7 @@ public struct PracticeView: View {
                     .japaneseGlyphs().foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.4).padding(16)
             case .some(let paths):
-                StrokeOrderPlayer(paths: paths).padding(10)
+                StrokeOrderPlayer(paths: paths, size: side - 24)
             }
         }
         .frame(width: side, height: side)

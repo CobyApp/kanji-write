@@ -181,6 +181,7 @@ public struct PracticeFeature {
         case hintStrokesLoaded([String])
         case finish              // → review
         case restart             // → setup
+        case exitToSetup         // closing a run goes back to the range picker
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
@@ -300,9 +301,15 @@ public struct PracticeFeature {
             case .startTest:
                 let lk = state.levelItems
                 guard !lk.isEmpty else { return .none }
-                let s = min(state.start, max(0, lk.count - 1))
-                let e = min(s + state.count, lk.count)
-                state.questions = Array(lk[s..<e])
+                // Clamp both ends against what this level actually holds, and
+                // slice from those. Taking the start from the clamped range but
+                // the length from the remembered one mixes two different lists
+                // and could produce an empty run.
+                let first = min(max(0, state.start), lk.count - 1)
+                let last = min(max(first, state.end), lk.count - 1)
+                state.start = first
+                state.end = last
+                state.questions = Array(lk[first...last])
                 state.index = 0
                 state.drawings = [:]
                 state.hintShown = false
@@ -347,6 +354,15 @@ public struct PracticeFeature {
 
             case .finish:
                 state.phase = .review
+                return .none
+
+            case .exitToSetup:
+                state.phase = .setup
+                state.questions = []
+                state.drawings = [:]
+                state.index = 0
+                state.hintShown = false
+                state.hintStrokes = nil
                 return .none
 
             case .restart:

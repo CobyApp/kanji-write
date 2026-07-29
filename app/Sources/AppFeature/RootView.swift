@@ -100,10 +100,17 @@ private struct SessionCover: View {
 
     /// The ✕ is context-aware for the 칸켄 hub: while playing a section it steps
     /// back to the section list; otherwise (hub, other sessions) it closes.
+    /// ✕ steps back one level rather than always leaving: out of a running
+    /// section to the hub, out of a writing run to its range picker. The level
+    /// and range you just set are right there, and the next run nearly always
+    /// reuses them — dropping to Home would make you walk back in every time.
     private func closeTapped() {
-        if case let .kanken(kanken) = sessionStore.case, kanken.isPlaying {
+        switch sessionStore.case {
+        case let .kanken(kanken) where kanken.isPlaying:
             kanken.send(.exitToHub)
-        } else {
+        case let .practice(practice) where practice.phase != .setup:
+            practice.send(.exitToSetup)
+        default:
             store.send(.session(.dismiss))
         }
     }

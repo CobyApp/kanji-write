@@ -251,6 +251,9 @@ public enum L {
     public static let kankenHyogaiDesc = L10nText(
         ko: "표외 읽기 고르기", ja: "表外の読みを選ぶ",
         zh: "选择表外读音", en: "Pick the non-standard reading")
+    public static let kankenIikaeDesc = L10nText(
+        ko: "뜻이 가장 가까운 말", ja: "意味が最も近い語",
+        zh: "意思最接近的词", en: "The closest in meaning")
     public static let kankenGokeiseiDesc = L10nText(
         ko: "접두·접미어 고르기", ja: "接頭語・接尾語を選ぶ",
         zh: "选择前缀或后缀", en: "Pick the prefix or suffix")
