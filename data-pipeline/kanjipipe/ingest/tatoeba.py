@@ -8,6 +8,12 @@ from kanjipipe.models import Sentence
 _LANG_MAP = {"eng": "en", "kor": "ko", "cmn": "zh"}
 _KEEP_LANGS = {"jpn", *_LANG_MAP}
 
+# Tatoeba is crowd-sourced and a handful of its Japanese sentences are unfit for
+# a study app: not merely coarse, but stated in the first person as a desire to
+# commit a crime. The app shows these unbidden next to whichever kanji they
+# happen to contain, so they are dropped at ingest rather than filtered downstream.
+_BLOCKED_SUBSTRINGS = ("強姦",)
+
 
 def parse_tatoeba(sentences_path: str | Path, links_path: str | Path) -> list[Sentence]:
     # 1. Keep only sentences in the languages we care about.
@@ -49,6 +55,6 @@ def parse_tatoeba(sentences_path: str | Path, links_path: str | Path) -> list[Se
             key = _LANG_MAP.get(entry[0])
             if key and key not in translations:
                 translations[key] = entry[1]
-        if translations:
+        if translations and not any(bad in text for bad in _BLOCKED_SUBSTRINGS):
             sentences.append(Sentence(ja_text=text, translations=translations))
     return sentences
