@@ -36,6 +36,9 @@ class KankenCountPolicy:
     # is introduced at — so nothing is shared and 1級 holds only its own.
     stored_advanced_memberships: dict[str, int]
     stored_shared_advanced: int = 0
+    # Only a build with the whole inventory can be judged on whether each
+    # playable 大問 has data; a three-kanji fixture would fail every one.
+    check_playable_sections: bool = False
 
 
 PRODUCTION_KANKEN_COUNT_POLICY = KankenCountPolicy(
@@ -60,6 +63,7 @@ PRODUCTION_KANKEN_COUNT_POLICY = KankenCountPolicy(
     advanced_memberships={"準1級": 1248, "1級": 2955},
     shared_advanced=397,
     stored_advanced_memberships={"準1級": 1248, "1級": 2552},
+    check_playable_sections=True,
 )
 
 
@@ -169,6 +173,75 @@ _WRITE_KINDS = (
     "sanji", "kyotsu", "hantai", "taigi", "kousei", "tsukuri", "goselect",
     "kotowaza", "jukujikun", "hyogai",
 )
+
+
+# What the app marks playable, mirrored from ExamType.kankenSections. A bank
+# section names its `kind`; the two table-backed ones name their table.
+_PLAYABLE: dict[str, tuple[tuple[str, str], ...]] = {
+    "10級": (("読み", "reading"), ("書き取り", "orthography"), ("反対のことば", "hantai")),
+    "9級": (("読み", "reading"), ("書き取り", "orthography"), ("反対のことば", "hantai")),
+    "8級": (("読み", "reading"), ("書き取り", "orthography"), ("対義語", "taigi"),
+            ("同音異字", "doonkun")),
+    "7級": (("読み", "reading"), ("書き取り", "orthography"), ("対義語", "taigi"),
+            ("同音異字", "doonkun"), ("三字熟語", "sanji")),
+    "6級": (("読み", "reading"), ("書き取り", "orthography"),
+            ("同音・同訓異字", "doonkun"), ("熟語作り", "tsukuri"),
+            ("対義語・類義語", "table:taigirui")),
+    "5級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
+            ("同音・同訓異字", "doonkun"), ("四字熟語", "table:yojijukugo"),
+            ("対義語・類義語", "table:taigirui")),
+    "4級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
+            ("同音・同訓異字", "doonkun"), ("漢字識別", "shikibetsu"),
+            ("誤字訂正", "goji"), ("四字熟語", "table:yojijukugo"),
+            ("対義語・類義語", "table:taigirui")),
+    "3級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
+            ("同音・同訓異字", "doonkun"), ("漢字識別", "shikibetsu"),
+            ("誤字訂正", "goji"), ("四字熟語", "table:yojijukugo"),
+            ("対義語・類義語", "table:taigirui")),
+    "準2級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
+              ("同音・同訓異字", "doonkun"), ("誤字訂正", "goji"),
+              ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
+    "2級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
+            ("同音・同訓異字", "doonkun"), ("誤字訂正", "goji"),
+            ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
+    "準1級": (("読み", "reading"), ("書き取り", "orthography"), ("表外の読み", "hyogai"),
+              ("共通の漢字", "kyotsu"), ("誤字訂正", "goji"), ("故事・諺", "kotowaza"),
+              ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
+    "1級": (("読み", "reading"), ("書き取り", "orthography"), ("語選択", "goselect"),
+            ("熟字訓・当て字", "jukujikun"), ("故事・諺", "kotowaza"),
+            ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
+}
+# Below this a 20-question run repeats itself noticeably.
+_MIN_PER_SECTION = 15
+
+
+def starved_sections(conn: sqlite3.Connection) -> list[str]:
+    """Playable 大問 with nothing, or too little, behind them."""
+    bank: dict[tuple[str, str], int] = {}
+    for level, kind, count in conn.execute(
+        "SELECT km.level_label, q.kind, COUNT(*) FROM jlpt_question q "
+        "JOIN kanken_membership km ON km.kanji_id = q.kanji_id GROUP BY 1, 2"
+    ):
+        bank[(level, kind)] = count
+    tables: dict[tuple[str, str], int] = {}
+    for table in ("yojijukugo", "taigirui"):
+        for level, count in conn.execute(
+            f"SELECT kanken_level, COUNT(*) FROM {table} GROUP BY 1"
+        ):
+            tables[(level, table)] = count
+
+    starved: list[str] = []
+    for level, sections in _PLAYABLE.items():
+        for title, source in sections:
+            if source.startswith("table:"):
+                count = tables.get((level, source.removeprefix("table:")), 0)
+            else:
+                count = bank.get((level, source), 0)
+            if count == 0:
+                starved.append(f"{level} {title} is empty")
+            elif count < _MIN_PER_SECTION:
+                starved.append(f"{level} {title} has only {count}")
+    return starved
 
 
 def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
@@ -438,6 +511,13 @@ def assert_core_gates(
                 "parsed shared advanced memberships expected "
                 f"{kanken_count_policy.shared_advanced}, got {parsed_shared}"
             )
+        if kanken_count_policy.check_playable_sections:
+            starved = starved_sections(conn)
+            report["starved_sections"] = len(starved)
+            if starved:
+                problems.append(
+                    "playable sections with no data — " + "; ".join(starved))
+
         if report["kanken_shared_advanced"] != (
             kanken_count_policy.stored_shared_advanced
         ):

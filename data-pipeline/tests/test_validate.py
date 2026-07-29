@@ -12,6 +12,7 @@ from kanjipipe.loader import (
 from kanjipipe.models import Gloss, Kanji, KankenAllocation, LlmGloss, Reading, Word
 from kanjipipe.validate import (
     question_defects,
+    starved_sections,
     PRODUCTION_KANKEN_COUNT_POLICY,
     KankenCountPolicy,
     assert_core_gates,
@@ -105,6 +106,7 @@ def test_production_kanken_count_policy_is_canonical():
         advanced_memberships={"準1級": 1248, "1級": 2955},
         shared_advanced=397,
         stored_advanced_memberships={"準1級": 1248, "1級": 2552},
+        check_playable_sections=True,
     )
 
 
@@ -547,3 +549,43 @@ def test_gate_reports_a_question_missing_a_supported_language():
          _json.dumps({"ko": "…", "ja": "…", "en": "…"})))   # no zh
     conn.commit()
     assert "missing zh explanation" in question_defects(conn)
+
+
+def test_gate_catches_a_playable_section_with_no_data():
+    """6級 対義語・類義語 shipped playable against an empty dataset.
+
+    The table only ever covered 5級〜2級, so tapping it opened a quiz with
+    nothing in it. Nothing checked that a live 大問 had anything behind it.
+    """
+    conn = init_db(":memory:")
+    starved = starved_sections(conn)
+    assert any("6級 対義語・類義語 is empty" in s for s in starved)
+    # And every other level's sections are reported too, not just the one.
+    assert any("1級 故事・諺 is empty" in s for s in starved)
+
+
+def test_starved_gate_only_runs_for_a_full_inventory():
+    """Fixture databases hold three kanji and no questions, so the check is
+    opt-in per policy — otherwise every fixture build trips all 70 sections."""
+    assert PRODUCTION_KANKEN_COUNT_POLICY.check_playable_sections
+    fixture = KankenCountPolicy(
+        legacy_memberships={}, unicode_advanced=1, stored_unicode_advanced=1,
+        image_pending=1, advanced_memberships={"準1級": 1, "1級": 1},
+        shared_advanced=1, stored_advanced_memberships={"準1級": 1, "1級": 0})
+    assert not fixture.check_playable_sections
+
+
+def test_gate_accepts_a_section_with_enough_data():
+    import json as _json
+    conn = init_db(":memory:")
+    conn.execute("INSERT INTO kanji (id, literal, codepoint, stroke_count) "
+                 "VALUES (1, '極', 26997, 12)")
+    conn.execute("INSERT INTO kanken_membership (kanji_id, level_label, "
+                 "source_classification) VALUES (1, '10級', '10級')")
+    for i in range(20):
+        conn.execute(
+            "INSERT INTO jlpt_question (kanji_id, level, kind, prompt, options, "
+            "answer, explanations, focus) VALUES (1, '10級', 'reading', ?, ?, 0, '{}', NULL)",
+            (f"<u>極</u>{i}", _json.dumps(["a", "b", "c", "d"])))
+    conn.commit()
+    assert not any("10級 読み" in s for s in starved_sections(conn))

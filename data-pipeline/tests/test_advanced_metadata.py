@@ -335,3 +335,24 @@ def test_checked_in_supplement_covers_exact_residuals():
         for source in entry.provenance
         if source.source == "Kanjipedia"
     )
+
+
+def test_unihan_parses_the_primary_korean_reading(tmp_path):
+    """kanjidic2's first korean_h is not the primary reading.
+
+    It gave 阿 as 옥 and 丑 as 추 — wrong for 570 of the 6,352 kanji that have
+    one. Unihan's kHangul lists the primary first, so that is the better source.
+    """
+    archive = tmp_path / "Unihan.zip"
+    with zipfile.ZipFile(archive, "w") as handle:
+        handle.writestr(
+            "Unihan_Readings.txt",
+            "U+963F\tkHangul\t\uc544:0N\n"
+            "U+4E11\tkHangul\t\ucd95:0E \ucd94:0N\n")
+        handle.writestr("Unihan_IRGSources.txt", "")
+        handle.writestr("Unihan_RadicalStrokeCounts.txt", "")
+
+    parsed = parse_unihan(archive, expected_sha256=None)
+    assert parsed["\u963f"].korean_reading == "\uc544"
+    # Several listed — the first is the primary.
+    assert parsed["\u4e11"].korean_reading == "\ucd95"
