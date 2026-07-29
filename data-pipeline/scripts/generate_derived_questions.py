@@ -69,6 +69,8 @@ def main() -> int:
     ja_glosses = dict(con.execute(
         "SELECT w.surface, g.text FROM word w JOIN word_gloss g ON g.word_id = w.id "
         "WHERE g.lang = 'ja' AND w.is_common = 1"))
+    taigirui_rows = list(con.execute(
+        "SELECT word, word_reading, answer, answer_reading, relation FROM taigirui"))
     antonyms = list(con.execute("""
         SELECT a.surface, a.reading_kana, b.surface, b.reading_kana
         FROM relation r JOIN word a ON a.id = r.word_id_a JOIN word b ON b.id = r.word_id_b
@@ -330,6 +332,43 @@ def main() -> int:
         })
         made_gokeisei += 1
     stats["gokeisei"] = made_gokeisei
+
+    # ── 言い換え類義 (JLPT) ─────────────────────────────────────────────────
+    # The 類義 half of the 対義語・類義語 dataset is exactly this question: a word,
+    # and which of four means the same. It is keyed by 級 there, so the JLPT
+    # level comes from the hardest kanji the pair uses — that is the level at
+    # which a learner could be expected to read it.
+    JLPT_ORDER = ("N5", "N4", "N3", "N2", "N1")
+    rank = {level: index for index, level in enumerate(JLPT_ORDER)}
+    synonym_pool = [answer for _, _, answer, _, relation in taigirui_rows
+                    if relation == "類義"]
+    for word, word_reading, answer, answer_reading, relation in taigirui_rows:
+        if relation != "類義":
+            continue
+        chars = set(word) | set(answer)
+        if any(c not in jlpt_of for c in chars):
+            continue
+        level = max((jlpt_of[c] for c in chars), key=lambda l: rank[l])
+        target = next((c for c in answer if jlpt_of.get(c) == level), None)
+        if target is None:
+            continue
+        others = [w for w in synonym_pool if w != answer and w != word]
+        if len(others) < 3:
+            continue
+        rng.shuffle(others)
+        options = others[:3] + [answer]
+        rng.shuffle(options)
+        out.append({
+            "literal": target, "level": level, "kind": "iikae",
+            "prompt": f"<u>{word}</u>（{word_reading}）",
+            "options": options, "answer": options.index(answer), "focus": word,
+            "explanations": explanations(
+                f"「{word}」와 뜻이 가장 가까운 말은 「{answer}」({answer_reading})입니다.",
+                f"「{word}」に最も意味が近い語は「{answer}」（{answer_reading}）です。",
+                f"与「{word}」意思最接近的词是「{answer}」（{answer_reading}）。",
+                f"The closest in meaning to 「{word}」 is 「{answer}」 ({answer_reading})."),
+        })
+        stats["iikae"] += 1
 
     Path(args.out).write_text(
         "\n".join(json.dumps(q, ensure_ascii=False) for q in out) + "\n",

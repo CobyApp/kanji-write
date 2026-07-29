@@ -214,7 +214,7 @@ extension ExamType {
                     doon("同音異字"), sanji, writing]
         case "6級":
             return [reading, onkun, radical, strokes,
-                    okuri("送りがな"), soon("taigirui", "対義語・類義語"),
+                    okuri("送りがな"), taigirui,
                     doon("同音・同訓異字"), authored("tsukuri", "熟語作り", "tsukuri"), writing]
         case "5級":
             return [reading, radical, strokes, okuri("送りがな"),
@@ -267,14 +267,14 @@ extension ExamType {
         let bunmyaku = live("context", "文脈規定", .context, "context")
         switch level {
         case "N5":
-            return [reading, hyoki, bunmyaku, soon("iikae", "言い換え類義")]
+            return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae")]
         case "N4", "N3":
-            return [reading, hyoki, bunmyaku, soon("iikae", "言い換え類義"), soon("youhou", "用法")]
+            return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), soon("youhou", "用法")]
         case "N2":
             return [reading, hyoki, live("gokeisei", "語形成", .writing, "gokeisei"), bunmyaku,
-                    soon("iikae", "言い換え類義"), soon("youhou", "用法")]
+                    live("iikae", "言い換え類義", .taigirui, "iikae"), soon("youhou", "用法")]
         case "N1":
-            return [reading, bunmyaku, soon("iikae", "言い換え類義"), soon("youhou", "用法")]
+            return [reading, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), soon("youhou", "用法")]
         default:
             return [reading, hyoki, bunmyaku]
         }
