@@ -369,14 +369,16 @@ def test_load_sentences_word_link_respects_cap_and_requires_substring():
     assert tozan == 0  # shares 山 but surface never appears
 
 
-def test_load_sentence_glosses_attaches_ko_zh_by_text():
+def test_load_sentence_glosses_attaches_translations_by_text():
     conn = init_db(":memory:")
     load_kanji(conn, [_yama()])
     load_sentences(conn, [Sentence(ja_text="山。", translations={"en": "Mountain."})])
 
-    load_sentence_glosses(conn, [("山。", "산.", "山。"), ("知らない文。", "무시됨", None)])
+    load_sentence_glosses(conn, [("山。", "산.", "山。", "A mountain."),
+                                 ("知らない文。", "무시됨", None, None)])
 
     rows = dict(conn.execute("SELECT lang, text FROM sentence_translation").fetchall())
+    # en was already supplied by Tatoeba, so the batch's en is not applied.
     assert rows == {"en": "Mountain.", "ko": "산.", "zh": "山。"}
 
 
@@ -386,7 +388,7 @@ def test_load_sentence_glosses_does_not_overwrite_existing_lang():
     # Tatoeba already supplied a ko translation for this sentence.
     load_sentences(conn, [Sentence(ja_text="山。", translations={"ko": "기존 번역"})])
 
-    load_sentence_glosses(conn, [("山。", "새 번역", "山。")])
+    load_sentence_glosses(conn, [("山。", "새 번역", "山。", "A mountain.")])
 
     ko = conn.execute(
         "SELECT text FROM sentence_translation WHERE lang = 'ko'").fetchall()
@@ -394,6 +396,9 @@ def test_load_sentence_glosses_does_not_overwrite_existing_lang():
     zh = conn.execute(
         "SELECT text FROM sentence_translation WHERE lang = 'zh'").fetchone()
     assert zh == ("山。",)  # zh newly added
+    en = conn.execute(
+        "SELECT text FROM sentence_translation WHERE lang = 'en'").fetchone()
+    assert en == ("A mountain.",)  # en likewise — Tatoeba supplied neither
 
 
 def test_load_relations_links_stored_words_only():

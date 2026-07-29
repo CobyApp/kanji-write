@@ -403,9 +403,9 @@ def load_word_jazh_glosses(
 
 def load_sentence_glosses(
     conn: sqlite3.Connection,
-    entries: list[tuple[str, str | None, str | None]],
+    entries: list[tuple[str, str | None, str | None, str | None]],
 ) -> None:
-    """Attach LLM ko/zh translations to existing sentences, matched by the
+    """Attach LLM ko/zh/en translations to existing sentences, matched by the
     Japanese text. Skips a (sentence, lang) pair that already has a translation
     (e.g. one Tatoeba supplied) so this never duplicates or overwrites."""
     ids_by_text: dict[str, list[int]] = {}
@@ -416,9 +416,9 @@ def load_sentence_glosses(
         for sentence_id, lang in conn.execute(
             "SELECT sentence_id, lang FROM sentence_translation")
     }
-    for ja, ko, zh in entries:
+    for ja, ko, zh, en in entries:
         for sentence_id in ids_by_text.get(ja, ()):
-            for lang, text in (("ko", ko), ("zh", zh)):
+            for lang, text in (("ko", ko), ("zh", zh), ("en", en)):
                 if text and (sentence_id, lang) not in existing:
                     conn.execute(
                         "INSERT INTO sentence_translation (sentence_id, lang, text) "
