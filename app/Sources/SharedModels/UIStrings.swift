@@ -219,6 +219,53 @@ public enum L {
     // Named for what it is: practice organised by the paper's 大問, drawn from
     // the whole selected level. It is not a timed sitting, which is why it
     // belongs under 학습 rather than beside the writing tests.
+    // Ten 大問 now share the `.writing` render type, so the blurb has to come
+    // from the section rather than from how it draws.
+    public static let kankenKouseiDesc = L10nText(
+        ko: "숙어의 구성 고르기", ja: "熟語の構成を選ぶ", zh: "选择熟语的构成",
+        en: "How the compound is built")
+    public static let kankenGojiDesc = L10nText(
+        ko: "잘못 쓰인 한자 고치기", ja: "誤って使われた漢字を正す",
+        zh: "改正误用的汉字", en: "Fix the misused kanji")
+    public static let kankenShikibetsuDesc = L10nText(
+        ko: "세 낱말에 공통인 한자", ja: "三つの語に共通する漢字",
+        zh: "三个词共同的汉字", en: "The kanji all three share")
+    public static let kankenKyotsuDesc = L10nText(
+        ko: "두 낱말에 공통인 한자", ja: "二つの語に共通する漢字",
+        zh: "两个词共同的汉字", en: "The kanji both share")
+    public static let kankenSanjiDesc = L10nText(
+        ko: "세 글자 숙어 완성", ja: "三字熟語を完成させる",
+        zh: "补全三字熟语", en: "Complete the three-kanji compound")
+    public static let kankenDoonDesc = L10nText(
+        ko: "같은 음의 한자 구별", ja: "同じ音の漢字を使い分ける",
+        zh: "区分同音汉字", en: "Tell homophone kanji apart")
+    public static let kankenTsukuriDesc = L10nText(
+        ko: "뜻에 맞는 숙어 만들기", ja: "意味に合う熟語を作る",
+        zh: "组成符合意思的熟语", en: "Build the compound for the meaning")
+    public static let kankenGoselectDesc = L10nText(
+        ko: "뜻에 맞는 낱말 고르기", ja: "意味に合う語を選ぶ",
+        zh: "选择符合意思的词", en: "Pick the word for the definition")
+    public static let kankenKotowazaDesc = L10nText(
+        ko: "고사·속담 완성", ja: "故事・諺を完成させる",
+        zh: "补全故事与谚语", en: "Complete the proverb")
+    public static let kankenHyogaiDesc = L10nText(
+        ko: "표외 읽기 고르기", ja: "表外の読みを選ぶ",
+        zh: "选择表外读音", en: "Pick the non-standard reading")
+    public static let kankenHantaiDesc = L10nText(
+        ko: "반대말 고르기", ja: "反対のことばを選ぶ",
+        zh: "选择反义词", en: "Pick the opposite")
+    public static let mockExam = L10nText(
+        ko: "모의 테스트", ja: "模擬テスト", zh: "模拟测验", en: "Mock exam")
+    public static let mockExamSub = L10nText(
+        ko: "모든 유형을 한 번에", ja: "全出題形式を通しで",
+        zh: "一次涵盖所有题型", en: "Every section in one sitting")
+    public static let mockExamSize = L10nText(
+        ko: "유형당 문항 수", ja: "大問ごとの問題数", zh: "每题型题数",
+        en: "Questions per section")
+    public static let mockExamStart = L10nText(
+        ko: "모의 테스트 시작", ja: "模擬テストを始める",
+        zh: "开始模拟测验", en: "Start mock exam")
+    public static let unitQuestions = L10nText(ko: "문항", ja: "問", zh: "题", en: "")
     public static let kankenHub = L10nText(
         ko: "칸켄 유형별 학습", ja: "漢検 出題形式別の学習",
         zh: "汉检题型学习", en: "Study by Kanken section")

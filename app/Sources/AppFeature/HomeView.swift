@@ -255,7 +255,7 @@ struct HomeView: View {
                     studyLauncher; kankenButton
                 }
                 launcherSection(L.sectionTests[appLanguage], Palette.butter) {
-                    practiceButton; wordPracticeButton; yojiPracticeButton
+                    practiceButton
                 }
                 launcherSection(L.sectionDictionaries[appLanguage], Palette.sky) {
                     dictionaryButton
@@ -327,7 +327,7 @@ struct HomeView: View {
                 studyLauncher; kankenButton
             }
             launcherSection(L.sectionTests[appLanguage], Palette.butter, grid: true) {
-                practiceButton; wordPracticeButton; yojiPracticeButton
+                practiceButton
             }
             launcherSection(L.sectionDictionaries[appLanguage], Palette.sky, grid: true) {
                 dictionaryButton
@@ -564,22 +564,6 @@ struct HomeView: View {
                  subtitle: L.practiceSub[appLanguage], count: nil,
                  soft: Palette.butterSoft, accent: Palette.butter) {
             store.send(.startPractice(mode: .kanji))
-        }
-    }
-
-    private var wordPracticeButton: some View {
-        launcher(icon: "square.and.pencil", title: L.wordWriteTestTitle[appLanguage],
-                 subtitle: L.wordWriteSub[appLanguage], count: nil,
-                 soft: Palette.mintSoft, accent: Palette.mint) {
-            store.send(.startPractice(mode: .word))
-        }
-    }
-
-    private var yojiPracticeButton: some View {
-        launcher(icon: "text.badge.star", title: L.yojiWriteTestTitle[appLanguage],
-                 subtitle: L.yojiWriteSub[appLanguage], count: nil,
-                 soft: Palette.grapeSoft, accent: Palette.grape) {
-            store.send(.startPractice(mode: .yoji))
         }
     }
 

@@ -11,6 +11,8 @@ public struct KankenExamView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("examType") private var examType: ExamType = .jlpt
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// How many questions the mock paper draws from each 大問.
+    @State private var perSection = 5
 
     public init(store: StoreOf<KankenExamFeature>) {
         self.store = store
@@ -34,6 +36,7 @@ public struct KankenExamView: View {
         ScrollView {
             VStack(spacing: 14) {
                 header
+                mockExamCard
                 ForEach(examType.sections(for: store.level)) { section in
                     sectionCard(section)
                 }
@@ -73,7 +76,7 @@ public struct KankenExamView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(section.jaTitle)
                         .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                    Text(section.available ? sectionDesc(section.renderType) : L.kankenComingSoon[appLanguage])
+                    Text(section.available ? sectionDesc(section) : L.kankenComingSoon[appLanguage])
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 }
                 Spacer(minLength: 0)
@@ -92,6 +95,65 @@ public struct KankenExamView: View {
         .buttonStyle(.bouncy)
         .disabled(!section.available)
         .opacity(section.available ? 1 : 0.6)
+    }
+
+    /// A full paper: every playable 大問 at this level, back to back. Sitting the
+    /// whole thing is a different exercise from drilling one section, which is
+    /// why it leads the hub rather than being buried at the end.
+    private var mockExamCard: some View {
+        let playable = examType.sections(for: store.level).filter(\.available).count
+        return VStack(spacing: 10) {
+            HStack(spacing: 14) {
+                Image(systemName: "doc.text.fill")
+                    .font(.system(size: 19, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Palette.lavender)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L.mockExam[appLanguage])
+                        .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
+                    Text(L.mockExamSub[appLanguage])
+                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                }
+                Spacer(minLength: 0)
+                Text("\(playable)")
+                    .font(.kawaii(14, weight: .bold)).monospacedDigit().foregroundStyle(.white)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Palette.lavender).clipShape(Capsule())
+            }
+
+            // How long a sitting: the total is this times the playable sections,
+            // so it is shown rather than left to be worked out.
+            VStack(spacing: 6) {
+                HStack {
+                    Text(L.mockExamSize[appLanguage])
+                        .font(.kawaii(12, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.inkSoft)
+                    Spacer()
+                    Text("\(perSection * playable)\(L.unitQuestions[appLanguage])")
+                        .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.lavender)
+                }
+                Picker("", selection: $perSection) {
+                    ForEach([3, 5, 10], id: \.self) { Text("\($0)").tag($0) }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            Button { store.send(.selectMockExam(perSection: perSection)) } label: {
+                Text(L.mockExamStart[appLanguage])
+                    .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 13)
+                    .background(LinearGradient(colors: [Palette.lavender, Palette.sky],
+                                               startPoint: .leading, endPoint: .trailing))
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.bouncy)
+            .disabled(playable == 0)
+        }
+        .padding(16)
+        .background(Palette.card)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Palette.ink.opacity(0.06), radius: 8, y: 3)
     }
 
     private var wrongNoteCard: some View {
@@ -123,6 +185,25 @@ public struct KankenExamView: View {
         .buttonStyle(.bouncy)
         .disabled(store.wrongCount == 0)
         .opacity(store.wrongCount == 0 ? 0.5 : 1)
+    }
+
+    /// A section's blurb. Keyed by the section, because ten 大問 share the
+    /// `.writing` render type and would otherwise all claim to be 書き取り.
+    private func sectionDesc(_ section: ExamSection) -> String {
+        switch section.id {
+        case "kousei": return L.kankenKouseiDesc[appLanguage]
+        case "goji": return L.kankenGojiDesc[appLanguage]
+        case "shikibetsu": return L.kankenShikibetsuDesc[appLanguage]
+        case "common-kanji": return L.kankenKyotsuDesc[appLanguage]
+        case "sanji": return L.kankenSanjiDesc[appLanguage]
+        case "doonkun": return L.kankenDoonDesc[appLanguage]
+        case "tsukuri": return L.kankenTsukuriDesc[appLanguage]
+        case "word-selection": return L.kankenGoselectDesc[appLanguage]
+        case "koji-kotowaza": return L.kankenKotowazaDesc[appLanguage]
+        case "hyogai-reading": return L.kankenHyogaiDesc[appLanguage]
+        case "hantai", "taigi": return L.kankenHantaiDesc[appLanguage]
+        default: return sectionDesc(section.renderType)
+        }
     }
 
     private func sectionDesc(_ type: KankenQuestionType) -> String {

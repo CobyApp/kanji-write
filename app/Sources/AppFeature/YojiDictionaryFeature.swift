@@ -37,10 +37,13 @@ public struct YojiDictionaryFeature {
         }
 
         /// The 級 present in the data, in exam order (for the filter chips).
+        ///
+        /// Driven by the exam's own level list rather than a literal, so a level
+        /// that gains 四字熟語 later shows up on its own — 準1級 and 1級 had data
+        /// and no chip, because the list predated them.
         public var levels: [String] {
-            let order = ["5級", "4級", "3級", "準2級", "2級"]
             let present = Set(all.map(\.level))
-            return order.filter(present.contains)
+            return ExamType.kanken.levels.filter(present.contains)
         }
     }
 

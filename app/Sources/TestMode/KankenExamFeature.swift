@@ -22,6 +22,8 @@ public struct KankenExamFeature {
         // Session state — nil `activeSection` and not `isWrongNote` means the hub.
         public var activeSection: ExamSection?
         public var isWrongNote = false
+        /// A full paper: every playable 大問 of this level, in paper order.
+        public var isMockExam = false
         public var queue: [KankenQuestion] = []
         public var sessionItems: [KankenQuestion] = []
         public var total = 0
@@ -37,7 +39,7 @@ public struct KankenExamFeature {
         }
 
         /// True while a section / 오답노트 session is running (vs. the hub).
-        public var isPlaying: Bool { activeSection != nil || isWrongNote }
+        public var isPlaying: Bool { activeSection != nil || isWrongNote || isMockExam }
         public var current: KankenQuestion? { queue.first }
         public var isFinished: Bool { started && total > 0 && queue.isEmpty }
         public var answered: Bool { chosen != nil }
@@ -45,6 +47,7 @@ public struct KankenExamFeature {
         /// Section title shown in the session header.
         public var sessionTitle: String {
             if isWrongNote { return "오답노트" }
+            if isMockExam { return L.mockExam[language] }
             return activeSection.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
         }
     }
@@ -54,6 +57,7 @@ public struct KankenExamFeature {
         case wrongCountLoaded(Int)
         case selectSection(ExamSection)
         case selectWrongNote
+        case selectMockExam(perSection: Int)
         case loaded([KankenQuestion])
         case chose(String)
         case next
@@ -83,6 +87,30 @@ public struct KankenExamFeature {
             case let .wrongCountLoaded(count):
                 state.wrongCount = count
                 return .none
+
+            case let .selectMockExam(perSection):
+                state.isMockExam = true
+                state.activeSection = nil
+                state.isWrongNote = false
+                state.isLoading = true
+                state.started = false
+                let level = state.level
+                let language = state.language
+                let unit = L.strokesUnit[language]
+                // Paper order, not shuffled: a 漢検 sitting works through its
+                // 大問 one after another, and keeping that makes the practice
+                // feel like the exam rather than a shuffled quiz.
+                let sections = ExamType.current.sections(for: level).filter(\.available)
+                return .run { send in
+                    var all: [KankenQuestion] = []
+                    for section in sections {
+                        let built = try? await questions(
+                            for: section, level: level, language: language,
+                            unit: unit, perSection: perSection)
+                        all.append(contentsOf: built ?? [])
+                    }
+                    await send(.loaded(all))
+                }
 
             case let .selectSection(section):
                 state.activeSection = section
@@ -154,6 +182,7 @@ public struct KankenExamFeature {
             case .exitToHub:
                 state.activeSection = nil
                 state.isWrongNote = false
+                state.isMockExam = false
                 state.queue = []
                 state.sessionItems = []
                 state.total = 0
@@ -179,33 +208,43 @@ public struct KankenExamFeature {
         let language = state.language
         let unit = L.strokesUnit[language]
         return .run { send in
-            let questions: [KankenQuestion]
-            if let kind = section.kind {
-                let bank = (try? await dictionaryClient.examQuestions(level, kind, 20)) ?? []
-                questions = bank.map { KankenQuestion.from($0, type: section.renderType, language: language) }
-            } else if section.renderType == .strokes {
-                let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
-                questions = KankenQuestion.strokeQuiz(items, count: 15, unit: unit)
-            } else if section.renderType == .yojijukugo {
-                let items = (try? await dictionaryClient.examYojijukugo(level, 60)) ?? []
-                questions = KankenQuestion.yojijukugoQuiz(items, count: 15, language: language)
-            } else if section.renderType == .okurigana {
-                let items = (try? await dictionaryClient.examOkurigana(level, 120)) ?? []
-                questions = KankenQuestion.okuriganaQuiz(items, count: 15)
-            } else if section.renderType == .taigirui {
-                // 対義語-only sections (lower 級) filter to antonyms; 対義語・類義語 uses both.
-                let relationOnly = section.id == "taigi" ? "対義" : nil
-                let items = (try? await dictionaryClient.examTaigirui(level, relationOnly, 40)) ?? []
-                questions = KankenQuestion.taigiruiQuiz(items, count: 15)
-            } else if section.renderType == .onkun {
-                let items = (try? await dictionaryClient.examOnKun(level, 40)) ?? []
-                questions = KankenQuestion.onKunQuiz(items, count: 15)
-            } else {
-                let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
-                questions = KankenQuestion.radicalQuiz(items, count: 15)
-            }
-            await send(.loaded(questions.filter { $0.options.count >= 2 }))
+            await send(.loaded(
+                try await questions(for: section, level: level, language: language,
+                                    unit: unit, perSection: 20)))
         }
+    }
+
+    /// Every question for one 大問, at the level given. Shared by a single
+    /// section and by the mock paper, which needs all of them.
+    private func questions(for section: ExamSection, level: String,
+                           language: AppLanguage, unit: String,
+                           perSection: Int) async throws -> [KankenQuestion] {
+        let built: [KankenQuestion]
+        if let kind = section.kind {
+            let bank = (try? await dictionaryClient.examQuestions(level, kind, perSection)) ?? []
+            built = bank.map { KankenQuestion.from($0, type: section.renderType, language: language) }
+        } else if section.renderType == .strokes {
+            let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
+            built = KankenQuestion.strokeQuiz(items, count: perSection, unit: unit)
+        } else if section.renderType == .yojijukugo {
+            let items = (try? await dictionaryClient.examYojijukugo(level, 60)) ?? []
+            built = KankenQuestion.yojijukugoQuiz(items, count: perSection, language: language)
+        } else if section.renderType == .okurigana {
+            let items = (try? await dictionaryClient.examOkurigana(level, 120)) ?? []
+            built = KankenQuestion.okuriganaQuiz(items, count: perSection)
+        } else if section.renderType == .taigirui {
+            // 対義語-only sections (lower 級) filter to antonyms; 対義語・類義語 uses both.
+            let relationOnly = section.id == "taigi" ? "対義" : nil
+            let items = (try? await dictionaryClient.examTaigirui(level, relationOnly, 40)) ?? []
+            built = KankenQuestion.taigiruiQuiz(items, count: perSection)
+        } else if section.renderType == .onkun {
+            let items = (try? await dictionaryClient.examOnKun(level, 40)) ?? []
+            built = KankenQuestion.onKunQuiz(items, count: perSection)
+        } else {
+            let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
+            built = KankenQuestion.radicalQuiz(items, count: perSection)
+        }
+        return built.filter { $0.options.count >= 2 }
     }
 }
 
