@@ -370,6 +370,59 @@ def main() -> int:
         })
         stats["iikae"] += 1
 
+    # ── 熟語の読み・一字訓読み (準1級) ───────────────────────────────────────
+    # The paper gives a compound, then the same kanji alone with its okurigana,
+    # and asks for the 訓読み of the single character. The compound is context,
+    # not the question — which is what keeps this distinct from 読み (compound
+    # readings) and from 音読み・訓読み (a bare kanji with no context at all).
+    kun_forms: dict[str, list[str]] = defaultdict(list)
+    for literal, value, axis in con_readings:
+        if axis != "kun" or "." not in value:
+            continue
+        # 「托する」「撰する」 are サ変 verbs: the stem is the 音読み, so asking for
+        # it as a 訓読み is simply wrong. And a leading or trailing "-" marks a
+        # prefix/suffix form in kanjidic2, not a reading that stands alone.
+        if value.endswith(".する") or "-" in value:
+            continue
+        kun_forms[literal].append(value)
+    compounds_by_kanji: dict[str, list[tuple[str, str]]] = defaultdict(list)
+    for surface, reading in words:
+        if len(surface) == 2 and all("一" <= c <= "龠" for c in surface):
+            for ch in set(surface):
+                compounds_by_kanji[ch].append((surface, reading))
+
+    all_kun = sorted({v.split(".")[0] for vs in kun_forms.values() for v in vs})
+    for literal in sorted(kun_forms):
+        if level_of.get(literal) != "準1級":
+            continue
+        pairs = compounds_by_kanji.get(literal)
+        if not pairs:
+            continue
+        form = kun_forms[literal][0]
+        okurigana = form.replace(".", "")
+        answer = form.split(".")[0]
+        compound, compound_reading = pairs[0]
+        same_length = [k for k in all_kun if k != answer and len(k) == len(answer)]
+        if len(same_length) < 3:
+            continue
+        rng.shuffle(same_length)
+        options = same_length[:3] + [answer]
+        rng.shuffle(options)
+        out.append({
+            "literal": literal, "level": "準1級", "kind": "jukugo_kun",
+            "prompt": f"{compound}（{compound_reading}）　—　<u>{okurigana}</u>",
+            "options": options, "answer": options.index(answer), "focus": okurigana,
+            "explanations": explanations(
+                f"「{okurigana}」의 훈독은 「{answer}」입니다. 숙어 「{compound}」"
+                f"({compound_reading})와 같은 한자입니다.",
+                f"「{okurigana}」の訓読みは「{answer}」です。熟語「{compound}」"
+                f"（{compound_reading}）と同じ漢字です。",
+                f"「{okurigana}」的训读是「{answer}」，与熟语「{compound}」"
+                f"（{compound_reading}）用同一个汉字。",
+                f"「{okurigana}」is read {answer}. Same kanji as in 「{compound}」."),
+        })
+        stats["jukugo_kun"] += 1
+
     Path(args.out).write_text(
         "\n".join(json.dumps(q, ensure_ascii=False) for q in out) + "\n",
         encoding="utf-8")

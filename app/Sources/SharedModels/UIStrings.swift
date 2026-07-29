@@ -201,6 +201,9 @@ public enum L {
         ko: "밑줄 친 말을 한자로?", ja: "＿＿を漢字で書くと？", zh: "下划线词的汉字写法？", en: "Kanji for the underlined word?")
     public static let quizCloze = L10nText(
         ko: "빈칸에 들어갈 말은?", ja: "空欄に入る言葉は？", zh: "选择填入空格的词", en: "Fill in the blank")
+    public static let quizUsage = L10nText(
+        ko: "이 말을 바르게 쓴 문장은?", ja: "この言葉の使い方が正しい文は？",
+        zh: "哪句话用得正确？", en: "Which sentence uses it correctly?")
     public static let quizFirstTry = L10nText(
         ko: "첫 시도 정답", ja: "一発正解", zh: "首次答对", en: "First-try correct")
     public static let quizCorrect = L10nText(ko: "정답!", ja: "正解！", zh: "答对了！", en: "Correct!")
@@ -251,9 +254,18 @@ public enum L {
     public static let kankenHyogaiDesc = L10nText(
         ko: "표외 읽기 고르기", ja: "表外の読みを選ぶ",
         zh: "选择表外读音", en: "Pick the non-standard reading")
+    public static let kankenJukugoKunDesc = L10nText(
+        ko: "한 글자의 훈독", ja: "一字の訓読み", zh: "单字的训读",
+        en: "The single kanji's kun reading")
     public static let kankenIikaeDesc = L10nText(
         ko: "뜻이 가장 가까운 말", ja: "意味が最も近い語",
         zh: "意思最接近的词", en: "The closest in meaning")
+    public static let kankenPassageDesc = L10nText(
+        ko: "문장 속 한자어의 읽기", ja: "文中の漢字語の読み",
+        zh: "文中汉语词的读音", en: "Reading of the word in the passage")
+    public static let kankenYouhouDesc = L10nText(
+        ko: "바르게 쓰인 문장 고르기", ja: "正しい使い方の文を選ぶ",
+        zh: "选择用法正确的句子", en: "Pick the sentence that uses it right")
     public static let kankenGokeiseiDesc = L10nText(
         ko: "접두·접미어 고르기", ja: "接頭語・接尾語を選ぶ",
         zh: "选择前缀或后缀", en: "Pick the prefix or suffix")

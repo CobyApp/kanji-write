@@ -245,6 +245,8 @@ public struct PracticeView: View {
                             canvasCard(side: side)
                         }
                     }
+                    .frame(width: side, height: side)
+                    .overlay(alignment: .bottomTrailing) { boardTools }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     // The review renders the drawing against this same rect, so
                     // the capture has to track whatever size we ended up with.
@@ -252,8 +254,6 @@ public struct PracticeView: View {
                     .onChange(of: side) { _, new in canvasSide = new }
                 }
                 .padding(.vertical, 6)
-
-                hintToggle.padding(.bottom, 6)
             }
 
             navButtons.padding(.horizontal, 16).padding(.bottom, 10)
@@ -263,30 +263,48 @@ public struct PracticeView: View {
         .onChange(of: store.index) { _, _ in loadDrawing() }
     }
 
+    /// The card above the canvas keeps one height for the whole run.
+    ///
+    /// What it holds varies per question — a one-word gloss or a wrapping one,
+    /// 음 only or 음 and 훈 — and letting it size to its content moved the canvas
+    /// under it on every 다음. Both dimensions are pinned to the tall case: two
+    /// gloss lines, and the 음+훈 pair.
     private func hintCard(_ item: PracticeItem) -> some View {
         VStack(spacing: 10) {
             Text(promptLabel)
                 .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-            if let meaning = localizedGloss(item.glosses, appLanguage), !meaning.isEmpty {
-                Text(meaning)
-                    .font(.kawaii(26, weight: .bold, language: appLanguage))
-                    .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
-            }
-            VStack(spacing: 6) {
-                // A word is pinned by its kana reading; a single kanji by its
-                // 음/훈 lines, since it has no one reading in isolation.
-                if let reading = item.reading, !reading.isEmpty {
-                    readingLine(L.reading[appLanguage], [reading], Palette.lavender)
-                }
-                if !item.onReadings.isEmpty {
-                    readingLine(L.onReading[appLanguage], item.onReadings, Palette.sky)
-                }
-                if !item.kunReadings.isEmpty {
-                    readingLine(L.kunReading[appLanguage], item.kunReadings, Palette.mint)
+            Text(localizedGloss(item.glosses, appLanguage) ?? "")
+                .font(.kawaii(26, weight: .bold, language: appLanguage))
+                .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
+                .lineLimit(2, reservesSpace: true).minimumScaleFactor(0.7)
+            ZStack(alignment: .top) {
+                readingBlockTemplate.hidden()
+                VStack(spacing: 6) {
+                    // A word is pinned by its kana reading; a single kanji by its
+                    // 음/훈 lines, since it has no one reading in isolation.
+                    if let reading = item.reading, !reading.isEmpty {
+                        readingLine(L.reading[appLanguage], [reading], Palette.lavender)
+                    }
+                    if !item.onReadings.isEmpty {
+                        readingLine(L.onReading[appLanguage], item.onReadings, Palette.sky)
+                    }
+                    if !item.kunReadings.isEmpty {
+                        readingLine(L.kunReading[appLanguage], item.kunReadings, Palette.mint)
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity).roundedCard()
+    }
+
+    /// Laid out but never drawn — it reserves the height of the 음+훈 pair, the
+    /// most reading lines any item shows, so shorter items leave a gap instead
+    /// of pulling the card up.
+    private var readingBlockTemplate: some View {
+        VStack(spacing: 6) {
+            readingLine(L.onReading[appLanguage], ["ア"], Palette.sky)
+            readingLine(L.kunReading[appLanguage], ["あ"], Palette.mint)
+        }
     }
 
     private func canvasCard(side: CGFloat) -> some View {
@@ -297,14 +315,25 @@ public struct PracticeView: View {
         .frame(width: side, height: side)
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
             .stroke(Palette.ink.opacity(0.08), lineWidth: 1.5))
-        .overlay(alignment: .bottomTrailing) {
-            Button { drawing = PKDrawing() } label: {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.pink)
-                    .padding(10).background(Palette.pinkSoft, in: Circle())
+    }
+
+    /// The two controls that act on the board, sitting in its bottom corner: a
+    /// full-width row under the canvas cost a strip of the drawing area, and the
+    /// buttons belong with the thing they act on.
+    private var boardTools: some View {
+        HStack(spacing: 8) {
+            hintToggle
+            // Nothing to wipe while the hint covers the board.
+            if !store.hintShown {
+                Button { drawing = PKDrawing() } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.pink)
+                        .padding(10).background(Palette.pinkSoft, in: Circle())
+                }
+                .buttonStyle(.bouncy)
             }
-            .buttonStyle(.bouncy).padding(12)
         }
+        .padding(12)
     }
 
     private var navButtons: some View {
@@ -342,14 +371,14 @@ public struct PracticeView: View {
     /// wiping the work would cost the learner their answer for a peek.
     private var hintToggle: some View {
         Button { store.send(.toggleHint) } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: store.hintShown ? "eye.slash.fill" : "eye.fill")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                 Text(store.hintShown ? L.hintHide[appLanguage] : L.hintShow[appLanguage])
-                    .font(.kawaii(14, weight: .bold, language: appLanguage))
+                    .font(.kawaii(13, weight: .bold, language: appLanguage))
             }
             .foregroundStyle(Palette.grape)
-            .padding(.horizontal, 18).padding(.vertical, 10)
+            .padding(.horizontal, 14).padding(.vertical, 9)
             .background(Palette.grapeSoft).clipShape(Capsule())
         }
         .buttonStyle(.bouncy)
@@ -371,7 +400,10 @@ public struct PracticeView: View {
                     .japaneseGlyphs().foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.4).padding(16)
             case .some(let paths):
-                StrokeOrderPlayer(paths: paths, size: side - 24)
+                // Filling the whole canvas overshot; this leaves the play
+                // control and a margin visible without shrinking to the
+                // player's own 200pt default.
+                StrokeOrderPlayer(paths: paths, size: side * 0.72)
             }
         }
         .frame(width: side, height: side)

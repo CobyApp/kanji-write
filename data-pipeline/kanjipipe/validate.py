@@ -205,10 +205,13 @@ _PLAYABLE: dict[str, tuple[tuple[str, str], ...]] = {
             ("同音・同訓異字", "doonkun"), ("誤字訂正", "goji"),
             ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
     "準1級": (("読み", "reading"), ("書き取り", "orthography"), ("表外の読み", "hyogai"),
+              ("熟語の読み・一字訓読み", "jukugo_kun"),
               ("共通の漢字", "kyotsu"), ("誤字訂正", "goji"), ("故事・諺", "kotowaza"),
+              ("文章題", "passage"),
               ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
     "1級": (("読み", "reading"), ("書き取り", "orthography"), ("語選択", "goselect"),
             ("熟字訓・当て字", "jukujikun"), ("故事・諺", "kotowaza"),
+            ("文章題", "passage"),
             ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
 }
 # The JLPT side of the same table. These are keyed by N-level, which the app
@@ -218,13 +221,14 @@ _PLAYABLE_JLPT: dict[str, tuple[tuple[str, str], ...]] = {
     "N5": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context"),
            ("言い換え類義", "iikae")),
     "N4": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context"),
-           ("言い換え類義", "iikae")),
+           ("言い換え類義", "iikae"), ("用法", "youhou")),
     "N3": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context"),
-           ("言い換え類義", "iikae")),
+           ("言い換え類義", "iikae"), ("用法", "youhou")),
     "N2": (("漢字読み", "reading"), ("表記", "orthography"),
            ("語形成", "gokeisei"), ("文脈規定", "context"),
-           ("言い換え類義", "iikae")),
-    "N1": (("漢字読み", "reading"), ("文脈規定", "context"), ("言い換え類義", "iikae")),
+           ("言い換え類義", "iikae"), ("用法", "youhou")),
+    "N1": (("漢字読み", "reading"), ("文脈規定", "context"), ("言い換え類義", "iikae"),
+           ("用法", "youhou")),
 }
 # Below this a 20-question run repeats itself noticeably.
 _MIN_PER_SECTION = 15
