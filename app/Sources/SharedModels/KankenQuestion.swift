@@ -13,6 +13,7 @@ public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codab
     case okurigana        // 送りがな — カナ word, answer is the kanji+okurigana form
     case taigirui         // 対義語・類義語 — a word, answer is its antonym / synonym
     case onkun            // 音読み・訓読み — kanji glyph, answer is an on / kun reading
+    case hitsujun         // 筆順 — the glyph with one stroke marked, answer is its ordinal
     case comingSoon       // real 大問, curated data not ready yet (not playable)
 
     /// Reading answers get slightly larger option type than kanji/word answers.
@@ -167,6 +168,9 @@ extension ExamType {
     /// 対義語・類義語 — live only where the dataset covers (5級〜2級).
     private static var taigirui: ExamSection { live("taigirui", "対義語・類義語", .taigirui, nil) }
     private static var onkun: ExamSection { live("onkun", "音読み・訓読み", .onkun, nil) }
+    /// 筆順 — the glyph with one stroke marked; the answer is its place in
+    /// writing order. Generated from the KanjiVG paths, so no bank kind.
+    private static var hitsujun: ExamSection { live("hitsujun", "筆順", .hitsujun, nil) }
     /// 同音異字 / 同音・同訓異字 — pick the right kanji among homophones. Same
     /// blank-fill rendering as 書き取り, drawing on the generated bank.
     private static func doon(_ ja: String) -> ExamSection {
@@ -195,10 +199,10 @@ extension ExamType {
     private static func kankenSections(_ level: String) -> [ExamSection] {
         switch level {
         case "10級":
-            return [reading, soon("hitsujun", "筆順"), strokes,
+            return [reading, hitsujun, strokes,
                     hantai("hantai", "反対のことば", "hantai"), writing]
         case "9級":
-            return [reading, soon("hitsujun", "筆順"), strokes, okuri("送りがな"),
+            return [reading, hitsujun, strokes, okuri("送りがな"),
                     hantai("hantai", "反対のことば", "hantai"), writing]
         case "8級":
             return [reading, onkun, radical, strokes,
@@ -290,11 +294,17 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
     public let answer: String        // the correct option's text
     public let explanation: String?
     public let label: String?        // overrides the type's prompt label (e.g. 読み/意味)
+    /// 筆順 only: the glyph's strokes in order, and which one the question marks.
+    /// Carried on the question rather than re-fetched so a 오답노트 entry still
+    /// renders offline, which is the whole point of storing the question.
+    public let strokePaths: [String]?
+    public let markedStroke: Int?
 
     public init(
         id: String, type: KankenQuestionType, kanjiID: Int, prompt: String,
         focus: String? = nil, options: [String], answer: String,
-        explanation: String? = nil, label: String? = nil
+        explanation: String? = nil, label: String? = nil,
+        strokePaths: [String]? = nil, markedStroke: Int? = nil
     ) {
         self.id = id
         self.type = type
@@ -305,6 +315,21 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
         self.answer = answer
         self.explanation = explanation
         self.label = label
+        self.strokePaths = strokePaths
+        self.markedStroke = markedStroke
+    }
+}
+
+/// A kanji with its strokes in writing order — the input to the 筆順 generator.
+public struct StrokeOrderItem: Equatable, Sendable {
+    public let kanjiID: Int
+    public let literal: String
+    public let paths: [String]
+
+    public init(kanjiID: Int, literal: String, paths: [String]) {
+        self.kanjiID = kanjiID
+        self.literal = literal
+        self.paths = paths
     }
 }
 

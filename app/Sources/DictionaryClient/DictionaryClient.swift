@@ -70,6 +70,10 @@ public struct DictionaryClient: Sendable {
     public var examTaigirui: @Sendable (_ level: String, _ relationOnly: String?, _ limit: Int) async throws -> [TaigiruiPair]
     /// Kanji at the level with their 音読み / 訓読み reading sets — the input to the
     /// 音読み・訓読み question generator.
+    /// Kanji with verified stroke order at a level, with their strokes in order —
+    /// the input to the 筆順 generator.
+    public var examStrokeOrderItems: @Sendable (_ level: String, _ limit: Int)
+        async throws -> [StrokeOrderItem]
     public var examOnKun: @Sendable (_ level: String, _ limit: Int) async throws -> [OnKunItem]
 }
 

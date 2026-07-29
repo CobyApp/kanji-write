@@ -598,6 +598,30 @@ extension DictionaryClient: DependencyKey {
                 }
             }
         },
+        examStrokeOrderItems: { level, limit in
+            let predicate = Self.kanjiLevelPredicate(level)
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [StrokeOrderItem] in
+                // Only kanji whose stroke order is verified — an unverified glyph
+                // has no ordering to ask about.
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT k.id, k.literal FROM kanji k
+                    WHERE \(predicate) AND k.has_verified_stroke_order = 1
+                    ORDER BY RANDOM() LIMIT ?
+                    """, arguments: [level, limit])
+                var out: [StrokeOrderItem] = []
+                for row in rows {
+                    let id: Int = row["id"]
+                    let paths = try String.fetchAll(db, sql: """
+                        SELECT path_d FROM stroke_order WHERE kanji_id = ? ORDER BY ordinal
+                        """, arguments: [id])
+                    guard paths.count >= 4 else { continue }
+                    out.append(StrokeOrderItem(kanjiID: id, literal: row["literal"],
+                                               paths: paths))
+                }
+                return out
+            }
+        },
         examOnKun: { level, limit in
             let predicate = Self.kanjiLevelPredicate(level)
             let queue = try openBundledDatabase()
