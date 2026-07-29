@@ -46,7 +46,7 @@ public struct KankenExamFeature {
         public var isCorrect: Bool { chosen == current?.answer }
         /// Section title shown in the session header.
         public var sessionTitle: String {
-            if isWrongNote { return "오답노트" }
+            if isWrongNote { return L.wrongNote[language] }
             if isMockExam { return L.mockExam[language] }
             return activeSection.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
         }

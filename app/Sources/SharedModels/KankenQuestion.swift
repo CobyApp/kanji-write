@@ -31,24 +31,32 @@ public struct Yojijukugo: Equatable, Identifiable, Sendable {
     public let reading: String
     public let meaningJa: String?
     public let meaningKo: String?
+    public let meaningZh: String?
+    public let meaningEn: String?
     public let level: String
 
     public init(id: Int, yoji: String, reading: String,
-                meaningJa: String?, meaningKo: String?, level: String) {
+                meaningJa: String?, meaningKo: String?,
+                meaningZh: String? = nil, meaningEn: String? = nil, level: String) {
         self.id = id
         self.yoji = yoji
         self.reading = reading
         self.meaningJa = meaningJa
         self.meaningKo = meaningKo
+        self.meaningZh = meaningZh
+        self.meaningEn = meaningEn
         self.level = level
     }
 
-    /// The meaning in the app language, falling back Japanese → Korean.
+    /// The meaning in the app language. Japanese is the last resort rather than
+    /// the default: a zh or en reader used to get the Japanese gloss even though
+    /// nothing was missing on their side.
     public func meaning(_ language: AppLanguage) -> String? {
         switch language {
         case .ko: meaningKo ?? meaningJa
         case .ja: meaningJa ?? meaningKo
-        default: meaningJa ?? meaningKo
+        case .zh: meaningZh ?? meaningJa ?? meaningKo
+        case .en: meaningEn ?? meaningJa ?? meaningKo
         }
     }
 }

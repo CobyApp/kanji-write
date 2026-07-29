@@ -408,6 +408,11 @@ public enum L {
         en: "Idioms at this level")
     public static let writeRange = L10nText(
         ko: "출제 범위", ja: "出題範囲", zh: "出题范围", en: "Range")
+    public static let writeLevelEmpty = L10nText(
+        ko: "이 급수에는 아직 출제할 항목이 없어요\n다른 급수를 골라 보세요",
+        ja: "この級には出題できる項目がまだありません\n他の級を選んでください",
+        zh: "本级暂无可出题的条目\n请选择其他等级",
+        en: "Nothing to draw from at this level yet\nTry another level")
     public static let writeRangeFrom = L10nText(ko: "부터", ja: "から", zh: "从", en: "From")
     public static let writeRangeTo = L10nText(ko: "까지", ja: "まで", zh: "到", en: "To")
     public static let writeLevelKanjiTotal = L10nText(

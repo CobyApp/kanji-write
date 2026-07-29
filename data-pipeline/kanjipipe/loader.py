@@ -134,14 +134,16 @@ def load_yojijukugo(
     entries = json.loads(Path(path).read_text(encoding="utf-8"))
     conn.executemany(
         "INSERT INTO yojijukugo "
-        "(yoji, reading, meaning_ja, meaning_ko, kanken_level) "
-        "VALUES (?, ?, ?, ?, ?)",
+        "(yoji, reading, meaning_ja, meaning_ko, meaning_zh, meaning_en, kanken_level) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
             (
                 entry["yoji"],
                 entry["reading"],
                 entry.get("meaningJa"),
                 entry.get("meaningKo"),
+                entry.get("meaningZh"),
+                entry.get("meaningEn"),
                 entry["level"],
             )
             for entry in entries
