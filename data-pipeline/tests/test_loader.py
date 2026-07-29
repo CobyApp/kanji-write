@@ -438,7 +438,7 @@ def test_load_word_ko_glosses_inserts_ko_word_gloss():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_ko_glosses(conn, [(word_id, "산")])
+    load_word_ko_glosses(conn, [(word_id, "산", "山")])
 
     ko = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang = 'ko'",
@@ -459,7 +459,7 @@ def test_load_word_jazh_glosses_inserts_ja_and_zh_word_glosses():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_jazh_glosses(conn, [(word_id, "やま", "山")])
+    load_word_jazh_glosses(conn, [(word_id, "やま", "山", "山")])
 
     rows = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
@@ -475,7 +475,7 @@ def test_load_word_jazh_glosses_with_only_zh_inserts_only_zh():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_jazh_glosses(conn, [(word_id, None, "山")])
+    load_word_jazh_glosses(conn, [(word_id, None, "山", "山")])
 
     rows = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
@@ -491,7 +491,7 @@ def test_load_word_jazh_glosses_with_only_ja_inserts_only_ja():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_jazh_glosses(conn, [(word_id, "やま", None)])
+    load_word_jazh_glosses(conn, [(word_id, "やま", None, "山")])
 
     rows = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
@@ -559,3 +559,21 @@ def test_compat_ideograph_refuses_unified_strokes_when_counts_differ():
     assert conn.execute(
         "SELECT has_verified_stroke_order FROM kanji WHERE literal = '隆'"
     ).fetchone() == (0,)
+
+
+def test_load_word_glosses_drop_an_entry_whose_surface_moved():
+    """A gloss file written against an older build addresses a different word at
+    the same id. Dropping it and reporting the count is what stops 学校's gloss
+    from ending up on a word meaning "frontal width"."""
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
+    word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
+
+    ko_mismatches = load_word_ko_glosses(conn, [(word_id, "학교", "学校")])
+    jazh_mismatches = load_word_jazh_glosses(conn, [(word_id, "がっこう", "学校", "学校")])
+
+    assert (ko_mismatches, jazh_mismatches) == (1, 1)
+    assert conn.execute(
+        "SELECT COUNT(*) FROM word_gloss WHERE lang IN ('ko', 'ja', 'zh')"
+    ).fetchone()[0] == 0
