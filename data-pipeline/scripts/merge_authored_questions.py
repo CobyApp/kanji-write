@@ -26,16 +26,33 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("batches", nargs="+")
     parser.add_argument("--out", default="sources/kanken_authored_questions.jsonl")
+    parser.add_argument(
+        "--append", action="store_true",
+        help="keep what is already in --out. Batch files live outside the repo, "
+             "so a later run has no way to regenerate the earlier ones — without "
+             "this it silently replaces them.")
     args = parser.parse_args()
 
     rng = random.Random(SEED)
     out: list[dict] = []
     by_kind: Counter[str] = Counter()
+    target = Path(args.out)
+    seen: set[tuple] = set()
+    if args.append and target.exists():
+        for line in target.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                q = json.loads(line)
+                out.append(q)
+                seen.add((q.get("kind"), q.get("prompt")))
+                by_kind[f"{q.get('kind')} {q.get('level')}"] += 1
     for path in sorted(args.batches):
         for line in Path(path).read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
             q = json.loads(line)
+            if (q.get("kind"), q.get("prompt")) in seen:
+                continue
+            seen.add((q.get("kind"), q.get("prompt")))
             if q.get("kind") not in FIXED_ORDER_KINDS:
                 correct = q["options"][q["answer"]]
                 options = list(q["options"])
@@ -45,7 +62,7 @@ def main() -> int:
             out.append(q)
             by_kind[f"{q.get('kind')} {q.get('level')}"] += 1
 
-    Path(args.out).write_text(
+    target.write_text(
         "\n".join(json.dumps(q, ensure_ascii=False) for q in out) + "\n",
         encoding="utf-8")
     print(f"wrote {len(out)} authored questions → {args.out}")

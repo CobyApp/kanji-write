@@ -24,6 +24,8 @@ from pathlib import Path
 SEED = 20260728
 BLANK = "□"
 SANJI_LEVELS = ("7級",)
+JUKUJIKUN_LEVELS = ("1級",)
+TSUKURI_LEVELS = ("6級",)
 HANTAI_LEVELS = {"10級": "hantai", "9級": "hantai", "8級": "taigi", "7級": "taigi"}
 KYOTSU_LEVELS = ("準1級",)
 
@@ -48,6 +50,12 @@ def main() -> int:
     ko_of = dict(con.execute(
         "SELECT k.literal, g.text FROM kanji k JOIN gloss g ON g.kanji_id = k.id "
         "WHERE g.lang = 'ko'"))
+    con_readings = list(con.execute(
+        "SELECT k.literal, r.value, r.lang_axis FROM kanji k "
+        "JOIN reading r ON r.kanji_id = k.id WHERE r.lang_axis IN ('on','kun')"))
+    ja_glosses = dict(con.execute(
+        "SELECT w.surface, g.text FROM word w JOIN word_gloss g ON g.word_id = w.id "
+        "WHERE g.lang = 'ja' AND w.is_common = 1"))
     antonyms = list(con.execute("""
         SELECT a.surface, a.reading_kana, b.surface, b.reading_kana
         FROM relation r JOIN word a ON a.id = r.word_id_a JOIN word b ON b.id = r.word_id_b
@@ -172,6 +180,105 @@ def main() -> int:
                 f"The kanji completing both is {literal}. {s1}, {s2}."),
         })
         stats["kyotsu"] += 1
+
+    # ── 熟字訓・当て字 (1級) ────────────────────────────────────────────────
+    # A 熟字訓 is a compound read as a whole rather than kanji by kanji, so the
+    # test is exactly "the reading you cannot work out from the parts". Which
+    # means it can be found rather than listed: keep the words whose reading
+    # cannot be cut so each piece starts like a reading of its own kanji.
+    kana_readings = defaultdict(set)
+    for literal, value, axis in con_readings:
+        hira = "".join(chr(ord(c) - 0x60) if "ァ" <= c <= "ヶ" else c for c in value)
+        kana_readings[literal].add(hira.split(".")[0])
+
+    def decomposable(surface: str, reading: str) -> bool:
+        def walk(index: int, pos: int) -> bool:
+            if index == len(surface):
+                return pos == len(reading)
+            for r in kana_readings.get(surface[index], ()):
+                if not r:
+                    continue
+                for cut in range(max(1, len(r) - 1), len(r) + 1):
+                    piece = reading[pos:pos + cut]
+                    if not piece:
+                        continue
+                    # Allow rendaku and a clipped final mora, which is what
+                    # 学校 → がっこう does to がく + こう.
+                    if abs(ord(piece[0]) - ord(r[0])) <= 2 and walk(index + 1, pos + cut):
+                        return True
+            return False
+        return walk(0, 0)
+
+    jukujikun: list[tuple[str, str, str]] = []
+    for surface, reading in words:
+        if not 2 <= len(surface) <= 3 or not all("一" <= c <= "龠" for c in surface):
+            continue
+        if not all(c in kana_readings for c in surface):
+            continue
+        target = next((c for c in surface if level_of.get(c) in JUKUJIKUN_LEVELS), None)
+        if target is None or decomposable(surface, reading):
+            continue
+        jukujikun.append((surface, reading, target))
+
+    pool = [r for _, r, _ in jukujikun]
+    for surface, reading, target in jukujikun:
+        same_length = [r for r in pool if r != reading and len(r) == len(reading)]
+        if len(same_length) < 3:
+            continue
+        rng.shuffle(same_length)
+        options = same_length[:3] + [reading]
+        rng.shuffle(options)
+        out.append({
+            "literal": target, "level": level_of[target], "kind": "jukujikun",
+            "prompt": f"<u>{surface}</u>", "options": options,
+            "answer": options.index(reading), "focus": surface,
+            "explanations": explanations(
+                f"「{surface}」는 글자마다 읽지 않고 전체를 {reading}로 읽는 숙자훈입니다.",
+                f"「{surface}」は字ごとに読まず、全体で {reading} と読む熟字訓です。",
+                f"「{surface}」不逐字读，整体读作 {reading}，属熟字训。",
+                f"「{surface}」is read {reading} as a whole, not kanji by kanji."),
+        })
+        stats["jukujikun"] += 1
+
+    # ── 熟語作り (6級) ──────────────────────────────────────────────────────
+    # Given a meaning, build the compound. The meanings are the Japanese word
+    # glosses we already ship, so the question is real vocabulary rather than a
+    # definition someone wrote for the occasion.
+    made_tsukuri: set[str] = set()
+    compounds = [(s, g) for s, g in ja_glosses.items()
+                 if len(s) == 2 and all("一" <= c <= "龠" for c in s) and g]
+    surfaces_only = [s for s, _ in compounds]
+    for surface, gloss in compounds:
+        target = next((c for c in surface if level_of.get(c) in TSUKURI_LEVELS), None)
+        if target is None or surface in made_tsukuri:
+            continue
+        # A JMdict Japanese gloss often restates the headword ("悪質" defined
+        # with 悪質 in it), which hands over the answer.
+        if surface in gloss:
+            continue
+        if stats["tsukuri"] >= 400:
+            break
+        others = [s for s in surfaces_only if s != surface and not set(s) & set(surface)]
+        if len(others) < 3:
+            continue
+        rng.shuffle(others)
+        distractors = [o for o in others if o not in gloss][:3]
+        if len(distractors) < 3:
+            continue
+        options = distractors + [surface]
+        rng.shuffle(options)
+        made_tsukuri.add(surface)
+        out.append({
+            "literal": target, "level": level_of[target], "kind": "tsukuri",
+            "prompt": f"<u>{gloss}</u>", "options": options,
+            "answer": options.index(surface), "focus": gloss,
+            "explanations": explanations(
+                f"이 뜻에 맞는 숙어는 「{surface}」입니다.",
+                f"この意味に合う熟語は「{surface}」です。",
+                f"符合这个意思的熟语是「{surface}」。",
+                f"The compound with this meaning is 「{surface}」."),
+        })
+        stats["tsukuri"] += 1
 
     Path(args.out).write_text(
         "\n".join(json.dumps(q, ensure_ascii=False) for q in out) + "\n",

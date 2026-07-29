@@ -245,7 +245,7 @@ extension ExamType {
                 writing,
                 authored("word-selection", "語選択", "goselect"),
                 yoji,
-                soon("jukujikun-ateji", "熟字訓・当て字"),
+                authored("jukujikun-ateji", "熟字訓・当て字", "jukujikun", .reading),
                 onkun,
                 taigirui,
                 authored("koji-kotowaza", "故事・諺", "kotowaza"),

@@ -56,11 +56,12 @@ final class AdvancedKankenSectionTests: XCTestCase {
             ]
         )
         XCTAssertEqual(sections.map(\.numeral), ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"])
-        // 読み and 書き取り are backed by the generated 準1級 bank; the rest still
-        // need curated data and stay 준비 중.
+        // Only 熟語の読み・一字訓読み and 文章題 are still 준비 중 at 準1級 — the
+        // first needs a shape we do not render, the second a written passage.
         XCTAssertEqual(
             sections.filter(\.available).map(\.jaTitle),
-            ["読み", "書き取り", "四字熟語", "対義語・類義語"])
+            ["読み", "表外の読み", "共通の漢字", "書き取り", "誤字訂正",
+             "四字熟語", "対義語・類義語", "故事・諺"])
     }
 
     func testFirstSectionsMatchOfficialPaperOrder() {
@@ -74,11 +75,11 @@ final class AdvancedKankenSectionTests: XCTestCase {
             ]
         )
         XCTAssertEqual(sections.map(\.numeral), ["一", "二", "三", "四", "五", "六", "七", "八", "九"])
-        // 音読み・訓読み is generated from the readings table, so it is playable
-        // alongside the two bank-backed sections.
+        // 文章題 alone is still 준비 중 at 1級; it needs a written passage.
         XCTAssertEqual(
             sections.filter(\.available).map(\.jaTitle),
-            ["読み", "書き取り", "四字熟語", "音読み・訓読み", "対義語・類義語"])
+            ["読み", "書き取り", "語選択", "四字熟語", "熟字訓・当て字",
+             "音読み・訓読み", "対義語・類義語", "故事・諺"])
     }
 }
 
