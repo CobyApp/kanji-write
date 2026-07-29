@@ -78,7 +78,7 @@ public struct RootFeature {
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case startStudy(pullAhead: Bool)
-        case startPractice(mode: PracticeFeature.State.Mode)
+        case startPractice(mode: PracticeFeature.State.Mode, favorites: Bool = false)
         case startQuiz(level: String, planned: [Int])
         case startKanken(level: String)
         case path(StackActionOf<Path>)
@@ -195,10 +195,13 @@ public struct RootFeature {
                 state.sessionPath.removeAll()
                 state.session = .worksheet(WorksheetFeature.State(pullAhead: pullAhead))
                 return .none
-            case let .startPractice(mode):
+            case let .startPractice(mode, favorites):
                 state.sessionPath.removeAll()
                 var practice = PracticeFeature.State()
                 practice.mode = mode
+                // Opening 즐겨찾기 from Home forces the scope on, so the tile lands
+                // where it says it will rather than on whatever was last used.
+                practice.useFavorites = favorites
                 state.session = .practice(practice)
                 return .none
             case let .startQuiz(level, planned):

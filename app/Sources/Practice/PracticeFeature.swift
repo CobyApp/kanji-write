@@ -48,6 +48,9 @@ public struct PracticeSettings: Equatable, Codable, Sendable {
     public var level: String
     public var start: Int
     public var end: Int
+    /// Drawing from 즐겨찾기 rather than a 급수 range. Optional so a settings blob
+    /// written before the scope existed still decodes.
+    public var useFavorites: Bool?
 }
 
 @Reducer
@@ -67,6 +70,14 @@ public struct PracticeFeature {
         public var words: [WordEntry] = []
         /// Level 四字熟語 for 사자성어쓰기.
         public var yojijukugo: [Yojijukugo] = []
+
+        /// Draw from the 즐겨찾기 list instead of a level range.
+        public var useFavorites = false
+        /// mode raw value → favourited item ids.
+        public var favorites: [String: [Int]] = [:]
+        /// The favourites resolved to items, for the current mode. Empty until
+        /// the lookup returns, which is why it is not computed.
+        public var favoriteItems: [PracticeItem] = []
 
         /// Chosen level + range.
         public var level = "N5"
@@ -161,6 +172,15 @@ public struct PracticeFeature {
         public var isLast: Bool { index >= questions.count - 1 }
         /// Exclusive range end (clamped) for the summary label.
         public var rangeEnd: Int { min(end + 1, levelCount) }
+
+        /// The favourited ids for whichever mode is selected.
+        public var favoriteIDs: [Int] { favorites[mode.rawValue] ?? [] }
+        public var favoriteCount: Int { favoriteIDs.count }
+        public func isFavorite(_ item: PracticeItem) -> Bool {
+            favoriteIDs.contains(item.id)
+        }
+        /// How many items a run would hold, whichever scope is active.
+        public var runCount: Int { useFavorites ? favoriteItems.count : count }
     }
 
     public enum Action: Equatable {
@@ -182,9 +202,14 @@ public struct PracticeFeature {
         case finish              // → review
         case restart             // → setup
         case exitToSetup         // closing a run goes back to the range picker
+        case favoritesLoaded([String: [Int]])
+        case toggleFavorite(PracticeItem)
+        case setUseFavorites(Bool)
+        case favoriteItemsLoaded([PracticeItem])
     }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
+    @Dependency(\.practiceFavoriteStore) var favoriteStore
 
     static let settingsKey = "practiceSettings"
 
@@ -193,7 +218,7 @@ public struct PracticeFeature {
     private func persist(_ state: State) -> Effect<Action> {
         let settings = PracticeSettings(
             mode: state.mode.rawValue, level: state.level,
-            start: state.start, end: state.end)
+            start: state.start, end: state.end, useFavorites: state.useFavorites)
         return .run { _ in
             if let data = try? JSONEncoder().encode(settings) {
                 UserDefaults.standard.set(data, forKey: Self.settingsKey)
@@ -225,6 +250,60 @@ public struct PracticeFeature {
         }
     }
 
+    /// Turn favourited ids back into items.
+    ///
+    /// A favourite outlives the level it was marked in, so this cannot filter
+    /// `levelItems` — 熟語 favourited while working 2級 would vanish the moment
+    /// the learner moved to 準1級. Kanji are all in memory; words and idioms are
+    /// looked up.
+    private func loadFavoriteItems(
+        _ mode: State.Mode, _ ids: [Int],
+        kanji: IdentifiedArrayOf<Kanji>, glosses: [Int: [String: String]]
+    ) -> Effect<Action> {
+        guard !ids.isEmpty else { return .send(.favoriteItemsLoaded([])) }
+        switch mode {
+        case .kanji:
+            let items = ids.compactMap { id -> PracticeItem? in
+                guard let k = kanji[id: id] else { return nil }
+                return PracticeItem(
+                    id: k.id, answer: k.literal, glosses: glosses[k.id] ?? [:],
+                    onReadings: k.onReadings, kunReadings: k.kunReadings,
+                    strokeOrderKanjiID: k.id)
+            }
+            return .send(.favoriteItemsLoaded(items))
+        case .word:
+            return .run { send in
+                var items: [PracticeItem] = []
+                for id in ids {
+                    guard let w = try? await dictionaryClient.word(id) else { continue }
+                    items.append(PracticeItem(
+                        id: w.id, answer: w.surface,
+                        glosses: [
+                            "ko": w.meaningKo, "ja": w.meaningJa,
+                            "zh": w.meaningZh, "en": w.meaningEn,
+                        ].compactMapValues { $0 },
+                        reading: w.reading))
+                }
+                await send(.favoriteItemsLoaded(items))
+            }
+        case .yoji:
+            return .run { send in
+                let all = (try? await dictionaryClient.allYojijukugo()) ?? []
+                let byID = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
+                let items = ids.compactMap { id -> PracticeItem? in
+                    guard let y = byID[id] else { return nil }
+                    return PracticeItem(
+                        id: y.id, answer: y.yoji,
+                        glosses: ["ja": y.meaningJa, "ko": y.meaningKo,
+                                  "zh": y.meaningZh, "en": y.meaningEn]
+                            .compactMapValues { $0 },
+                        reading: y.reading)
+                }
+                await send(.favoriteItemsLoaded(items))
+            }
+        }
+    }
+
     /// Whichever extra dataset the mode needs; 한자쓰기 needs none.
     private func loadFor(_ mode: State.Mode, _ level: String) -> Effect<Action> {
         switch mode {
@@ -247,6 +326,7 @@ public struct PracticeFeature {
                         let glosses = (try? await dictionaryClient.allGlosses()) ?? [:]
                         await send(.loaded(all, glosses))
                     },
+                    .run { send in await send(.favoritesLoaded(await favoriteStore.load())) },
                     restoreSettings())
 
             case let .restored(settings):
@@ -254,7 +334,16 @@ public struct PracticeFeature {
                 state.level = settings.level
                 state.start = settings.start
                 state.end = settings.end
-                return loadFor(state.mode, settings.level)
+                // `useFavorites` is false on a fresh state, so a true here can
+                // only have been set by the 즐겨찾기 tile on the way in — and that
+                // has to win over whatever scope was last used.
+                if !state.useFavorites {
+                    state.useFavorites = settings.useFavorites ?? false
+                }
+                return .merge(
+                    loadFor(state.mode, settings.level),
+                    loadFavoriteItems(state.mode, state.favoriteIDs,
+                                      kanji: state.kanji, glosses: state.glossesByID))
 
             case let .loaded(all, glosses):
                 defer { state.clampRange() }
@@ -286,7 +375,11 @@ public struct PracticeFeature {
             case let .modeSelected(mode):
                 state.mode = mode
                 state.resetRange()
-                return .merge(persist(state), loadFor(mode, state.level))
+                state.favoriteItems = []
+                return .merge(
+                    persist(state), loadFor(mode, state.level),
+                    loadFavoriteItems(mode, state.favoriteIDs,
+                                      kanji: state.kanji, glosses: state.glossesByID))
 
             case let .wordsLoaded(words):
                 state.words = words
@@ -299,6 +392,16 @@ public struct PracticeFeature {
                 return .none
 
             case .startTest:
+                if state.useFavorites {
+                    guard !state.favoriteItems.isEmpty else { return .none }
+                    state.questions = state.favoriteItems
+                    state.index = 0
+                    state.drawings = [:]
+                    state.hintShown = false
+                    state.hintStrokes = nil
+                    state.phase = .testing
+                    return .none
+                }
                 let lk = state.levelItems
                 guard !lk.isEmpty else { return .none }
                 // Clamp both ends against what this level actually holds, and
@@ -363,6 +466,37 @@ public struct PracticeFeature {
                 state.index = 0
                 state.hintShown = false
                 state.hintStrokes = nil
+                return .none
+
+            case let .favoritesLoaded(byMode):
+                state.favorites = byMode
+                return loadFavoriteItems(state.mode, state.favoriteIDs,
+                                         kanji: state.kanji, glosses: state.glossesByID)
+
+            case let .toggleFavorite(item):
+                var ids = state.favoriteIDs
+                if let at = ids.firstIndex(of: item.id) {
+                    ids.remove(at: at)
+                } else {
+                    ids.append(item.id)
+                }
+                state.favorites[state.mode.rawValue] = ids
+                // Keep the resolved list in step so the count on the setup screen
+                // is right the moment the learner goes back to it.
+                if let at = state.favoriteItems.firstIndex(where: { $0.id == item.id }) {
+                    state.favoriteItems.remove(at: at)
+                } else {
+                    state.favoriteItems.append(item)
+                }
+                let byMode = state.favorites
+                return .run { _ in await favoriteStore.save(byMode) }
+
+            case let .setUseFavorites(on):
+                state.useFavorites = on
+                return persist(state)
+
+            case let .favoriteItemsLoaded(items):
+                state.favoriteItems = items
                 return .none
 
             case .restart:

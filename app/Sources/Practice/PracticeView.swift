@@ -59,10 +59,13 @@ public struct PracticeView: View {
     }
 
     private var modeSubtitle: String {
+        // Every mode's own subtitle says "급수·범위별", which contradicts the header
+        // the moment the scope is 즐겨찾기.
+        if store.useFavorites { return L.writeFavoriteSub[appLanguage] }
         switch store.mode {
-        case .kanji: L.practiceSub[appLanguage]
-        case .word: L.wordWriteSub[appLanguage]
-        case .yoji: L.yojiWriteSub[appLanguage]
+        case .kanji: return L.practiceSub[appLanguage]
+        case .word: return L.wordWriteSub[appLanguage]
+        case .yoji: return L.yojiWriteSub[appLanguage]
         }
     }
 
@@ -122,6 +125,9 @@ public struct PracticeView: View {
     private var rangeHigh: Binding<Int> {
         Binding(get: { store.end }, set: { store.send(.setEnd(Double($0))) })
     }
+    private var scopeBinding: Binding<Bool> {
+        Binding(get: { store.useFavorites }, set: { store.send(.setUseFavorites($0)) })
+    }
 
     private var setupView: some View {
         ScrollView {
@@ -142,7 +148,75 @@ public struct PracticeView: View {
                     }
                     .pickerStyle(.segmented)
                 }
-                settingCard(L.targetLevel[appLanguage]) {
+                settingCard(L.writeScope[appLanguage]) {
+                    Picker("", selection: scopeBinding) {
+                        Text(L.writeScopeLevel[appLanguage]).tag(false)
+                        Text(L.favorites[appLanguage]).tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                if store.useFavorites {
+                    favoriteScopeCards
+                } else {
+                    levelScopeCards
+                }
+
+                Button { store.send(.startTest) } label: {
+                    Text(L.writeTestStart[appLanguage])
+                        .font(.kawaii(17, weight: .bold)).foregroundStyle(.white)
+                        .frame(maxWidth: .infinity).padding(.vertical, 15)
+                        .background(Palette.accent).clipShape(Capsule())
+                        .shadow(color: Palette.accent.opacity(0.35), radius: 10, y: 5)
+                }
+                .buttonStyle(.bouncy)
+                // Disabled with nothing to draw from, and it has to look it — at
+                // full strength the button reads as the next step and the tap
+                // just does nothing.
+                .disabled(store.runCount == 0)
+                .opacity(store.runCount == 0 ? 0.4 : 1)
+            }
+            .padding(20)
+        }
+    }
+
+    /// 즐겨찾기 needs no level and no range — the list *is* the range.
+    @ViewBuilder
+    private var favoriteScopeCards: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "star.fill")
+                .font(.system(size: 18, weight: .bold)).foregroundStyle(Palette.butter)
+                .frame(width: 44, height: 44)
+                .background(Palette.butterSoft)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L.writeFavoriteTotal[appLanguage])
+                    .font(.kawaii(15, weight: .bold, language: appLanguage))
+                    .foregroundStyle(Palette.ink)
+                Text(L.writeFavoriteSub[appLanguage])
+                    .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+            }
+            Spacer()
+            Text("\(store.favoriteCount)")
+                .font(.kawaii(26, weight: .bold)).monospacedDigit().foregroundStyle(Palette.butter)
+            Text(L.unitCount[appLanguage])
+                .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+        }
+        .padding(16).frame(maxWidth: .infinity)
+        .background(Palette.butterSoft.opacity(0.45))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        if store.favoriteCount == 0 {
+            settingCard(L.favorites[appLanguage]) {
+                Text(L.writeFavoriteEmpty[appLanguage])
+                    .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity).padding(.vertical, 6)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var levelScopeCards: some View {
+        settingCard(L.targetLevel[appLanguage]) {
                     // A segmented control crams 漢検's ten 級 into one row; chips
                     // wrap onto as many rows as needed (same as the study plan).
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 8)], spacing: 8) {
@@ -180,22 +254,6 @@ public struct PracticeView: View {
                     }
                 }
 
-                Button { store.send(.startTest) } label: {
-                    Text(L.writeTestStart[appLanguage])
-                        .font(.kawaii(17, weight: .bold)).foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).padding(.vertical, 15)
-                        .background(Palette.accent).clipShape(Capsule())
-                        .shadow(color: Palette.accent.opacity(0.35), radius: 10, y: 5)
-                }
-                .buttonStyle(.bouncy)
-                // Disabled on an empty 級, and it has to look it — at full
-                // strength the button reads as the next step and the tap just
-                // does nothing.
-                .disabled(store.levelCount == 0)
-                .opacity(store.levelCount == 0 ? 0.4 : 1)
-            }
-            .padding(20)
-        }
     }
 
     /// A square tile that fills the width it's given. Driving the shape from a
@@ -430,6 +488,20 @@ public struct PracticeView: View {
         .transition(.opacity)
     }
 
+    /// 즐겨찾기 on one item. Filled star = kept.
+    private func favoriteToggle(_ item: PracticeItem) -> some View {
+        let on = store.state.isFavorite(item)
+        return Button { store.send(.toggleFavorite(item)) } label: {
+            Image(systemName: on ? "star.fill" : "star")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(on ? Palette.butter : Palette.inkSoft.opacity(0.5))
+                .padding(6)
+                .background(on ? Palette.butterSoft : Color.clear, in: Circle())
+        }
+        .buttonStyle(.bouncy)
+        .accessibilityLabel(Text(L.favorites[appLanguage]))
+    }
+
     private func loadDrawing() {
         if let data = store.drawings[store.index], let restored = try? PKDrawing(data: data) {
             drawing = restored
@@ -484,10 +556,18 @@ public struct PracticeView: View {
 
     private func reviewCell(_ index: Int, _ item: PracticeItem) -> some View {
         VStack(spacing: 8) {
-            if let meaning = localizedGloss(item.glosses, appLanguage), !meaning.isEmpty {
-                Text(meaning)
-                    .font(.kawaii(13, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
-                    .lineLimit(1).minimumScaleFactor(0.7)
+            // Nothing here is auto-graded, so this screen is the only place the
+            // learner knows whether they got it — and therefore the only place
+            // worth offering to keep it for another round.
+            HStack(spacing: 6) {
+                if let meaning = localizedGloss(item.glosses, appLanguage), !meaning.isEmpty {
+                    Text(meaning)
+                        .font(.kawaii(13, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.ink)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                }
+                Spacer(minLength: 4)
+                favoriteToggle(item)
             }
             // Both boxes share the row evenly and stay square, so the pair fits
             // whatever width the cell gets instead of forcing a fixed 176pt.
