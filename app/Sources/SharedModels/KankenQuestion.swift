@@ -271,7 +271,7 @@ extension ExamType {
         case "N4", "N3":
             return [reading, hyoki, bunmyaku, soon("iikae", "言い換え類義"), soon("youhou", "用法")]
         case "N2":
-            return [reading, hyoki, soon("gokeisei", "語形成"), bunmyaku,
+            return [reading, hyoki, live("gokeisei", "語形成", .writing, "gokeisei"), bunmyaku,
                     soon("iikae", "言い換え類義"), soon("youhou", "用法")]
         case "N1":
             return [reading, bunmyaku, soon("iikae", "言い換え類義"), soon("youhou", "用法")]

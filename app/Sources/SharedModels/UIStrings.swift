@@ -251,6 +251,9 @@ public enum L {
     public static let kankenHyogaiDesc = L10nText(
         ko: "표외 읽기 고르기", ja: "表外の読みを選ぶ",
         zh: "选择表外读音", en: "Pick the non-standard reading")
+    public static let kankenGokeiseiDesc = L10nText(
+        ko: "접두·접미어 고르기", ja: "接頭語・接尾語を選ぶ",
+        zh: "选择前缀或后缀", en: "Pick the prefix or suffix")
     public static let kankenHitsujunDesc = L10nText(
         ko: "표시된 획이 몇 번째인지", ja: "示された画が何画目か",
         zh: "标记的笔画是第几笔", en: "Which stroke is marked")

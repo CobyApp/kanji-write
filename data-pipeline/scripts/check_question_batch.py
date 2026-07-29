@@ -34,6 +34,10 @@ def main() -> int:
     level_of = dict(con.execute(
         "SELECT k.literal, km.level_label FROM kanji k "
         "JOIN kanken_membership km ON km.kanji_id = k.id"))
+    # JLPT 大問 (語形成, 用法, 言い換え類義) are keyed by N-level, and the app
+    # looks them up with `jlpt_level = ?`, not by 級.
+    jlpt_of = dict(con.execute(
+        "SELECT literal, jlpt_level FROM kanji WHERE jlpt_level IS NOT NULL"))
     con.close()
 
     problems: list[str] = []
@@ -45,7 +49,13 @@ def main() -> int:
         if literal not in level_of:
             problems.append(f"{tag} literal is not a kanji we ship")
             continue
-        if level_of[literal] != level:
+        if str(level).startswith("N"):
+            actual = jlpt_of.get(literal)
+            if actual != level:
+                problems.append(
+                    f"{tag} claims {level} but {literal} is "
+                    f"{actual or 'not in any JLPT level'}")
+        elif level_of[literal] != level:
             problems.append(
                 f"{tag} claims {level} but {literal} is introduced at {level_of[literal]}")
         options = q.get("options") or []
