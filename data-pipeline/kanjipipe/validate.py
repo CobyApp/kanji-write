@@ -171,7 +171,7 @@ _WRITE_KINDS = (
     # Derived and authored sections whose options are the answer itself, so the
     # prompt must never contain it.
     "sanji", "kyotsu", "hantai", "taigi", "kousei", "tsukuri", "goselect",
-    "kotowaza", "jukujikun", "hyogai",
+    "kotowaza", "jukujikun", "hyogai", "gokeisei",
 )
 
 
@@ -211,6 +211,17 @@ _PLAYABLE: dict[str, tuple[tuple[str, str], ...]] = {
             ("熟字訓・当て字", "jukujikun"), ("故事・諺", "kotowaza"),
             ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
 }
+# The JLPT side of the same table. These are keyed by N-level, which the app
+# looks up with `jlpt_level = ?` rather than through kanken_membership — so the
+# gate has to count them separately or it would never see them at all.
+_PLAYABLE_JLPT: dict[str, tuple[tuple[str, str], ...]] = {
+    "N5": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context")),
+    "N4": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context")),
+    "N3": (("漢字読み", "reading"), ("表記", "orthography"), ("文脈規定", "context")),
+    "N2": (("漢字読み", "reading"), ("表記", "orthography"),
+           ("語形成", "gokeisei"), ("文脈規定", "context")),
+    "N1": (("漢字読み", "reading"), ("文脈規定", "context")),
+}
 # Below this a 20-question run repeats itself noticeably.
 _MIN_PER_SECTION = 15
 
@@ -230,7 +241,22 @@ def starved_sections(conn: sqlite3.Connection) -> list[str]:
         ):
             tables[(level, table)] = count
 
+    jlpt: dict[tuple[str, str], int] = {}
+    for level, kind, count in conn.execute(
+        "SELECT k.jlpt_level, q.kind, COUNT(*) FROM jlpt_question q "
+        "JOIN kanji k ON k.id = q.kanji_id WHERE k.jlpt_level IS NOT NULL "
+        "GROUP BY 1, 2"
+    ):
+        jlpt[(level, kind)] = count
+
     starved: list[str] = []
+    for level, sections in _PLAYABLE_JLPT.items():
+        for title, kind in sections:
+            count = jlpt.get((level, kind), 0)
+            if count == 0:
+                starved.append(f"{level} {title} is empty")
+            elif count < _MIN_PER_SECTION:
+                starved.append(f"{level} {title} has only {count}")
     for level, sections in _PLAYABLE.items():
         for title, source in sections:
             if source.startswith("table:"):

@@ -28,6 +28,17 @@ JUKUJIKUN_LEVELS = ("1級",)
 TSUKURI_LEVELS = ("6級",)
 HANTAI_LEVELS = {"10級": "hantai", "9級": "hantai", "8級": "taigi", "7級": "taigi"}
 KYOTSU_LEVELS = ("準1級",)
+# 語形成 is a JLPT 大問, so it is keyed by JLPT level, not by 級. Only affixes
+# that are themselves N2 can carry an N2 question — which is exactly the set the
+# real paper draws on.
+PREFIXES = ("再", "副", "各", "準", "総", "諸", "超")
+SUFFIXES = ("量", "額")
+# Distractors have to sit in the same slot as the answer. Only 量 and 額 are N2
+# suffixes, so they cannot supply three of their own — offering prefixes instead
+# made 降水□ answerable from position alone. These are drawn on for the wrong
+# answers only; the answer itself is still an N2 affix.
+SUFFIX_DISTRACTORS = ("的", "性", "化", "者", "家", "力", "感", "観", "費",
+                      "料", "数", "用", "式", "風", "量", "額")
 
 
 def explanations(ko: str, ja: str, zh: str, en: str) -> dict[str, str]:
@@ -53,6 +64,8 @@ def main() -> int:
     con_readings = list(con.execute(
         "SELECT k.literal, r.value, r.lang_axis FROM kanji k "
         "JOIN reading r ON r.kanji_id = k.id WHERE r.lang_axis IN ('on','kun')"))
+    jlpt_of = dict(con.execute(
+        "SELECT literal, jlpt_level FROM kanji WHERE jlpt_level IS NOT NULL"))
     ja_glosses = dict(con.execute(
         "SELECT w.surface, g.text FROM word w JOIN word_gloss g ON g.word_id = w.id "
         "WHERE g.lang = 'ja' AND w.is_common = 1"))
@@ -279,6 +292,44 @@ def main() -> int:
                 f"The compound with this meaning is 「{surface}」."),
         })
         stats["tsukuri"] += 1
+
+    # ── 語形成 (N2) ─────────────────────────────────────────────────────────
+    # Blank the affix and offer four; a candidate is rejected when substituting
+    # it also spells a real word, so the answer is the only one that fits.
+    made_gokeisei = 0
+    for surface, _reading in words:
+        if made_gokeisei >= 200:
+            break
+        if not 3 <= len(surface) <= 4 or not all("一" <= c <= "龠" for c in surface):
+            continue
+        head, tail = surface[0], surface[-1]
+        if head in PREFIXES:
+            affix, frame, pool = head, BLANK + surface[1:], PREFIXES
+        elif tail in SUFFIXES:
+            affix, frame, pool = tail, surface[:-1] + BLANK, SUFFIX_DISTRACTORS
+        else:
+            continue
+        if jlpt_of.get(affix) != "N2" or affix in frame:
+            continue
+        safe = [c for c in pool
+                if c != affix and frame.replace(BLANK, c) not in all_surfaces]
+        if len(safe) < 3:
+            continue
+        rng.shuffle(safe)
+        options = safe[:3] + [affix]
+        rng.shuffle(options)
+        out.append({
+            "literal": affix, "level": "N2", "kind": "gokeisei",
+            "prompt": f"<u>{frame}</u>", "options": options,
+            "answer": options.index(affix), "focus": frame,
+            "explanations": explanations(
+                f"「{surface}」가 되도록 빈칸에 들어갈 글자는 {affix}입니다.",
+                f"「{surface}」となるよう空欄に入る字は {affix} です。",
+                f"要构成「{surface}」，填入空格的字是 {affix}。",
+                f"The character that forms 「{surface}」 is {affix}."),
+        })
+        made_gokeisei += 1
+    stats["gokeisei"] = made_gokeisei
 
     Path(args.out).write_text(
         "\n".join(json.dumps(q, ensure_ascii=False) for q in out) + "\n",
