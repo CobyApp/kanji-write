@@ -205,6 +205,9 @@ public struct KankenExamView: View {
         case "jukujikun-ateji": return L.kankenJukujikunDesc[appLanguage]
         case "gokeisei": return L.kankenGokeiseiDesc[appLanguage]
         case "iikae": return L.kankenIikaeDesc[appLanguage]
+        case "youhou": return L.kankenYouhouDesc[appLanguage]
+        case "passage": return L.kankenPassageDesc[appLanguage]
+        case "jukugo-reading": return L.kankenJukugoKunDesc[appLanguage]
         case "hantai", "taigi": return L.kankenHantaiDesc[appLanguage]
         default: return sectionDesc(section.renderType)
         }
@@ -319,14 +322,26 @@ public struct KankenExamView: View {
         }
     }
 
+    /// 用法 answers are sentences, every other 大問's are a word or a reading.
+    /// Sizing off the longest option keeps sentences on screen without shrinking
+    /// the short answers that most sections use.
+    private func optionSize(_ item: KankenQuestion) -> CGFloat {
+        let longest = item.options.map(\.count).max() ?? 0
+        if longest > 12 { return 15 }
+        return item.type == .reading ? 22 : 20
+    }
+
     private func options(_ item: KankenQuestion) -> some View {
         VStack(spacing: 12) {
             ForEach(item.options, id: \.self) { option in
                 Button { store.send(.chose(option)) } label: {
                     HStack {
                         Text(option)
-                            .font(.kawaiiJP(item.type == .reading ? 22 : 20, weight: .bold)).japaneseGlyphs()
+                            .font(.kawaiiJP(optionSize(item), weight: .bold)).japaneseGlyphs()
                             .foregroundStyle(optionText(option, item)).multilineTextAlignment(.leading)
+                            // 用法's options are whole sentences; without this the
+                            // HStack gives them one line and clips the rest.
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                         if store.answered, option == item.answer {
                             Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mint)

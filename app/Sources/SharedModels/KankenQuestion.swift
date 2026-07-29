@@ -234,14 +234,14 @@ extension ExamType {
             return [
                 reading,
                 authored("hyogai-reading", "表外の読み", "hyogai", .reading),
-                soon("jukugo-reading", "熟語の読み・一字訓読み"),
+                live("jukugo-reading", "熟語の読み・一字訓読み", .reading, "jukugo_kun"),
                 kyotsu,
                 writing,
                 authored("goji", "誤字訂正", "goji"),
                 yoji,
                 taigirui,
                 authored("koji-kotowaza", "故事・諺", "kotowaza"),
-                soon("passage", "文章題"),
+                authored("passage", "文章題", "passage", .reading),
             ]
         case "1級":
             return [
@@ -253,7 +253,7 @@ extension ExamType {
                 onkun,
                 taigirui,
                 authored("koji-kotowaza", "故事・諺", "kotowaza"),
-                soon("passage", "文章題"),
+                authored("passage", "文章題", "passage", .reading),
             ]
         default:
             return [reading, radical, writing]
@@ -269,12 +269,12 @@ extension ExamType {
         case "N5":
             return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae")]
         case "N4", "N3":
-            return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), soon("youhou", "用法")]
+            return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), live("youhou", "用法", .taigirui, "youhou")]
         case "N2":
             return [reading, hyoki, live("gokeisei", "語形成", .writing, "gokeisei"), bunmyaku,
-                    live("iikae", "言い換え類義", .taigirui, "iikae"), soon("youhou", "用法")]
+                    live("iikae", "言い換え類義", .taigirui, "iikae"), live("youhou", "用法", .taigirui, "youhou")]
         case "N1":
-            return [reading, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), soon("youhou", "用法")]
+            return [reading, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), live("youhou", "用法", .taigirui, "youhou")]
         default:
             return [reading, hyoki, bunmyaku]
         }

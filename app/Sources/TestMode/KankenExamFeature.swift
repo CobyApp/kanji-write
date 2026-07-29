@@ -222,7 +222,13 @@ public struct KankenExamFeature {
         let built: [KankenQuestion]
         if let kind = section.kind {
             let bank = (try? await dictionaryClient.examQuestions(level, kind, perSection)) ?? []
-            built = bank.map { KankenQuestion.from($0, type: section.renderType, language: language) }
+            // 用法 borrows 対義語・類義語's rendering (a word prompt, text options),
+            // so it has to carry its own instruction or it would ask the reader
+            // for a synonym.
+            let label = kind == "youhou" ? L.quizUsage[language] : nil
+            built = bank.map {
+                KankenQuestion.from($0, type: section.renderType, language: language, label: label)
+            }
         } else if section.renderType == .strokes {
             let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
             built = KankenQuestion.strokeQuiz(items, count: perSection, unit: unit)
@@ -253,13 +259,14 @@ public struct KankenExamFeature {
 
 extension KankenQuestion {
     /// Adapts a pre-authored `JLPTQuestion` into a 漢検 section question.
-    static func from(_ q: JLPTQuestion, type: KankenQuestionType, language: AppLanguage) -> KankenQuestion {
+    static func from(_ q: JLPTQuestion, type: KankenQuestionType, language: AppLanguage,
+                     label: String? = nil) -> KankenQuestion {
         let (clean, underlined) = JLPTQuestion.parseUnderline(q.prompt)
         let explanation = localizedExplanation(q.explanations, language)
         return KankenQuestion(
             id: "\(type.rawValue):\(q.kanjiID):\(q.id)", type: type, kanjiID: q.kanjiID,
             prompt: clean, focus: underlined ?? q.focus, options: q.options,
-            answer: q.answerText, explanation: explanation)
+            answer: q.answerText, explanation: explanation, label: label)
     }
 
     /// Builds 部首 questions: show the kanji, pick its radical from four choices.

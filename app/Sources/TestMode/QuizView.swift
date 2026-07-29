@@ -118,14 +118,20 @@ public struct QuizView: View {
         switch kind {
         case "reading": L.quizWordReading[appLanguage]
         case "orthography": L.quizOrthography[appLanguage]
+        case "youhou": L.quizUsage[appLanguage]
         default: L.quizCloze[appLanguage]
         }
     }
 
     /// Reading options render in the Japanese face; everything else too (options
-    /// are Japanese words/readings from the bank).
+    /// are Japanese words/readings from the bank). 用法 is the one kind whose
+    /// options are whole sentences, so they take sentence-sized type.
     private func optionFont(_ item: QuizItem) -> Font {
-        .kawaiiJP(item.kind == "reading" ? 22 : 19, weight: .bold)
+        switch item.kind {
+        case "reading": .kawaiiJP(22, weight: .bold)
+        case "youhou": .kawaiiJP(15, weight: .semibold)
+        default: .kawaiiJP(19, weight: .bold)
+        }
     }
 
     private func options(_ item: QuizItem) -> some View {
@@ -138,6 +144,9 @@ public struct QuizView: View {
                             .japaneseGlyphs()
                             .foregroundStyle(optionText(option, item))
                             .multilineTextAlignment(.leading)
+                            // 用法 options are sentences; without this the HStack
+                            // hands them one line and truncates the rest.
+                            .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                         if store.answered, option == item.answer {
                             Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mint)
