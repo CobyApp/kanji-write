@@ -83,13 +83,14 @@ def script_problem(lang: str, text: str) -> str | None:
     return None
 
 
-def load_jsonl(path: Path) -> dict:
-    out = {}
+def load_word_file(path: Path) -> dict[tuple[str, str], dict]:
+    """Word-gloss files are keyed by (surface, reading) — see merge_words."""
+    out: dict[tuple[str, str], dict] = {}
     if path.exists():
         for line in path.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 entry = json.loads(line)
-                out[entry["id"]] = entry
+                out[(entry["surface"], entry["reading"])] = entry
     return out
 
 
@@ -104,46 +105,64 @@ def read_batches(paths: list[str]) -> list[dict]:
 
 
 def merge_words(conn: sqlite3.Connection, items: list[dict], write: bool) -> int:
-    surfaces = dict(conn.execute("SELECT id, surface FROM word"))
-    already = {r[0] for r in conn.execute(
-        "SELECT DISTINCT word_id FROM word_gloss WHERE lang = 'ko'")}
-    ko, jazh = load_jsonl(WORD_KO), load_jsonl(WORD_JAZH)
+    """Merge word glosses, keyed by surface + kana reading.
+
+    Not by word id: ids are autoincrement rowids and move whenever the
+    vocabulary set changes. Adding 117 kanji widened the JMdict filter and
+    shifted 4,386 of them, which under the old id keying would have silently
+    re-pointed every gloss after the shift.
+    """
+    known: set[tuple[str, str]] = set()
+    for surface, reading in conn.execute("SELECT surface, reading_kana FROM word"):
+        known.add((surface, reading))
+    already: set[tuple[str, str]] = set()
+    for surface, reading in conn.execute(
+        "SELECT DISTINCT w.surface, w.reading_kana FROM word w "
+        "JOIN word_gloss g ON g.word_id = w.id WHERE g.lang = 'ko'"
+    ):
+        already.add((surface, reading))
+
+    ko = load_word_file(WORD_KO)
+    jazh = load_word_file(WORD_JAZH)
     problems: list[str] = []
-    staged_ko, staged_jazh = {}, {}
+    staged_ko: dict[tuple[str, str], dict] = {}
+    staged_jazh: dict[tuple[str, str], dict] = {}
+    skipped_present = 0
     for i, item in enumerate(items):
-        wid = item.get("id")
-        tag = f"[{i}:{wid}]"
-        if wid not in surfaces:
-            problems.append(f"{tag} no such word id")
+        surface, reading = item.get("surface"), item.get("reading")
+        tag = f"[{i}:{surface}/{reading}]"
+        if not surface or not reading:
+            problems.append(f"{tag} needs both a surface and a reading")
             continue
-        if wid in already:
-            problems.append(f"{tag} already has a ko gloss — refusing to overwrite")
+        key = (surface, reading)
+        if key not in known:
+            problems.append(f"{tag} no such word in this build")
             continue
-        if item.get("surface") and item["surface"] != surfaces[wid]:
-            problems.append(
-                f"{tag} surface {item['surface']!r} != {surfaces[wid]!r} — batch is misaligned")
+        if key in already:
+            skipped_present += 1
             continue
         for lang in ("ko", "ja", "zh"):
             bad = script_problem(lang, item.get(lang, ""))
             if bad:
-                problems.append(f"{tag} {surfaces[wid]} {lang}: {bad}")
-        staged_ko[wid] = {"id": wid, "ko": item.get("ko", "")}
-        staged_jazh[wid] = {"id": wid, "ja": item.get("ja", ""), "zh": item.get("zh", "")}
+                problems.append(f"{tag} {lang}: {bad}")
+        staged_ko[key] = {"surface": surface, "reading": reading,
+                          "ko": item.get("ko", "")}
+        staged_jazh[key] = {"surface": surface, "reading": reading,
+                            "ja": item.get("ja", ""), "zh": item.get("zh", "")}
     if problems:
         print(f"FAIL ({len(problems)} problems)")
         for p in problems[:40]:
             print("  " + p)
         return 1
-    print(f"OK — {len(staged_ko)} words")
+    print(f"OK — {len(staged_ko)} words"
+          + (f", {skipped_present} already glossed" if skipped_present else ""))
     if write:
         ko.update(staged_ko)
         jazh.update(staged_jazh)
-        WORD_KO.write_text("\n".join(
-            json.dumps(ko[k], ensure_ascii=False) for k in sorted(ko)) + "\n",
-            encoding="utf-8")
-        WORD_JAZH.write_text("\n".join(
-            json.dumps(jazh[k], ensure_ascii=False) for k in sorted(jazh)) + "\n",
-            encoding="utf-8")
+        for path, data in ((WORD_KO, ko), (WORD_JAZH, jazh)):
+            path.write_text("\n".join(
+                json.dumps(data[k], ensure_ascii=False) for k in sorted(data)) + "\n",
+                encoding="utf-8")
         print(f"wrote {len(ko)} → {WORD_KO}, {len(jazh)} → {WORD_JAZH}")
     return 0
 

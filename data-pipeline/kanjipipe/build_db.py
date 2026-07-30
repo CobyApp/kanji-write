@@ -14,6 +14,7 @@ from kanjipipe.ingest.jlpt import merge_jlpt
 from kanjipipe.ingest.kanken import (
     VALID_LEVELS,
     memberships_for,
+    DEFAULT_RESOLVED_LITERALS_PATH,
     parse_kanken_allocations,
 )
 from kanjipipe.ingest.kanken_supplement import (
@@ -69,11 +70,13 @@ def build(
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
+    resolved_literals_path: str | Path | None = DEFAULT_RESOLVED_LITERALS_PATH,
     kanken_supplement_path: str | Path = DEFAULT_SUPPLEMENT_PATH,
     kanken_count_policy: KankenCountPolicy = PRODUCTION_KANKEN_COUNT_POLICY,
 ) -> dict[str, int]:
     kanji = parse_kanjidic2(kanjidic2_path)
-    allocations = parse_kanken_allocations(kanken_path)
+    allocations = parse_kanken_allocations(
+        kanken_path, resolved_literals_path=resolved_literals_path)
     for source_level in sorted({row.source_level for row in allocations}):
         if source_level not in VALID_LEVELS and source_level != "配当外":
             memberships_for(source_level)

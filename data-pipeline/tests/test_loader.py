@@ -438,7 +438,7 @@ def test_load_word_ko_glosses_inserts_ko_word_gloss():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_ko_glosses(conn, [(word_id, "산", "山")])
+    load_word_ko_glosses(conn, [("山", "やま", "산")])
 
     ko = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang = 'ko'",
@@ -459,7 +459,7 @@ def test_load_word_jazh_glosses_inserts_ja_and_zh_word_glosses():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_jazh_glosses(conn, [(word_id, "やま", "山", "山")])
+    load_word_jazh_glosses(conn, [("山", "やま", "やま", "山")])
 
     rows = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
@@ -475,7 +475,7 @@ def test_load_word_jazh_glosses_with_only_zh_inserts_only_zh():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_jazh_glosses(conn, [(word_id, None, "山", "山")])
+    load_word_jazh_glosses(conn, [("山", "やま", None, "山")])
 
     rows = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
@@ -491,7 +491,7 @@ def test_load_word_jazh_glosses_with_only_ja_inserts_only_ja():
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
     word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    load_word_jazh_glosses(conn, [(word_id, "やま", None, "山")])
+    load_word_jazh_glosses(conn, [("山", "やま", "やま", None)])
 
     rows = conn.execute(
         "SELECT lang, text FROM word_gloss WHERE word_id = ? AND lang IN ('ja', 'zh') "
@@ -561,19 +561,37 @@ def test_compat_ideograph_refuses_unified_strokes_when_counts_differ():
     ).fetchone() == (0,)
 
 
-def test_load_word_glosses_drop_an_entry_whose_surface_moved():
-    """A gloss file written against an older build addresses a different word at
-    the same id. Dropping it and reporting the count is what stops 学校's gloss
-    from ending up on a word meaning "frontal width"."""
+def test_load_word_glosses_drop_an_entry_for_a_word_not_in_the_build():
+    """Keyed by surface + reading, a gloss for a word this build does not have has
+    nowhere to go. Counting those is what tells the gate the vocabulary set moved
+    under the files — the failure that once put 学校's gloss on a word meaning
+    "frontal width"."""
     conn = init_db(":memory:")
     load_kanji(conn, [_yama()])
     load_words(conn, [Word(surface="山", reading_kana="やま", en_glosses=["mountain"])])
-    word_id = conn.execute("SELECT id FROM word WHERE surface = '山'").fetchone()[0]
 
-    ko_mismatches = load_word_ko_glosses(conn, [(word_id, "학교", "学校")])
-    jazh_mismatches = load_word_jazh_glosses(conn, [(word_id, "がっこう", "学校", "学校")])
+    ko_unmatched = load_word_ko_glosses(conn, [("学校", "がっこう", "학교")])
+    jazh_unmatched = load_word_jazh_glosses(
+        conn, [("学校", "がっこう", "がっこう", "学校")])
 
-    assert (ko_mismatches, jazh_mismatches) == (1, 1)
+    assert (ko_unmatched, jazh_unmatched) == (1, 1)
     assert conn.execute(
         "SELECT COUNT(*) FROM word_gloss WHERE lang IN ('ko', 'ja', 'zh')"
     ).fetchone()[0] == 0
+
+
+def test_load_word_glosses_match_on_the_reading_too():
+    """Same surface, two readings, two different words."""
+    conn = init_db(":memory:")
+    load_kanji(conn, [_yama()])
+    load_words(conn, [
+        Word(surface="上手", reading_kana="じょうず", en_glosses=["skillful"]),
+        Word(surface="上手", reading_kana="うわて", en_glosses=["upper part"]),
+    ])
+
+    assert load_word_ko_glosses(conn, [("上手", "じょうず", "능숙함")]) == 0
+
+    rows = conn.execute(
+        "SELECT w.reading_kana, g.text FROM word w JOIN word_gloss g "
+        "ON g.word_id = w.id WHERE g.lang = 'ko'").fetchall()
+    assert rows == [("じょうず", "능숙함")]

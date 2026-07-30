@@ -54,15 +54,19 @@ PRODUCTION_KANKEN_COUNT_POLICY = KankenCountPolicy(
         "準2級": 328,
         "2級": 185,
     },
-    unicode_advanced=3806,
-    image_pending=371,
+    # 117 of these were image-only entries until sources/kanken_resolved_literals.csv
+    # gave them their canonical character: +112 at 1級, +5 at 準1級. The remaining
+    # 254 image-only entries are 旧字 variants of characters already shipped at
+    # their own 級, so they want a variant glyph, not an allocation.
+    unicode_advanced=3923,
+    image_pending=254,
     # 缶・芸・欠・弁・予・余 have a second, unrelated 1級 allocation on top of
     # their jōyō one. They are stored at their jōyō level, so the advanced
-    # inventory is 1248 + 2552 and does not include them.
-    stored_unicode_advanced=3800,
-    advanced_memberships={"準1級": 1248, "1級": 2955},
+    # inventory is 1253 + 2664 and does not include them.
+    stored_unicode_advanced=3917,
+    advanced_memberships={"準1級": 1253, "1級": 3067},
     shared_advanced=397,
-    stored_advanced_memberships={"準1級": 1248, "1級": 2552},
+    stored_advanced_memberships={"準1級": 1253, "1級": 2664},
     check_playable_sections=True,
 )
 
@@ -230,6 +234,10 @@ _PLAYABLE_JLPT: dict[str, tuple[tuple[str, str], ...]] = {
     "N1": (("漢字読み", "reading"), ("文脈規定", "context"), ("言い換え類義", "iikae"),
            ("用法", "youhou")),
 }
+# A few glosses may name a word JMdict has since dropped; more than this means
+# the vocabulary set moved and the files no longer describe it.
+_MAX_UNMATCHED_WORD_GLOSSES = 50
+
 # Below this a 20-question run repeats itself noticeably.
 _MIN_PER_SECTION = 15
 
@@ -604,19 +612,16 @@ def assert_core_gates(
     if report["missing_advanced_meaning"]:
         problems.append(
             f"{report['missing_advanced_meaning']} advanced kanji missing meaning")
-    # word_glosses_{ko,jazh}.jsonl address words by autoincrement id, which shifts
-    # whenever the word set changes — that once attached 学校's gloss to a word
-    # meaning "frontal width", a silent corruption of the whole 단어사전. Each line
-    # records the word's surface, and the loader checks it; anything that failed
-    # that check means the files no longer line up with the ids they use.
-    #
-    # This used to be checked by proxy — "no uncommon word may carry a curated
-    # gloss" — which held only while the uncommon words were untranslated.
+    # word_glosses_{ko,jazh}.jsonl are keyed by surface + kana reading, and the
+    # loader counts entries naming a word this build does not have. A handful can
+    # be legitimate — JMdict drops an entry between releases — but a jump means
+    # the vocabulary filter moved and the files need re-keying, which is how
+    # 学校's gloss once ended up on a word meaning "frontal width".
     report["misaligned_word_glosses"] = word_gloss_mismatches
-    if word_gloss_mismatches:
+    if word_gloss_mismatches > _MAX_UNMATCHED_WORD_GLOSSES:
         problems.append(
-            f"{word_gloss_mismatches} word glosses name a surface that is not at "
-            "the id they claim — word ids have shifted")
+            f"{word_gloss_mismatches} word glosses name a word that is not in "
+            "this build — the vocabulary set has moved under them")
 
     defects = question_defects(conn)
     report["question_defects"] = sum(len(v) for v in defects.values())

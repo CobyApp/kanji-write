@@ -210,7 +210,7 @@ def test_build_produces_sqlite_with_strokes(tmp_path):
 def test_build_uses_canonical_kanken_count_policy_by_default(tmp_path):
     with pytest.raises(
         ValueError,
-        match="kanken_unicode_advanced expected 3806, got 1",
+        match="kanken_unicode_advanced expected 3923, got 1",
     ):
         build(
             kanjidic2_path=FIX / "kanjidic2_sample.xml",

@@ -1,7 +1,7 @@
-{"id": 1, "ko": "산"}
-{"id": 2, "ko": "  학교  "}
+{"surface": "山", "reading": "やま", "ko": "산"}
+{"surface": "学校", "reading": "がっこう", "ko": "  학교  "}
 
-{"id": 3, "ko": "   "}
-{"id": "bad", "ko": "산악"}
+{"surface": "海", "reading": "うみ", "ko": "   "}
+{"surface": "川", "ko": "읽기 없음"}
 not even json
-{"ko": "id 없음"}
+{"reading": "かわ", "ko": "표기 없음"}
