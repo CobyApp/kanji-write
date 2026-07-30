@@ -372,49 +372,64 @@ def load_relations(conn: sqlite3.Connection, relations: list["Relation"]) -> Non
     conn.commit()
 
 
+def _word_ids_by_surface_reading(
+    conn: sqlite3.Connection,
+) -> dict[tuple[str, str], list[int]]:
+    ids: dict[tuple[str, str], list[int]] = {}
+    for word_id, surface, reading in conn.execute(
+        "SELECT id, surface, reading_kana FROM word"
+    ):
+        ids.setdefault((surface, reading), []).append(word_id)
+    return ids
+
+
 def load_word_ko_glosses(
-    conn: sqlite3.Connection, entries: list[tuple[int, str, str | None]]
+    conn: sqlite3.Connection, entries: list[tuple[str, str, str]]
 ) -> int:
-    """Attach Korean word glosses, verifying each against the surface the file
-    recorded. Returns how many were dropped for a surface mismatch — the
-    signature of shifted word ids, which the build gate refuses."""
-    surfaces = dict(conn.execute("SELECT id, surface FROM word"))
-    mismatched = 0
-    for word_id, ko, surface in entries:
-        if surface is not None and surfaces.get(word_id) != surface:
-            mismatched += 1
+    """Attach Korean word glosses, matched on surface + kana reading.
+
+    Returns how many entries named a word this build does not have. Ids used to
+    be the key and they are autoincrement rowids: any change to the vocabulary
+    renumbers them and every later gloss silently lands on the wrong word.
+    """
+    ids = _word_ids_by_surface_reading(conn)
+    unmatched = 0
+    for surface, reading, ko in entries:
+        word_ids = ids.get((surface, reading))
+        if not word_ids:
+            unmatched += 1
             continue
-        conn.execute(
-            "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ko', ?)",
-            (word_id, ko),
-        )
+        for word_id in word_ids:
+            conn.execute(
+                "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ko', ?)",
+                (word_id, ko),
+            )
     conn.commit()
-    return mismatched
+    return unmatched
 
 
 def load_word_jazh_glosses(
     conn: sqlite3.Connection,
-    entries: list[tuple[int, str | None, str | None, str | None]],
+    entries: list[tuple[str, str, str | None, str | None]],
 ) -> int:
     """As `load_word_ko_glosses`, for the ja/zh file."""
-    surfaces = dict(conn.execute("SELECT id, surface FROM word"))
-    mismatched = 0
-    for word_id, ja, zh, surface in entries:
-        if surface is not None and surfaces.get(word_id) != surface:
-            mismatched += 1
+    ids = _word_ids_by_surface_reading(conn)
+    unmatched = 0
+    for surface, reading, ja, zh in entries:
+        word_ids = ids.get((surface, reading))
+        if not word_ids:
+            unmatched += 1
             continue
-        if ja:
-            conn.execute(
-                "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'ja', ?)",
-                (word_id, ja),
-            )
-        if zh:
-            conn.execute(
-                "INSERT INTO word_gloss (word_id, lang, text) VALUES (?, 'zh', ?)",
-                (word_id, zh),
-            )
+        for word_id in word_ids:
+            for lang, text in (("ja", ja), ("zh", zh)):
+                if text:
+                    conn.execute(
+                        "INSERT INTO word_gloss (word_id, lang, text) "
+                        "VALUES (?, ?, ?)",
+                        (word_id, lang, text),
+                    )
     conn.commit()
-    return mismatched
+    return unmatched
 
 
 def load_sentence_glosses(

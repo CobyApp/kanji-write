@@ -100,12 +100,12 @@ def test_production_kanken_count_policy_is_canonical():
             "準2級": 328,
             "2級": 185,
         },
-        unicode_advanced=3806,
-        stored_unicode_advanced=3800,
-        image_pending=371,
-        advanced_memberships={"準1級": 1248, "1級": 2955},
+        unicode_advanced=3923,
+        stored_unicode_advanced=3917,
+        image_pending=254,
+        advanced_memberships={"準1級": 1253, "1級": 3067},
         shared_advanced=397,
-        stored_advanced_memberships={"準1級": 1248, "1級": 2552},
+        stored_advanced_memberships={"準1級": 1253, "1級": 2664},
         check_playable_sections=True,
     )
 
@@ -479,13 +479,19 @@ def test_native_gloss_present_drops_the_count():
     assert assert_core_gates(conn)["kanji_without_native_gloss"] == 0
 
 
-def test_gate_rejects_shifted_word_ids():
-    """The loader counts glosses whose recorded surface is not at the id they
-    claim; any such count means the gloss files no longer line up."""
+def test_gate_rejects_a_vocabulary_set_that_moved_under_the_gloss_files():
+    """The loader counts glosses naming a word this build does not have. A few can
+    be JMdict dropping an entry; a jump means the vocabulary filter moved and the
+    files need re-keying."""
     conn = init_db(":memory:")
 
-    with pytest.raises(ValueError, match="word ids have shifted"):
+    with pytest.raises(ValueError, match="the vocabulary set has moved"):
+        assert_core_gates(conn, word_gloss_mismatches=500)
+
+    # A handful is tolerated, so it is not among the problems reported.
+    with pytest.raises(ValueError) as few:
         assert_core_gates(conn, word_gloss_mismatches=3)
+    assert "the vocabulary set has moved" not in str(few.value)
 
 
 def _question_db():

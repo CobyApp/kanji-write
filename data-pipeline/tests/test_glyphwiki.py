@@ -291,18 +291,19 @@ def test_cli_uses_curated_export_options(tmp_path: Path):
     assert "SPARQL JSON" in help_text
 
 
-def test_checked_in_manifest_is_empty_and_pending_report_accounts_for_371():
+def test_candidates_cover_every_advanced_image_only_entry():
     pipeline = Path(__file__).parents[1]
+    ADVANCED = {"準1級", "1/準1級", "1級"}
     allocations = parse_kanken_allocations(pipeline / "sources/kanken.csv")
     expected = {
         row.ce_id
         for row in allocations
-        if row.literal is None and row.source_level in {"準1級", "1/準1級", "1級"}
+        if row.literal is None and row.source_level in ADVANCED
     }
     excluded = {
         row.ce_id
         for row in allocations
-        if row.literal is None and row.source_level not in {"準1級", "1/準1級", "1級"}
+        if row.literal is None and row.source_level not in ADVANCED
     }
 
     assert parse_verified_glyph_manifest(
@@ -314,6 +315,8 @@ def test_checked_in_manifest_is_empty_and_pending_report_accounts_for_371():
         rows = list(csv.DictReader(source))
 
     actual = {row["ce_id"] for row in rows}
+    # The candidate sheet still covers all 371 image-only advanced entries; 117 of
+    # them have since been resolved to a character, which is the next assertion.
     assert len(expected) == 371
     assert actual == expected
     assert actual.isdisjoint(excluded)
@@ -321,3 +324,27 @@ def test_checked_in_manifest_is_empty_and_pending_report_accounts_for_371():
     assert b"\r" not in (
         pipeline / "sources/kanken_glyph_candidates.csv"
     ).read_bytes()
+
+
+def test_resolved_literals_close_117_of_the_image_only_entries():
+    """The 親字 entries now arrive with their canonical character, so only the 旧字
+    variant rows are still waiting on a verified glyph."""
+    pipeline = Path(__file__).parents[1]
+    ADVANCED = {"準1級", "1/準1級", "1級"}
+
+    def pending(resolved: bool) -> set[str]:
+        allocations = parse_kanken_allocations(
+            pipeline / "sources/kanken.csv",
+            resolved_literals_path=(
+                pipeline / "sources/kanken_resolved_literals.csv" if resolved else None),
+        )
+        return {
+            row.ce_id for row in allocations
+            if row.literal is None and row.source_level in ADVANCED
+        }
+
+    before, after = pending(False), pending(True)
+    assert len(before) == 371
+    assert len(after) == 254
+    assert len(before - after) == 117
+    assert after < before
