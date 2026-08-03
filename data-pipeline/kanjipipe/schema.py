@@ -32,6 +32,12 @@ CREATE TABLE glyph_asset (
     source_url     TEXT NOT NULL,
     license_url    TEXT NOT NULL,
     local_svg_name TEXT NOT NULL,
+    -- The glyph's outline, lifted out of the SVG. A GlyphWiki glyph is a single
+    -- filled path on a 200×200 box, so carrying the `d` string here means the
+    -- app renders variants straight from the database instead of bundling and
+    -- parsing hundreds of SVG files.
+    path_d         TEXT NOT NULL DEFAULT '',
+    view_box       INTEGER NOT NULL DEFAULT 200,
     UNIQUE(provider, glyph_name, revision),
     UNIQUE(sha256),
     UNIQUE(local_svg_name)

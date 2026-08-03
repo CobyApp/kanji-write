@@ -33,6 +33,7 @@ from kanjipipe.ingest.unihan import parse_unihan
 from kanjipipe.ingest.word_glosses import parse_word_glosses, parse_word_jazh
 from kanjipipe.loader import (
     load_jlpt_questions, load_kanji, load_kanken_memberships, load_llm_glosses,
+    load_kanji_variants,
     load_relations, load_sentence_glosses, load_sentence_words, load_sentences,
     load_stroke_order, load_taigirui, load_word_jazh_glosses,
     load_word_ko_glosses, load_words, load_yojijukugo)
@@ -40,6 +41,7 @@ from kanjipipe.validate import (
     PRODUCTION_KANKEN_COUNT_POLICY,
     KankenCountPolicy,
     assert_core_gates,
+    parse_verified_glyph_manifest,
 )
 
 RESOURCE_DIR = (
@@ -71,6 +73,8 @@ def build(
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
     resolved_literals_path: str | Path | None = DEFAULT_RESOLVED_LITERALS_PATH,
+    glyph_manifest_path: str | Path | None = "sources/kanken_glyph_map.csv",
+    glyph_dir: str | Path = "sources/glyphs",
     kanken_supplement_path: str | Path = DEFAULT_SUPPLEMENT_PATH,
     kanken_count_policy: KankenCountPolicy = PRODUCTION_KANKEN_COUNT_POLICY,
 ) -> dict[str, int]:
@@ -141,6 +145,15 @@ def build(
         if word_jazh_path is not None and os.path.exists(word_jazh_path):
             word_gloss_mismatches += load_word_jazh_glosses(
                 conn, parse_word_jazh(word_jazh_path))
+        # 旧字 variants: the old form of a character the app already ships, which
+        # the 漢検 list prints only as a picture. Verified entries only — the
+        # manifest is empty until a glyph has been matched to its reference.
+        if glyph_manifest_path is not None and os.path.exists(glyph_manifest_path):
+            variants_attached = load_kanji_variants(
+                conn, parse_verified_glyph_manifest(glyph_manifest_path),
+                allocations, glyph_dir)
+        else:
+            variants_attached = 0
         load_sentences(conn, sentences)
         load_sentence_words(conn)  # link sentences to the words they contain
         if sentence_glosses_path is not None and os.path.exists(sentence_glosses_path):
@@ -182,6 +195,7 @@ def build(
                 "missing_advanced_inventory"
             ],
         )  # raises if a gate fails
+        report["kanji_variants"] = variants_attached
     finally:
         conn.close()  # always release the handle, even on gate failure
     return report

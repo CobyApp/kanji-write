@@ -408,6 +408,11 @@ public enum L {
         en: "Idioms at this level")
     public static let writeRange = L10nText(
         ko: "출제 범위", ja: "出題範囲", zh: "出题范围", en: "Range")
+    public static let oldForm = L10nText(
+        ko: "구자체", ja: "旧字体", zh: "旧字形", en: "Old form")
+    public static let glyphCredit = L10nText(
+        ko: "글리프: GlyphWiki", ja: "字形: GlyphWiki",
+        zh: "字形: GlyphWiki", en: "Glyph: GlyphWiki")
     public static let favorites = L10nText(
         ko: "즐겨찾기", ja: "お気に入り", zh: "收藏", en: "Favorites")
     public static let writeScope = L10nText(

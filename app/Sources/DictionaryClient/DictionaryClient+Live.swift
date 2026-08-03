@@ -239,6 +239,27 @@ extension DictionaryClient: DependencyKey {
                 }
             }
         },
+        variants: { kanjiID in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [KanjiVariant] in
+                // The outline lives in the row, so a variant renders without any
+                // bundled SVG file to find and parse.
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT v.id, v.variant_kind, g.path_d, g.view_box,
+                           g.source_url, g.license_url
+                    FROM kanji_variant v
+                    JOIN glyph_asset g ON g.id = v.glyph_asset_id
+                    WHERE v.canonical_kanji_id = ? AND g.path_d <> ''
+                    ORDER BY v.id
+                    """, arguments: [kanjiID])
+                return rows.map { row in
+                    KanjiVariant(
+                        id: row["id"], variantKind: row["variant_kind"],
+                        pathD: row["path_d"], viewBox: row["view_box"],
+                        sourceURL: row["source_url"], licenseURL: row["license_url"])
+                }
+            }
+        },
         word: { wordID in
             let queue = try openBundledDatabase()
             return try await queue.read { db -> WordEntry? in

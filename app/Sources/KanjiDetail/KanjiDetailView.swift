@@ -25,7 +25,8 @@ public struct KanjiDetailView: View {
                     if !store.strokePaths.isEmpty { strokeOrderSection.popIn(delay: 0.16) }
                     if !store.words.isEmpty { wordsSection.popIn(delay: 0.22) }
                     if !store.sentences.isEmpty { sentencesSection.popIn(delay: 0.28) }
-                    if !store.relations.isEmpty { relationsSection.popIn(delay: 0.34) }
+                    if !store.variants.isEmpty { variantsSection.popIn(delay: 0.34) }
+                    if !store.relations.isEmpty { relationsSection.popIn(delay: 0.40) }
                 }
                 .padding(16)
                 .readableWidth(sizeClass)
@@ -176,6 +177,36 @@ public struct KanjiDetailView: View {
                 }
             }
         }
+        .roundedCard()
+    }
+
+    /// 旧字 — the pre-reform shape of this character.
+    ///
+    /// Drawn from an outline, not typed: the old form has no codepoint, which is
+    /// why the 漢検 list prints it as a picture in the first place.
+    private var variantsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L.oldForm[appLanguage])
+                .font(.kawaii(15, weight: .bold, language: appLanguage))
+                .foregroundStyle(Palette.ink)
+            HStack(spacing: 12) {
+                ForEach(store.variants) { variant in
+                    VStack(spacing: 4) {
+                        VariantGlyph(variant, size: 60)
+                            .padding(10)
+                            .background(Palette.card)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        Text(variant.variantKind)
+                            .font(.kawaiiJP(10)).foregroundStyle(Palette.inkSoft)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            // GlyphWiki asks that its glyphs be credited where they are shown.
+            Text(L.glyphCredit[appLanguage])
+                .font(.kawaii(10, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .roundedCard()
     }
 

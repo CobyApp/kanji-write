@@ -17,6 +17,8 @@ public struct KanjiDetailFeature {
         public var words: IdentifiedArrayOf<WordEntry> = []
         public var sentences: [ExampleSentence] = []
         public var relations: [RelationEntry] = []
+        /// 旧字 forms, when this kanji has one. Almost none do.
+        public var variants: [KanjiVariant] = []
         public var strokePaths: [String] = []
         public var isLoading = false
         public var addedToReview = false
@@ -34,7 +36,8 @@ public struct KanjiDetailFeature {
 
     public enum Action: Equatable {
         case onAppear
-        case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String])
+        case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String],
+                [KanjiVariant])
         case bookmarkLoaded(Bool)
         case showSibling(delta: Int)   // prev (-1) / next (+1)
         case writeTapped
@@ -70,17 +73,19 @@ public struct KanjiDetailFeature {
                 state.words = []
                 state.sentences = []
                 state.relations = []
+                state.variants = []
                 state.strokePaths = []
                 state.addedToReview = false
                 state.isLoading = true
                 return load(state.kanji.id)
-            case let .loaded(glosses, words, sentences, relations, strokePaths):
+            case let .loaded(glosses, words, sentences, relations, strokePaths, variants):
                 state.isLoading = false
                 state.glosses = glosses
                 state.words = IdentifiedArray(uniqueElements: words)
                 state.sentences = sentences
                 state.relations = relations
                 state.strokePaths = strokePaths
+                state.variants = variants
                 return .none
             case let .bookmarkLoaded(bookmarked):
                 state.isBookmarked = bookmarked
@@ -141,12 +146,14 @@ public struct KanjiDetailFeature {
             async let sentences = dictionaryClient.sentences(id, 3)
             async let relations = dictionaryClient.relations(id, 20)
             async let strokes = dictionaryClient.strokeOrder(id)
+            async let variants = dictionaryClient.variants(id)
             await send(.loaded(
                 (try? await glosses) ?? [:],
                 (try? await words) ?? [],
                 (try? await sentences) ?? [],
                 (try? await relations) ?? [],
-                (try? await strokes) ?? []
+                (try? await strokes) ?? [],
+                (try? await variants) ?? []
             ))
             await send(.bookmarkLoaded(await kanjiBookmarkStore.load().contains(id)))
         }
