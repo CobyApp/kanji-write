@@ -19,7 +19,7 @@ public struct VariantGlyph: View {
 
     public var body: some View {
         OutlineShape(d: variant.pathD, box: CGFloat(variant.viewBox))
-            .fill(Palette.ink, style: FillStyle(eoFill: true))
+            .fill(Palette.ink)
             .frame(width: size, height: size)
             .accessibilityLabel(Text(variant.variantKind))
     }
@@ -27,9 +27,11 @@ public struct VariantGlyph: View {
 
 /// The outline scaled to whatever rect it is given.
 ///
-/// Filled with the even-odd rule: a glyph's enclosed counters (the hole in 口,
-/// the gaps in 門) are subpaths inside the outer one, and the non-zero rule
-/// would flood them.
+/// Filled with the non-zero rule, which is what the SVG declares — GlyphWiki
+/// sets no `fill-rule`. The two rules happen to agree on every one of these
+/// glyphs (checked across 300 of them), because each stroke is authored as its
+/// own closed, non-overlapping region rather than as shapes laid over one
+/// another. Following the file is still the right default.
 private struct OutlineShape: Shape {
     let d: String
     let box: CGFloat

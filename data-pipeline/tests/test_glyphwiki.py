@@ -348,3 +348,27 @@ def test_resolved_literals_close_117_of_the_image_only_entries():
     assert len(after) == 254
     assert len(before - after) == 117
     assert after < before
+
+
+def test_a_standard_form_reference_is_not_rankable():
+    """Kanjipedia names some images after the canonical character's own codepoint
+    — 棚 (U+68DA) links pr_68DA.png — and that is a picture of the standard
+    character, not of its 旧字. Ranking candidates by likeness to it would pick
+    whichever is *closest to the standard form*, the opposite of the variant being
+    looked for, so those entries must not be auto-confirmed."""
+    import sys
+    sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
+    from match_glyph_candidates import reference_is_the_variant
+
+    standard = {
+        "canonical_literal": "棚",
+        "image_url": "https://www.kanjipedia.jp/common/images/kanji/60/pr_68DA.png",
+    }
+    variant = {
+        "canonical_literal": "異",
+        "image_url": "https://www.kanjipedia.jp/common/images/kanji/60/skj_8001.png",
+    }
+
+    assert reference_is_the_variant(standard) is False
+    assert reference_is_the_variant(variant) is True
+    assert reference_is_the_variant({"canonical_literal": "棚", "image_url": ""}) is False
