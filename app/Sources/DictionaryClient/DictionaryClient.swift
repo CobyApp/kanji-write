@@ -26,6 +26,11 @@ public struct DictionaryClient: Sendable {
     /// "pick the antonym" quiz (prompt word + reading + its opposite).
     public var antonyms: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [AntonymPair]
 
+    /// 旧字 forms of a kanji — the pre-reform shapes the 漢検 list prints as
+    /// images. Empty for almost every kanji; only the ~250 with a verified glyph
+    /// have one.
+    public var variants: @Sendable (_ kanjiID: Int) async throws -> [KanjiVariant]
+
     // Word-centric reads (for the word detail screen).
     /// A single word by id (surface, reading, 4-language meanings).
     public var word: @Sendable (_ wordID: Int) async throws -> WordEntry?

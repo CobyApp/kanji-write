@@ -154,6 +154,10 @@ def fetch_reference(url: str, dest: Path) -> bytes | None:
 def cmd_score(args: argparse.Namespace) -> int:
     entries = [e for e in json.loads(PROBE_JSON.read_text(encoding="utf-8"))
                if e["candidates"]]
+    # 親字 entries ship as real characters now, so their glyphs were never
+    # downloaded; scoring them would only fetch reference bitmaps for nothing.
+    if args.variant_kind:
+        entries = [e for e in entries if e["variant_kind"] in args.variant_kind]
     REF_DIR.mkdir(parents=True, exist_ok=True)
     results = []
     for index, entry in enumerate(entries, start=1):
@@ -294,6 +298,8 @@ def main() -> int:
         ("sheet", cmd_sheet, "render the ranked review sheet"),
     ):
         p = sub.add_parser(name, help=helptext)
+        p.add_argument("--variant-kind", nargs="*", default=None,
+                       help="only these 字体 values, e.g. 旧字 '旧字でない異体字'")
         p.set_defaults(func=func)
     args = parser.parse_args()
     return args.func(args)

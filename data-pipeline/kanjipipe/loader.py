@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -499,3 +500,79 @@ def load_llm_glosses(conn: sqlite3.Connection, entries: list["LlmGloss"]) -> Non
                     (kanji_id, lang, text),
                 )
     conn.commit()
+
+
+def load_kanji_variants(
+    conn: sqlite3.Connection,
+    assets: list["GlyphAsset"],
+    allocations: list["KankenAllocation"],
+    glyph_dir: str | Path,
+) -> int:
+    """Attach verified variant glyphs to the characters they are variants of.
+
+    The 漢検 list prints some entries only as a picture. 117 of those turned out
+    to be head characters and now ship as text; the rest are 旧字 — the old form
+    of a character the app already has — and there is no codepoint to show them
+    with, only a glyph. Each one becomes a `glyph_asset` row carrying the outline
+    and a `kanji_variant` row pointing at its canonical kanji.
+
+    Returns how many variants were attached. Entries whose canonical character is
+    not in the inventory are skipped rather than dropped silently by a foreign
+    key.
+    """
+    glyph_dir = Path(glyph_dir)
+    kanji_by_literal = dict(conn.execute("SELECT literal, id FROM kanji"))
+    by_ce = {a.ce_id: a for a in allocations}
+    attached = 0
+    for asset in assets:
+        allocation = by_ce.get(asset.ce_id)
+        canonical_id = kanji_by_literal.get(asset.canonical_literal)
+        if allocation is None or canonical_id is None:
+            continue
+        svg = glyph_dir / asset.local_svg_name
+        path_d, view_box = _svg_outline(svg)
+        if not path_d:
+            continue
+        cursor = conn.execute(
+            "INSERT OR IGNORE INTO glyph_asset "
+            "(provider, glyph_name, revision, sha256, source_url, license_url, "
+            " local_svg_name, path_d, view_box) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (asset.provider, asset.glyph_name, asset.revision, asset.sha256,
+             asset.source_url, asset.license_url, asset.local_svg_name,
+             path_d, view_box),
+        )
+        asset_id = cursor.lastrowid
+        if not asset_id:
+            asset_id = conn.execute(
+                "SELECT id FROM glyph_asset WHERE sha256 = ?", (asset.sha256,)
+            ).fetchone()[0]
+        conn.execute(
+            "INSERT OR IGNORE INTO kanji_variant "
+            "(canonical_kanji_id, glyph_asset_id, source_ct_id, source_ce_id, "
+            " variant_kind, literal, codepoint) "
+            "VALUES (?, ?, ?, ?, ?, NULL, NULL)",
+            (canonical_id, asset_id, allocation.ct_id, asset.ce_id,
+             allocation.variant_kind),
+        )
+        attached += 1
+    conn.commit()
+    return attached
+
+
+def _svg_outline(path: Path) -> tuple[str, int]:
+    """The `d` string and box size of a single-path SVG, or ("", 0).
+
+    GlyphWiki serves one filled path on a square viewBox, which is why the whole
+    glyph fits in a column instead of needing the file shipped.
+    """
+    if not path.exists():
+        return "", 0
+    text = path.read_text(encoding="utf-8")
+    paths = re.findall(r'<path[^>]*\bd="([^"]+)"', text)
+    if len(paths) != 1:
+        return "", 0
+    box = re.search(r'viewBox="0 0 (\d+) (\d+)"', text)
+    if not box or box.group(1) != box.group(2):
+        return "", 0
+    return paths[0], int(box.group(1))
