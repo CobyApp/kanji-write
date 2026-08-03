@@ -7,6 +7,15 @@ dependencies = ["lxml>=5.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+# scripts/fetch_glyph_assets.py + match_glyph_candidates.py only. They source the
+# 漢検 variant glyphs that the list publishes as images, by scoring GlyphWiki
+# candidates against the dictionary's own bitmap — not needed to build the DB.
+glyphs = ["numpy>=1.26", "Pillow>=10.0", "cairosvg>=2.7"]
+
+# Without this, setuptools' flat-layout auto-discovery treats out/ and sources/
+# as packages and refuses to build: "Multiple top-level packages discovered".
+[tool.setuptools.packages.find]
+include = ["kanjipipe*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
