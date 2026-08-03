@@ -234,6 +234,11 @@ def cmd_fetch(args: argparse.Namespace) -> int:
     entries = _load_probe()
     GLYPH_DIR.mkdir(parents=True, exist_ok=True)
     targets = [e for e in entries if e.candidates]
+    # 親字 entries were resolved to a real character and now ship as text, so
+    # their glyphs are no longer needed; --variant-kind keeps the fetch to the
+    # 旧字/異体字 rows that still have nothing to render.
+    if args.variant_kind:
+        targets = [e for e in targets if e.variant_kind in args.variant_kind]
     if args.limit:
         targets = targets[: args.limit]
     total = sum(len(e.candidates) for e in targets)
@@ -246,6 +251,7 @@ def cmd_fetch(args: argparse.Namespace) -> int:
         )
 
     done = skipped = failed = 0
+    drifted: list[str] = []
     for entry in targets:
         for candidate in entry.candidates:
             done += 1
@@ -269,7 +275,14 @@ def cmd_fetch(args: argparse.Namespace) -> int:
                 local.unlink(missing_ok=True)
                 print(f"  [{done}/{total}] {candidate.glyph_name}: blank glyph, skipped")
                 continue
-            candidate.sha256 = hashlib.sha256(svg).hexdigest()
+            digest = hashlib.sha256(svg).hexdigest()
+            # The sheet pins the hash the candidate pass saw. GlyphWiki glyphs do
+            # get edited, and a changed shape means the earlier visual judgement
+            # no longer applies to what we just downloaded — say so rather than
+            # quietly adopting the new one.
+            if candidate.sha256 and candidate.sha256 != digest:
+                drifted.append(f"{candidate.glyph_name} @r{candidate.revision}")
+            candidate.sha256 = digest
             candidate.local_svg_name = local.name
             local.write_bytes(svg)
             if done % 50 == 0:
@@ -277,9 +290,18 @@ def cmd_fetch(args: argparse.Namespace) -> int:
                 print(f"  [{done}/{total}] … {candidate.glyph_name} @r{candidate.revision}")
     checkpoint()
     print(f"fetched {done - skipped - failed}, reused {skipped}, failed {failed}")
+    if drifted:
+        print(f"  {len(drifted)} glyphs no longer hash to the pinned value:")
+        for name in drifted[:10]:
+            print(f"    {name}")
     print(f"\nSVGs → {GLYPH_DIR}")
-    _write_review_csv(entries)
-    print(f"review sheet stub → {REVIEW_CSV}")
+    if args.variant_kind:
+        # A filtered run has only some of the entries; rewriting the sheet from
+        # them would drop every row it did not touch.
+        print("review sheet left alone (filtered run)")
+    else:
+        _write_review_csv(entries)
+        print(f"review sheet stub → {REVIEW_CSV}")
     return 0
 
 
@@ -404,6 +426,8 @@ def main() -> int:
     probe.set_defaults(func=cmd_probe)
     fetch = sub.add_parser("fetch", help="download candidate SVGs and hash them")
     fetch.add_argument("--limit", type=int, default=0)
+    fetch.add_argument("--variant-kind", nargs="*", default=None,
+                       help="only these 字体 values, e.g. 旧字 '旧字でない異体字'")
     fetch.set_defaults(func=cmd_fetch)
     sheet = sub.add_parser("sheet", help="render the visual review sheet")
     sheet.set_defaults(func=cmd_sheet)
