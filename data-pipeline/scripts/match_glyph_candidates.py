@@ -25,6 +25,7 @@ import hashlib
 import html
 import io
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -46,10 +47,44 @@ SHEET_HTML = PIPELINE_ROOT / "out" / "glyph_match_review.html"
 
 CANVAS = 128           # comparison resolution
 USER_AGENT = "kanji-write-pipeline/1.0 (+glyph sourcing for Kanken variants)"
-# A win is only auto-confirmed when it is both good on its own and clearly
+# A win is only auto-confirmed when it is both plausible on its own and clearly
 # ahead of the next candidate — otherwise the shapes are too close to call.
-MIN_IOU = 0.62
+#
+# The floor is calibrated, not guessed. Rendering the *same* character in a
+# normal Japanese face and scoring it against its GlyphWiki outline gives a
+# median IoU of 0.47 and never exceeds 0.66 across these 232 entries: a correct
+# match simply does not score higher than that, because Kanjipedia's reference is
+# a brush form and the candidate is a print outline. The original 0.62 floor was
+# set before any reference image had been downloaded and rejected every entry,
+# including the ones where a single candidate led the field outright.
+#
+# So the absolute score only rules out the implausible; the margin does the
+# actual work, since every candidate for an entry is the same character and the
+# question is which variant shape the dictionary drew.
+MIN_IOU = 0.30
 MIN_MARGIN = 0.045
+
+
+def reference_is_the_variant(entry: dict) -> bool:
+    """Whether an entry's reference image can possibly show the variant.
+
+    This is the harness's load-bearing assumption and it does not hold for most
+    entries. Kanjipedia names some images after the canonical character's own
+    codepoint — 棚 (U+68DA) links pr_68DA.png — and that is a picture of the
+    standard character, not of its 旧字. Ranking candidates by likeness to it
+    selects the one *closest to the standard form*, which is the opposite of the
+    variant we are trying to identify.
+
+    Only an image with an id of its own (skj_8001.png, and the pr_/std_ ones whose
+    number is not the character's codepoint) is a separate glyph, and therefore a
+    reference a variant can be matched against.
+    """
+    url = entry.get("image_url") or ""
+    literal = entry.get("canonical_literal") or ""
+    found = re.search(r"_([0-9A-Fa-f]{4,5})\.png", url)
+    if not found or not literal:
+        return False
+    return found.group(1).upper() != f"{ord(literal[0]):04X}"
 
 
 # --- image handling ----------------------------------------------------------
@@ -204,7 +239,10 @@ def cmd_score(args: argparse.Namespace) -> int:
             "has_reference": ref_mask is not None,
             "best_iou": best,
             "margin": round(best - second, 4),
-            "auto": bool(ref_mask is not None and best >= MIN_IOU
+            "reference_is_the_variant": reference_is_the_variant(entry),
+            "auto": bool(ref_mask is not None
+                         and reference_is_the_variant(entry)
+                         and best >= MIN_IOU
                          and (best - second) >= MIN_MARGIN),
             "candidates": scored,
         })
@@ -214,7 +252,10 @@ def cmd_score(args: argparse.Namespace) -> int:
                            encoding="utf-8")
     auto = sum(1 for r in results if r["auto"])
     noref = sum(1 for r in results if not r["has_reference"])
+    standard = sum(1 for r in results if not r["reference_is_the_variant"])
     print(f"\n{auto}/{len(results)} clear winners · {noref} without a reference image")
+    print(f"{standard} reference the standard character, not the variant — "
+          "not rankable")
     print(f"→ {SCORES_JSON}")
     return 0
 

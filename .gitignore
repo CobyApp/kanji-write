@@ -43,6 +43,11 @@ app/Tuist/.build/
 # reproducible from it.
 !data-pipeline/sources/kanken_glyph_review.csv
 
+# The canonical character for each image-only 親字 entry. Not reproducible from a
+# download: without it the allocation parser sees no character for those entries
+# and 117 kanji vanish from the build.
+!data-pipeline/sources/kanken_resolved_literals.csv
+
 # Local scratch (question-generation batches, temp scripts) — never commit
 scratch/
 !data-pipeline/sources/kanken_advanced_questions.jsonl
