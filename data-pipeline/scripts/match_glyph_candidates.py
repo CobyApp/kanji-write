@@ -11,6 +11,31 @@ The score is evidence for a reviewer, not an oracle: it fills the `confirm`
 column only where the winner is clearly ahead of the runner-up, and flags the
 rest for a human look.
 
+RESULT OF ACTUALLY RUNNING IT: nothing here is confirmable, and the reason is in
+the sources rather than the thresholds. Three measurements, in order of how much
+they rule out:
+
+1. For 159 of the 249 entries the reference is not the variant at all. 漢検's own
+   漢字画像 column points at an image named after the canonical character's
+   codepoint — 棚 (U+68DA) → pr_68DA.png — which is a picture of the standard
+   character. The 漢字ペディア page for such an entry carries no other glyph
+   either, so no picture of the old form exists in these sources to match against.
+2. The metric's ceiling for a *correct* match is about 0.66: rendering the same
+   character in a plain Japanese face and scoring it against its own GlyphWiki
+   outline gives a median of 0.47. The original 0.62 floor was therefore
+   unreachable and rejected every entry. Recalibrating it to 0.30 let 12 through.
+3. Those 12 do not survive a control. Scoring the reference against the base
+   character drawn in a plain font — a glyph that is by construction *not* the
+   variant — beats the winning candidate outright for 糾, 致, 弧 and 翼, and the
+   remaining leads (0.004–0.18) show no visible difference on a contact sheet.
+   The brush-versus-outline style gap is simply wider than the gap between the
+   old and new shapes, so the score is not measuring the variant.
+
+So `confirm` stays empty and no glyph ships. Identifying these forms needs a
+source that states which shape is the 旧字 — the Adobe-Japan1 IVS designations, or
+the printed dictionary — not image similarity against a reference that either
+shows the wrong glyph or shows it in a different medium.
+
 Usage:
     python3 scripts/match_glyph_candidates.py score      # download refs + rank
     python3 scripts/match_glyph_candidates.py apply      # confirm clear winners
@@ -63,6 +88,37 @@ USER_AGENT = "kanji-write-pipeline/1.0 (+glyph sourcing for Kanken variants)"
 # question is which variant shape the dictionary drew.
 MIN_IOU = 0.30
 MIN_MARGIN = 0.045
+
+
+# Fonts to draw the control glyph with, first one present wins. Absent on other
+# platforms, in which case the control is skipped and reported as such.
+CONTROL_FONTS = (
+    "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+)
+
+
+def control_mask(literal: str) -> "np.ndarray | None":
+    """The base character drawn in an ordinary Japanese face.
+
+    This is the control the candidates have to beat. A variant glyph that matches
+    the reference no better than a plain rendering of the character it is a
+    variant *of* tells us nothing — and that is what happens here, because the
+    reference is a brush form and every candidate is a print outline, a gap wider
+    than the difference between the old and new shapes.
+    """
+    from PIL import ImageDraw, ImageFont
+    for path in CONTROL_FONTS:
+        if Path(path).exists():
+            font_path = path
+            break
+    else:
+        return None
+    image = Image.new("L", (256, 256), 255)
+    ImageDraw.Draw(image).text(
+        (128, 128), literal, font=ImageFont.truetype(font_path, 200),
+        fill=0, anchor="mm")
+    return _normalise((np.asarray(image) < 160).astype(np.uint8))
 
 
 def reference_is_the_variant(entry: dict) -> bool:
@@ -230,6 +286,11 @@ def cmd_score(args: argparse.Namespace) -> int:
         scored = deduped
         best = scored[0]["iou"] if scored else 0.0
         second = scored[1]["iou"] if len(scored) > 1 else 0.0
+        control = None
+        if ref_mask is not None and entry["canonical_literal"]:
+            baseline = control_mask(entry["canonical_literal"])
+            if baseline is not None:
+                control = round(iou(ref_mask, baseline), 4)
         results.append({
             "ce_id": entry["ce_id"],
             "canonical_literal": entry["canonical_literal"],
@@ -240,10 +301,14 @@ def cmd_score(args: argparse.Namespace) -> int:
             "best_iou": best,
             "margin": round(best - second, 4),
             "reference_is_the_variant": reference_is_the_variant(entry),
+            "control_iou": control,
             "auto": bool(ref_mask is not None
                          and reference_is_the_variant(entry)
                          and best >= MIN_IOU
-                         and (best - second) >= MIN_MARGIN),
+                         and (best - second) >= MIN_MARGIN
+                         # Beat the base character drawn in a plain font, or the
+                         # score is not measuring the variant at all.
+                         and (control is None or best > control)),
             "candidates": scored,
         })
         if index % 25 == 0 or index == len(entries):
@@ -256,6 +321,9 @@ def cmd_score(args: argparse.Namespace) -> int:
     print(f"\n{auto}/{len(results)} clear winners · {noref} without a reference image")
     print(f"{standard} reference the standard character, not the variant — "
           "not rankable")
+    lost = sum(1 for r in results
+               if r["control_iou"] is not None and r["best_iou"] <= r["control_iou"])
+    print(f"{lost} scored no better than the base character in a plain font")
     print(f"→ {SCORES_JSON}")
     return 0
 
