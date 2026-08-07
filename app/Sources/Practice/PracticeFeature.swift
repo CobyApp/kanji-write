@@ -24,19 +24,22 @@ public struct PracticeItem: Equatable, Identifiable {
     public let reading: String?
     public let onReadings: [String]
     public let kunReadings: [String]
+    /// The 部首 glyph, for a single kanji. A word or an idiom has no one radical.
+    public let radical: String?
     /// Set only when the answer is a single kanji, so the 힌트 can show its
     /// stroke order. A multi-kanji word has no single stroke-order animation.
     public let strokeOrderKanjiID: Int?
 
     public init(id: Int, answer: String, glosses: [String: String], reading: String? = nil,
                 onReadings: [String] = [], kunReadings: [String] = [],
-                strokeOrderKanjiID: Int? = nil) {
+                radical: String? = nil, strokeOrderKanjiID: Int? = nil) {
         self.id = id
         self.answer = answer
         self.glosses = glosses
         self.reading = reading
         self.onReadings = onReadings
         self.kunReadings = kunReadings
+        self.radical = radical
         self.strokeOrderKanjiID = strokeOrderKanjiID
     }
 }
@@ -136,7 +139,7 @@ public struct PracticeFeature {
                     PracticeItem(
                         id: k.id, answer: k.literal, glosses: glossesByID[k.id] ?? [:],
                         onReadings: k.onReadings, kunReadings: k.kunReadings,
-                        strokeOrderKanjiID: k.id)
+                        radical: k.radicalGlyph, strokeOrderKanjiID: k.id)
                 }
             case .yoji:
                 return yojijukugo.map { y in
@@ -268,7 +271,7 @@ public struct PracticeFeature {
                 return PracticeItem(
                     id: k.id, answer: k.literal, glosses: glosses[k.id] ?? [:],
                     onReadings: k.onReadings, kunReadings: k.kunReadings,
-                    strokeOrderKanjiID: k.id)
+                    radical: k.radicalGlyph, strokeOrderKanjiID: k.id)
             }
             return .send(.favoriteItemsLoaded(items))
         case .word:
@@ -354,7 +357,13 @@ public struct PracticeFeature {
                 if !ExamType.current.levels.contains(state.level) {
                     state.level = ExamType.current.defaultLevel
                 }
-                return .none
+                // Favourites load in parallel with the kanji list and usually win
+                // the race, and a kanji favourite can only be resolved once the
+                // list is here. Without this the setup screen showed "1 항목" from
+                // the stored ids while the run stayed empty and 테스트 시작 sat
+                // there disabled.
+                return loadFavoriteItems(state.mode, state.favoriteIDs,
+                                         kanji: state.kanji, glosses: state.glossesByID)
 
             case let .levelSelected(level):
                 state.level = level

@@ -191,3 +191,79 @@ final class PracticeScopeRestoreTests: XCTestCase {
         XCTAssertTrue(store.state.useFavorites)
     }
 }
+
+@MainActor
+final class PracticeRadicalTests: XCTestCase {
+    /// The 部首 rides along on the item, so the clue card can show it without a
+    /// second lookup mid-test.
+    func testAKanjiItemCarriesItsRadical() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        }
+        store.exhaustivity = .off
+        await store.send(.loaded([Self.yama], [:]))
+
+        XCTAssertEqual(store.state.levelItems.first?.radical, "山")
+    }
+
+    /// A word has no single radical, and claiming one would put a wrong clue on
+    /// the card.
+    func testAWordItemHasNoRadical() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        } withDependencies: {
+            $0.dictionaryClient.quizWords = { _, _ in
+                [WordEntry(id: 1, surface: "火山", reading: "かざん", meaningEn: "volcano", meaningKo: "화산")]
+            }
+        }
+        store.exhaustivity = .off
+        await store.send(.loaded([Self.yama], [:]))
+        await store.send(.modeSelected(.word))
+        await store.send(.wordsLoaded([
+            WordEntry(id: 1, surface: "火山", reading: "かざん", meaningEn: "volcano", meaningKo: "화산"),
+        ]))
+
+        XCTAssertNil(store.state.levelItems.first?.radical)
+    }
+
+    private static var yama: Kanji {
+        // radical 46 is 山 — the glyph the card shows comes from this number.
+        Kanji(id: 1, literal: "山", strokeCount: 3, grade: 1, jlptLevel: "N5",
+              kankenLevel: "10級", kankenMemberships: ["10級"],
+              hasVerifiedStrokeOrder: true, onReadings: ["サン"], kunReadings: ["やま"],
+              radical: 46)
+    }
+}
+
+@MainActor
+final class PracticeFavoriteRaceTests: XCTestCase {
+    /// Favourites and the kanji list load in parallel, and the favourites usually
+    /// arrive first. A kanji favourite can only be turned into an item once the
+    /// list is here, so the resolution has to run again when it lands — otherwise
+    /// the setup screen showed a count from the stored ids while the run was empty
+    /// and 테스트 시작 stayed disabled.
+    func testFavoritesResolveOnceTheKanjiListArrives() async {
+        let store = TestStore(initialState: PracticeFeature.State()) {
+            PracticeFeature()
+        } withDependencies: {
+            $0.practiceFavoriteStore.save = { _ in }
+        }
+        store.exhaustivity = .off
+
+        await store.send(.favoritesLoaded(["kanji": [1]]))
+        XCTAssertEqual(store.state.favoriteCount, 1)
+        XCTAssertTrue(store.state.favoriteItems.isEmpty)  // nothing to resolve against
+
+        await store.send(.loaded([Self.yama], [:]))
+        await store.receive(\.favoriteItemsLoaded)
+
+        XCTAssertEqual(store.state.favoriteItems.map(\.answer), ["山"])
+    }
+
+    private static var yama: Kanji {
+        Kanji(id: 1, literal: "山", strokeCount: 3, grade: 1, jlptLevel: "N5",
+              kankenLevel: "10級", kankenMemberships: ["10級"],
+              hasVerifiedStrokeOrder: true, onReadings: ["サン"], kunReadings: ["やま"],
+              radical: 46)
+    }
+}
