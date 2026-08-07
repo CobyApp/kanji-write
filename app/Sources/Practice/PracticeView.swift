@@ -367,19 +367,35 @@ public struct PracticeView: View {
                     if !item.kunReadings.isEmpty {
                         readingLine(L.kunReading[appLanguage], item.kunReadings, Palette.mint)
                     }
+                    // The 部首 is a clue to the shape, not just trivia: knowing the
+                    // radical tells you which side of the character to start from.
+                    if let radical = item.radical, !radical.isEmpty {
+                        readingLine(L.radical[appLanguage], [radical], Palette.coral)
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity).roundedCard()
     }
 
-    /// Laid out but never drawn — it reserves the height of the 음+훈 pair, the
-    /// most reading lines any item shows, so shorter items leave a gap instead
-    /// of pulling the card up.
+    /// Laid out but never drawn — it reserves the height of the tallest clue
+    /// stack the current mode can produce, so a shorter item leaves a gap instead
+    /// of pulling the card up under the canvas.
+    ///
+    /// Mode-dependent because it has to be: a kanji shows 음, 훈 and 부수, a word
+    /// or an idiom shows one kana reading. Reserving three lines for 단어쓰기 would
+    /// pad the card with two empty ones. The mode cannot change mid-run, so the
+    /// height is still fixed for the whole run, which is the point.
+    @ViewBuilder
     private var readingBlockTemplate: some View {
         VStack(spacing: 6) {
-            readingLine(L.onReading[appLanguage], ["ア"], Palette.sky)
-            readingLine(L.kunReading[appLanguage], ["あ"], Palette.mint)
+            if store.mode == .kanji {
+                readingLine(L.onReading[appLanguage], ["ア"], Palette.sky)
+                readingLine(L.kunReading[appLanguage], ["あ"], Palette.mint)
+                readingLine(L.radical[appLanguage], ["山"], Palette.coral)
+            } else {
+                readingLine(L.reading[appLanguage], ["ア"], Palette.lavender)
+            }
         }
     }
 
