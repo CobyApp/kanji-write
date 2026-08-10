@@ -293,10 +293,19 @@ let project = Project(
                 // Home-screen name: マイカンジ (mykanji).
                 "CFBundleDisplayName": "マイカンジ",
                 "UILaunchScreen": ["UIColorName": ""],
-                // Portrait-only on both iPhone and iPad — the whole UI is designed
-                // as a single portrait column.
+                // Portrait-only on iPhone — the whole UI is one portrait column.
                 "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
-                "UISupportedInterfaceOrientations~ipad": ["UIInterfaceOrientationPortrait"],
+                // iPad has to offer all four. An iPad app that participates in
+                // multitasking is resizable by definition, so App Store
+                // validation rejects a narrower list (error 90474), and
+                // UIRequiresFullScreen is no longer an escape hatch — it is
+                // deprecated as of iPadOS 26, which is this app's floor.
+                "UISupportedInterfaceOrientations~ipad": [
+                    "UIInterfaceOrientationPortrait",
+                    "UIInterfaceOrientationPortraitUpsideDown",
+                    "UIInterfaceOrientationLandscapeLeft",
+                    "UIInterfaceOrientationLandscapeRight",
+                ],
             ]),
             sources: ["Sources/KanjiApp/**"],
             resources: ["Sources/KanjiApp/Resources/**"],
@@ -325,6 +334,9 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.widget",
             deploymentTargets: iOS,
             infoPlist: .extendingDefault(with: [
+                // Shown in the widget gallery, and required by App Store
+                // validation for an embedded extension.
+                "CFBundleDisplayName": "マイカンジ",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
                 ],
@@ -352,12 +364,19 @@ let project = Project(
                 "WKCompanionAppBundleIdentifier": "com.cobyapp.kanjiwrite",
             ]),
             sources: ["Sources/KanjiWatch/**"],
+            resources: ["Sources/KanjiWatch/Resources/**"],
             dependencies: [
                 .target(name: "SharedModels"),
-            ]
-            // Signs with the project-wide DEVELOPMENT_TEAM so the embedded watch
-            // app matches the parent app's certificate (required to install on a
-            // device).
+            ],
+            // No signing settings here on purpose: the watch app inherits the
+            // project-wide DEVELOPMENT_TEAM so it matches the parent app's
+            // certificate, which a device install requires.
+            settings: .settings(base: [
+                // A watch app has to carry its own icon: App Store validation
+                // rejects the whole upload for a missing CFBundleIconName here,
+                // even though the phone app's icon is right there in the bundle.
+                "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
+            ])
         ),
         .target(
             name: "KanjiListFeatureTests",
