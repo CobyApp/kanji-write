@@ -1,0 +1,111 @@
+:root {
+  --bg: #fdfcff;
+  --card: #ffffff;
+  --ink: #2e2a33;
+  --muted: #6c6577;
+  --line: #ece7f2;
+  --accent: #e57fa8;
+  --accent-soft: #fbeef4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #18151c;
+    --card: #201c26;
+    --ink: #ece9f1;
+    --muted: #a49dae;
+    --line: #2e2937;
+    --accent: #f0a3c2;
+    --accent-soft: #2a2029;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 20px 72px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+        "Hiragino Sans", "Noto Sans KR", "Noto Sans SC", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap { max-width: 720px; margin: 0 auto; }
+
+header {
+  padding: 56px 0 28px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 36px;
+}
+
+h1 { font-size: 30px; line-height: 1.3; margin: 0 0 6px; letter-spacing: -0.01em; }
+h2 { font-size: 19px; margin: 40px 0 12px; letter-spacing: -0.01em; }
+h3 { font-size: 16px; margin: 26px 0 6px; }
+p, li { color: var(--ink); }
+.lede { color: var(--muted); margin: 0; }
+
+a { color: var(--accent); text-underline-offset: 3px; }
+
+/* Language switcher */
+nav.langs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+nav.langs button {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+nav.langs button[aria-current="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Only the selected language is shown. Without JS every language stays
+   visible, which is worse-looking but still readable — never a blank page. */
+.l { display: none; }
+.l.on { display: block; }
+html.no-js .l { display: block; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin: 22px 0;
+}
+
+.contact { font-size: 17px; }
+.contact a { font-weight: 600; }
+
+dl { margin: 0; }
+dt { font-weight: 600; margin-top: 22px; }
+dd { margin: 4px 0 0; color: var(--muted); }
+
+ul { padding-left: 20px; }
+li { margin: 5px 0; }
+
+footer {
+  margin-top: 56px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+footer a { color: var(--muted); }
+
+.updated { font-size: 14px; color: var(--muted); }
