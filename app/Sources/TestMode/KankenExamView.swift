@@ -1,19 +1,33 @@
 import ComposableArchitecture
 import DesignSystem
+import PencilKit
 import SharedModels
 import SwiftUI
 import WritingCanvas
 
-/// The 칸켄 문제 허브 screen: a hub listing the 漢検 exam sections (읽기 / 부수 /
-/// 쓰기) plus the 오답노트, and — once a section is picked — a mastery-loop
-/// question player mirroring the study quiz look.
+/// The exam hub screen: the level's 大問 list, a mock paper and the 오답노트,
+/// and — once one is picked — the question player. Readings can be typed and
+/// 書き取り written by hand, the way the real 漢検 is answered.
 public struct KankenExamView: View {
     @Bindable public var store: StoreOf<KankenExamFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("examType") private var examType: ExamType = .jlpt
+    /// Answer readings by typing and 書き取り by hand, instead of choosing.
+    @AppStorage("examWriteMode") private var writeMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// How many questions the mock paper draws from each 大問.
     @State private var perSection = 5
+
+    // Per-question answer input. Reset whenever the question changes.
+    @State private var typed = ""
+    @State private var drawing = PKDrawing()
+    @State private var revealed = false
+    @FocusState private var typingFocused: Bool
+
+    /// What a self-marked miss records as the chosen option: never equal to an
+    /// answer, and never shown to the learner.
+    static let selfMarkedWrong = "\u{0}✗"
 
     public init(store: StoreOf<KankenExamFeature>) {
         self.store = store
@@ -29,6 +43,10 @@ public struct KankenExamView: View {
             }
         }
         .task { store.send(.onAppear(level: store.level, language: appLanguage)) }
+        .sensoryFeedback(trigger: store.chosen) { _, new in
+            guard new != nil else { return nil }
+            return store.isCorrect ? .success : .error
+        }
     }
 
     // MARK: - Hub
@@ -37,6 +55,7 @@ public struct KankenExamView: View {
         ScrollView {
             VStack(spacing: 14) {
                 header
+                answerModeCard
                 mockExamCard
                 ForEach(examType.sections(for: store.level)) { section in
                     sectionCard(section)
@@ -55,54 +74,98 @@ public struct KankenExamView: View {
     }
 
     private var header: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 8) {
             Text(hubTitle)
                 .font(.kawaii(24, weight: .bold)).foregroundStyle(Palette.ink)
-            Text("\(store.level) · \(L.kankenHubSubtitle[appLanguage])")
-                .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+            // The level used to be fixed to the study plan's; drilling another
+            // 級 meant changing the plan. It is a choice here now.
+            Menu {
+                ForEach(examType.levels, id: \.self) { level in
+                    Button {
+                        store.send(.levelChanged(level))
+                    } label: {
+                        if level == store.level {
+                            Label(level, systemImage: "checkmark")
+                        } else {
+                            Text(level)
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(store.level)
+                        .font(.kawaiiJP(16, weight: .bold)).japaneseGlyphs()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 16).padding(.vertical, 9)
+                .background(Palette.accent)
+                .clipShape(Capsule())
+                .contentShape(Capsule())
+            }
+            .accessibilityLabel("\(L.examLevelPicker[appLanguage]): \(store.level)")
+            Text(L.kankenHubSubtitle[appLanguage])
+                .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 8).padding(.bottom, 4)
     }
 
-    @ViewBuilder
+    private var answerModeCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(L.answerMode[appLanguage])
+                    .font(.kawaii(13, weight: .bold, language: appLanguage))
+                    .foregroundStyle(Palette.inkSoft)
+                Spacer()
+                Picker(L.answerMode[appLanguage], selection: $writeMode) {
+                    Text(L.answerModeChoice[appLanguage]).tag(false)
+                    Text(L.answerModeType[appLanguage]).tag(true)
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 220)
+            }
+            if writeMode {
+                Text(L.answerModeHint[appLanguage])
+                    .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .roundedCard(padding: 14)
+    }
+
     private func sectionCard(_ section: ExamSection) -> some View {
-        Button { if section.available { store.send(.selectSection(section)) } } label: {
+        Button { store.send(.selectSection(section)) } label: {
             HStack(spacing: 14) {
                 Text(section.numeral)
                     .font(.kawaiiJP(20, weight: .bold)).foregroundStyle(.white)
                     .frame(width: 44, height: 44)
-                    .background(section.available ? Palette.accent : Palette.inkSoft.opacity(0.5))
+                    .background(Palette.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
                     Text(section.jaTitle)
                         .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                    Text(section.available ? sectionDesc(section) : L.kankenComingSoon[appLanguage])
+                    Text(section.instruction(appLanguage))
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                if section.available {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
-                } else {
-                    Text(L.kankenComingSoon[appLanguage])
-                        .font(.kawaii(11, weight: .bold)).foregroundStyle(Palette.inkSoft)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Palette.inkSoft.opacity(0.12)).clipShape(Capsule())
-                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
             }
             .roundedCard()
         }
         .buttonStyle(.bouncy)
-        .disabled(!section.available)
-        .opacity(section.available ? 1 : 0.6)
     }
 
-    /// A full paper: every playable 大問 at this level, back to back. Sitting the
-    /// whole thing is a different exercise from drilling one section, which is
-    /// why it leads the hub rather than being buried at the end.
+    /// A full paper: every playable 大問 at this level, back to back, scored
+    /// against the level's pass line. It leads the hub because sitting the
+    /// whole thing is a different exercise from drilling one section.
     private var mockExamCard: some View {
         let playable = examType.sections(for: store.level).filter(\.available).count
+        let passPercent = Int((examType.passRatio(for: store.level) * 100).rounded())
         return VStack(spacing: 10) {
             HStack(spacing: 14) {
                 Image(systemName: "doc.text.fill")
@@ -115,12 +178,19 @@ public struct KankenExamView: View {
                         .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
                     Text(L.mockExamSub[appLanguage])
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                Text("\(playable)")
-                    .font(.kawaii(14, weight: .bold)).monospacedDigit().foregroundStyle(.white)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Palette.lavender).clipShape(Capsule())
+            }
+
+            HStack(spacing: 8) {
+                infoPill(icon: "flag.checkered",
+                         text: "\(examType.hasOfficialPassLine ? L.examPassLine[appLanguage] : L.examGuideLine[appLanguage]) \(passPercent)%")
+                if let minutes = examType.officialMinutes(for: store.level) {
+                    infoPill(icon: "clock",
+                             text: "\(L.examOfficialTime[appLanguage]) \(minutes)\(L.minutesUnit[appLanguage])")
+                }
+                Spacer(minLength: 0)
             }
 
             // How long a sitting: the total is this times the playable sections,
@@ -132,9 +202,9 @@ public struct KankenExamView: View {
                         .foregroundStyle(Palette.inkSoft)
                     Spacer()
                     Text("\(perSection * playable)\(L.unitQuestions[appLanguage])")
-                        .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.lavender)
+                        .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.ink)
                 }
-                Picker("", selection: $perSection) {
+                Picker(L.mockExamSize[appLanguage], selection: $perSection) {
                     ForEach([3, 5, 10], id: \.self) { Text("\($0)").tag($0) }
                 }
                 .pickerStyle(.segmented)
@@ -143,7 +213,7 @@ public struct KankenExamView: View {
             Button { store.send(.selectMockExam(perSection: perSection)) } label: {
                 Text(L.mockExamStart[appLanguage])
                     .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 13)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
                     .background(LinearGradient(colors: [Palette.lavender, Palette.sky],
                                                startPoint: .leading, endPoint: .trailing))
                     .clipShape(Capsule())
@@ -157,6 +227,17 @@ public struct KankenExamView: View {
         .shadow(color: Palette.ink.opacity(0.06), radius: 8, y: 3)
     }
 
+    private func infoPill(icon: String, text: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon).font(.system(size: 11, weight: .bold))
+            Text(text).font(.kawaii(12, weight: .bold, language: appLanguage))
+        }
+        .foregroundStyle(Palette.ink)
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Palette.lavenderSoft)
+        .clipShape(Capsule())
+    }
+
     private var wrongNoteCard: some View {
         Button { store.send(.selectWrongNote) } label: {
             HStack(spacing: 14) {
@@ -168,8 +249,10 @@ public struct KankenExamView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(L.wrongNote[appLanguage])
                         .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
-                    Text(L.wrongNoteDesc[appLanguage])
+                    Text(store.wrongCount == 0 ? L.wrongNoteDesc[appLanguage]
+                                               : L.wrongNoteLevelScope[appLanguage])
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
                 if store.wrongCount > 0 {
@@ -177,56 +260,14 @@ public struct KankenExamView: View {
                         .font(.kawaii(14, weight: .bold)).monospacedDigit().foregroundStyle(.white)
                         .padding(.horizontal, 10).padding(.vertical, 4)
                         .background(Palette.pink).clipShape(Capsule())
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
                 }
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
             }
             .roundedCard()
         }
         .buttonStyle(.bouncy)
         .disabled(store.wrongCount == 0)
-        .opacity(store.wrongCount == 0 ? 0.5 : 1)
-    }
-
-    /// A section's blurb. Keyed by the section, because ten 大問 share the
-    /// `.writing` render type and would otherwise all claim to be 書き取り.
-    private func sectionDesc(_ section: ExamSection) -> String {
-        switch section.id {
-        case "kousei": return L.kankenKouseiDesc[appLanguage]
-        case "goji": return L.kankenGojiDesc[appLanguage]
-        case "shikibetsu": return L.kankenShikibetsuDesc[appLanguage]
-        case "common-kanji": return L.kankenKyotsuDesc[appLanguage]
-        case "sanji": return L.kankenSanjiDesc[appLanguage]
-        case "doonkun": return L.kankenDoonDesc[appLanguage]
-        case "tsukuri": return L.kankenTsukuriDesc[appLanguage]
-        case "word-selection": return L.kankenGoselectDesc[appLanguage]
-        case "koji-kotowaza": return L.kankenKotowazaDesc[appLanguage]
-        case "hyogai-reading": return L.kankenHyogaiDesc[appLanguage]
-        case "jukujikun-ateji": return L.kankenJukujikunDesc[appLanguage]
-        case "gokeisei": return L.kankenGokeiseiDesc[appLanguage]
-        case "iikae": return L.kankenIikaeDesc[appLanguage]
-        case "youhou": return L.kankenYouhouDesc[appLanguage]
-        case "passage": return L.kankenPassageDesc[appLanguage]
-        case "jukugo-reading": return L.kankenJukugoKunDesc[appLanguage]
-        case "hantai", "taigi": return L.kankenHantaiDesc[appLanguage]
-        default: return sectionDesc(section.renderType)
-        }
-    }
-
-    private func sectionDesc(_ type: KankenQuestionType) -> String {
-        switch type {
-        case .reading: L.kankenReadingDesc[appLanguage]
-        case .radical: L.kankenRadicalDesc[appLanguage]
-        case .writing: L.kankenWritingDesc[appLanguage]
-        case .context: L.kankenContextDesc[appLanguage]
-        case .strokes: L.kankenStrokesDesc[appLanguage]
-        case .yojijukugo: L.kankenYojiDesc[appLanguage]
-        case .okurigana: L.kankenOkuriDesc[appLanguage]
-        case .taigirui: L.kankenTaigiruiDesc[appLanguage]
-        case .onkun: L.kankenOnKunDesc[appLanguage]
-        case .hitsujun: L.kankenHitsujunDesc[appLanguage]
-        case .comingSoon: L.kankenComingSoon[appLanguage]
-        }
     }
 
     // MARK: - Player
@@ -234,52 +275,80 @@ public struct KankenExamView: View {
     @ViewBuilder
     private var player: some View {
         VStack(spacing: 0) {
-            if store.isFinished {
-                resultCard
+            if store.isLoading {
+                loadingCard
+            } else if store.isFinished {
+                ScrollView {
+                    resultCard
+                        .readableWidth(sizeClass)
+                }
+                .scrollIndicators(.hidden)
             } else if let item = store.current {
                 ScrollView {
                     VStack(spacing: 20) {
                         progress
                         questionCard(item)
-                        options(item)
+                        answerArea(item)
                         if store.answered { explanationCard(item); nextButton }
                     }
                     .padding(16)
                     .readableWidth(sizeClass)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.85), value: store.answered)
-                    .animation(.easeInOut, value: store.current?.id)
+                    .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.85),
+                               value: store.answered)
+                    .animation(reduceMotion ? nil : .easeInOut, value: store.current?.id)
                 }
                 .scrollIndicators(.hidden)
-            } else if !store.isLoading {
+                .scrollDismissesKeyboard(.interactively)
+            } else {
                 emptyCard
             }
         }
+        .onChange(of: store.current?.id) { _, _ in
+            typed = ""
+            drawing = PKDrawing()
+            revealed = false
+        }
     }
 
-    /// The one top strip during a section: the section title and the progress
-    /// count. Exiting is handled by the session's ✕ (top-left), so there's no
-    /// separate back control here.
+    private var loadingCard: some View {
+        VStack(spacing: 14) {
+            ProgressView().controlSize(.large).tint(Palette.accent)
+            Text(L.loadingQuestions[appLanguage])
+                .font(.kawaii(15, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// The one top strip during a section: the section title, the progress
+    /// count and a progress bar. Exiting is the session's ✕ (top-left).
     private var progress: some View {
-        HStack(spacing: 10) {
-            Text(store.sessionTitle)
-                .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                .lineLimit(1).minimumScaleFactor(0.7)
-            Spacer(minLength: 8)
-            Text("\(store.mastered) / \(store.total)")
-                .font(.kawaii(15, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Text(store.sessionTitle)
+                    .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Spacer(minLength: 8)
+                Text("\(store.progressCount) / \(store.total)")
+                    .font(.kawaii(15, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+            }
+            ProgressView(value: Double(store.progressCount), total: Double(max(store.total, 1)))
+                .tint(Palette.accent)
         }
         .roundedCard()
+        .accessibilityElement(children: .combine)
     }
 
     private func questionCard(_ item: KankenQuestion) -> some View {
         VStack(spacing: 10) {
-            Text(item.label ?? promptLabel(item.type))
-                .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
+            Text(item.label ?? item.type.instruction(appLanguage))
+                .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             if let paths = item.strokePaths, let marked = item.markedStroke {
                 // 筆順 cannot be asked in text: the question is "this stroke,
                 // where does it come?", so the stroke has to be pointed at.
                 MarkedStrokeGlyph(paths: paths, marked: marked)
-                    .frame(width: 180, height: 180)
+                    .frame(maxWidth: 200).aspectRatio(1, contentMode: .fit)
             } else {
                 promptText(item)
                     .font(.kawaiiJP(promptSize(item.prompt), weight: .bold)).japaneseGlyphs()
@@ -298,28 +367,131 @@ public struct KankenExamView: View {
         let target = String(item.prompt[range])
         let after = String(item.prompt[range.upperBound...])
         return Text(before)
-            + Text(target).underline().foregroundColor(Palette.pink)
+            + Text(target).underline().foregroundColor(Palette.accent)
             + Text(after)
     }
 
     private func promptSize(_ prompt: String) -> CGFloat {
-        switch prompt.count { case 0...3: 44; case 4...10: 30; default: 22 }
+        let longestLine = prompt.split(separator: "\n").map(\.count).max() ?? prompt.count
+        switch longestLine { case 0...3: return 44; case 4...10: return 30; default: return 22 }
     }
 
-    private func promptLabel(_ type: KankenQuestionType) -> String {
-        switch type {
-        case .reading: L.kankenReadingDesc[appLanguage]
-        case .radical: L.kankenRadicalDesc[appLanguage]
-        case .writing: L.kankenWritingDesc[appLanguage]
-        case .context: L.kankenContextDesc[appLanguage]
-        case .strokes: L.kankenStrokesDesc[appLanguage]
-        case .yojijukugo: L.kankenYojiDesc[appLanguage]
-        case .okurigana: L.kankenOkuriDesc[appLanguage]
-        case .taigirui: L.kankenTaigiruiDesc[appLanguage]
-        case .onkun: L.kankenOnKunDesc[appLanguage]
-        case .hitsujun: L.kankenHitsujunDesc[appLanguage]
-        case .comingSoon: ""
+    // MARK: Answer input
+
+    /// Kana-only answers can be typed: the real 読み section is written, not chosen.
+    private func canType(_ item: KankenQuestion) -> Bool {
+        writeMode && item.type == .reading && !item.answer.isEmpty
+            && item.answer.unicodeScalars.allSatisfy { Self.isKana($0) }
+    }
+
+    /// 書き取り / 表記 can be written by hand, then checked against the answer.
+    private func canHandwrite(_ item: KankenQuestion) -> Bool {
+        writeMode && item.type == .writing
+            && (item.sectionID == "writing" || item.sectionID == "orthography")
+    }
+
+    @ViewBuilder
+    private func answerArea(_ item: KankenQuestion) -> some View {
+        if canType(item) {
+            typedAnswer(item)
+        } else if canHandwrite(item) {
+            handwrittenAnswer(item)
+        } else {
+            options(item)
         }
+    }
+
+    private func typedAnswer(_ item: KankenQuestion) -> some View {
+        VStack(spacing: 12) {
+            TextField(L.typeReadingPlaceholder[appLanguage], text: $typed)
+                .font(.kawaiiJP(24, weight: .bold)).japaneseGlyphs()
+                .multilineTextAlignment(.center)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .focused($typingFocused)
+                .submitLabel(.done)
+                .onSubmit { submitTyped(item) }
+                .padding(.vertical, 16).padding(.horizontal, 12)
+                .background(Palette.card)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(typedStroke(item), lineWidth: 2))
+                .disabled(store.answered)
+            if !store.answered {
+                primaryButton(L.checkAnswer[appLanguage]) { submitTyped(item) }
+                    .disabled(Self.normalizeKana(typed).isEmpty)
+            }
+        }
+        .onAppear { typingFocused = true }
+    }
+
+    private func submitTyped(_ item: KankenQuestion) {
+        let answer = Self.normalizeKana(typed)
+        guard !answer.isEmpty, !store.answered else { return }
+        typingFocused = false
+        store.send(.chose(answer == Self.normalizeKana(item.answer) ? item.answer : answer))
+    }
+
+    private func typedStroke(_ item: KankenQuestion) -> Color {
+        guard store.answered else { return Palette.ink.opacity(0.10) }
+        return store.isCorrect ? Palette.mint : Palette.pink
+    }
+
+    private func handwrittenAnswer(_ item: KankenQuestion) -> some View {
+        VStack(spacing: 12) {
+            ZStack(alignment: .topTrailing) {
+                PencilCanvasView(drawing: $drawing)
+                    .frame(height: 200)
+                    .background(Palette.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Palette.ink.opacity(0.10), lineWidth: 2))
+                    .allowsHitTesting(!revealed)
+                Button { drawing = PKDrawing() } label: {
+                    Image(systemName: "eraser")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Palette.inkSoft)
+                        .frame(width: 44, height: 44)
+                }
+                .accessibilityLabel(L.clearCanvas[appLanguage])
+                .disabled(revealed)
+            }
+            if !revealed {
+                primaryButton(L.revealAnswer[appLanguage]) { revealed = true }
+            } else if !store.answered {
+                VStack(spacing: 10) {
+                    Text(item.answer)
+                        .font(.kawaiiJP(40, weight: .bold)).japaneseGlyphs()
+                        .foregroundStyle(Palette.ink)
+                    Text(L.selfMarkPrompt[appLanguage])
+                        .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    HStack(spacing: 12) {
+                        selfMarkButton(L.selfMarkWrong[appLanguage], icon: "xmark",
+                                       color: Palette.pink) {
+                            store.send(.chose(Self.selfMarkedWrong))
+                        }
+                        selfMarkButton(L.selfMarkRight[appLanguage], icon: "checkmark",
+                                       color: Palette.mint) {
+                            store.send(.chose(item.answer))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .roundedCard()
+            }
+        }
+    }
+
+    private func selfMarkButton(_ title: String, icon: String, color: Color,
+                                action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.kawaii(16, weight: .bold, language: appLanguage))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity).padding(.vertical, 13)
+                .background(color).clipShape(Capsule())
+        }
+        .buttonStyle(.bouncy)
     }
 
     /// 用法 answers are sentences, every other 大問's are a word or a reading.
@@ -333,9 +505,12 @@ public struct KankenExamView: View {
 
     private func options(_ item: KankenQuestion) -> some View {
         VStack(spacing: 12) {
-            ForEach(item.options, id: \.self) { option in
+            ForEach(Array(item.options.enumerated()), id: \.element) { index, option in
                 Button { store.send(.chose(option)) } label: {
-                    HStack {
+                    HStack(spacing: 12) {
+                        Text(["ア", "イ", "ウ", "エ", "オ", "カ"][min(index, 5)])
+                            .font(.kawaiiJP(14, weight: .bold))
+                            .foregroundStyle(Palette.inkSoft)
                         Text(option)
                             .font(.kawaiiJP(optionSize(item), weight: .bold)).japaneseGlyphs()
                             .foregroundStyle(optionText(option, item)).multilineTextAlignment(.leading)
@@ -344,22 +519,31 @@ public struct KankenExamView: View {
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                         if store.answered, option == item.answer {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mint)
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mintDeep)
                         } else if store.answered, option == store.chosen {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.pink)
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.pinkDeep)
                         }
                     }
-                    .padding(.horizontal, 20).padding(.vertical, 16)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 18).padding(.vertical, 16)
+                    .frame(maxWidth: .infinity, minHeight: 56)
                     .background(optionFill(option, item))
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(optionStroke(option, item), lineWidth: 2))
+                    .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .disabled(store.answered)
+                .accessibilityValue(accessibilityState(option, item))
             }
         }
+    }
+
+    private func accessibilityState(_ option: String, _ item: KankenQuestion) -> String {
+        guard store.answered else { return "" }
+        if option == item.answer { return L.quizCorrect[appLanguage] }
+        if option == store.chosen { return L.quizWrong[appLanguage] }
+        return ""
     }
 
     @ViewBuilder
@@ -367,10 +551,17 @@ public struct KankenExamView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: store.isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .foregroundStyle(store.isCorrect ? Palette.mint : Palette.pink)
                 Text(store.isCorrect ? L.quizCorrect[appLanguage] : L.quizWrong[appLanguage])
                     .font(.kawaii(15, weight: .bold))
-                    .foregroundStyle(store.isCorrect ? Palette.mint : Palette.pink)
+            }
+            .foregroundStyle(store.isCorrect ? Palette.mintDeep : Palette.pinkDeep)
+            // A typed answer that was wrong isn't one of the options, so it
+            // isn't marked anywhere else; show it next to the right one.
+            if !store.isCorrect, let chosen = store.chosen, chosen != Self.selfMarkedWrong,
+               !item.options.contains(chosen) {
+                Text("\(L.yourAnswer[appLanguage]): \(chosen)　→　\(item.answer)")
+                    .font(.kawaiiJP(16, weight: .bold)).japaneseGlyphs()
+                    .foregroundStyle(Palette.ink)
             }
             if let explanation = item.explanation, !explanation.isEmpty {
                 Text(explanation)
@@ -381,45 +572,147 @@ public struct KankenExamView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .roundedCard()
+        .accessibilityElement(children: .combine)
     }
 
     private var nextButton: some View {
-        Button { store.send(.next) } label: {
-            Text(L.next[appLanguage])
-                .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
+        primaryButton(L.next[appLanguage]) { store.send(.next) }
+    }
+
+    private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
                 .background(Palette.accent).clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.bouncy)
     }
 
+    // MARK: Results
+
+    @ViewBuilder
     private var resultCard: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 48)).foregroundStyle(Palette.mint)
-            Text(store.isWrongNote ? L.wrongNoteCleared[appLanguage] : L.quizDone[appLanguage])
-                .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            if store.isWrongNote {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 48)).foregroundStyle(Palette.mint)
+                Text(L.wrongNoteCleared[appLanguage])
+                    .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
+                    .multilineTextAlignment(.center)
+            } else if store.isMockExam {
+                mockResult
+            } else {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 48)).foregroundStyle(Palette.mint)
+                Text(L.examPracticeDone[appLanguage])
+                    .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
+                statRow(L.examFirstTry[appLanguage],
+                        "\(Int((store.scoreRatio * 100).rounded()))%  (\(store.firstTryCorrect)/\(store.total))")
+                statRow(L.examElapsed[appLanguage], L.clock(store.elapsedSeconds))
+            }
+            if !store.isWrongNote, store.firstTryCorrect < store.total {
+                Text(L.examMissedCount[appLanguage])
+                    .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .multilineTextAlignment(.center)
+            }
             HStack(spacing: 12) {
                 Button { store.send(.restart) } label: {
                     Text(L.quizAgain[appLanguage])
                         .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
-                        .padding(.horizontal, 24).padding(.vertical, 12)
+                        .frame(maxWidth: .infinity).padding(.vertical, 13)
                         .background(Palette.accent).clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.bouncy)
                 Button { store.send(.exitToHub) } label: {
                     Text(L.backToHub[appLanguage])
                         .font(.kawaii(16, weight: .bold)).foregroundStyle(Palette.ink)
-                        .padding(.horizontal, 24).padding(.vertical, 12)
+                        .frame(maxWidth: .infinity).padding(.vertical, 13)
                         .background(Palette.card).clipShape(Capsule())
                         .overlay(Capsule().stroke(Palette.ink.opacity(0.10), lineWidth: 1))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.bouncy)
             }
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 32)
+        .frame(maxWidth: .infinity).padding(.vertical, 28).padding(.horizontal, 4)
         .roundedCard().padding(16)
+    }
+
+    private var mockResult: some View {
+        let percent = Int((store.scoreRatio * 100).rounded())
+        let passPercent = Int((store.passRatio * 100).rounded())
+        return VStack(spacing: 14) {
+            Text(L.examMockDone[appLanguage])
+                .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+            ZStack {
+                Circle().stroke(Palette.ink.opacity(0.08), lineWidth: 12)
+                Circle()
+                    .trim(from: 0, to: store.scoreRatio)
+                    .stroke(store.passed ? Palette.mint : Palette.coral,
+                            style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 2) {
+                    Text("\(percent)%")
+                        .font(.kawaii(34, weight: .bold)).monospacedDigit().foregroundStyle(Palette.ink)
+                    Text("\(store.firstTryCorrect) / \(store.total)")
+                        .font(.kawaii(13, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                }
+            }
+            .frame(width: 150, height: 150)
+            .accessibilityElement(children: .combine)
+
+            Text(store.passed ? L.examPassed[appLanguage]
+                              : "\(L.examNotYet[appLanguage]) \(max(0, passPercent - percent))%")
+                .font(.kawaii(17, weight: .bold, language: appLanguage))
+                .foregroundStyle(store.passed ? Palette.mintDeep : Palette.coralDeep)
+                .multilineTextAlignment(.center)
+
+            VStack(spacing: 6) {
+                statRow(ExamType.current.hasOfficialPassLine ? L.examPassLine[appLanguage]
+                                                             : L.examGuideLine[appLanguage],
+                        "\(passPercent)%")
+                statRow(L.examElapsed[appLanguage], L.clock(store.elapsedSeconds))
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(L.examBySection[appLanguage])
+                    .font(.kawaii(14, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                ForEach(store.sectionTallies) { tally in
+                    sectionBar(tally)
+                }
+            }
+            .padding(14)
+            .background(Palette.background)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    private func sectionBar(_ tally: KankenExamFeature.SectionTally) -> some View {
+        let ratio = tally.total > 0 ? Double(tally.correct) / Double(tally.total) : 0
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(tally.title)
+                    .font(.kawaiiJP(14, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                Spacer()
+                Text("\(tally.correct)/\(tally.total)")
+                    .font(.kawaii(13, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+            }
+            ProgressView(value: ratio)
+                .tint(ratio >= store.passRatio ? Palette.mint : Palette.coral)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func statRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title)
+                .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+            Spacer()
+            Text(value)
+                .font(.kawaii(15, weight: .bold)).monospacedDigit().foregroundStyle(Palette.ink)
+        }
+        .frame(maxWidth: 320)
     }
 
     private var emptyCard: some View {
@@ -427,11 +720,12 @@ public struct KankenExamView: View {
             Image(systemName: store.isWrongNote ? "checkmark.seal.fill" : "tray")
                 .font(.system(size: 44)).foregroundStyle(store.isWrongNote ? Palette.mint : Palette.inkSoft)
             Text(store.isWrongNote ? L.wrongNoteEmpty[appLanguage] : L.kankenSectionEmpty[appLanguage])
-                .font(.kawaii(16)).foregroundStyle(Palette.inkSoft).multilineTextAlignment(.center)
+                .font(.kawaii(16, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                .multilineTextAlignment(.center)
             Button { store.send(.exitToHub) } label: {
                 Text(L.backToHub[appLanguage])
                     .font(.kawaii(15, weight: .bold)).foregroundStyle(Palette.ink)
-                    .padding(.horizontal, 22).padding(.vertical, 10)
+                    .padding(.horizontal, 22).padding(.vertical, 12)
                     .background(Palette.card).clipShape(Capsule())
                     .overlay(Capsule().stroke(Palette.ink.opacity(0.10), lineWidth: 1))
             }
@@ -444,8 +738,8 @@ public struct KankenExamView: View {
     // Option styling: neutral until answered, then green (correct) / red (chosen wrong).
     private func optionText(_ option: String, _ item: KankenQuestion) -> Color {
         guard store.answered else { return Palette.ink }
-        if option == item.answer { return Palette.mint }
-        if option == store.chosen { return Palette.pink }
+        if option == item.answer { return Palette.mintDeep }
+        if option == store.chosen { return Palette.pinkDeep }
         return Palette.inkSoft
     }
     private func optionFill(_ option: String, _ item: KankenQuestion) -> Color {
@@ -459,5 +753,17 @@ public struct KankenExamView: View {
         if option == item.answer { return Palette.mint }
         if option == store.chosen { return Palette.pink }
         return Color.clear
+    }
+
+    // MARK: Kana helpers
+
+    private static func isKana(_ scalar: Unicode.Scalar) -> Bool {
+        (0x3041...0x309F).contains(scalar.value) || (0x30A0...0x30FF).contains(scalar.value)
+    }
+
+    /// Hiragana, no spaces: typed ヒトツ, ひとつ and " ひとつ " all match ひとつ.
+    static func normalizeKana(_ text: String) -> String {
+        let trimmed = text.filter { !$0.isWhitespace }
+        return trimmed.applyingTransform(.hiraganaToKatakana, reverse: true) ?? trimmed
     }
 }

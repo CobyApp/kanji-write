@@ -1,8 +1,6 @@
 import Foundation
 
-/// How a question renders / is generated in the player. Sections whose type is
-/// `.comingSoon` are shown for structural accuracy (they exist on the real paper)
-/// but aren't yet backed by data, so they aren't playable.
+/// How a question renders / is generated in the player.
 public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codable {
     case reading          // 読み / 漢字読み — sentence, answer is a reading
     case radical          // 部首 — kanji glyph, options are 部首 glyphs
@@ -14,12 +12,55 @@ public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codab
     case taigirui         // 対義語・類義語 — a word, answer is its antonym / synonym
     case onkun            // 音読み・訓読み — kanji glyph, answer is an on / kun reading
     case hitsujun         // 筆順 — the glyph with one stroke marked, answer is its ordinal
-    case comingSoon       // real 大問, curated data not ready yet (not playable)
 
     /// Reading answers get slightly larger option type than kanji/word answers.
     public var isReading: Bool { self == .reading }
     /// Renders as a centered glyph (kanji / idiom) rather than a sentence.
     public var isGlyphPrompt: Bool { self == .radical || self == .strokes || self == .yojijukugo }
+}
+
+extension ExamType {
+    /// 漢検 級 in ascending difficulty (10級 = 1 … 1級 = 12). Tables that are
+    /// cumulative — 四字熟語, 対義語・類義語 — draw everything at or below the
+    /// target rank. nil for a JLPT level.
+    public static func kankenRank(_ level: String) -> Int? {
+        let order = ["10級", "9級", "8級", "7級", "6級", "5級", "4級", "3級",
+                     "準2級", "2級", "準1級", "1級"]
+        return order.firstIndex(of: level).map { $0 + 1 }
+    }
+
+    /// The share of the paper a candidate needs to pass, per the official
+    /// 合格基準: 10〜8級 80% (120/150), 7級〜準2級 70% (140/200), 2級 and above
+    /// 80% (160/200). JLPT has no pass line for 文字・語彙 on its own — it is
+    /// scored with 文法・読解 — so 60% is shown as a guide rather than a rule.
+    public func passRatio(for level: String) -> Double {
+        guard self == .kanken, let rank = Self.kankenRank(level) else { return 0.6 }
+        switch rank {
+        case 1...3: return 0.8
+        case 4...9: return 0.7
+        default: return 0.8
+        }
+    }
+
+    /// True when `passRatio` is an official line rather than a guide.
+    public var hasOfficialPassLine: Bool { self == .kanken }
+
+    /// The official sitting length in minutes (漢検 10〜8級 40分, the rest 60分;
+    /// JLPT 文字・語彙 N5 20分 / N4 25分 / N3 30分, and shared with 文法・読解 above).
+    public func officialMinutes(for level: String) -> Int? {
+        switch self {
+        case .kanken:
+            guard let rank = Self.kankenRank(level) else { return nil }
+            return rank <= 3 ? 40 : 60
+        case .jlpt:
+            switch level {
+            case "N5": return 20
+            case "N4": return 25
+            case "N3": return 30
+            default: return nil
+            }
+        }
+    }
 }
 
 /// A 四字熟語 (four-character idiom): the idiom, its full kana reading, meanings,
@@ -163,17 +204,13 @@ extension ExamType {
                              _ kind: String?) -> ExamSection {
         ExamSection(id: id, numeral: "", jaTitle: ja, renderType: type, kind: kind, available: true)
     }
-    /// A real 大問 whose curated data isn't ready — shown for structure, not playable.
-    private static func soon(_ id: String, _ ja: String) -> ExamSection {
-        ExamSection(id: id, numeral: "", jaTitle: ja, renderType: .comingSoon, kind: nil, available: false)
-    }
     private static var reading: ExamSection { live("reading", "読み", .reading, "reading") }
     private static var writing: ExamSection { live("writing", "書き取り", .writing, "orthography") }
     private static var radical: ExamSection { live("radical", "部首", .radical, nil) }
     private static var strokes: ExamSection { live("strokes", "画数", .strokes, nil) }
     private static var yoji: ExamSection { live("yoji", "四字熟語", .yojijukugo, nil) }
     private static func okuri(_ ja: String) -> ExamSection { live("okuri", ja, .okurigana, nil) }
-    /// 対義語・類義語 — live only where the dataset covers (5級〜2級).
+    /// 対義語・類義語 — cumulative from 6級 up, drawn from the curated pair table.
     private static var taigirui: ExamSection { live("taigirui", "対義語・類義語", .taigirui, nil) }
     private static var onkun: ExamSection { live("onkun", "音読み・訓読み", .onkun, nil) }
     /// 筆順 — the glyph with one stroke marked; the answer is its place in
@@ -289,8 +326,8 @@ extension ExamType {
     }
 }
 
-/// A ready-to-show 漢検 multiple-choice question. Adapted from the pre-authored
-/// `JLPTQuestion` bank (読み・書き取り) or generated from kanji data (部首). Codable
+/// A ready-to-show exam multiple-choice question. Adapted from the pre-authored
+/// `JLPTQuestion` bank or generated from kanji data (部首, 画数, 筆順 …). Codable
 /// so a missed one can be stored in the 오답노트 and re-served without a re-query.
 public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
     public let id: String            // stable: "<type>:<kanjiID>:<sourceID>"
@@ -307,12 +344,16 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
     /// renders offline, which is the whole point of storing the question.
     public let strokePaths: [String]?
     public let markedStroke: Int?
+    /// The 大問 this question was drawn for, so a mock paper can be scored per
+    /// section. Optional so notes saved by an older build still decode.
+    public var sectionID: String?
 
     public init(
         id: String, type: KankenQuestionType, kanjiID: Int, prompt: String,
         focus: String? = nil, options: [String], answer: String,
         explanation: String? = nil, label: String? = nil,
-        strokePaths: [String]? = nil, markedStroke: Int? = nil
+        strokePaths: [String]? = nil, markedStroke: Int? = nil,
+        sectionID: String? = nil
     ) {
         self.id = id
         self.type = type
@@ -325,6 +366,7 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
         self.label = label
         self.strokePaths = strokePaths
         self.markedStroke = markedStroke
+        self.sectionID = sectionID
     }
 }
 
@@ -355,16 +397,25 @@ public struct RadicalItem: Equatable, Sendable {
     }
 }
 
-/// A missed 漢検 question saved to the 오답노트, with the day it was saved so the
+/// A missed exam question saved to the 오답노트, with the day it was saved so the
 /// notebook can show newest-first. The whole question is stored so it re-serves
 /// offline without touching the DB.
 public struct WrongNote: Equatable, Identifiable, Sendable, Codable {
     public var id: String { question.id }
     public let question: KankenQuestion
     public let savedDay: Int
+    /// The level (級 / N) it was missed at. The notebook shows one level at a
+    /// time, so a JLPT N3 miss doesn't turn up in a 漢検 2級 review. nil for
+    /// notes saved before levels were recorded; those show everywhere.
+    public var level: String?
 
-    public init(question: KankenQuestion, savedDay: Int) {
+    public init(question: KankenQuestion, savedDay: Int, level: String? = nil) {
         self.question = question
         self.savedDay = savedDay
+        self.level = level
+    }
+
+    public func belongs(to level: String) -> Bool {
+        self.level == nil || self.level == level
     }
 }
