@@ -91,8 +91,11 @@ CREATE TABLE word (
     id           INTEGER PRIMARY KEY,
     surface      TEXT NOT NULL,
     reading_kana TEXT NOT NULL,
-    is_common    INTEGER NOT NULL DEFAULT 1
+    is_common    INTEGER NOT NULL DEFAULT 1,
+    jlpt_level   TEXT            -- 'N5'..'N1' from the JLPT vocabulary lists
 );
+
+CREATE INDEX idx_word_jlpt_level ON word(jlpt_level);
 
 CREATE TABLE word_kanji (
     word_id  INTEGER NOT NULL REFERENCES word(id),

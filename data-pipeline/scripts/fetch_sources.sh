@@ -146,5 +146,14 @@ verify_sha256 "${YOJIJUKUGO_SHA256}" \
 verify_sha256 "${TAIGIRUI_SHA256}" \
   ../app/Sources/DictionaryClient/Resources/taigirui.source.json
 
+# JLPT vocabulary lists: jamsinclair/open-anki-jlpt-decks at commit
+# 1ad66734417aca9dbcca6b2d5ee440cb13ab3ba0 (MIT, derived from tanos.co.uk).
+# Checked in under sources/jlpt_vocab/ and verified like the other local inputs.
+verify_sha256 "120911636c019899552aa6d7bd64b036ecef4bedfe272a744f75735c46aae5cd" sources/jlpt_vocab/n1.csv
+verify_sha256 "2d0f1ddd6222881cd9fc2ca701db74300af99b3f1f84d5ac3c18411c20f0c055" sources/jlpt_vocab/n2.csv
+verify_sha256 "ba071571d344e60b0e1fd11cd2e98a6aaa04515361653ca45147129460531297" sources/jlpt_vocab/n3.csv
+verify_sha256 "0e835f40a8d2a1f191d7aa499076002756fa099b95634758376f43c73793e9f6" sources/jlpt_vocab/n4.csv
+verify_sha256 "f89abc86b391c4f2b551bbf8910b0de6cd600973b3a9f8d98347513921929ebe" sources/jlpt_vocab/n5.csv
+
 echo "All source pins verified."
 echo "Done. Now build with: python -m kanjipipe.build_db --out out/kanji.sqlite"
