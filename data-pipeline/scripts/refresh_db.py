@@ -45,6 +45,7 @@ QUESTION_FILES = (  # build_db's load order; INSERT OR IGNORE keeps the first
     "sources/kanken_shikibetsu_questions.jsonl",
     "sources/kanken_derived_questions.jsonl",
     "sources/kanken_authored_questions.jsonl",
+    "sources/kanken_rare_kun_questions.jsonl",
 )
 
 

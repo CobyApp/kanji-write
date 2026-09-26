@@ -31,9 +31,13 @@ def main() -> int:
              else [json.loads(l) for l in text.splitlines() if l.strip()])
 
     con = sqlite3.connect("out/kanji.sqlite")
-    level_of = dict(con.execute(
-        "SELECT k.literal, km.level_label FROM kanji k "
-        "JOIN kanken_membership km ON km.kanji_id = k.id"))
+    # A kanji can sit in both 準1級 and 1級, so keep every level it has.
+    levels_of: dict[str, set[str]] = {}
+    for literal, level in con.execute(
+            "SELECT k.literal, km.level_label FROM kanji k "
+            "JOIN kanken_membership km ON km.kanji_id = k.id"):
+        levels_of.setdefault(literal, set()).add(level)
+    level_of = {literal: min(levels) for literal, levels in levels_of.items()}
     # JLPT 大問 (語形成, 用法, 言い換え類義) are keyed by N-level, and the app
     # looks them up with `jlpt_level = ?`, not by 級.
     jlpt_of = dict(con.execute(
@@ -55,7 +59,7 @@ def main() -> int:
                 problems.append(
                     f"{tag} claims {level} but {literal} is "
                     f"{actual or 'not in any JLPT level'}")
-        elif level_of[literal] != level:
+        elif level not in levels_of[literal]:
             problems.append(
                 f"{tag} claims {level} but {literal} is introduced at {level_of[literal]}")
         options = q.get("options") or []

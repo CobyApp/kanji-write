@@ -18,7 +18,7 @@ Every number below comes from the built database, not from an estimate:
 | Four-character idioms (四字熟語) | 398 |
 | Example sentences | 6,602 |
 | Stroke-order records | 71,836 |
-| Practice questions | 22,237 — every 10級〜2級 kanji has 読み and 書き取り items |
+| Practice questions | 25,099 — every 10級〜2級 kanji has 読み and 書き取り items; 準1級 97%, 1級 94% |
 | JLPT vocabulary levels | 6,129 words tagged N5〜N1 |
 | Languages | Korean, Japanese, English, Simplified Chinese — including every gloss and sentence translation |
 

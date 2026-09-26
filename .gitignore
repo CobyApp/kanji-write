@@ -58,3 +58,4 @@ scratch/
 # JLPT vocabulary lists (jamsinclair/open-anki-jlpt-decks, MIT) pinned by
 # SHA-256 in fetch_sources.sh; tag word.jlpt_level.
 !data-pipeline/sources/jlpt_vocab/
+!data-pipeline/sources/kanken_rare_kun_questions.jsonl
