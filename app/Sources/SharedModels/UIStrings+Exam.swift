@@ -91,3 +91,32 @@ extension L {
         return String(format: "%d:%02d", s / 60, s % 60)
     }
 }
+
+extension L {
+    public static let weakMix = L10nText(ko: "약점 집중", ja: "苦手克服", zh: "薄弱项突破", en: "Weak spots")
+    public static let weakMixSub = L10nText(
+        ko: "정답률이 낮은 유형을 섞어서 풀어요", ja: "正答率の低い大問をまとめて練習",
+        zh: "混合练习正确率低的题型", en: "A mixed drill of your lowest-scoring sections")
+    public static let weakMixEmpty = L10nText(
+        ko: "유형별로 몇 문제 풀어 보면 약점을 찾아 드려요", ja: "いくつか解くと苦手な大問が分かります",
+        zh: "做几道题后就能找出薄弱题型", en: "Answer a few sections and your weak spots show up here")
+    public static let weakMixStart = L10nText(ko: "약점 집중 시작", ja: "苦手克服を始める", zh: "开始练习", en: "Start")
+    public static let notTriedYet = L10nText(ko: "아직 안 풂", ja: "未挑戦", zh: "未练习", en: "Not tried")
+    public static let wrongDueToday = L10nText(
+        ko: "오늘 복습할 문제", ja: "今日の復習", zh: "今日待复习", en: "Due today")
+    public static let wrongNoteSpaced = L10nText(
+        ko: "세 번 연달아 맞히면 노트에서 빠져요 (1·3·7일 간격)",
+        ja: "3回続けて正解するとノートから外れます（1・3・7日後）",
+        zh: "连续答对三次即从错题本移除（间隔1・3・7天）",
+        en: "Leaves the notebook after three clears in a row (1, 3, 7 days apart)")
+    public static let timeLimit = L10nText(ko: "제한 시간", ja: "制限時間", zh: "限时", en: "Time limit")
+    public static let timeLeft = L10nText(ko: "남은 시간", ja: "残り時間", zh: "剩余时间", en: "Time left")
+    public static let timeUp = L10nText(
+        ko: "시간 종료 — 풀지 못한 문제는 오답으로 처리했어요",
+        ja: "時間切れ — 未解答の問題は不正解になりました",
+        zh: "时间到 — 未作答的题按错误计算", en: "Time's up — unanswered questions count as wrong")
+    public static let reviewWrongNotes = L10nText(ko: "오답 복습", ja: "間違い復習", zh: "错题复习", en: "Mistake review")
+    public static let reviewWrongNotesSub = L10nText(
+        ko: "복습할 때가 된 틀린 문제", ja: "復習時期が来た間違えた問題",
+        zh: "到期该复习的错题", en: "Missed questions that are due again")
+}

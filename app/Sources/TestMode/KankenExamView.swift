@@ -57,6 +57,7 @@ public struct KankenExamView: View {
                 header
                 answerModeCard
                 mockExamCard
+                weakMixCard
                 ForEach(examType.sections(for: store.level)) { section in
                     sectionCard(section)
                 }
@@ -153,12 +154,69 @@ public struct KankenExamView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
+                accuracyBadge(store.state.stat(for: section))
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(Palette.inkSoft)
             }
             .roundedCard()
         }
         .buttonStyle(.bouncy)
+    }
+
+    /// First-try accuracy for a section, coloured against the pass line.
+    @ViewBuilder
+    private func accuracyBadge(_ stat: SectionStat?) -> some View {
+        if let stat, stat.attempts > 0 {
+            let percent = Int((stat.accuracy * 100).rounded())
+            let good = stat.accuracy >= examType.passRatio(for: store.level)
+            VStack(spacing: 1) {
+                Text("\(percent)%")
+                    .font(.kawaii(15, weight: .bold)).monospacedDigit()
+                    .foregroundStyle(good ? Palette.mintDeep : Palette.coralDeep)
+                Text("\(stat.attempts)\(L.unitQuestions[appLanguage])")
+                    .font(.kawaii(10)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    /// 약점 집중 — a mixed drill over the lowest-scoring sections.
+    private var weakMixCard: some View {
+        let weak = store.state.weakSections
+        let tried = weak.contains { store.state.stat(for: $0) != nil }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 14) {
+                Image(systemName: "scope")
+                    .font(.system(size: 19, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Palette.coral)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L.weakMix[appLanguage])
+                        .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
+                    Text(tried ? L.weakMixSub[appLanguage] : L.weakMixEmpty[appLanguage])
+                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            if tried {
+                // Which sections the drill will mix, weakest first.
+                FlowChips(items: weak.map { section in
+                    let stat = store.state.stat(for: section)
+                    let score = stat.map { "\(Int(($0.accuracy * 100).rounded()))%" } ?? L.notTriedYet[appLanguage]
+                    return "\(section.jaTitle) \(score)"
+                })
+                Button { store.send(.selectWeakMix) } label: {
+                    Text(L.weakMixStart[appLanguage])
+                        .font(.kawaii(15, weight: .bold, language: appLanguage)).foregroundStyle(.white)
+                        .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        .background(Palette.coralDeep).clipShape(Capsule())
+                }
+                .buttonStyle(.bouncy)
+            }
+        }
+        .roundedCard()
     }
 
     /// A full paper: every playable 大問 at this level, back to back, scored
@@ -184,15 +242,17 @@ public struct KankenExamView: View {
                 Spacer(minLength: 0)
             }
 
-            HStack(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 infoPill(icon: "flag.checkered",
                          text: "\(examType.hasOfficialPassLine ? L.examPassLine[appLanguage] : L.examGuideLine[appLanguage]) \(passPercent)%")
+                infoPill(icon: "timer",
+                         text: "\(L.timeLimit[appLanguage]) \(L.clock(perSection * playable * KankenExamFeature.secondsPerQuestion))")
                 if let minutes = examType.officialMinutes(for: store.level) {
                     infoPill(icon: "clock",
                              text: "\(L.examOfficialTime[appLanguage]) \(minutes)\(L.minutesUnit[appLanguage])")
                 }
-                Spacer(minLength: 0)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // How long a sitting: the total is this times the playable sections,
             // so it is shown rather than left to be worked out.
@@ -232,6 +292,7 @@ public struct KankenExamView: View {
         HStack(spacing: 4) {
             Image(systemName: icon).font(.system(size: 11, weight: .bold))
             Text(text).font(.kawaii(12, weight: .bold, language: appLanguage))
+                .lineLimit(1).minimumScaleFactor(0.75)
         }
         .foregroundStyle(Palette.ink)
         .padding(.horizontal, 10).padding(.vertical, 5)
@@ -251,7 +312,9 @@ public struct KankenExamView: View {
                     Text(L.wrongNote[appLanguage])
                         .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
                     Text(store.wrongCount == 0 ? L.wrongNoteDesc[appLanguage]
-                                               : L.wrongNoteLevelScope[appLanguage])
+                                               : store.wrongDue > 0
+                                                 ? "\(L.wrongDueToday[appLanguage]) \(store.wrongDue) · \(L.wrongNoteSpaced[appLanguage])"
+                                                 : L.wrongNoteSpaced[appLanguage])
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -330,6 +393,9 @@ public struct KankenExamView: View {
                     .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 8)
+                if let limit = store.timeLimit, let started = store.startedAt {
+                    countdown(limit: limit, started: started)
+                }
                 Text("\(store.progressCount) / \(store.total)")
                     .font(.kawaii(15, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
             }
@@ -338,6 +404,17 @@ public struct KankenExamView: View {
         }
         .roundedCard()
         .accessibilityElement(children: .combine)
+    }
+
+    /// Remaining time on a mock paper; turns red in the last minute.
+    private func countdown(limit: Int, started: Date) -> some View {
+        TimelineView(.periodic(from: started, by: 1)) { context in
+            let left = max(0, limit - Int(context.date.timeIntervalSince(started)))
+            Label(L.clock(left), systemImage: "timer")
+                .font(.kawaii(14, weight: .bold)).monospacedDigit()
+                .foregroundStyle(left <= 60 ? Palette.pinkDeep : Palette.ink)
+                .accessibilityLabel("\(L.timeLeft[appLanguage]) \(L.clock(left))")
+        }
     }
 
     private func questionCard(_ item: KankenQuestion) -> some View {
@@ -352,10 +429,24 @@ public struct KankenExamView: View {
                 MarkedStrokeGlyph(paths: paths, marked: marked)
                     .frame(maxWidth: 200).aspectRatio(1, contentMode: .fit)
             } else {
-                promptText(item)
-                    .font(.kawaiiJP(promptSize(item.prompt), weight: .bold)).japaneseGlyphs()
+                // Generated prompts carry a gloss on a second line — the reading
+                // under an idiom, the meaning under a 送りがな word. It is a
+                // hint, not the question, so it is set small.
+                let lines = item.prompt.components(separatedBy: "\n")
+                let head = KankenQuestion(
+                    id: item.id, type: item.type, kanjiID: item.kanjiID,
+                    prompt: lines[0], focus: item.focus, options: item.options,
+                    answer: item.answer)
+                promptText(head)
+                    .font(.kawaiiJP(promptSize(lines[0]), weight: .bold)).japaneseGlyphs()
                     .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                if lines.count > 1 {
+                    Text(lines.dropFirst().joined(separator: "\n"))
+                        .font(.kawaii(16, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 22).padding(.horizontal, 12)
@@ -603,6 +694,12 @@ public struct KankenExamView: View {
                     .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
                     .multilineTextAlignment(.center)
             } else if store.isMockExam {
+                if let limit = store.timeLimit, store.elapsedSeconds >= limit {
+                    Label(L.timeUp[appLanguage], systemImage: "timer")
+                        .font(.kawaii(13, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.pinkDeep)
+                        .multilineTextAlignment(.center)
+                }
                 mockResult
             } else {
                 Image(systemName: "checkmark.seal.fill")
@@ -767,5 +864,55 @@ public struct KankenExamView: View {
     static func normalizeKana(_ text: String) -> String {
         let trimmed = text.filter { !$0.isWhitespace }
         return trimmed.applyingTransform(.hiraganaToKatakana, reverse: true) ?? trimmed
+    }
+}
+
+
+/// Small wrapping chips — the weak-spot sections.
+private struct FlowChips: View {
+    let items: [String]
+    var body: some View {
+        FlowLayout(spacing: 6) {
+            ForEach(items, id: \.self) { item in
+                Text(item)
+                    .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs()
+                    .foregroundStyle(Palette.coralDeep)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Palette.coralSoft).clipShape(Capsule())
+            }
+        }
+    }
+}
+
+/// A minimal left-to-right wrapping layout.
+private struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, maxX: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > width {
+                x = 0; y += rowHeight + spacing; rowHeight = 0
+            }
+            x += size.width + spacing
+            maxX = max(maxX, x - spacing)
+            rowHeight = max(rowHeight, size.height)
+        }
+        return CGSize(width: min(maxX, width), height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > bounds.minX, x + size.width > bounds.maxX {
+                x = bounds.minX; y += rowHeight + spacing; rowHeight = 0
+            }
+            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }

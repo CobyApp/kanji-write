@@ -180,6 +180,7 @@ struct HomeView: View {
             if !examType.levels.contains(targetLevel) { targetLevel = examType.defaultLevel }
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
+            store.send(.refreshWrongDue(level: targetLevel))
             writeSnapshot()
         }
         .onChange(of: examType) { _, newExam in
@@ -189,7 +190,11 @@ struct HomeView: View {
             }
         }
         .onChange(of: newPerDay) { _, _ in writeSnapshot() }
-        .onChange(of: targetLevel) { _, _ in studyStartIndex = 0; writeSnapshot() }
+        .onChange(of: targetLevel) { _, level in
+            studyStartIndex = 0
+            writeSnapshot()
+            store.send(.refreshWrongDue(level: level))
+        }
         .onChange(of: levelTotal) { _, _ in writeSnapshot() }
         .onChange(of: store.review.records.count) { _, _ in writeSnapshot() }
     }
@@ -267,7 +272,9 @@ struct HomeView: View {
             // row, grouped by purpose so eight tiles don't read as one flat list.
             VStack(spacing: 22) {
                 launcherSection(L.sectionStudy[appLanguage], Palette.pink) {
-                    studyLauncher; reviewLauncher; kankenButton
+                    studyLauncher; reviewLauncher
+                    if store.wrongDue > 0 { wrongNoteLauncher }
+                    kankenButton
                 }
                 launcherSection(L.sectionTests[appLanguage], Palette.butter) {
                     practiceButton
@@ -340,7 +347,9 @@ struct HomeView: View {
     private var launchersGrid: some View {
         VStack(spacing: 22) {
             launcherSection(L.sectionStudy[appLanguage], Palette.pink, grid: true) {
-                studyLauncher; reviewLauncher; kankenButton
+                studyLauncher; reviewLauncher
+                if store.wrongDue > 0 { wrongNoteLauncher }
+                kankenButton
             }
             launcherSection(L.sectionTests[appLanguage], Palette.butter, grid: true) {
                 practiceButton
@@ -526,6 +535,15 @@ struct HomeView: View {
                  count: session.dueIDs.isEmpty ? nil : session.dueIDs.count,
                  soft: Palette.mintSoft, accent: Palette.mint) {
             store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
+        }
+    }
+
+    /// 오답 복습 — shown only while notebook entries are due.
+    private var wrongNoteLauncher: some View {
+        launcher(icon: "exclamationmark.bubble.fill", title: L.reviewWrongNotes[appLanguage],
+                 subtitle: L.reviewWrongNotesSub[appLanguage], count: store.wrongDue,
+                 soft: Palette.pinkSoft, accent: Palette.pinkDeep) {
+            store.send(.startWrongNoteReview(level: targetLevel, language: appLanguage))
         }
     }
 

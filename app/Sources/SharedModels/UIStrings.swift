@@ -301,7 +301,7 @@ public enum L {
     public static let kankenStrokesDesc = L10nText(
         ko: "한자의 총획수", ja: "総画数", zh: "总笔画数", en: "The kanji's stroke count")
     public static let kankenYojiDesc = L10nText(
-        ko: "사자성어 읽기·뜻", ja: "四字熟語の読み・意味", zh: "四字成语读音·意思", en: "Four-character idioms")
+        ko: "빈칸 한자 채우기·뜻", ja: "□に入る漢字・意味", zh: "填空汉字·意思", en: "Fill the missing kanji, pick the meaning")
     public static let kankenOkuriDesc = L10nText(
         ko: "올바른 오쿠리가나 표기", ja: "正しい送りがな", zh: "正确的送假名", en: "The correct okurigana")
     public static let kankenTaigiruiDesc = L10nText(

@@ -51,6 +51,9 @@ public struct RootFeature {
         public var showWordbook = false
         // Bookmarked kanji ids (loaded on Home appear).
         public var bookmarkedIDs: [Int] = []
+        // 오답노트 entries due today at the plan's level (Home's 오답 복습 tile).
+        public var wrongDue = 0
+        public var wrongDueLevel: String?
         public var path = StackState<Path.State>()
         // The active full-screen study session, if any.
         @Presents public var session: Session.State?
@@ -77,6 +80,9 @@ public struct RootFeature {
         case openYojiDictionary
         case bookmarksAppeared
         case bookmarksLoaded([Int])
+        case refreshWrongDue(level: String)
+        case wrongDueLoaded(Int)
+        case startWrongNoteReview(level: String, language: AppLanguage)
         case startStudy(pullAhead: Bool)
         case startPractice(mode: PracticeFeature.State.Mode, favorites: Bool = false)
         case startQuiz(level: String, planned: [Int])
@@ -87,6 +93,8 @@ public struct RootFeature {
     }
 
     @Dependency(\.kanjiBookmarkStore) var kanjiBookmarkStore
+    @Dependency(\.wrongNoteStore) var wrongNoteStore
+    @Dependency(\.date) var date
 
     public init() {}
 
@@ -171,6 +179,26 @@ public struct RootFeature {
                 state.bookmarkedIDs = ids
                 return .none
 
+            case let .refreshWrongDue(level):
+                state.wrongDueLevel = level
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
+                return .run { send in
+                    let due = await wrongNoteStore.load()
+                        .filter { $0.belongs(to: level) && $0.isDue(on: today) }
+                    await send(.wrongDueLoaded(due.count))
+                }
+            case let .wrongDueLoaded(count):
+                state.wrongDue = count
+                return .none
+
+            case let .startWrongNoteReview(level, language):
+                state.sessionPath.removeAll()
+                state.session = .kanken(KankenExamFeature.State(level: level, language: language))
+                // Straight into today's notebook review rather than the hub.
+                return .concatenate(
+                    .send(.session(.presented(.kanken(.onAppear(level: level, language: language))))),
+                    .send(.session(.presented(.kanken(.selectWrongNote)))))
+
             // Dictionary browse (from the study hub) → drill into a level / a searched kanji.
             case let .path(.element(id: _, action: .dictionary(.levelSelected(level)))):
                 let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: level.level)
@@ -232,6 +260,9 @@ public struct RootFeature {
                 state.sessionPath.removeAll()
                 // A study / quiz session may have updated SRS records — refresh
                 // home progress so it doesn't need an app restart.
+                if let level = state.wrongDueLevel {
+                    return .merge(.send(.review(.reloadRecords)), .send(.refreshWrongDue(level: level)))
+                }
                 return .send(.review(.reloadRecords))
 
             // In-session drilling (word → kanji → writing), mirroring the

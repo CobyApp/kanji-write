@@ -10,7 +10,9 @@ CREATE TABLE kanji (
     has_verified_stroke_order INTEGER NOT NULL DEFAULT 0
         CHECK(has_verified_stroke_order IN (0, 1)),
     freq_rank    INTEGER,
-    radical      INTEGER
+    radical      INTEGER,
+    radical_form TEXT,      -- the radical as drawn in this kanji (氵 for 海)
+    parts        TEXT       -- JSON array of the kanji's other parts (KanjiVG)
 );
 
 CREATE TABLE kanken_membership (

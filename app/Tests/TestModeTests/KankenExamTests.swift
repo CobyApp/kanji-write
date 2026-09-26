@@ -163,3 +163,65 @@ final class KankenExamFeatureTests: XCTestCase {
         XCTAssertFalse(store.state.started)
     }
 }
+
+final class WrongNoteScheduleTests: XCTestCase {
+    private let note = WrongNote(
+        question: KankenQuestion(id: "q", type: .reading, kanjiID: 1, prompt: "p",
+                                 options: ["a", "b"], answer: "a"),
+        savedDay: 10)
+
+    func testClearsSpaceOutThenRetire() {
+        let first = note.reviewed(correct: true, today: 10)
+        XCTAssertEqual(first?.box, 1)
+        XCTAssertEqual(first?.due, 13)                 // 3 days
+        let second = first?.reviewed(correct: true, today: 13)
+        XCTAssertEqual(second?.due, 20)                // 7 days
+        XCTAssertNil(second?.reviewed(correct: true, today: 20))   // retired
+    }
+
+    func testAMissComesBackTomorrow() {
+        let missed = note.reviewed(correct: true, today: 10)?.reviewed(correct: false, today: 13)
+        XCTAssertEqual(missed?.box, 0)
+        XCTAssertEqual(missed?.due, 14)
+        XCTAssertTrue(note.isDue(on: 0))               // unscheduled = due now
+    }
+}
+
+@MainActor
+final class WeakSpotAndTimerTests: XCTestCase {
+    func testWeakSectionsAreLowestAccuracyThenUntried() {
+        var state = KankenExamFeature.State(level: "5級")
+        let sections = ExamType.kanken.sections(for: "5級")
+        let strong = sections[0], weak = sections[1], thin = sections[2]
+        state.stats = [
+            SectionStat.key(level: "5級", section: strong.id): SectionStat(attempts: 10, correct: 9),
+            SectionStat.key(level: "5級", section: weak.id): SectionStat(attempts: 10, correct: 3),
+            // Too few answers to judge — not "weak", but not untried either.
+            SectionStat.key(level: "5級", section: thin.id): SectionStat(attempts: 2, correct: 0),
+        ]
+        let picked = state.weakSections.map(\.id)
+        XCTAssertEqual(picked.first, weak.id)
+        XCTAssertEqual(picked.count, 3)
+        XCTAssertFalse(picked.contains(thin.id))
+    }
+
+    func testTimeUpCountsTheRestAsUnanswered() async {
+        var state = KankenExamFeature.State(level: "5級")
+        state.isMockExam = true
+        let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
+            $0.date.now = Date(timeIntervalSince1970: 1_000)
+        }
+        store.exhaustivity = .off
+        let questions = (0..<3).map {
+            KankenQuestion(id: "\($0)", type: .reading, kanjiID: 1, prompt: "p",
+                           options: ["a", "b"], answer: "a", sectionID: "reading")
+        }
+        await store.send(.loaded(questions))
+        XCTAssertEqual(store.state.timeLimit, 3 * KankenExamFeature.secondsPerQuestion)
+        await store.send(.timeUp)
+        XCTAssertTrue(store.state.isFinished)
+        XCTAssertEqual(store.state.firstTryCorrect, 0)
+        XCTAssertEqual(store.state.firstTry.count, 3)
+        await store.send(.exitToHub)                   // cancels the timer
+    }
+}
