@@ -71,6 +71,7 @@ def build(
     shikibetsu_questions_path: str | Path | None = None,
     derived_questions_path: str | Path | None = None,
     authored_questions_path: str | Path | None = None,
+    rare_kun_questions_path: str | Path | None = None,
     jlpt_vocab_dir: str | Path | None = None,
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
@@ -188,6 +189,10 @@ def build(
         if (authored_questions_path is not None
                 and os.path.exists(authored_questions_path)):
             load_jlpt_questions(conn, parse_jlpt_questions(authored_questions_path))
+        # 一字訓読み for the advanced kanji that no dictionary word uses.
+        if (rare_kun_questions_path is not None
+                and os.path.exists(rare_kun_questions_path)):
+            load_jlpt_questions(conn, parse_jlpt_questions(rare_kun_questions_path))
         if yojijukugo_path is not None:
             load_yojijukugo(conn, yojijukugo_path)
         if taigirui_path is not None:
@@ -230,6 +235,8 @@ def main() -> None:
                         default="sources/kanken_derived_questions.jsonl")
     parser.add_argument("--authored-questions",
                         default="sources/kanken_authored_questions.jsonl")
+    parser.add_argument("--rare-kun-questions",
+                        default="sources/kanken_rare_kun_questions.jsonl")
     parser.add_argument("--jlpt-vocab", default="sources/jlpt_vocab")
     parser.add_argument("--kanken", default="sources/kanken.csv")
     parser.add_argument("--unihan", default="sources/Unihan.zip")
@@ -261,6 +268,7 @@ def main() -> None:
                    shikibetsu_questions_path=args.shikibetsu_questions,
                    derived_questions_path=args.derived_questions,
                    authored_questions_path=args.authored_questions,
+                   rare_kun_questions_path=args.rare_kun_questions,
                    jlpt_vocab_dir=args.jlpt_vocab,
                    yojijukugo_path=args.yojijukugo,
                    taigirui_path=args.taigirui,
