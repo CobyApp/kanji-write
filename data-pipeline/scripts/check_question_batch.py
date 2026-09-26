@@ -59,8 +59,10 @@ def main() -> int:
             problems.append(
                 f"{tag} claims {level} but {literal} is introduced at {level_of[literal]}")
         options = q.get("options") or []
-        if len(options) != 4 or len(set(options)) != 4:
-            problems.append(f"{tag} needs four distinct options, got {options}")
+        # 熟語の構成 prints its five ア〜オ categories as the options.
+        want = 5 if q.get("kind") == "kousei" else 4
+        if len(options) != want or len(set(options)) != want:
+            problems.append(f"{tag} needs {want} distinct options, got {options}")
         answer = q.get("answer")
         if not isinstance(answer, bool) and isinstance(answer, int) and 0 <= answer < len(options):
             correct = options[answer]

@@ -72,8 +72,9 @@ def problems_for(q: dict, by_reading, by_surface) -> list[str]:
                 # spelling if it is in the lexicon.
                 for word in spellings:
                     if correct in word and word.replace(correct, opt, 1) in spellings:
-                        out.append(f"distractor {opt!r} also makes "
-                                   f"{word.replace(correct, opt, 1)} ({reading})")
+                        out.append(f"WARN distractor {opt!r} also makes "
+                                   f"{word.replace(correct, opt, 1)} ({reading}) "
+                                   "— the sentence must rule it out")
                         break
     elif kind == "reading" and focus:
         readings = by_surface.get(focus, set())
@@ -101,9 +102,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("batch", nargs="?")
     parser.add_argument("--db", default="out/kanji.sqlite")
+    parser.add_argument("--lexicon", help="JSON {surface: [readings]} to widen the "
+                        "lexicon beyond the shipped words (e.g. all of JMdict)")
     args = parser.parse_args()
     con = sqlite3.connect(args.db)
     by_reading, by_surface = load_lexicon(con)
+    if args.lexicon:
+        for surface, readings in json.loads(Path(args.lexicon).read_text("utf-8")).items():
+            for reading in readings:
+                r = kata_to_hira(reading)
+                by_surface[surface].add(r)
+                by_reading[r].add(surface)
 
     if args.batch:
         text = Path(args.batch).read_text(encoding="utf-8")
@@ -126,7 +135,8 @@ def main() -> int:
                 warned += 1
             else:
                 found += 1
-            if found + warned <= 200:
+            # Every hard failure is printed; warnings only up to a screenful.
+            if not p.startswith("WARN") or warned <= 100:
                 print(f"[{key}:{q.get('kind')}:{q.get('level')}:{q.get('literal')}] {p}")
     print(f"{'FAIL' if found else 'OK'} — {found} ambiguous item(s), "
           f"{warned} context warning(s) in {len(rows)}")
