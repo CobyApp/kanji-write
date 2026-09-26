@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import DesignSystem
-import PencilKit
 import SharedModels
 import SwiftUI
 import WritingCanvas
@@ -19,15 +18,6 @@ public struct KankenExamView: View {
     /// How many questions the mock paper draws from each 大問.
     @State private var perSection = 5
 
-    // Per-question answer input. Reset whenever the question changes.
-    @State private var typed = ""
-    @State private var drawing = PKDrawing()
-    @State private var revealed = false
-    @FocusState private var typingFocused: Bool
-
-    /// What a self-marked miss records as the chosen option: never equal to an
-    /// answer, and never shown to the learner.
-    static let selfMarkedWrong = "\u{0}✗"
 
     public init(store: StoreOf<KankenExamFeature>) {
         self.store = store
@@ -367,12 +357,6 @@ public struct KankenExamView: View {
                 emptyCard
             }
         }
-        .onChange(of: store.attempt) { _, _ in
-            typed = ""
-            drawing = PKDrawing()
-            revealed = false
-            if let item = store.current, canType(item) { typingFocused = true }
-        }
     }
 
     private var loadingCard: some View {
@@ -429,52 +413,18 @@ public struct KankenExamView: View {
                 MarkedStrokeGlyph(paths: paths, marked: marked)
                     .frame(maxWidth: 200).aspectRatio(1, contentMode: .fit)
             } else {
-                // Generated prompts carry a gloss on a second line — the reading
-                // under an idiom, the meaning under a 送りがな word. It is a
-                // hint, not the question, so it is set small.
-                let lines = item.prompt.components(separatedBy: "\n")
-                let head = KankenQuestion(
-                    id: item.id, type: item.type, kanjiID: item.kanjiID,
-                    prompt: lines[0], focus: item.focus, options: item.options,
-                    answer: item.answer)
-                promptText(head)
-                    .font(.kawaiiJP(promptSize(lines[0]), weight: .bold)).japaneseGlyphs()
-                    .foregroundStyle(Palette.ink).multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                if lines.count > 1 {
-                    Text(lines.dropFirst().joined(separator: "\n"))
-                        .font(.kawaii(16, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                ExamPromptText(prompt: item.prompt, focus: item.focus, language: appLanguage)
             }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 22).padding(.horizontal, 12)
         .roundedCard()
     }
 
-    private func promptText(_ item: KankenQuestion) -> Text {
-        guard let focus = item.focus, !focus.isEmpty,
-              let range = item.prompt.range(of: focus) else { return Text(item.prompt) }
-        let before = String(item.prompt[..<range.lowerBound])
-        let target = String(item.prompt[range])
-        let after = String(item.prompt[range.upperBound...])
-        return Text(before)
-            + Text(target).underline().foregroundColor(Palette.accent)
-            + Text(after)
-    }
-
-    private func promptSize(_ prompt: String) -> CGFloat {
-        let longestLine = prompt.split(separator: "\n").map(\.count).max() ?? prompt.count
-        switch longestLine { case 0...3: return 44; case 4...10: return 30; default: return 22 }
-    }
-
     // MARK: Answer input
 
     /// Kana-only answers can be typed: the real 読み section is written, not chosen.
     private func canType(_ item: KankenQuestion) -> Bool {
-        writeMode && item.type == .reading && !item.answer.isEmpty
-            && item.answer.unicodeScalars.allSatisfy { Self.isKana($0) }
+        writeMode && item.type == .reading && ExamKana.isKanaOnly(item.answer)
     }
 
     /// 書き取り / 表記 can be written by hand, then checked against the answer.
@@ -483,203 +433,36 @@ public struct KankenExamView: View {
             && (item.sectionID == "writing" || item.sectionID == "orthography")
     }
 
+    /// Keyed by the attempt, so a fresh attempt starts from an empty field or
+    /// canvas even when the same question comes straight back.
     @ViewBuilder
     private func answerArea(_ item: KankenQuestion) -> some View {
-        if canType(item) {
-            typedAnswer(item)
-        } else if canHandwrite(item) {
-            handwrittenAnswer(item)
-        } else {
-            options(item)
-        }
-    }
-
-    private func typedAnswer(_ item: KankenQuestion) -> some View {
-        VStack(spacing: 12) {
-            TextField(L.typeReadingPlaceholder[appLanguage], text: $typed)
-                .font(.kawaiiJP(24, weight: .bold)).japaneseGlyphs()
-                .multilineTextAlignment(.center)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .focused($typingFocused)
-                .submitLabel(.done)
-                .onSubmit { submitTyped(item) }
-                .padding(.vertical, 16).padding(.horizontal, 12)
-                .background(Palette.card)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(typedStroke(item), lineWidth: 2))
-                .disabled(store.answered)
-            if !store.answered {
-                primaryButton(L.checkAnswer[appLanguage]) { submitTyped(item) }
-                    .disabled(Self.normalizeKana(typed).isEmpty)
-            }
-        }
-        .onAppear { typingFocused = true }
-    }
-
-    private func submitTyped(_ item: KankenQuestion) {
-        let answer = Self.normalizeKana(typed)
-        guard !answer.isEmpty, !store.answered else { return }
-        typingFocused = false
-        store.send(.chose(answer == Self.normalizeKana(item.answer) ? item.answer : answer))
-    }
-
-    private func typedStroke(_ item: KankenQuestion) -> Color {
-        guard store.answered else { return Palette.ink.opacity(0.10) }
-        return store.isCorrect ? Palette.mint : Palette.pink
-    }
-
-    private func handwrittenAnswer(_ item: KankenQuestion) -> some View {
-        VStack(spacing: 12) {
-            ZStack(alignment: .topTrailing) {
-                PencilCanvasView(drawing: $drawing)
-                    .frame(height: 200)
-                    .background(Palette.card)
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Palette.ink.opacity(0.10), lineWidth: 2))
-                    .allowsHitTesting(!revealed)
-                Button { drawing = PKDrawing() } label: {
-                    Image(systemName: "eraser")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Palette.inkSoft)
-                        .frame(width: 44, height: 44)
+        Group {
+            if canType(item) {
+                TypedReadingAnswer(answer: item.answer, chosen: store.chosen, language: appLanguage) {
+                    store.send(.chose($0))
                 }
-                .accessibilityLabel(L.clearCanvas[appLanguage])
-                .disabled(revealed)
-            }
-            if !revealed {
-                primaryButton(L.revealAnswer[appLanguage]) { revealed = true }
-            } else if !store.answered {
-                VStack(spacing: 10) {
-                    Text(item.answer)
-                        .font(.kawaiiJP(40, weight: .bold)).japaneseGlyphs()
-                        .foregroundStyle(Palette.ink)
-                    Text(L.selfMarkPrompt[appLanguage])
-                        .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                    HStack(spacing: 12) {
-                        selfMarkButton(L.selfMarkWrong[appLanguage], icon: "xmark",
-                                       color: Palette.pink) {
-                            store.send(.chose(Self.selfMarkedWrong))
-                        }
-                        selfMarkButton(L.selfMarkRight[appLanguage], icon: "checkmark",
-                                       color: Palette.mint) {
-                            store.send(.chose(item.answer))
-                        }
-                    }
+            } else if canHandwrite(item) {
+                HandwrittenAnswer(answer: item.answer, answered: store.answered, language: appLanguage) {
+                    store.send(.chose($0 ? item.answer : ExamKana.selfMarkedWrong))
                 }
-                .frame(maxWidth: .infinity)
-                .roundedCard()
-            }
-        }
-    }
-
-    private func selfMarkButton(_ title: String, icon: String, color: Color,
-                                action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: icon)
-                .font(.kawaii(16, weight: .bold, language: appLanguage))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity).padding(.vertical, 13)
-                .background(color).clipShape(Capsule())
-        }
-        .buttonStyle(.bouncy)
-    }
-
-    /// 用法 answers are sentences, every other 大問's are a word or a reading.
-    /// Sizing off the longest option keeps sentences on screen without shrinking
-    /// the short answers that most sections use.
-    private func optionSize(_ item: KankenQuestion) -> CGFloat {
-        let longest = item.options.map(\.count).max() ?? 0
-        if longest > 12 { return 15 }
-        return item.type == .reading ? 22 : 20
-    }
-
-    private func options(_ item: KankenQuestion) -> some View {
-        VStack(spacing: 12) {
-            ForEach(Array(item.options.enumerated()), id: \.element) { index, option in
-                Button { store.send(.chose(option)) } label: {
-                    HStack(spacing: 12) {
-                        Text(["ア", "イ", "ウ", "エ", "オ", "カ"][min(index, 5)])
-                            .font(.kawaiiJP(14, weight: .bold))
-                            .foregroundStyle(Palette.inkSoft)
-                        Text(option)
-                            .font(.kawaiiJP(optionSize(item), weight: .bold)).japaneseGlyphs()
-                            .foregroundStyle(optionText(option, item)).multilineTextAlignment(.leading)
-                            // 用法's options are whole sentences; without this the
-                            // HStack gives them one line and clips the rest.
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer()
-                        if store.answered, option == item.answer {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mintDeep)
-                        } else if store.answered, option == store.chosen {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.pinkDeep)
-                        }
-                    }
-                    .padding(.horizontal, 18).padding(.vertical, 16)
-                    .frame(maxWidth: .infinity, minHeight: 56)
-                    .background(optionFill(option, item))
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(optionStroke(option, item), lineWidth: 2))
-                    .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            } else {
+                ExamOptionList(options: item.options, answer: item.answer, chosen: store.chosen,
+                               isReading: item.type == .reading, language: appLanguage) {
+                    store.send(.chose($0))
                 }
-                .buttonStyle(.plain)
-                .disabled(store.answered)
-                .accessibilityValue(accessibilityState(option, item))
             }
         }
+        .id(store.attempt)
     }
 
-    private func accessibilityState(_ option: String, _ item: KankenQuestion) -> String {
-        guard store.answered else { return "" }
-        if option == item.answer { return L.quizCorrect[appLanguage] }
-        if option == store.chosen { return L.quizWrong[appLanguage] }
-        return ""
-    }
-
-    @ViewBuilder
     private func explanationCard(_ item: KankenQuestion) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: store.isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                Text(store.isCorrect ? L.quizCorrect[appLanguage] : L.quizWrong[appLanguage])
-                    .font(.kawaii(15, weight: .bold))
-            }
-            .foregroundStyle(store.isCorrect ? Palette.mintDeep : Palette.pinkDeep)
-            // A typed answer that was wrong isn't one of the options, so it
-            // isn't marked anywhere else; show it next to the right one.
-            if !store.isCorrect, let chosen = store.chosen, chosen != Self.selfMarkedWrong,
-               !item.options.contains(chosen) {
-                Text("\(L.yourAnswer[appLanguage]): \(chosen)　→　\(item.answer)")
-                    .font(.kawaiiJP(16, weight: .bold)).japaneseGlyphs()
-                    .foregroundStyle(Palette.ink)
-            }
-            if let explanation = item.explanation, !explanation.isEmpty {
-                Text(explanation)
-                    .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.ink)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .roundedCard()
-        .accessibilityElement(children: .combine)
+        ExamExplanationCard(isCorrect: store.isCorrect, chosen: store.chosen, options: item.options,
+                            answer: item.answer, explanation: item.explanation, language: appLanguage)
     }
 
     private var nextButton: some View {
-        primaryButton(L.next[appLanguage]) { store.send(.next) }
-    }
-
-    private func primaryButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
-                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Palette.accent).clipShape(Capsule())
-        }
-        .buttonStyle(.bouncy)
+        ExamPrimaryButton(title: L.next[appLanguage], language: appLanguage) { store.send(.next) }
     }
 
     // MARK: Results
@@ -834,39 +617,7 @@ public struct KankenExamView: View {
         .roundedCard().padding(16)
     }
 
-    // Option styling: neutral until answered, then green (correct) / red (chosen wrong).
-    private func optionText(_ option: String, _ item: KankenQuestion) -> Color {
-        guard store.answered else { return Palette.ink }
-        if option == item.answer { return Palette.mintDeep }
-        if option == store.chosen { return Palette.pinkDeep }
-        return Palette.inkSoft
-    }
-    private func optionFill(_ option: String, _ item: KankenQuestion) -> Color {
-        guard store.answered else { return Palette.card }
-        if option == item.answer { return Palette.mintSoft }
-        if option == store.chosen { return Palette.pinkSoft }
-        return Palette.card
-    }
-    private func optionStroke(_ option: String, _ item: KankenQuestion) -> Color {
-        guard store.answered else { return Palette.ink.opacity(0.08) }
-        if option == item.answer { return Palette.mint }
-        if option == store.chosen { return Palette.pink }
-        return Color.clear
-    }
-
-    // MARK: Kana helpers
-
-    private static func isKana(_ scalar: Unicode.Scalar) -> Bool {
-        (0x3041...0x309F).contains(scalar.value) || (0x30A0...0x30FF).contains(scalar.value)
-    }
-
-    /// Hiragana, no spaces: typed ヒトツ, ひとつ and " ひとつ " all match ひとつ.
-    static func normalizeKana(_ text: String) -> String {
-        let trimmed = text.filter { !$0.isWhitespace }
-        return trimmed.applyingTransform(.hiraganaToKatakana, reverse: true) ?? trimmed
-    }
 }
-
 
 /// Small wrapping chips — the weak-spot sections.
 private struct FlowChips: View {

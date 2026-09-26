@@ -42,3 +42,31 @@ extension L {
     public static let speak = L10nText(ko: "소리 듣기", ja: "読み上げ", zh: "朗读", en: "Listen")
     public static let clearSearch = L10nText(ko: "검색어 지우기", ja: "検索語を消す", zh: "清除搜索", en: "Clear search")
 }
+
+extension L {
+    public static let studyStats = L10nText(ko: "학습 기록", ja: "学習記録", zh: "学习记录", en: "Progress")
+    public static let studyStatsSub = L10nText(
+        ko: "하루 학습량과 유형별 실력", ja: "日々の学習量と大問別の実力", zh: "每日学习量与各题型水平",
+        en: "Daily activity and section strength")
+    public static let last14Days = L10nText(ko: "최근 14일", ja: "直近14日", zh: "最近14天", en: "Last 14 days")
+    public static let kanjiLearnedChart = L10nText(ko: "새로 배운 한자", ja: "新しく覚えた漢字", zh: "新学汉字", en: "New kanji")
+    public static let questionsChart = L10nText(ko: "푼 문제", ja: "解いた問題", zh: "做题数", en: "Questions")
+    public static let readiness = L10nText(ko: "시험 준비도", ja: "合格への準備", zh: "备考进度", en: "Exam readiness")
+    public static let coverage = L10nText(ko: "한자 학습", ja: "漢字の学習", zh: "汉字学习", en: "Kanji learned")
+    public static let estimatedScore = L10nText(ko: "예상 정답률", ja: "予想正答率", zh: "预估正确率", en: "Estimated score")
+    public static let estimateNeedsData = L10nText(
+        ko: "유형별로 5문제 이상 풀면 예상 정답률을 보여 드려요",
+        ja: "各大問を5問以上解くと予想正答率を表示します",
+        zh: "每个题型做满5题后显示预估正确率",
+        en: "Answer five questions in a section to see an estimate")
+    public static let byLevel = L10nText(ko: "급수별 진도", ja: "級・レベル別の進み具合", zh: "各级进度", en: "By level")
+    public static let totalLearned = L10nText(ko: "배운 한자", ja: "覚えた漢字", zh: "已学汉字", en: "Kanji learned")
+    public static let totalAnswered = L10nText(ko: "푼 문제", ja: "解いた問題", zh: "做过的题", en: "Answered")
+    public static let overallAccuracy = L10nText(ko: "정답률", ja: "正答率", zh: "正确率", en: "Accuracy")
+}
+
+extension L {
+    public static let noActivityYet = L10nText(
+        ko: "최근 14일 동안의 기록이 아직 없어요", ja: "直近14日の記録はまだありません",
+        zh: "最近14天还没有记录", en: "Nothing recorded in the last 14 days yet")
+}

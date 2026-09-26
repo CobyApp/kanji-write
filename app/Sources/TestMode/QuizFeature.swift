@@ -44,6 +44,19 @@ public struct QuizItem: Equatable, Identifiable, Sendable {
         return (clean, target.isEmpty ? nil : target)
     }
 
+    /// The same question in the exam hub's shape, for the 오답노트.
+    public var asExamQuestion: KankenQuestion {
+        let type: KankenQuestionType = switch kind {
+        case "reading": .reading
+        case "orthography": .writing
+        default: .context
+        }
+        return KankenQuestion(
+            id: "quiz:\(id)", type: type, kanjiID: kanjiID, prompt: prompt, focus: focus,
+            options: options, answer: answer, explanation: explanation,
+            sectionID: kind == "orthography" ? "orthography" : kind)
+    }
+
     /// The 해설 in the chosen language, falling back deterministically.
     static func localized(_ dict: [String: String], _ language: AppLanguage) -> String? {
         for key in [language.glossKey, "en", "ko", "ja", "zh"] {
@@ -83,6 +96,9 @@ public struct QuizFeature {
         // True during a 다시 풀기 replay: the mastery loop still runs, but first
         // attempts don't reschedule/persist SRS (scheduling happened on pass 1).
         public var isReplay = false
+        /// Bumped on every attempt so the view resets its answer input, even
+        /// when a missed question comes straight back.
+        public var attempt = 0
 
         public init(level: String, plannedIDs: [Int] = [], language: AppLanguage = .ko) {
             self.level = level
@@ -111,6 +127,8 @@ public struct QuizFeature {
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.quizStore) var quizStore
     @Dependency(\.reviewStore) var reviewStore
+    @Dependency(\.wrongNoteStore) var wrongNoteStore
+    @Dependency(\.studyLogStore) var studyLogStore
     @Dependency(\.date) var date
 
     public init() {}
@@ -133,6 +151,7 @@ public struct QuizFeature {
                 state.chosen = nil
                 state.started = true
                 state.isReplay = true
+                state.attempt += 1
                 return .none
 
             case let .loaded(questions, studied, records, today, order):
@@ -174,6 +193,7 @@ public struct QuizFeature {
                 state.answeredOnce = []
                 state.chosen = nil
                 state.started = true
+                state.attempt += 1
                 return .none
 
             case let .chose(option):
@@ -195,7 +215,22 @@ public struct QuizFeature {
                                                  correct: correct, today: state.today)
                         state.records[item.id] = QuizRecord(id: item.id, box: s.box, due: s.due)
                         let all = Array(state.records.values)
-                        save = .run { _ in await quizStore.save(all) }
+                        let today = state.today
+                        save = .run { _ in
+                            await quizStore.save(all)
+                            await studyLogStore.record(today, correct)
+                        }
+                        // A first miss joins the 오답노트, the same notebook the
+                        // exam hub reviews — the daily quiz used to forget it.
+                        if !correct {
+                            let note = WrongNote(question: item.asExamQuestion, savedDay: state.today,
+                                                 level: state.level)
+                            save = .merge(save, .run { _ in
+                                _ = await wrongNoteStore.update { notes in
+                                    notes.filter { $0.id != note.id } + [note]
+                                }
+                            })
+                        }
                     }
                 }
                 state.queue.removeFirst()
@@ -206,6 +241,7 @@ public struct QuizFeature {
                     state.queue.append(item)   // retry later this session
                 }
                 state.chosen = nil
+                state.attempt += 1
                 return save
             }
         }

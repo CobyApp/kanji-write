@@ -287,6 +287,7 @@ struct HomeView: View {
                     if examType == .kanken { yojiDictionaryButton }
                 }
                 launcherSection(L.sectionCollection[appLanguage], Palette.teal) {
+                    statsButton
                     wordbookButton
                 }
             }
@@ -362,6 +363,7 @@ struct HomeView: View {
                 if examType == .kanken { yojiDictionaryButton }
             }
             launcherSection(L.sectionCollection[appLanguage], Palette.teal, grid: true) {
+                statsButton
                 wordbookButton
             }
         }
@@ -639,6 +641,15 @@ struct HomeView: View {
         launcher(icon: "quote.opening", title: L.expressionDictionary[appLanguage],
                  subtitle: L.expressionSub[appLanguage], count: nil,
                  soft: Palette.coralSoft, accent: Palette.coral) { store.send(.openExpressionDictionary) }
+    }
+
+    /// 학습 기록 — daily activity, per-level progress, exam readiness.
+    private var statsButton: some View {
+        launcher(icon: "chart.bar.xaxis", title: L.studyStats[appLanguage],
+                 subtitle: L.studyStatsSub[appLanguage], count: nil,
+                 soft: Palette.skySoft, accent: Palette.sky) {
+            store.send(.openStats(level: targetLevel))
+        }
     }
 
     /// The 단어장 (saved collection) — opens the bulk-manage overlay for the
