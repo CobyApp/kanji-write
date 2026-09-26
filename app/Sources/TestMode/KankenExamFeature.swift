@@ -43,6 +43,9 @@ public struct KankenExamFeature {
         public var sectionTitles: [String: String] = [:]
         public var startedAt: Date?
         public var finishedAt: Date?
+        /// Bumped on every new attempt, including a missed question that comes
+        /// straight back (same id) — the view resets its answer input on it.
+        public var attempt = 0
 
         public init(level: String, language: AppLanguage = .ko) {
             self.level = level
@@ -241,13 +244,15 @@ public struct KankenExamFeature {
                     }
                 }
                 if state.queue.isEmpty { state.finishedAt = date.now }
+                state.attempt += 1
                 return effect
 
             case .restart:
                 // The notebook may have shrunk since this run began; re-read it
                 // rather than replaying notes that were already cleared.
                 if state.isWrongNote { return .send(.selectWrongNote) }
-                state.sessionItems.shuffle()
+                // A mock paper keeps paper order, as the real sitting does.
+                if !state.isMockExam { state.sessionItems.shuffle() }
                 state.queue = state.sessionItems
                 beginRun(&state)
                 return .none
@@ -283,6 +288,7 @@ public struct KankenExamFeature {
         state.started = true
         state.startedAt = date.now
         state.finishedAt = nil
+        state.attempt += 1
     }
 
     private func refreshWrongCount(level: String) -> Effect<Action> {

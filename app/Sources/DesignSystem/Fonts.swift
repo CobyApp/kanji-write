@@ -70,6 +70,17 @@ extension Font {
     public static func kawaii(_ size: CGFloat, weight: Font.Weight = .regular,
                               language: AppLanguage) -> Font {
         Fonts.register()
+        // Display numbers and headings above 30pt sit in fixed shapes (rings,
+        // tiles); they keep their size, as in `kawaiiJP`.
+        if size > 30 {
+            switch language {
+            case .ko: return .custom("Jua-Regular", fixedSize: size)
+            case .zh: return .custom("ZCOOLKuaiLe-Regular", fixedSize: size)
+            case .ja, .en:
+                return .custom(isBold(weight) ? "ZenMaruGothic-Bold" : "ZenMaruGothic-Regular",
+                               fixedSize: size)
+            }
+        }
         switch language {
         case .ko: return .custom("Jua-Regular", size: size, relativeTo: textStyle(for: size))
         case .zh: return .custom("ZCOOLKuaiLe-Regular", size: size, relativeTo: textStyle(for: size))

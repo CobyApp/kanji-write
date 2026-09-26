@@ -144,6 +144,7 @@ struct OnboardingView: View {
                 Text(title)
                     .font(.kawaiiJP(20, weight: .bold)).japaneseGlyphs()
                     .foregroundStyle(selected ? .white : Palette.accent)
+                    .lineLimit(1).minimumScaleFactor(0.5)
                     .frame(width: 64, height: 48)
                     .background(selected ? Palette.accent : Palette.pinkSoft)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))

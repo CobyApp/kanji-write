@@ -30,7 +30,18 @@ public struct RootView: View {
     /// A fresh install, as opposed to an update from before onboarding: those
     /// already have a study plan saved.
     private var needsOnboarding: Bool {
-        !onboardingDone && UserDefaults.standard.object(forKey: "targetLevel") == nil
+        guard !onboardingDone else { return false }
+        // @AppStorage only writes a key once its value changes, so a learner who
+        // kept every default still has none of these. Any one of them — or any
+        // study record — marks an install that predates onboarding.
+        let defaults = UserDefaults.standard
+        let planKeys = ["appLanguage", "examType", "targetLevel", "newPerDay", "studyStartIndex"]
+        if planKeys.contains(where: { defaults.object(forKey: $0) != nil }) { return false }
+        // Records load asynchronously, so look for their files rather than
+        // the (still empty) in-memory state.
+        let support = URL.applicationSupportDirectory
+        let saved = ["reviews.json", "word_reviews.json", "wrong_notes.json"]
+        return !saved.contains { FileManager.default.fileExists(atPath: support.appending(path: $0).path) }
     }
 
     public var body: some View {
@@ -76,7 +87,10 @@ public struct RootView: View {
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
         .task {
             if needsOnboarding {
-                appLanguage = OnboardingView.deviceLanguage
+                // Only a language nobody chose is replaced by the device's.
+                if UserDefaults.standard.object(forKey: "appLanguage") == nil {
+                    appLanguage = OnboardingView.deviceLanguage
+                }
                 showOnboarding = true
             } else {
                 onboardingDone = true
