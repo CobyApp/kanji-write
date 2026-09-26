@@ -103,7 +103,6 @@ final class KankenExamFeatureTests: XCTestCase {
         XCTAssertEqual(store.state.queue.map(\.id), ["b"])
         await store.send(.chose("あ"))          // right
         await store.send(.next)
-        await store.skipReceivedActions()
 
         XCTAssertTrue(store.state.isFinished)
         XCTAssertEqual(store.state.firstTryCorrect, 1)
@@ -127,7 +126,6 @@ final class KankenExamFeatureTests: XCTestCase {
         XCTAssertEqual(store.state.queue.map(\.id), ["a"])   // back for another go
         await store.send(.chose("あ"))
         await store.send(.next)
-        await store.skipReceivedActions()
         XCTAssertTrue(store.state.isFinished)
         XCTAssertEqual(store.state.firstTryCorrect, 0)       // it was missed first time
     }
