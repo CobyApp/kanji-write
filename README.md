@@ -44,8 +44,12 @@ Tuist generates the Xcode project, so it is not checked in. After changing
 `Project.swift` or adding source files:
 
 ```bash
-cd app && tuist generate --no-open
+app/Scripts/generate.sh
 ```
+
+The script wraps `tuist install` + `tuist generate` and lifts the deployment
+targets of Tuist's generated package resource bundles, which Xcode 27 would
+otherwise reject.
 
 ### data-pipeline/
 
