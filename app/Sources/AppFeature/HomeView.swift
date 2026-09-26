@@ -17,13 +17,12 @@ struct HomeView: View {
     @AppStorage("newPerDay") private var newPerDay = 7
     // Study-plan start position: how many kanji to skip at the front of the level.
     @AppStorage("studyStartIndex") private var studyStartIndex = 0
-    // Epoch-day the last quiz was completed (set by QuizView), so Home can tell
-    // whether today's quiz is still pending.
-    @AppStorage("lastQuizDay") private var lastQuizDay = -1
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showPlan = false
     @State private var wordbookTab = 0          // 0: 한자, 1: 단어
     @State private var flashcards: [FlashcardItem] = []   // non-empty → card session shown
+    /// The saved words' own spaced-repetition review (built, never reachable).
+    @State private var showWordReview = false
 
     private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, exam: examType, level: targetLevel) }
     private var learnedInLevel: Int {
@@ -105,8 +104,6 @@ struct HomeView: View {
         return steps * newPerDay
     }
     private var goalFraction: Double { goalTarget > 0 ? min(Double(doneToday) / Double(goalTarget), 1) : 0 }
-    /// Today's quiz has already been completed.
-    private var quizTakenToday: Bool { lastQuizDay == store.review.today }
 
     /// 학습하기 tapped. If today's goal is already met, gate entry behind a
     /// confirmation (pull tomorrow's study forward / take the pending quiz);
@@ -168,6 +165,7 @@ struct HomeView: View {
             // settings). In-content buttons respond reliably on Mac Catalyst.
             if showPlan { planOverlay.zIndex(1) }
             if store.showWordbook { wordbookOverlay.zIndex(1) }
+            if showWordReview { wordReviewOverlay.zIndex(1.5) }
             if !flashcards.isEmpty {
                 FlashcardView(items: flashcards) { flashcards = [] }
                     .transition(.scale(scale: 0.97).combined(with: .opacity))
@@ -217,12 +215,29 @@ struct HomeView: View {
     // MARK: Greeting + ring
 
     private var greeting: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(L.greeting[appLanguage])
                 .font(.kawaii(24, weight: .bold, language: appLanguage))
                 .foregroundStyle(Palette.ink)
-            Text("\(targetLevel) · \(learnedInLevel)/\(levelTotal)")
-                .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
+            // Which exam you are on used to be visible only inside Settings.
+            // Tapping the chip opens the plan, where exam and level both live.
+            Button { withAnimation(.easeOut(duration: 0.18)) { showPlan = true } } label: {
+                HStack(spacing: 6) {
+                    Text(examType == .kanken ? "漢検" : "JLPT")
+                        .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs()
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Palette.accent).clipShape(Capsule())
+                    Text("\(targetLevel) · \(learnedInLevel)/\(levelTotal)")
+                        .font(.kawaii(14)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .bold)).foregroundStyle(Palette.inkSoft)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(L.studyPlan[appLanguage]): \(examType == .kanken ? "漢検" : "JLPT") \(targetLevel)")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -252,7 +267,7 @@ struct HomeView: View {
             // row, grouped by purpose so eight tiles don't read as one flat list.
             VStack(spacing: 22) {
                 launcherSection(L.sectionStudy[appLanguage], Palette.pink) {
-                    studyLauncher; kankenButton
+                    studyLauncher; reviewLauncher; kankenButton
                 }
                 launcherSection(L.sectionTests[appLanguage], Palette.butter) {
                     practiceButton
@@ -325,7 +340,7 @@ struct HomeView: View {
     private var launchersGrid: some View {
         VStack(spacing: 22) {
             launcherSection(L.sectionStudy[appLanguage], Palette.pink, grid: true) {
-                studyLauncher; kankenButton
+                studyLauncher; reviewLauncher; kankenButton
             }
             launcherSection(L.sectionTests[appLanguage], Palette.butter, grid: true) {
                 practiceButton
@@ -409,6 +424,15 @@ struct HomeView: View {
     private var planEditor: some View {
         VStack(alignment: .leading, spacing: 16) {
             SectionHeader(L.studyPlan[appLanguage], accent: Palette.sky)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L.examType[appLanguage])
+                    .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.inkSoft)
+                Picker(L.examType[appLanguage], selection: $examType) {
+                    Text("JLPT").tag(ExamType.jlpt)
+                    Text("漢検").tag(ExamType.kanken)
+                }
+                .pickerStyle(.segmented)
+            }
             // Level chips wrap to as many rows as needed — a segmented control is
             // too cramped for 漢検's 10 levels on iPhone.
             VStack(alignment: .leading, spacing: 8) {
@@ -492,6 +516,17 @@ struct HomeView: View {
                  subtitle: L.newKanjiSub[appLanguage],
                  count: session.newIDs.isEmpty ? nil : session.newIDs.count,
                  soft: Palette.pinkSoft, accent: Palette.pink) { startStudyTapped() }
+    }
+
+    /// 오늘의 복습 — the spaced-repetition quiz over what was studied plus the
+    /// questions whose review is due. It was built but had no way in.
+    private var reviewLauncher: some View {
+        launcher(icon: "arrow.triangle.2.circlepath", title: L.reviewQuiz[appLanguage],
+                 subtitle: L.reviewQuizSub[appLanguage],
+                 count: session.dueIDs.isEmpty ? nil : session.dueIDs.count,
+                 soft: Palette.mintSoft, accent: Palette.mint) {
+            store.send(.startQuiz(level: targetLevel, planned: session.newIDs))
+        }
     }
 
     private var dictionaryButton: some View {
@@ -665,7 +700,13 @@ struct HomeView: View {
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 20).readableWidth(sizeClass)
-                    cardStudyButton
+                    HStack(spacing: 10) {
+                        cardStudyButton
+                        if wordbookTab == 1, !store.wordReview.dueIDs.isEmpty {
+                            wordReviewButton
+                        }
+                    }
+                    .padding(.horizontal, 20).readableWidth(sizeClass)
                 }
             }
             .padding(.bottom, 6)
@@ -751,8 +792,35 @@ struct HomeView: View {
             .background(Palette.accent).clipShape(Capsule())
         }
         .buttonStyle(.bouncy)
-        .padding(.horizontal, 20).readableWidth(sizeClass)
         .disabled(wordbookTab == 0 ? bookmarkedKanji.isEmpty : store.wordReview.words.isEmpty)
+    }
+
+    /// 복습 N — the saved words that are due, graded with the four FSRS buttons.
+    private var wordReviewButton: some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.18)) { showWordReview = true }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 13, weight: .bold))
+                Text("\(L.review[appLanguage]) \(store.wordReview.dueIDs.count)")
+                    .font(.kawaii(14, weight: .bold, language: appLanguage))
+            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity).padding(.vertical, 11)
+            .background(Palette.mintDeep).clipShape(Capsule())
+        }
+        .buttonStyle(.bouncy)
+    }
+
+    private var wordReviewOverlay: some View {
+        WordReviewHubView(wordStore: store.scope(state: \.wordReview, action: \.wordReview))
+            .safeAreaInset(edge: .top) {
+                OverlayHeader(title: L.review[appLanguage]) {
+                    withAnimation(.easeOut(duration: 0.18)) { showWordReview = false }
+                }
+            }
+            .background(Palette.background.ignoresSafeArea())
+            .transition(.scale(scale: 0.97).combined(with: .opacity))
     }
 
     private var kanjiFlashcards: [FlashcardItem] {

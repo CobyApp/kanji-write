@@ -49,7 +49,7 @@ private struct KanjiWidgetView: View {
             }
             Spacer(minLength: 0)
             Text(s.nextGlyph.isEmpty ? "🌸" : s.nextGlyph)
-                .font(.kawaii(52, weight: .bold)).foregroundStyle(Palette.ink)
+                .font(.kawaiiJP(52, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                 .frame(maxWidth: .infinity)
             if !s.nextMeaning.isEmpty {
                 Text(s.nextMeaning).font(.kawaii(13, language: lang))
@@ -64,7 +64,7 @@ private struct KanjiWidgetView: View {
         HStack(spacing: 16) {
             VStack(spacing: 4) {
                 Text(s.nextGlyph.isEmpty ? "🌸" : s.nextGlyph)
-                    .font(.kawaii(64, weight: .bold)).foregroundStyle(Palette.ink)
+                    .font(.kawaiiJP(64, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                 if !s.nextMeaning.isEmpty {
                     Text(s.nextMeaning).font(.kawaii(13, language: lang))
                         .foregroundStyle(Palette.inkSoft).lineLimit(1)

@@ -95,6 +95,10 @@ public struct PracticeFeature {
         public var index = 0
         /// Per-question PKDrawing data (question index → serialized drawing).
         public var drawings: [Int: Data] = [:]
+        /// Self-marked results on the review screen (question index → right).
+        /// Nothing grades handwriting automatically, so the learner's own ○/×
+        /// is the only score the run has.
+        public var marks: [Int: Bool] = [:]
         /// 힌트: the answer kanji and its stroke order, hidden until asked for.
         /// Reset on every navigation so the next question starts covered.
         public var hintShown = false
@@ -203,6 +207,7 @@ public struct PracticeFeature {
         case toggleHint
         case hintStrokesLoaded([String])
         case finish              // → review
+        case mark(index: Int, correct: Bool)
         case restart             // → setup
         case exitToSetup         // closing a run goes back to the range picker
         case favoritesLoaded([String: [Int]])
@@ -406,6 +411,7 @@ public struct PracticeFeature {
                     state.questions = state.favoriteItems
                     state.index = 0
                     state.drawings = [:]
+                    state.marks = [:]
                     state.hintShown = false
                     state.hintStrokes = nil
                     state.phase = .testing
@@ -424,6 +430,7 @@ public struct PracticeFeature {
                 state.questions = Array(lk[first...last])
                 state.index = 0
                 state.drawings = [:]
+                state.marks = [:]
                 state.hintShown = false
                 state.hintStrokes = nil
                 state.phase = .testing
@@ -467,6 +474,15 @@ public struct PracticeFeature {
             case .finish:
                 state.phase = .review
                 return .none
+
+            case let .mark(index, correct):
+                guard state.questions.indices.contains(index) else { return .none }
+                state.marks[index] = correct
+                // A miss joins 즐겨찾기 — the "test me on what I got wrong" list —
+                // so it comes back without a second tap on the star.
+                let item = state.questions[index]
+                guard !correct, !state.favoriteIDs.contains(item.id) else { return .none }
+                return .send(.toggleFavorite(item))
 
             case .exitToSetup:
                 state.phase = .setup

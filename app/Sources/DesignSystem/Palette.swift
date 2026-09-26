@@ -28,7 +28,16 @@ public enum Palette {
 
     // Text
     public static let ink = Color(hex: 0x6B5563)
-    public static let inkSoft = Color(hex: 0xA8929E)
+    /// Secondary text. Darkened from #A8929E (2.9:1 on white) to clear the
+    /// 4.5:1 WCAG AA line for body text.
+    public static let inkSoft = Color(hex: 0x86707C)
+
+    // Text-safe versions of the pastel accents, for right/wrong labels and
+    // counts written *in* the color (the pastels are ~2:1 on white).
+    public static let mintDeep = Color(hex: 0x23865F)
+    public static let pinkDeep = Color(hex: 0xC93A73)
+    public static let coralDeep = Color(hex: 0xB65A2A)
+    public static let lavenderDeep = Color(hex: 0x7458C9)
 
     // Primary brand accent (candy pink)
     public static let accent = Color(hex: 0xFF80B5)
