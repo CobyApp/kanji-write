@@ -23,10 +23,9 @@ public struct CircleButton: View {
                 .frame(width: size, height: size)
                 .background(Palette.card, in: Circle())
                 .shadow(color: Palette.ink.opacity(0.06), radius: 5, y: 2)
-                // The drawn circle stays small; the hit area meets the 44pt
-                // minimum so the ✕ isn't a fiddly target.
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
+                // The drawn circle and its layout stay as they were; only the
+                // hit area grows to the 44pt minimum.
+                .contentShape(Rectangle().inset(by: -max(0, (44 - size) / 2)))
         }
         .buttonStyle(.bouncy)   // springy press + gentle pointer-hover lift
         .accessibilityLabel(defaultLabel)

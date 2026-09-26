@@ -141,6 +141,7 @@ public struct KankenExamView: View {
             HStack(spacing: 14) {
                 Text(section.numeral)
                     .font(.kawaiiJP(20, weight: .bold)).foregroundStyle(.white)
+                    .lineLimit(1).minimumScaleFactor(0.5)
                     .frame(width: 44, height: 44)
                     .background(Palette.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -303,10 +304,11 @@ public struct KankenExamView: View {
                 emptyCard
             }
         }
-        .onChange(of: store.current?.id) { _, _ in
+        .onChange(of: store.attempt) { _, _ in
             typed = ""
             drawing = PKDrawing()
             revealed = false
+            if let item = store.current, canType(item) { typingFocused = true }
         }
     }
 
