@@ -48,6 +48,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default="out/kanji.sqlite")
     parser.add_argument("--out", default="sources/kanken_doonkun_questions.jsonl")
+    parser.add_argument(
+        "--jmdict", default="sources/jmdict.xml",
+        help="every JMdict headword counts as a real word when rejecting a "
+             "distractor; the shipped word table alone is common words only, "
+             "which let 一朝 through as a wrong answer for いっちょう 一□")
     args = parser.parse_args()
 
     con = sqlite3.connect(args.db)
@@ -80,6 +85,12 @@ def main() -> int:
         words_by_literal[literal].append(WordRow(surface, reading, en, ko))
     all_surfaces = {row[0] for row in con.execute("SELECT surface FROM word")}
     con.close()
+    if args.jmdict and Path(args.jmdict).exists():
+        from lxml import etree
+        for _, entry in etree.iterparse(args.jmdict, tag="entry", load_dtd=False,
+                                        resolve_entities=False, huge_tree=True):
+            all_surfaces.update(k.text for k in entry.iter("keb") if k.text)
+            entry.clear()
 
     rng = random.Random(SEED)
     out: list[dict] = []

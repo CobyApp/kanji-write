@@ -325,7 +325,6 @@ public enum L {
         ko: "한자의 부수 고르기", ja: "漢字の部首", zh: "部首", en: "The kanji's radical")
     public static let kankenWritingDesc = L10nText(
         ko: "읽기에 맞는 한자 표기", ja: "正しい漢字表記", zh: "书写", en: "Write it in kanji")
-    public static let kankenComingSoon = L10nText(ko: "준비 중", ja: "準備中", zh: "准备中", en: "Coming soon")
     public static let wrongNote = L10nText(ko: "오답노트", ja: "間違いノート", zh: "错题本", en: "Mistake notebook")
     public static let wrongNoteDesc = L10nText(
         ko: "틀린 문제 다시 풀기", ja: "間違えた問題を解き直す", zh: "重做错题", en: "Re-solve missed questions")

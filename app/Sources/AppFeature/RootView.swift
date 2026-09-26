@@ -18,9 +18,30 @@ import WritingCanvas
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    /// First-run setup shown once. Installs from before onboarding existed
+    /// already chose a plan, so they skip it (see `needsOnboarding`).
+    @AppStorage("onboardingDone") private var onboardingDone = false
+    @State private var showOnboarding = false
 
     public init(store: StoreOf<RootFeature>) {
         self.store = store
+    }
+
+    /// A fresh install, as opposed to an update from before onboarding: those
+    /// already have a study plan saved.
+    private var needsOnboarding: Bool {
+        guard !onboardingDone else { return false }
+        // @AppStorage only writes a key once its value changes, so a learner who
+        // kept every default still has none of these. Any one of them — or any
+        // study record — marks an install that predates onboarding.
+        let defaults = UserDefaults.standard
+        let planKeys = ["appLanguage", "examType", "targetLevel", "newPerDay", "studyStartIndex"]
+        if planKeys.contains(where: { defaults.object(forKey: $0) != nil }) { return false }
+        // Records load asynchronously, so look for their files rather than
+        // the (still empty) in-memory state.
+        let support = URL.applicationSupportDirectory
+        let saved = ["reviews.json", "word_reviews.json", "wrong_notes.json"]
+        return !saved.contains { FileManager.default.fileExists(atPath: support.appending(path: $0).path) }
     }
 
     public var body: some View {
@@ -46,12 +67,36 @@ public struct RootView: View {
                     .transition(.scale(scale: 0.97).combined(with: .opacity))
                     .zIndex(3)
             }
+            if showOnboarding {
+                OnboardingView {
+                    onboardingDone = true
+                    withAnimation(.easeOut(duration: 0.25)) { showOnboarding = false }
+                }
+                .transition(.opacity)
+                .zIndex(4)
+            }
         }
         .animation(.easeOut(duration: 0.2), value: store.session != nil)
         .animation(.easeOut(duration: 0.2), value: store.showSettings)
         .tint(Palette.accent)
+        // The palette is a fixed light pastel set with no dark variants. Left to
+        // follow the system, dark mode put system controls (pickers, steppers,
+        // the drawing canvas's ink) in dark styling on white cards — strokes
+        // drawn in white on a white canvas vanished.
+        .preferredColorScheme(.light)
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
-        .task { store.send(.onAppear) }
+        .task {
+            if needsOnboarding {
+                // Only a language nobody chose is replaced by the device's.
+                if UserDefaults.standard.object(forKey: "appLanguage") == nil {
+                    appLanguage = OnboardingView.deviceLanguage
+                }
+                showOnboarding = true
+            } else {
+                onboardingDone = true
+            }
+            store.send(.onAppear)
+        }
     }
 
     /// Settings as a full-screen overlay with the shared header (✕ top-left +

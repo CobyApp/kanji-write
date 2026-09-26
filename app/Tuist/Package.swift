@@ -13,11 +13,72 @@ import ProjectDescription
 // compilation condition on the `Dependencies` target. We enable only
 // `Foundation`: the others would pull `@_exported import Clocks /
 // CombineSchedulers` for modules we neither link nor use.
+//
+// Xcode 27 rejects deployment targets below iOS 15 / macOS 12, and these
+// packages still declare iOS 12–13 / macOS 10.15. Each package target gets a
+// supported floor. Not iOS 17+: swift-perception marks its back-ported
+// `Bindable` obsoleted in iOS 17, and swift-sharing still references it.
+func floor(_ settings: SettingsDictionary) -> SettingsDictionary {
+    settings.merging([
+        "IPHONEOS_DEPLOYMENT_TARGET": "16.0",
+        "MACOSX_DEPLOYMENT_TARGET": "13.0",
+        "WATCHOS_DEPLOYMENT_TARGET": "9.0",
+        "TVOS_DEPLOYMENT_TARGET": "16.0",
+    ]) { current, _ in current }
+}
+
 let packageSettings = PackageSettings(
+    baseSettings: .settings(base: floor([:])),
     targetSettings: [
-        "Dependencies": [
+        "CasePaths": floor([:]),
+        "CasePathsCore": floor([:]),
+        "CasePathsMacros": floor([:]),
+        "CasePathsMacrosSupport": floor([:]),
+        "Clocks": floor([:]),
+        "CombineSchedulers": floor([:]),
+        "ConcurrencyExtras": floor([:]),
+        "CustomDump": floor([:]),
+        "Dependencies": floor([
             "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "$(inherited) Foundation",
-        ],
+        ]),
+        "DependenciesMacros": floor([:]),
+        "DependenciesMacrosPlugin": floor([:]),
+        "GRDB": floor([:]),
+        "GRDBSQLite": floor([:]),
+        "IdentifiedCollections": floor([:]),
+        "InternalCollectionsUtilities": floor([:]),
+        "IssueReporting": floor([:]),
+        "OrderedCollections": floor([:]),
+        "Perception": floor([:]),
+        "PerceptionCore": floor([:]),
+        "PerceptionMacros": floor([:]),
+        "Sharing": floor([:]),
+        "Sharing1": floor([:]),
+        "Sharing2": floor([:]),
+        "SwiftBasicFormat": floor([:]),
+        "SwiftCompilerPlugin": floor([:]),
+        "SwiftCompilerPluginMessageHandling": floor([:]),
+        "SwiftDiagnostics": floor([:]),
+        "SwiftIfConfig": floor([:]),
+        "SwiftNavigation": floor([:]),
+        "SwiftOperators": floor([:]),
+        "SwiftParser": floor([:]),
+        "SwiftParserDiagnostics": floor([:]),
+        "SwiftSyntax": floor([:]),
+        "SwiftSyntax509": floor([:]),
+        "SwiftSyntax510": floor([:]),
+        "SwiftSyntax600": floor([:]),
+        "SwiftSyntax601": floor([:]),
+        "SwiftSyntax602": floor([:]),
+        "SwiftSyntax603": floor([:]),
+        "SwiftSyntaxBuilder": floor([:]),
+        "SwiftSyntaxMacroExpansion": floor([:]),
+        "SwiftSyntaxMacros": floor([:]),
+        "SwiftUINavigation": floor([:]),
+        "UIKitNavigation": floor([:]),
+        "UIKitNavigationShim": floor([:]),
+        "XCTestDynamicOverlay": floor([:]),
+        "_SwiftSyntaxCShims": floor([:]),
     ]
 )
 #endif

@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 import Review
 
 @Reducer
@@ -12,13 +13,14 @@ public struct ReminderFeature {
     public enum Action: Equatable {
         case apply(enabled: Bool, hour: Int)
         case authorizationResult(Bool)
-        case resetProgress   // clears kanji + word SRS records, quiz SRS, wordbook
+        case resetProgress   // clears kanji + word SRS records, quiz SRS, wordbook, 오답노트
     }
 
     @Dependency(\.notificationClient) var notificationClient
     @Dependency(\.reviewStore) var reviewStore
     @Dependency(\.wordReviewStore) var wordReviewStore
     @Dependency(\.quizStore) var quizStore
+    @Dependency(\.wrongNoteStore) var wrongNoteStore
 
     public init() {}
 
@@ -30,6 +32,12 @@ public struct ReminderFeature {
                     await reviewStore.saveRecords([])
                     await wordReviewStore.saveRecords([])
                     await quizStore.save([])   // reset quiz spaced-repetition too
+                    // The 오답노트 is study progress too; left behind, a reset
+                    // learner still opened a notebook full of old misses.
+                    // Bookmarks and favourites are a collection, not progress,
+                    // and stay.
+                    await wrongNoteStore.save([])
+                    UserDefaults.standard.set(0, forKey: "studyStartIndex")
                 }
             case let .apply(enabled, hour):
                 guard enabled else {

@@ -100,9 +100,9 @@ struct StudyQuizCard: View {
                             .foregroundStyle(optionText(option)).multilineTextAlignment(.leading)
                         Spacer(minLength: 0)
                         if choice != nil, option == spec.answer {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mint)
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Palette.mintDeep)
                         } else if option == choice {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.pink)
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.pinkDeep)
                         }
                     }
                     .padding(.horizontal, 16).padding(.vertical, 13)
@@ -116,13 +116,17 @@ struct StudyQuizCard: View {
                 .disabled(choice != nil)
             }
         }
+        .sensoryFeedback(trigger: choice) { _, new in
+            guard let new else { return nil }
+            return new == spec.answer ? .success : .error
+        }
     }
 
     // Neutral until answered, then green (correct) / red (chosen wrong).
     private func optionText(_ option: String) -> Color {
         guard choice != nil else { return Palette.ink }
-        if option == spec.answer { return Palette.mint }
-        if option == choice { return Palette.pink }
+        if option == spec.answer { return Palette.mintDeep }
+        if option == choice { return Palette.pinkDeep }
         return Palette.inkSoft
     }
     private func optionFill(_ option: String) -> Color {
