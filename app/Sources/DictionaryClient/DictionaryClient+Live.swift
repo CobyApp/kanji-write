@@ -400,6 +400,7 @@ extension DictionaryClient: DependencyKey {
                     SELECT id, kanji_id, level, kind, prompt, options, answer, explanations, focus
                     FROM jlpt_question
                     WHERE kanji_id IN (\(placeholders))
+                      AND kind IN ('reading', 'orthography', 'context')
                     ORDER BY kanji_id, id
                     """, arguments: StatementArguments(kanjiIDs))
                 // Reconstruct options (stored as a JSON array of strings) and cap
@@ -498,17 +499,15 @@ extension DictionaryClient: DependencyKey {
         },
         examYojijukugo: { level, limit in
             // 四字熟語 are cumulative: a 級's paper draws from that 級 and easier.
-            let ranks = ["5級": 1, "4級": 2, "3級": 3, "準2級": 4, "2級": 5]
-            guard let target = ranks[level] else { return [] }  // JLPT → no 四字熟語
+            // 準1級 / 1級 included — they have their own idioms and were left out.
+            guard let target = ExamType.kankenRank(level) else { return [] }  // JLPT → none
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [Yojijukugo] in
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT id, yoji, reading, meaning_ja, meaning_ko,
                            meaning_zh, meaning_en, kanken_level
                     FROM yojijukugo
-                    WHERE (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2
-                           WHEN '3級' THEN 3 WHEN '準2級' THEN 4 WHEN '2級' THEN 5
-                           ELSE 99 END) <= ?
+                    WHERE \(Self.kankenRankSQL) <= ?
                     ORDER BY RANDOM() LIMIT ?
                     """, arguments: [target, limit])
                 return rows.map(Self.makeYoji)
@@ -521,9 +520,7 @@ extension DictionaryClient: DependencyKey {
                     SELECT id, yoji, reading, meaning_ja, meaning_ko,
                            meaning_zh, meaning_en, kanken_level
                     FROM yojijukugo
-                    ORDER BY (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2
-                              WHEN '3級' THEN 3 WHEN '準2級' THEN 4 WHEN '2級' THEN 5
-                              ELSE 99 END), id
+                    ORDER BY \(Self.kankenRankSQL), id
                     """)
                 return rows.map(Self.makeYoji)
             }
@@ -593,24 +590,26 @@ extension DictionaryClient: DependencyKey {
                     """, arguments: [level, limit])
                 return rows.map { row in
                     let id: Int = row["id"]
-                    let ko = try? String.fetchOne(
-                        db, sql: "SELECT text FROM word_gloss WHERE word_id=? AND lang='ko' LIMIT 1",
-                        arguments: [id])
+                    func gloss(_ lang: String) -> String? {
+                        (try? String.fetchOne(
+                            db, sql: "SELECT text FROM word_gloss WHERE word_id=? AND lang=? LIMIT 1",
+                            arguments: [id, lang])) ?? nil
+                    }
                     return WordEntry(id: id, surface: row["surface"], reading: row["reading_kana"],
-                                     meaningEn: nil, meaningKo: ko ?? nil)
+                                     meaningEn: gloss("en"), meaningKo: gloss("ko"),
+                                     meaningJa: gloss("ja"), meaningZh: gloss("zh"))
                 }
             }
         },
         examTaigirui: { level, relationOnly, limit in
-            let ranks = ["5級": 1, "4級": 2, "3級": 3, "準2級": 4, "2級": 5]
-            guard let target = ranks[level] else { return [] }
+            // Cumulative like 四字熟語; the table starts at 6級 and runs to 1級.
+            guard let target = ExamType.kankenRank(level) else { return [] }
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [TaigiruiPair] in
                 var sql = """
                     SELECT id, word, word_reading, answer, answer_reading, relation, kanken_level
                     FROM taigirui
-                    WHERE (CASE kanken_level WHEN '5級' THEN 1 WHEN '4級' THEN 2 WHEN '3級' THEN 3
-                           WHEN '準2級' THEN 4 WHEN '2級' THEN 5 ELSE 99 END) <= ?
+                    WHERE \(Self.kankenRankSQL) <= ?
                     """
                 var args: [DatabaseValueConvertible] = [target]
                 if let relationOnly { sql += " AND relation = ?"; args.append(relationOnly) }
@@ -665,17 +664,53 @@ extension DictionaryClient: DependencyKey {
                     var on: [String] = [], kun: [String] = []
                     for rr in rrows {
                         let axis: String = rr["lang_axis"], value: String = rr["value"]
-                        // Strip kanjidic okurigana dots (つ.ぐ → つぐ) for kun display.
-                        if axis == "on" { on.append(value) }
-                        else { kun.append(value.replacingOccurrences(of: ".", with: "")) }
+                        // Strip kanjidic okurigana dots (つ.ぐ → つぐ) and the affix
+                        // hyphens (-にく.い, わる-) that are notation, not reading.
+                        let clean = value.replacingOccurrences(of: ".", with: "")
+                            .replacingOccurrences(of: "-", with: "")
+                        guard !clean.isEmpty else { continue }
+                        if axis == "on" { on.append(clean) } else { kun.append(clean) }
                     }
                     out.append(OnKunItem(kanjiID: kid, literal: kr["literal"],
                                          onReadings: on, kunReadings: kun))
                 }
                 return out
             }
+        },
+        jlptVocabulary: { level, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [WordEntry] in
+                // Older bundles have no jlpt_level column; answer empty rather
+                // than failing the whole screen.
+                let columns = try db.columns(in: "word").map(\.name)
+                guard columns.contains("jlpt_level") else { return [] }
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT id, surface, reading_kana FROM word
+                    WHERE jlpt_level = ?
+                    ORDER BY id
+                    LIMIT ?
+                    """, arguments: [level, limit])
+                return try rows.map { row in
+                    let id: Int = row["id"]
+                    func gloss(_ lang: String) throws -> String? {
+                        try String.fetchOne(
+                            db, sql: "SELECT text FROM word_gloss WHERE word_id = ? AND lang = ? LIMIT 1",
+                            arguments: [id, lang])
+                    }
+                    return WordEntry(
+                        id: id, surface: row["surface"], reading: row["reading_kana"],
+                        meaningEn: try gloss("en"), meaningKo: try gloss("ko"),
+                        meaningJa: try gloss("ja"), meaningZh: try gloss("zh"))
+                }
+            }
         }
     )
+
+    /// A 漢検 級 as its difficulty rank, for cumulative level filters. Mirrors
+    /// `ExamType.kankenRank`.
+    static let kankenRankSQL = """
+        (CASE kanken_level WHEN '10級' THEN 1 WHEN '9級' THEN 2 WHEN '8級' THEN 3 WHEN '7級' THEN 4 WHEN '6級' THEN 5 WHEN '5級' THEN 6 WHEN '4級' THEN 7 WHEN '3級' THEN 8 WHEN '準2級' THEN 9 WHEN '2級' THEN 10 WHEN '準1級' THEN 11 WHEN '1級' THEN 12 ELSE 99 END)
+        """
 
     private static func makeYoji(_ row: Row) -> Yojijukugo {
         Yojijukugo(id: row["id"], yoji: row["yoji"], reading: row["reading"],

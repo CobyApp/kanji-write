@@ -73,13 +73,17 @@ public struct DictionaryClient: Sendable {
     /// 対義語・類義語 pairs at or below the 漢検 級 (cumulative). `relationOnly` filters
     /// to "対義" or "類義" (nil = both). JLPT levels return [].
     public var examTaigirui: @Sendable (_ level: String, _ relationOnly: String?, _ limit: Int) async throws -> [TaigiruiPair]
-    /// Kanji at the level with their 音読み / 訓読み reading sets — the input to the
-    /// 音読み・訓読み question generator.
     /// Kanji with verified stroke order at a level, with their strokes in order —
     /// the input to the 筆順 generator.
     public var examStrokeOrderItems: @Sendable (_ level: String, _ limit: Int)
         async throws -> [StrokeOrderItem]
+    /// Kanji at the level with their 音読み / 訓読み reading sets — the input to the
+    /// 音読み・訓読み question generator.
     public var examOnKun: @Sendable (_ level: String, _ limit: Int) async throws -> [OnKunItem]
+    /// The JLPT vocabulary list for an N level (the words the 文字・語彙 paper
+    /// draws on), in list order. Unlike `quizWords` this is word-level, not
+    /// "any word containing a kanji of this level".
+    public var jlptVocabulary: @Sendable (_ level: String, _ limit: Int) async throws -> [WordEntry]
 }
 
 extension DictionaryClient: TestDependencyKey {
