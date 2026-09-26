@@ -159,6 +159,7 @@ public struct KankenExamFeature {
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.wrongNoteStore) var wrongNoteStore
     @Dependency(\.sectionStatsStore) var sectionStatsStore
+    @Dependency(\.studyLogStore) var studyLogStore
     @Dependency(\.date) var date
 
     public init() {}
@@ -328,6 +329,9 @@ public struct KankenExamFeature {
                     effect = .run { send in
                         await send(.statsLoaded(await sectionStatsStore.record([key: delta])))
                     }
+                }
+                if isFirstTry {
+                    effect = .merge(effect, .run { _ in await studyLogStore.record(today, correct) })
                 }
                 if correct {
                     state.mastered += 1

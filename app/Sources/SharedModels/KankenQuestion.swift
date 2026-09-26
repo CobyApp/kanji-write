@@ -477,3 +477,15 @@ public struct SectionStat: Equatable, Sendable, Codable {
 
     public static func key(level: String, section: String) -> String { "\(level)|\(section)" }
 }
+
+/// One day's answering activity across the exam hub and the daily quiz — the
+/// raw material for the 학습 기록 charts.
+public struct DayLog: Equatable, Sendable, Codable {
+    public var answered: Int
+    public var correct: Int
+
+    public init(answered: Int = 0, correct: Int = 0) {
+        self.answered = answered
+        self.correct = correct
+    }
+}

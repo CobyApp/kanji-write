@@ -65,7 +65,10 @@ extension WrongNoteStore: DependencyKey {
 }
 
 extension WrongNoteStore: TestDependencyKey {
-    public static let testValue = WrongNoteStore()
+    /// Misses are filed from several features (exam hub, daily quiz); tests of
+    /// their other behaviour shouldn't have to stub the notebook.
+    public static let testValue = WrongNoteStore(
+        load: { [] }, save: { _ in }, update: { _ in [] })
 }
 
 extension DependencyValues {

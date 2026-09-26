@@ -24,6 +24,7 @@ public struct RootFeature {
         case wordDictionary(WordDictionaryFeature)
         case yojiDictionary(YojiDictionaryFeature)
         case yojiDetail(YojiDetailFeature)
+        case stats(StatsFeature)
     }
 
     /// A full-screen study session launched from Home.
@@ -78,6 +79,7 @@ public struct RootFeature {
         case openWordDictionary
         case openExpressionDictionary
         case openYojiDictionary
+        case openStats(level: String)
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case refreshWrongDue(level: String)
@@ -149,6 +151,13 @@ public struct RootFeature {
 
             case .openYojiDictionary:
                 state.path.append(.yojiDictionary(YojiDictionaryFeature.State()))
+                return .none
+
+            case let .openStats(level):
+                state.path.append(.stats(StatsFeature.State(
+                    exam: ExamType.of(level: level), level: level,
+                    kanji: state.review.kanji.elements, records: state.review.records.elements,
+                    today: state.review.today)))
                 return .none
 
             // Word dictionary → drill into a selected word's detail, carrying the
