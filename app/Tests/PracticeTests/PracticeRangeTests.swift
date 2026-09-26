@@ -94,6 +94,7 @@ final class PracticeFavoriteTests: XCTestCase {
             // Switching to 단어 loads that level's vocabulary; the favourites
             // themselves are what this is about.
             $0.dictionaryClient.quizWords = { _, _ in [] }
+            $0.dictionaryClient.jlptVocabulary = { _, _ in [] }
         }
         store.exhaustivity = .off
         let kanji = PracticeItem(id: 7, answer: "山", glosses: [:])
@@ -215,6 +216,7 @@ final class PracticeRadicalTests: XCTestCase {
             $0.dictionaryClient.quizWords = { _, _ in
                 [WordEntry(id: 1, surface: "火山", reading: "かざん", meaningEn: "volcano", meaningKo: "화산")]
             }
+            $0.dictionaryClient.jlptVocabulary = { _, _ in [] }
         }
         store.exhaustivity = .off
         await store.send(.loaded([Self.yama], [:]))

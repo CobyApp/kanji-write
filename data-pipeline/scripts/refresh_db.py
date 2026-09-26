@@ -32,8 +32,10 @@ sys.path.insert(0, str(ROOT))
 from kanjipipe.build_db import RESOURCE_DIR  # noqa: E402
 from kanjipipe.ingest.jlpt_questions import parse_jlpt_questions  # noqa: E402
 from kanjipipe.ingest.jlpt_vocab import parse_jlpt_vocab  # noqa: E402
+from kanjipipe.ingest.kanjivg_parts import parse_kanjivg_parts  # noqa: E402
 from kanjipipe.loader import (  # noqa: E402
-    load_jlpt_questions, load_taigirui, load_word_jlpt_levels, load_yojijukugo)
+    load_jlpt_questions, load_kanji_parts, load_taigirui, load_word_jlpt_levels,
+    load_yojijukugo)
 from kanjipipe.validate import question_defects, starved_sections  # noqa: E402
 
 QUESTION_FILES = (  # build_db's load order; INSERT OR IGNORE keeps the first
@@ -44,6 +46,13 @@ QUESTION_FILES = (  # build_db's load order; INSERT OR IGNORE keeps the first
     "sources/kanken_derived_questions.jsonl",
     "sources/kanken_authored_questions.jsonl",
 )
+
+
+def ensure_kanji_part_columns(conn: sqlite3.Connection) -> None:
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(kanji)")}
+    for name in ("radical_form", "parts"):
+        if name not in columns:
+            conn.execute(f"ALTER TABLE kanji ADD COLUMN {name} TEXT")
 
 
 def ensure_word_jlpt_column(conn: sqlite3.Connection) -> None:
@@ -58,6 +67,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", default=str(RESOURCE_DIR / "kanji.sqlite"))
     parser.add_argument("--jlpt-vocab", default=str(ROOT / "sources/jlpt_vocab"))
+    # KanjiVG is pinned to a release, so its parts can be refreshed in place.
+    parser.add_argument("--kanjivg", default=str(ROOT / "sources/kanjivg.xml"))
     args = parser.parse_args()
 
     # Work on a copy so a failed gate leaves the shipped database untouched.
@@ -66,6 +77,10 @@ def main() -> int:
     conn = sqlite3.connect(work)
     try:
         ensure_word_jlpt_column(conn)
+        ensure_kanji_part_columns(conn)
+        if Path(args.kanjivg).exists():
+            with_parts = load_kanji_parts(conn, parse_kanjivg_parts(args.kanjivg))
+            print(f"kanji with a radical form: {with_parts}")
         tagged = load_word_jlpt_levels(conn, parse_jlpt_vocab(args.jlpt_vocab))
 
         conn.execute("DELETE FROM jlpt_question")

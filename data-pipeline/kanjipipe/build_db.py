@@ -25,6 +25,7 @@ from kanjipipe.ingest.kanjidic2 import parse_kanjidic2
 from kanjipipe.ingest.jmdict import parse_jmdict
 from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
 from kanjipipe.ingest.kanjivg import parse_kanjivg
+from kanjipipe.ingest.kanjivg_parts import parse_kanjivg_parts
 from kanjipipe.ingest.jlpt_questions import parse_jlpt_questions
 from kanjipipe.ingest.jlpt_vocab import parse_jlpt_vocab
 from kanjipipe.ingest.llm_glosses import parse_llm_glosses
@@ -37,7 +38,7 @@ from kanjipipe.loader import (
     load_kanji_variants,
     load_relations, load_sentence_glosses, load_sentence_words, load_sentences,
     load_stroke_order, load_taigirui, load_word_jazh_glosses,
-    load_word_jlpt_levels, load_word_ko_glosses, load_words, load_yojijukugo)
+    load_kanji_parts, load_word_jlpt_levels, load_word_ko_glosses, load_words, load_yojijukugo)
 from kanjipipe.validate import (
     PRODUCTION_KANKEN_COUNT_POLICY,
     KankenCountPolicy,
@@ -138,6 +139,7 @@ def build(
         if llm_glosses_path is not None and os.path.exists(llm_glosses_path):
             load_llm_glosses(conn, parse_llm_glosses(llm_glosses_path))
         load_stroke_order(conn, strokes)
+        load_kanji_parts(conn, parse_kanjivg_parts(kanjivg_path))
         load_words(conn, words, advanced_literals=advanced_literals)
         if jlpt_vocab_dir is not None and os.path.isdir(jlpt_vocab_dir):
             load_word_jlpt_levels(conn, parse_jlpt_vocab(jlpt_vocab_dir))

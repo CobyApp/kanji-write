@@ -470,16 +470,26 @@ extension DictionaryClient: DependencyKey {
             return try await queue.read { db -> [RadicalItem] in
                 // `radical` is a KANGXI index (Int 1…214); map it to its 部首 glyph
                 // for display. Kanji whose radical index has no glyph are skipped.
+                // radical_form / parts come from KanjiVG; older bundles lack them.
+                let columns = try db.columns(in: "kanji").map(\.name)
+                let hasParts = columns.contains("radical_form") && columns.contains("parts")
+                let extra = hasParts ? ", k.radical_form, k.parts" : ""
                 let rows = try Row.fetchAll(db, sql: """
-                    SELECT k.id, k.literal, k.radical FROM kanji k
+                    SELECT k.id, k.literal, k.radical\(extra) FROM kanji k
                     WHERE \(predicate) AND k.radical IS NOT NULL AND k.radical > 0
                     ORDER BY RANDOM()
                     LIMIT ?
                     """, arguments: [level, limit])
                 return rows.compactMap { row -> RadicalItem? in
                     let index: Int = row["radical"]
-                    guard let glyph = kangxiRadical(index) else { return nil }
-                    return RadicalItem(kanjiID: row["id"], literal: row["literal"], radical: glyph)
+                    let form: String? = hasParts ? row["radical_form"] : nil
+                    guard let glyph = form ?? kangxiRadical(index) else { return nil }
+                    var parts: [String] = []
+                    if hasParts, let json: String = row["parts"], let data = json.data(using: .utf8) {
+                        parts = (try? JSONDecoder().decode([String].self, from: data)) ?? []
+                    }
+                    return RadicalItem(kanjiID: row["id"], literal: row["literal"],
+                                       radical: glyph, parts: parts)
                 }
             }
         },

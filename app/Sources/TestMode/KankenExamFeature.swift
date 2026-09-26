@@ -20,13 +20,21 @@ public struct KankenExamFeature {
         public var language: AppLanguage
         /// Count of saved 오답노트 entries at this level (badge on the hub).
         public var wrongCount = 0
+        /// Of those, how many are due for review today.
+        public var wrongDue = 0
         public var today = 0
+        /// First-try accuracy per section, keyed by `SectionStat.key`.
+        public var stats: [String: SectionStat] = [:]
 
         // Session state — nil `activeSection` and not `isWrongNote` means the hub.
         public var activeSection: ExamSection?
         public var isWrongNote = false
         /// A full paper: every playable 大問 of this level, in paper order.
         public var isMockExam = false
+        /// A drill over the learner's weakest sections, mixed together.
+        public var isWeakMix = false
+        /// Mock papers are timed: seconds allowed for the whole paper.
+        public var timeLimit: Int?
         public var queue: [KankenQuestion] = []
         public var sessionItems: [KankenQuestion] = []
         public var total = 0
@@ -53,7 +61,7 @@ public struct KankenExamFeature {
         }
 
         /// True while a section / 오답노트 session is running (vs. the hub).
-        public var isPlaying: Bool { activeSection != nil || isWrongNote || isMockExam }
+        public var isPlaying: Bool { activeSection != nil || isWrongNote || isMockExam || isWeakMix }
         public var current: KankenQuestion? { queue.first }
         public var isFinished: Bool { started && total > 0 && queue.isEmpty }
         public var answered: Bool { chosen != nil }
@@ -62,6 +70,7 @@ public struct KankenExamFeature {
         public var sessionTitle: String {
             if isWrongNote { return L.wrongNote[language] }
             if isMockExam { return L.mockExam[language] }
+            if isWeakMix { return L.weakMix[language] }
             return activeSection.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
         }
         /// The number shown against `total` in the header: questions answered on
@@ -69,10 +78,28 @@ public struct KankenExamFeature {
         public var progressCount: Int { isMockExam ? total - queue.count : mastered }
 
         public var firstTryCorrect: Int { firstTry.values.filter { $0 }.count }
+
+        public func stat(for section: ExamSection) -> SectionStat? {
+            stats[SectionStat.key(level: level, section: section.id)]
+        }
+
+        /// The sections to drill in a weak-spot session: the lowest first-try
+        /// accuracy among those tried at least five times, then any not yet
+        /// tried at all — up to three.
+        public var weakSections: [ExamSection] {
+            let playable = ExamType.of(level: level).sections(for: level).filter(\.available)
+            let tried = playable
+                .compactMap { section in stat(for: section).map { (section, $0) } }
+                .filter { $0.1.attempts >= 5 }
+                .sorted { $0.1.accuracy < $1.1.accuracy }
+                .map(\.0)
+            let untried = playable.filter { stat(for: $0) == nil }
+            return Array((tried + untried).prefix(3))
+        }
         public var scoreRatio: Double {
             total > 0 ? Double(firstTryCorrect) / Double(total) : 0
         }
-        public var passRatio: Double { ExamType.current.passRatio(for: level) }
+        public var passRatio: Double { ExamType.of(level: level).passRatio(for: level) }
         public var passed: Bool { scoreRatio >= passRatio }
         public var elapsedSeconds: Int {
             guard let startedAt, let finishedAt else { return 0 }
@@ -108,6 +135,10 @@ public struct KankenExamFeature {
         case onAppear(level: String, language: AppLanguage)
         case levelChanged(String)
         case wrongCountLoaded(Int)
+        case wrongDueLoaded(Int)
+        case statsLoaded([String: SectionStat])
+        case selectWeakMix
+        case timeUp
         case selectSection(ExamSection)
         case selectWrongNote
         case selectMockExam(perSection: Int)
@@ -119,10 +150,15 @@ public struct KankenExamFeature {
         case closeTapped   // delegate → parent dismisses the session
     }
 
-    enum CancelID { case load }
+    enum CancelID { case load, timer }
+
+    /// Seconds per question on a mock paper — the real 漢検 pace (60 minutes
+    /// for a 2級 paper of about 130 answers is ~28s each).
+    static let secondsPerQuestion = 30
 
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.wrongNoteStore) var wrongNoteStore
+    @Dependency(\.sectionStatsStore) var sectionStatsStore
     @Dependency(\.date) var date
 
     public init() {}
@@ -134,21 +170,66 @@ public struct KankenExamFeature {
                 state.level = level
                 state.language = language
                 state.today = Int(date.now.timeIntervalSince1970 / 86_400)
-                return refreshWrongCount(level: level)
+                return .merge(refreshWrongCount(level: level, today: state.today), loadStats())
 
             case let .levelChanged(level):
                 guard level != state.level else { return .none }
                 state.level = level
-                return refreshWrongCount(level: level)
+                return refreshWrongCount(level: level, today: state.today)
 
             case let .wrongCountLoaded(count):
                 state.wrongCount = count
+                return .none
+
+            case let .wrongDueLoaded(count):
+                state.wrongDue = count
+                return .none
+
+            case let .statsLoaded(stats):
+                state.stats = stats
+                return .none
+
+            case .selectWeakMix:
+                let sections = state.weakSections
+                guard !sections.isEmpty else { return .none }
+                state.isWeakMix = true
+                state.isMockExam = false
+                state.activeSection = nil
+                state.isWrongNote = false
+                state.isLoading = true
+                state.started = false
+                state.sectionTitles = Dictionary(
+                    sections.map { ($0.id, "\($0.numeral)　\($0.jaTitle)") },
+                    uniquingKeysWith: { first, _ in first })
+                let level = state.level
+                let language = state.language
+                return .run { send in
+                    var all: [KankenQuestion] = []
+                    for section in sections {
+                        let built = try? await questions(
+                            for: section, level: level, language: language, perSection: 7)
+                        all.append(contentsOf: built ?? [])
+                    }
+                    await send(.loaded(all.shuffled()))
+                }
+                .cancellable(id: CancelID.load, cancelInFlight: true)
+
+            case .timeUp:
+                // Time's up on a mock paper: whatever is left counts as unanswered.
+                guard state.isMockExam, !state.queue.isEmpty else { return .none }
+                for item in state.queue where state.firstTry[item.id] == nil {
+                    state.firstTry[item.id] = false
+                }
+                state.queue = []
+                state.chosen = nil
+                state.finishedAt = date.now
                 return .none
 
             case let .selectMockExam(perSection):
                 state.isMockExam = true
                 state.activeSection = nil
                 state.isWrongNote = false
+                state.isWeakMix = false
                 state.isLoading = true
                 state.started = false
                 let level = state.level
@@ -156,7 +237,7 @@ public struct KankenExamFeature {
                 // Paper order, not shuffled: a sitting works through its 大問 one
                 // after another, and keeping that makes the practice feel like
                 // the exam rather than a shuffled quiz.
-                let sections = ExamType.current.sections(for: level).filter(\.available)
+                let sections = ExamType.of(level: level).sections(for: level).filter(\.available)
                 state.sectionTitles = Dictionary(
                     sections.map { ($0.id, "\($0.numeral)　\($0.jaTitle)") },
                     uniquingKeysWith: { first, _ in first })
@@ -176,6 +257,7 @@ public struct KankenExamFeature {
                 state.activeSection = section
                 state.isWrongNote = false
                 state.isMockExam = false
+                state.isWeakMix = false
                 state.sectionTitles = [section.id: "\(section.numeral)　\(section.jaTitle)"]
                 return loadSection(state: &state, section: section)
 
@@ -183,14 +265,19 @@ public struct KankenExamFeature {
                 state.activeSection = nil
                 state.isWrongNote = true
                 state.isMockExam = false
+                state.isWeakMix = false
                 state.isLoading = true
                 state.started = false
                 let level = state.level
+                let today = state.today
                 return .run { send in
                     let notes = await wrongNoteStore.load()
                         .filter { $0.belongs(to: level) }
                         .sorted { $0.savedDay > $1.savedDay }
-                    await send(.loaded(notes.map(\.question)))
+                    // Today's due notes; if nothing is due, the whole notebook
+                    // (reviewing ahead is still useful).
+                    let due = notes.filter { $0.isDue(on: today) }
+                    await send(.loaded((due.isEmpty ? notes : due).map(\.question)))
                 }
                 .cancellable(id: CancelID.load, cancelInFlight: true)
 
@@ -203,7 +290,7 @@ public struct KankenExamFeature {
                 state.sessionItems = questions
                 state.total = questions.count
                 beginRun(&state)
-                return .none
+                return startTimer(&state)
 
             case let .chose(option):
                 guard state.chosen == nil else { return .none }
@@ -215,19 +302,35 @@ public struct KankenExamFeature {
                 let correct = state.chosen == item.answer
                 state.queue.removeFirst()
                 state.chosen = nil
-                if state.firstTry[item.id] == nil { state.firstTry[item.id] = correct }
+                let isFirstTry = state.firstTry[item.id] == nil
+                if isFirstTry { state.firstTry[item.id] = correct }
                 let level = state.level
+                let today = state.today
                 var effect: Effect<Action> = .none
+                if isFirstTry, state.isWrongNote {
+                    // A review answer moves the note along its schedule: a clear
+                    // pushes it out (1 → 3 → 7 days, then it retires), a miss
+                    // brings it back tomorrow.
+                    let id = item.id
+                    effect = .run { send in
+                        let notes = await wrongNoteStore.update { notes in
+                            notes.compactMap { note in
+                                note.id == id ? note.reviewed(correct: correct, today: today) : note
+                            }
+                        }
+                        let mine = notes.filter { $0.belongs(to: level) }
+                        await send(.wrongCountLoaded(mine.count))
+                        await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
+                    }
+                } else if isFirstTry, let section = item.sectionID {
+                    let key = SectionStat.key(level: level, section: section)
+                    let delta = SectionStat(attempts: 1, correct: correct ? 1 : 0, lastDay: today)
+                    effect = .run { send in
+                        await send(.statsLoaded(await sectionStatsStore.record([key: delta])))
+                    }
+                }
                 if correct {
                     state.mastered += 1
-                    if state.isWrongNote {
-                        // Clearing a note in 오답노트 mode removes it from the notebook.
-                        let id = item.id
-                        effect = .run { send in
-                            let notes = await wrongNoteStore.update { $0.filter { $0.id != id } }
-                            await send(.wrongCountLoaded(notes.filter { $0.belongs(to: level) }.count))
-                        }
-                    }
                 } else {
                     // A drill brings a miss back until it is cleared; a mock
                     // paper, like the real one, is sat once through.
@@ -235,16 +338,21 @@ public struct KankenExamFeature {
                     // A first miss is saved to the 오답노트 (once).
                     if !state.isWrongNote, state.missed.insert(item.id).inserted {
                         let note = WrongNote(question: item, savedDay: state.today, level: level)
-                        effect = .run { send in
+                        effect = .merge(effect, .run { send in
                             let notes = await wrongNoteStore.update { notes in
                                 notes.filter { $0.id != note.id } + [note]
                             }
-                            await send(.wrongCountLoaded(notes.filter { $0.belongs(to: level) }.count))
-                        }
+                            let mine = notes.filter { $0.belongs(to: level) }
+                            await send(.wrongCountLoaded(mine.count))
+                            await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
+                        })
                     }
                 }
-                if state.queue.isEmpty { state.finishedAt = date.now }
                 state.attempt += 1
+                if state.queue.isEmpty {
+                    state.finishedAt = date.now
+                    return .merge(effect, .cancel(id: CancelID.timer))
+                }
                 return effect
 
             case .restart:
@@ -255,12 +363,14 @@ public struct KankenExamFeature {
                 if !state.isMockExam { state.sessionItems.shuffle() }
                 state.queue = state.sessionItems
                 beginRun(&state)
-                return .none
+                return startTimer(&state)
 
             case .exitToHub:
                 state.activeSection = nil
                 state.isWrongNote = false
                 state.isMockExam = false
+                state.isWeakMix = false
+                state.timeLimit = nil
                 state.isLoading = false
                 state.queue = []
                 state.sessionItems = []
@@ -272,10 +382,11 @@ public struct KankenExamFeature {
                 state.started = false
                 state.startedAt = nil
                 state.finishedAt = nil
-                return .cancel(id: CancelID.load)
+                return .merge(.cancel(id: CancelID.load), .cancel(id: CancelID.timer))
 
             case .closeTapped:
-                return .cancel(id: CancelID.load)  // the parent dismisses
+                // the parent dismisses
+                return .merge(.cancel(id: CancelID.load), .cancel(id: CancelID.timer))
             }
         }
     }
@@ -291,11 +402,31 @@ public struct KankenExamFeature {
         state.attempt += 1
     }
 
-    private func refreshWrongCount(level: String) -> Effect<Action> {
+    private func refreshWrongCount(level: String, today: Int) -> Effect<Action> {
         .run { send in
-            let notes = await wrongNoteStore.load()
-            await send(.wrongCountLoaded(notes.filter { $0.belongs(to: level) }.count))
+            let mine = await wrongNoteStore.load().filter { $0.belongs(to: level) }
+            await send(.wrongCountLoaded(mine.count))
+            await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
         }
+    }
+
+    private func loadStats() -> Effect<Action> {
+        .run { send in await send(.statsLoaded(await sectionStatsStore.load())) }
+    }
+
+    /// A mock paper runs against the clock; anything else is untimed.
+    private func startTimer(_ state: inout State) -> Effect<Action> {
+        guard state.isMockExam, state.total > 0 else {
+            state.timeLimit = nil
+            return .cancel(id: CancelID.timer)
+        }
+        let limit = state.total * Self.secondsPerQuestion
+        state.timeLimit = limit
+        return .run { send in
+            try await Task.sleep(for: .seconds(limit))
+            await send(.timeUp)
+        }
+        .cancellable(id: CancelID.timer, cancelInFlight: true)
     }
 
     /// Loads and builds one section's questions from real data.
@@ -376,14 +507,25 @@ extension KankenQuestion {
     }
 
     /// Builds 部首 questions: show the kanji, pick its radical from four choices.
-    /// Distractors are other real radicals drawn from the same 級 pool.
+    /// As on the real paper, the wrong answers are the kanji's own other parts
+    /// (聞: 門 is offered against the answer 耳), topped up with other radicals
+    /// from the same 級 when a kanji has too few parts.
     static func radicalQuiz(_ items: [RadicalItem], count: Int) -> [KankenQuestion] {
         let pool = Array(Set(items.map(\.radical)))
         guard pool.count >= 4 else { return [] }
         var out: [KankenQuestion] = []
         for (index, item) in items.prefix(count).enumerated() {
             var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 1))
-            let distractors = pool.filter { $0 != item.radical }.shuffled(using: &rng).prefix(3)
+            // Single-character parts only, never the answer or the kanji itself.
+            var distractors: [String] = []
+            for part in item.parts where part.count == 1 && part != item.radical
+                && part != item.literal && !distractors.contains(part) {
+                distractors.append(part)
+            }
+            distractors = Array(distractors.shuffled(using: &rng).prefix(3))
+            for other in pool.shuffled(using: &rng) where distractors.count < 3 {
+                if other != item.radical && !distractors.contains(other) { distractors.append(other) }
+            }
             guard distractors.count == 3 else { continue }
             let options = (Array(distractors) + [item.radical]).shuffled(using: &rng)
             out.append(KankenQuestion(

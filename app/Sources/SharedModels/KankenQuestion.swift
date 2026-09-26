@@ -42,6 +42,11 @@ extension ExamType {
         }
     }
 
+    /// The exam a level belongs to: "N…" is JLPT, a 級 is 漢検.
+    public static func of(level: String) -> ExamType {
+        level.hasPrefix("N") ? .jlpt : .kanken
+    }
+
     /// True when `passRatio` is an official line rather than a guide.
     public var hasOfficialPassLine: Bool { self == .kanken }
 
@@ -388,12 +393,18 @@ public struct StrokeOrderItem: Equatable, Sendable {
 public struct RadicalItem: Equatable, Sendable {
     public let kanjiID: Int
     public let literal: String
+    /// The radical as it appears in this kanji (氵 for 海), falling back to
+    /// the Kangxi base form when the kanji is itself a radical.
     public let radical: String
+    /// The kanji's other parts (KanjiVG) — 漢検 offers these as the wrong
+    /// answers, so the choice is between pieces of the same character.
+    public let parts: [String]
 
-    public init(kanjiID: Int, literal: String, radical: String) {
+    public init(kanjiID: Int, literal: String, radical: String, parts: [String] = []) {
         self.kanjiID = kanjiID
         self.literal = literal
         self.radical = radical
+        self.parts = parts
     }
 }
 
@@ -408,14 +419,61 @@ public struct WrongNote: Equatable, Identifiable, Sendable, Codable {
     /// time, so a JLPT N3 miss doesn't turn up in a 漢検 2級 review. nil for
     /// notes saved before levels were recorded; those show everywhere.
     public var level: String?
+    /// Spaced review: how many times in a row it has been cleared, and the
+    /// day it comes back. A note leaves the notebook after its third clear
+    /// (1 → 3 → 7 days), instead of the first lucky guess. nil = due now.
+    public var box: Int?
+    public var due: Int?
 
-    public init(question: KankenQuestion, savedDay: Int, level: String? = nil) {
+    public init(question: KankenQuestion, savedDay: Int, level: String? = nil,
+                box: Int? = nil, due: Int? = nil) {
         self.question = question
         self.savedDay = savedDay
         self.level = level
+        self.box = box
+        self.due = due
     }
 
     public func belongs(to level: String) -> Bool {
         self.level == nil || self.level == level
     }
+
+    public func isDue(on today: Int) -> Bool { (due ?? 0) <= today }
+
+    /// Days until the next review after `clears` consecutive clears.
+    public static let intervals = [1, 3, 7]
+
+    /// The note after being answered in review: advanced a box when right
+    /// (nil once it has been cleared enough to retire), back to box 0 when not.
+    public func reviewed(correct: Bool, today: Int) -> WrongNote? {
+        var next = self
+        if correct {
+            let box = (self.box ?? 0) + 1
+            guard box < Self.intervals.count else { return nil }
+            next.box = box
+            next.due = today + Self.intervals[box]
+        } else {
+            next.box = 0
+            next.due = today + Self.intervals[0]
+        }
+        return next
+    }
+}
+
+/// Running first-try accuracy for one 大問 at one level — what the hub shows on
+/// each section and uses to pick the weakest ones.
+public struct SectionStat: Equatable, Sendable, Codable {
+    public var attempts: Int
+    public var correct: Int
+    public var lastDay: Int
+
+    public init(attempts: Int = 0, correct: Int = 0, lastDay: Int = 0) {
+        self.attempts = attempts
+        self.correct = correct
+        self.lastDay = lastDay
+    }
+
+    public var accuracy: Double { attempts > 0 ? Double(correct) / Double(attempts) : 0 }
+
+    public static func key(level: String, section: String) -> String { "\(level)|\(section)" }
 }

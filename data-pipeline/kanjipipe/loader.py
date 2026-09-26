@@ -608,3 +608,21 @@ def load_word_jlpt_levels(
                      [(level, word_id) for word_id, level in tagged.items()])
     conn.commit()
     return len(tagged)
+
+
+def load_kanji_parts(
+    conn: sqlite3.Connection,
+    parts: dict[int, tuple[str, list[str]]],
+) -> int:
+    """Store each kanji's radical form and parts. Returns rows updated."""
+    import json as _json
+
+    rows = [
+        (form, _json.dumps(others, ensure_ascii=False), codepoint)
+        for codepoint, (form, others) in parts.items()
+    ]
+    conn.executemany(
+        "UPDATE kanji SET radical_form = ?, parts = ? WHERE codepoint = ?", rows)
+    conn.commit()
+    return conn.execute(
+        "SELECT COUNT(*) FROM kanji WHERE radical_form IS NOT NULL").fetchone()[0]

@@ -244,9 +244,18 @@ public struct PracticeFeature {
     }
 
     /// 단어쓰기 needs the level's vocabulary; 한자쓰기 already has every kanji.
+    /// A JLPT level writes the words on that level's vocabulary list — the old
+    /// "any word containing a kanji of the level" pulled in words written with
+    /// harder kanji.
     private func loadWords(_ level: String) -> Effect<Action> {
         .run { send in
-            let words = (try? await dictionaryClient.quizWords(level, 400)) ?? []
+            var words: [WordEntry] = []
+            if level.hasPrefix("N") {
+                words = (try? await dictionaryClient.jlptVocabulary(level, 3000)) ?? []
+            }
+            if words.isEmpty {
+                words = (try? await dictionaryClient.quizWords(level, 400)) ?? []
+            }
             await send(.wordsLoaded(words))
         }
     }
