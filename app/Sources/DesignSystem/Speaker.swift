@@ -1,10 +1,12 @@
 import AVFoundation
+import SharedModels
 import SwiftUI
 
 /// A small speaker icon that reads the given text aloud when tapped.
 public struct SpeakButton: View {
     let text: String
     let language: String
+    @AppStorage("appLanguage") private var uiLanguage: AppLanguage = .ko
 
     public init(_ text: String, language: String = "ja-JP") {
         self.text = text
@@ -18,9 +20,12 @@ public struct SpeakButton: View {
                 .foregroundStyle(Palette.accent)
                 .padding(6)
                 .background(Palette.accent.opacity(0.12), in: Circle())
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("読み上げ")
+        .accessibilityLabel(L.speak[uiLanguage])
+        .accessibilityHint(text)
     }
 }
 

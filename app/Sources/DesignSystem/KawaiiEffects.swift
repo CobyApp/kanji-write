@@ -133,6 +133,7 @@ public struct FloatingBlobs: View {
 private struct PopIn: ViewModifier {
     let delay: Double
     @State private var shown: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(delay: Double, animated: Bool) {
         self.delay = delay
@@ -147,6 +148,8 @@ private struct PopIn: ViewModifier {
             .opacity(shown ? 1 : 0)
             .onAppear {
                 guard !shown else { return }
+                // Reduce Motion: appear in place, no scale.
+                if reduceMotion { shown = true; return }
                 withAnimation(.spring(response: 0.34, dampingFraction: 0.72).delay(delay)) {
                     shown = true
                 }
@@ -178,10 +181,12 @@ extension View {
 private struct Breathe: ViewModifier {
     let amount: CGFloat
     @State private var on = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func body(content: Content) -> some View {
         content
             .scaleEffect(on ? amount : 1)
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(.easeInOut(duration: 2.4).repeatForever(autoreverses: true)) {
                     on = true
                 }
@@ -269,11 +274,13 @@ public struct ConfettiView: View {
 /// A looping celebratory bounce + wiggle for a badge/emoji on completion screens.
 private struct Celebrate: ViewModifier {
     @State private var animate = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func body(content: Content) -> some View {
         content
-            .scaleEffect(animate ? 1.12 : 0.92)
-            .rotationEffect(.degrees(animate ? 7 : -7))
+            .scaleEffect(reduceMotion ? 1 : (animate ? 1.12 : 0.92))
+            .rotationEffect(.degrees(reduceMotion ? 0 : (animate ? 7 : -7)))
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(.spring(response: 0.55, dampingFraction: 0.45)
                     .repeatForever(autoreverses: true)) { animate = true }
             }
@@ -291,6 +298,7 @@ public struct Sparkles: View {
     var count = 10
     var radius: CGFloat = 66
     @State private var on = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(count: Int = 10, radius: CGFloat = 66) {
         self.count = count
@@ -310,7 +318,9 @@ public struct Sparkles: View {
             }
         }
         .onAppear {
+            if reduceMotion { on = true; return }
             withAnimation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true)) { on = true }
         }
+        .accessibilityHidden(true)
     }
 }

@@ -291,9 +291,11 @@ public struct WorksheetView: View {
                         Text(L.alreadyKnow[appLanguage])
                         Image(systemName: "forward.fill").font(.system(size: 10, weight: .bold))
                     }
-                    .font(.kawaii(12, weight: .bold)).foregroundStyle(Palette.lavender)
-                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .font(.kawaii(12, weight: .bold)).foregroundStyle(Palette.lavenderDeep)
+                    .padding(.horizontal, 12).padding(.vertical, 7)
                     .background(Palette.lavenderSoft).clipShape(Capsule())
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.bouncy)
             }
@@ -328,11 +330,19 @@ public struct WorksheetView: View {
         }
     }
 
-    /// Centers a card in the available space. No scrolling — each card's content
-    /// is kept short enough to fit (lists are split across cards and capped).
+    /// Centers a card in the available space. Cards are written to fit, but an
+    /// iPhone SE / mini or a large Dynamic Type size can still overflow them —
+    /// then, and only then, the card scrolls instead of clipping.
     private func cardShell<Content: View>(@ViewBuilder _ body: @escaping () -> Content) -> some View {
-        body()
-            .frame(maxWidth: .infinity)
+        ViewThatFits(in: .vertical) {
+            body()
+                .frame(maxWidth: .infinity)
+            ScrollView {
+                body()
+                    .frame(maxWidth: .infinity)
+            }
+            .scrollIndicators(.hidden)
+        }
     }
 
     /// Shared card chrome: an icon+title header in the card's accent, content
@@ -603,7 +613,9 @@ public struct WorksheetView: View {
                 .font(.system(size: 48)).foregroundStyle(Palette.mint)
             Text(L.doneToday[appLanguage])
                 .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
-            Text(L.seeTomorrow[appLanguage])
+            // Studying ahead finishes tomorrow's batch — "see you tomorrow"
+            // would be wrong there.
+            Text(store.pullAhead ? L.doneTodayPullAhead[appLanguage] : L.seeTomorrow[appLanguage])
                 .font(.kawaii(14)).foregroundStyle(Palette.inkSoft)
             Button { store.send(.closeTapped) } label: {
                 Text(L.done[appLanguage])
@@ -621,7 +633,9 @@ public struct WorksheetView: View {
 
     private var emptyCard: some View {
         VStack(spacing: 12) {
-            Text("🌸").font(.system(size: 52))
+            Image(systemName: "leaf.fill")
+                .font(.system(size: 44)).foregroundStyle(Palette.pink)
+                .accessibilityHidden(true)
             Text(L.noLessons[appLanguage])
                 .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.ink)
             Text(L.seeTomorrow[appLanguage])

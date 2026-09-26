@@ -23,8 +23,26 @@ public struct CircleButton: View {
                 .frame(width: size, height: size)
                 .background(Palette.card, in: Circle())
                 .shadow(color: Palette.ink.opacity(0.06), radius: 5, y: 2)
+                // The drawn circle stays small; the hit area meets the 44pt
+                // minimum so the ✕ isn't a fiddly target.
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.bouncy)   // springy press + gentle pointer-hover lift
+        .accessibilityLabel(defaultLabel)
+    }
+
+    /// Icon-only, so VoiceOver needs words. Callers can still override with
+    /// their own `.accessibilityLabel`.
+    private var defaultLabel: String {
+        let language = AppLanguage(
+            rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .ko
+        switch systemName {
+        case "xmark": return L.close[language]
+        case "chevron.left": return L.back[language]
+        case "gearshape": return L.settings[language]
+        default: return systemName
+        }
     }
 }
 
@@ -83,9 +101,12 @@ public struct SearchField: View {
             if !text.isEmpty {
                 Button { text = "" } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 15)).foregroundStyle(Palette.inkSoft.opacity(0.5))
+                        .font(.system(size: 15)).foregroundStyle(Palette.inkSoft.opacity(0.7))
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(L.clearSearch[appLanguage])
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 10)

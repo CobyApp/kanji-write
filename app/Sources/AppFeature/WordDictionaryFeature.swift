@@ -96,7 +96,16 @@ public struct WordDictionaryFeature {
         state.isLoading = true
         let level = state.level
         return .run { send in
-            let words = (try? await dictionaryClient.quizWords(level, 200)) ?? []
+            // A JLPT level lists that level's official vocabulary — what the
+            // 文字・語彙 paper actually asks. 漢検 has no word list, so it keeps
+            // "words written with this 級's kanji".
+            var words: [WordEntry] = []
+            if level.hasPrefix("N") {
+                words = (try? await dictionaryClient.jlptVocabulary(level, 3000)) ?? []
+            }
+            if words.isEmpty {
+                words = (try? await dictionaryClient.quizWords(level, 200)) ?? []
+            }
             await send(.levelLoaded(words))
         }
     }

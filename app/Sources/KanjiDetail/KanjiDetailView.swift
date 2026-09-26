@@ -34,13 +34,20 @@ public struct KanjiDetailView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .safeAreaInset(edge: .top) {
-            // A single 단어장(보관함) toggle — the kanji joins the same collection
-            // the Home 단어장 manages. (Review/write practice moved out of here.)
+            // 단어장(보관함) toggle — the kanji joins the same collection the Home
+            // 단어장 manages — and the stroke-checked writing canvas, which had
+            // no way in once its button was dropped from this header.
             NavHeader(title: store.kanji.literal, onBack: { dismiss() }) {
-                CircleButton(store.isBookmarked ? "bookmark.fill" : "bookmark", size: 34) {
-                    store.send(.toggleBookmark)
+                HStack(spacing: 0) {
+                    if store.kanji.hasVerifiedStrokeOrder {
+                        CircleButton("pencil.tip", size: 34) { store.send(.writeTapped) }
+                            .accessibilityLabel(L.practiceWriting[appLanguage])
+                    }
+                    CircleButton(store.isBookmarked ? "bookmark.fill" : "bookmark", size: 34) {
+                        store.send(.toggleBookmark)
+                    }
+                    .accessibilityLabel(store.isBookmarked ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage])
                 }
-                .accessibilityLabel(store.isBookmarked ? L.addedToWordbook[appLanguage] : L.addToWordbook[appLanguage])
             }
             .background(Palette.background)
         }
