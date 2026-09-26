@@ -33,7 +33,23 @@ private func isBold(_ weight: Font.Weight) -> Bool {
 
 /// The neutral Latin/Japanese base face (Zen Maru Gothic).
 private func baseFace(_ size: CGFloat, _ weight: Font.Weight) -> Font {
-    .custom(isBold(weight) ? "ZenMaruGothic-Bold" : "ZenMaruGothic-Regular", size: size)
+    .custom(isBold(weight) ? "ZenMaruGothic-Bold" : "ZenMaruGothic-Regular",
+            size: size, relativeTo: textStyle(for: size))
+}
+
+/// The Dynamic Type style a fixed design size scales with. Every face used to
+/// be a plain `.custom(_, size:)`, which ignores the reader's text-size
+/// setting entirely.
+private func textStyle(for size: CGFloat) -> Font.TextStyle {
+    switch size {
+    case ..<12: return .caption2
+    case ..<14: return .footnote
+    case ..<16: return .subheadline
+    case ..<19: return .body
+    case ..<23: return .title3
+    case ..<28: return .title2
+    default: return .title
+    }
 }
 
 /// The current UI language, read from the same store as `@AppStorage("appLanguage")`.
@@ -54,9 +70,20 @@ extension Font {
     public static func kawaii(_ size: CGFloat, weight: Font.Weight = .regular,
                               language: AppLanguage) -> Font {
         Fonts.register()
+        // Display numbers and headings above 30pt sit in fixed shapes (rings,
+        // tiles); they keep their size, as in `kawaiiJP`.
+        if size > 30 {
+            switch language {
+            case .ko: return .custom("Jua-Regular", fixedSize: size)
+            case .zh: return .custom("ZCOOLKuaiLe-Regular", fixedSize: size)
+            case .ja, .en:
+                return .custom(isBold(weight) ? "ZenMaruGothic-Bold" : "ZenMaruGothic-Regular",
+                               fixedSize: size)
+            }
+        }
         switch language {
-        case .ko: return .custom("Jua-Regular", size: size)
-        case .zh: return .custom("ZCOOLKuaiLe-Regular", size: size)
+        case .ko: return .custom("Jua-Regular", size: size, relativeTo: textStyle(for: size))
+        case .zh: return .custom("ZCOOLKuaiLe-Regular", size: size, relativeTo: textStyle(for: size))
         case .ja, .en: return baseFace(size, weight)
         }
     }
@@ -65,7 +92,11 @@ extension Font {
     /// which matches the KanjiVG stroke-order guide. Single weight.
     public static func kawaiiJP(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         Fonts.register()
-        return .custom("KleeOne-Regular", size: size)
+        // Sentence- and word-sized Japanese scales with Dynamic Type. Display
+        // glyphs (tiles, stroke guides) stay put: they are sized to a box, and
+        // growing them would push the ink out of it.
+        guard size <= 30 else { return .custom("KleeOne-Regular", fixedSize: size) }
+        return .custom("KleeOne-Regular", size: size, relativeTo: textStyle(for: size))
     }
 }
 

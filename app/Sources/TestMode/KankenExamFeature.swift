@@ -4,18 +4,21 @@ import Foundation
 import SharedModels
 
 /// The exam-question hub: real-exam-shaped practice organized by the exam's 大問
-/// sections (漢検: 読み / 部首 / 書き取り — JLPT: 漢字読み / 表記 / 文脈規定). From the
-/// hub the learner picks a section to practice, or opens the 오답노트 (wrong-answer
-/// notebook). A section runs a mastery loop — wrong answers requeue until cleared,
-/// and a first miss is saved to the 오답노트; clearing a note in 오답노트 mode
-/// removes it. Questions are scoped to the current level.
+/// sections. From the hub the learner picks a section to drill, sits a mock
+/// paper, or opens the 오답노트 (wrong-answer notebook).
+///
+/// * A section drill is a mastery loop — wrong answers requeue until cleared.
+/// * A mock paper is sat once through, like the real thing, and scored against
+///   the level's pass line, per 大問.
+/// * Every first miss is saved to the 오답노트 under the current level; clearing
+///   a note in 오답노트 mode removes it.
 @Reducer
 public struct KankenExamFeature {
     @ObservableState
     public struct State: Equatable {
         public var level: String
         public var language: AppLanguage
-        /// Count of saved 오답노트 entries (badge on the hub).
+        /// Count of saved 오답노트 entries at this level (badge on the hub).
         public var wrongCount = 0
         public var today = 0
 
@@ -32,6 +35,17 @@ public struct KankenExamFeature {
         public var chosen: String?
         public var isLoading = false
         public var started = false
+        /// Whether each question was answered right the first time it came up.
+        /// A drill requeues misses until they are cleared, so this — not
+        /// `mastered` — is what the result reports.
+        public var firstTry: [String: Bool] = [:]
+        /// 大問 titles by section id, for the mock paper's breakdown.
+        public var sectionTitles: [String: String] = [:]
+        public var startedAt: Date?
+        public var finishedAt: Date?
+        /// Bumped on every new attempt, including a missed question that comes
+        /// straight back (same id) — the view resets its answer input on it.
+        public var attempt = 0
 
         public init(level: String, language: AppLanguage = .ko) {
             self.level = level
@@ -50,10 +64,49 @@ public struct KankenExamFeature {
             if isMockExam { return L.mockExam[language] }
             return activeSection.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
         }
+        /// The number shown against `total` in the header: questions answered on
+        /// a mock paper (no retries there), questions cleared in a drill.
+        public var progressCount: Int { isMockExam ? total - queue.count : mastered }
+
+        public var firstTryCorrect: Int { firstTry.values.filter { $0 }.count }
+        public var scoreRatio: Double {
+            total > 0 ? Double(firstTryCorrect) / Double(total) : 0
+        }
+        public var passRatio: Double { ExamType.current.passRatio(for: level) }
+        public var passed: Bool { scoreRatio >= passRatio }
+        public var elapsedSeconds: Int {
+            guard let startedAt, let finishedAt else { return 0 }
+            return Int(finishedAt.timeIntervalSince(startedAt))
+        }
+
+        /// Per-大問 results in paper order: (title, right first time, total).
+        public var sectionTallies: [SectionTally] {
+            var order: [String] = []
+            var right: [String: Int] = [:]
+            var count: [String: Int] = [:]
+            for item in sessionItems {
+                let key = item.sectionID ?? ""
+                if count[key] == nil { order.append(key) }
+                count[key, default: 0] += 1
+                if firstTry[item.id] == true { right[key, default: 0] += 1 }
+            }
+            return order.map { key in
+                SectionTally(id: key, title: sectionTitles[key] ?? key,
+                             correct: right[key, default: 0], total: count[key, default: 0])
+            }
+        }
+    }
+
+    public struct SectionTally: Equatable, Identifiable, Sendable {
+        public let id: String
+        public let title: String
+        public let correct: Int
+        public let total: Int
     }
 
     public enum Action: Equatable {
         case onAppear(level: String, language: AppLanguage)
+        case levelChanged(String)
         case wrongCountLoaded(Int)
         case selectSection(ExamSection)
         case selectWrongNote
@@ -65,6 +118,8 @@ public struct KankenExamFeature {
         case exitToHub
         case closeTapped   // delegate → parent dismisses the session
     }
+
+    enum CancelID { case load }
 
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.wrongNoteStore) var wrongNoteStore
@@ -79,10 +134,12 @@ public struct KankenExamFeature {
                 state.level = level
                 state.language = language
                 state.today = Int(date.now.timeIntervalSince1970 / 86_400)
-                return .run { send in
-                    let notes = await wrongNoteStore.load()
-                    await send(.wrongCountLoaded(notes.count))
-                }
+                return refreshWrongCount(level: level)
+
+            case let .levelChanged(level):
+                guard level != state.level else { return .none }
+                state.level = level
+                return refreshWrongCount(level: level)
 
             case let .wrongCountLoaded(count):
                 state.wrongCount = count
@@ -96,47 +153,56 @@ public struct KankenExamFeature {
                 state.started = false
                 let level = state.level
                 let language = state.language
-                let unit = L.strokesUnit[language]
-                // Paper order, not shuffled: a 漢検 sitting works through its
-                // 大問 one after another, and keeping that makes the practice
-                // feel like the exam rather than a shuffled quiz.
+                // Paper order, not shuffled: a sitting works through its 大問 one
+                // after another, and keeping that makes the practice feel like
+                // the exam rather than a shuffled quiz.
                 let sections = ExamType.current.sections(for: level).filter(\.available)
+                state.sectionTitles = Dictionary(
+                    sections.map { ($0.id, "\($0.numeral)　\($0.jaTitle)") },
+                    uniquingKeysWith: { first, _ in first })
                 return .run { send in
                     var all: [KankenQuestion] = []
                     for section in sections {
                         let built = try? await questions(
                             for: section, level: level, language: language,
-                            unit: unit, perSection: perSection)
+                            perSection: perSection)
                         all.append(contentsOf: built ?? [])
                     }
                     await send(.loaded(all))
                 }
+                .cancellable(id: CancelID.load, cancelInFlight: true)
 
             case let .selectSection(section):
                 state.activeSection = section
                 state.isWrongNote = false
+                state.isMockExam = false
+                state.sectionTitles = [section.id: "\(section.numeral)　\(section.jaTitle)"]
                 return loadSection(state: &state, section: section)
 
             case .selectWrongNote:
                 state.activeSection = nil
                 state.isWrongNote = true
+                state.isMockExam = false
                 state.isLoading = true
                 state.started = false
+                let level = state.level
                 return .run { send in
                     let notes = await wrongNoteStore.load()
+                        .filter { $0.belongs(to: level) }
                         .sorted { $0.savedDay > $1.savedDay }
                     await send(.loaded(notes.map(\.question)))
                 }
+                .cancellable(id: CancelID.load, cancelInFlight: true)
 
             case let .loaded(questions):
+                // A load that lands after the learner went back to the hub
+                // belongs to a session that no longer exists.
+                guard state.isPlaying else { return .none }
                 state.isLoading = false
                 state.queue = questions
                 state.sessionItems = questions
                 state.total = questions.count
-                state.mastered = 0
-                state.missed = []
-                state.chosen = nil
-                state.started = true
+                beginRun(&state)
                 return .none
 
             case let .chose(option):
@@ -149,116 +215,156 @@ public struct KankenExamFeature {
                 let correct = state.chosen == item.answer
                 state.queue.removeFirst()
                 state.chosen = nil
+                if state.firstTry[item.id] == nil { state.firstTry[item.id] = correct }
+                let level = state.level
+                var effect: Effect<Action> = .none
                 if correct {
                     state.mastered += 1
-                    guard state.isWrongNote else { return .none }
-                    // Clearing a note in 오답노트 mode removes it from the notebook.
-                    let id = item.id
-                    return .run { send in
-                        let remaining = await wrongNoteStore.load().filter { $0.id != id }
-                        await wrongNoteStore.save(remaining)
-                        await send(.wrongCountLoaded(remaining.count))
+                    if state.isWrongNote {
+                        // Clearing a note in 오답노트 mode removes it from the notebook.
+                        let id = item.id
+                        effect = .run { send in
+                            let notes = await wrongNoteStore.update { $0.filter { $0.id != id } }
+                            await send(.wrongCountLoaded(notes.filter { $0.belongs(to: level) }.count))
+                        }
+                    }
+                } else {
+                    // A drill brings a miss back until it is cleared; a mock
+                    // paper, like the real one, is sat once through.
+                    if !state.isMockExam { state.queue.append(item) }
+                    // A first miss is saved to the 오답노트 (once).
+                    if !state.isWrongNote, state.missed.insert(item.id).inserted {
+                        let note = WrongNote(question: item, savedDay: state.today, level: level)
+                        effect = .run { send in
+                            let notes = await wrongNoteStore.update { notes in
+                                notes.filter { $0.id != note.id } + [note]
+                            }
+                            await send(.wrongCountLoaded(notes.filter { $0.belongs(to: level) }.count))
+                        }
                     }
                 }
-                state.queue.append(item)  // retry later this session
-                // A first miss in a section is saved to the 오답노트 (once).
-                guard !state.isWrongNote, state.missed.insert(item.id).inserted else { return .none }
-                let note = WrongNote(question: item, savedDay: state.today)
-                return .run { send in
-                    var notes = await wrongNoteStore.load().filter { $0.id != note.id }
-                    notes.append(note)
-                    await wrongNoteStore.save(notes)
-                    await send(.wrongCountLoaded(notes.count))
-                }
+                if state.queue.isEmpty { state.finishedAt = date.now }
+                state.attempt += 1
+                return effect
 
             case .restart:
+                // The notebook may have shrunk since this run began; re-read it
+                // rather than replaying notes that were already cleared.
+                if state.isWrongNote { return .send(.selectWrongNote) }
+                // A mock paper keeps paper order, as the real sitting does.
+                if !state.isMockExam { state.sessionItems.shuffle() }
                 state.queue = state.sessionItems
-                state.mastered = 0
-                state.missed = []
-                state.chosen = nil
-                state.started = true
+                beginRun(&state)
                 return .none
 
             case .exitToHub:
                 state.activeSection = nil
                 state.isWrongNote = false
                 state.isMockExam = false
+                state.isLoading = false
                 state.queue = []
                 state.sessionItems = []
                 state.total = 0
                 state.mastered = 0
                 state.missed = []
+                state.firstTry = [:]
                 state.chosen = nil
                 state.started = false
-                return .none
+                state.startedAt = nil
+                state.finishedAt = nil
+                return .cancel(id: CancelID.load)
 
             case .closeTapped:
-                return .none  // handled by the parent (dismiss)
+                return .cancel(id: CancelID.load)  // the parent dismisses
             }
         }
     }
 
-    /// Loads and builds a section's questions from real data. A section with a
-    /// bank `kind` pulls pre-authored questions; one without (`kind == nil`) is the
-    /// radical generator.
+    private func beginRun(_ state: inout State) {
+        state.mastered = 0
+        state.missed = []
+        state.firstTry = [:]
+        state.chosen = nil
+        state.started = true
+        state.startedAt = date.now
+        state.finishedAt = nil
+        state.attempt += 1
+    }
+
+    private func refreshWrongCount(level: String) -> Effect<Action> {
+        .run { send in
+            let notes = await wrongNoteStore.load()
+            await send(.wrongCountLoaded(notes.filter { $0.belongs(to: level) }.count))
+        }
+    }
+
+    /// Loads and builds one section's questions from real data.
     private func loadSection(state: inout State, section: ExamSection) -> Effect<Action> {
         state.isLoading = true
         state.started = false
         let level = state.level
         let language = state.language
-        let unit = L.strokesUnit[language]
         return .run { send in
             await send(.loaded(
                 try await questions(for: section, level: level, language: language,
-                                    unit: unit, perSection: 20)))
+                                    perSection: 20)))
         }
+        .cancellable(id: CancelID.load, cancelInFlight: true)
     }
 
     /// Every question for one 大問, at the level given. Shared by a single
     /// section and by the mock paper, which needs all of them.
     private func questions(for section: ExamSection, level: String,
-                           language: AppLanguage, unit: String,
+                           language: AppLanguage,
                            perSection: Int) async throws -> [KankenQuestion] {
         let built: [KankenQuestion]
         if let kind = section.kind {
             let bank = (try? await dictionaryClient.examQuestions(level, kind, perSection)) ?? []
-            // 用法 borrows 対義語・類義語's rendering (a word prompt, text options),
-            // so it has to carry its own instruction or it would ask the reader
-            // for a synonym.
-            let label = kind == "youhou" ? L.quizUsage[language] : nil
+            // Every bank section carries its own instruction: ten of them share
+            // a render type, and the type's generic wording would ask for the
+            // wrong thing (用法 is not a synonym question, 誤字訂正 not 書き取り).
             built = bank.map {
-                KankenQuestion.from($0, type: section.renderType, language: language, label: label)
+                KankenQuestion.from($0, type: section.renderType, language: language,
+                                    label: section.instruction(language))
             }
-        } else if section.renderType == .strokes {
-            let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
-            built = KankenQuestion.strokeQuiz(items, count: perSection, unit: unit)
-        } else if section.renderType == .yojijukugo {
-            let items = (try? await dictionaryClient.examYojijukugo(level, 60)) ?? []
-            built = KankenQuestion.yojijukugoQuiz(items, count: perSection, language: language)
-        } else if section.renderType == .okurigana {
-            let items = (try? await dictionaryClient.examOkurigana(level, 120)) ?? []
-            built = KankenQuestion.okuriganaQuiz(items, count: perSection)
-        } else if section.renderType == .taigirui {
-            // 対義語-only sections (lower 級) filter to antonyms; 対義語・類義語 uses both.
-            let relationOnly = section.id == "taigi" ? "対義" : nil
-            let items = (try? await dictionaryClient.examTaigirui(level, relationOnly, 40)) ?? []
-            built = KankenQuestion.taigiruiQuiz(items, count: perSection)
-        } else if section.renderType == .hitsujun {
-            let items = (try? await dictionaryClient.examStrokeOrderItems(level, 60)) ?? []
-            built = KankenQuestion.hitsujunQuiz(items, count: perSection, unit: unit)
-        } else if section.renderType == .onkun {
-            let items = (try? await dictionaryClient.examOnKun(level, 40)) ?? []
-            built = KankenQuestion.onKunQuiz(items, count: perSection)
         } else {
-            let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
-            built = KankenQuestion.radicalQuiz(items, count: perSection)
+            switch section.renderType {
+            case .strokes:
+                let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
+                built = KankenQuestion.strokeQuiz(items, count: perSection,
+                                                  unit: L.strokesUnit[language])
+            case .yojijukugo:
+                let items = (try? await dictionaryClient.examYojijukugo(level, 80)) ?? []
+                built = KankenQuestion.yojijukugoQuiz(items, count: perSection, language: language)
+            case .okurigana:
+                let items = (try? await dictionaryClient.examOkurigana(level, 120)) ?? []
+                built = KankenQuestion.okuriganaQuiz(items, count: perSection, language: language)
+            case .taigirui:
+                let items = (try? await dictionaryClient.examTaigirui(level, nil, 60)) ?? []
+                built = KankenQuestion.taigiruiQuiz(items, count: perSection, language: language)
+            case .hitsujun:
+                let items = (try? await dictionaryClient.examStrokeOrderItems(level, 60)) ?? []
+                built = KankenQuestion.hitsujunQuiz(items, count: perSection, language: language)
+            case .onkun:
+                let items = (try? await dictionaryClient.examOnKun(level, 60)) ?? []
+                built = KankenQuestion.onKunQuiz(items, count: perSection, language: language)
+            default:
+                let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
+                built = KankenQuestion.radicalQuiz(items, count: perSection)
+            }
         }
-        return built.filter { $0.options.count >= 2 }
+        return built
+            .filter { $0.options.count >= 2 }
+            .map { question in
+                var question = question
+                question.sectionID = section.id
+                return question
+            }
     }
 }
 
 extension KankenQuestion {
-    /// Adapts a pre-authored `JLPTQuestion` into a 漢検 section question.
+    /// Adapts a pre-authored `JLPTQuestion` into an exam section question.
     static func from(_ q: JLPTQuestion, type: KankenQuestionType, language: AppLanguage,
                      label: String? = nil) -> KankenQuestion {
         let (clean, underlined) = JLPTQuestion.parseUnderline(q.prompt)
@@ -289,13 +395,13 @@ extension KankenQuestion {
     }
 
     /// Builds 画数 questions: show the kanji, pick its total stroke count from four
-    /// choices. Distractors are nearby counts (±4) so the choice is non-trivial.
+    /// choices. Distractors are nearby counts (±3) so the choice is non-trivial.
     static func strokeQuiz(_ items: [StrokeItem], count: Int, unit: String) -> [KankenQuestion] {
         var out: [KankenQuestion] = []
         for (index, item) in items.prefix(count).enumerated() {
             var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 7))
             let answer = "\(item.strokeCount)\(unit)"
-            let nearby = (max(1, item.strokeCount - 4)...(item.strokeCount + 4))
+            let nearby = (max(1, item.strokeCount - 3)...(item.strokeCount + 3))
                 .filter { $0 != item.strokeCount }.map { "\($0)\(unit)" }
             let distractors = nearby.shuffled(using: &rng).prefix(3)
             guard distractors.count == 3 else { continue }
@@ -309,13 +415,14 @@ extension KankenQuestion {
     }
 
     /// Builds 筆順 questions: the glyph is drawn with one stroke marked, and the
-    /// answer is where that stroke falls in writing order. The strokes travel on
-    /// the question so a 오답노트 entry still renders without another query.
+    /// answer is where that stroke falls in writing order — an ordinal ("3画目"),
+    /// as the real paper asks it, not a stroke count. The strokes travel on the
+    /// question so a 오답노트 entry still renders without another query.
     ///
     /// The marked stroke is never the first or the last: those are guessable from
     /// the shape alone, which tests recognition rather than stroke order.
     static func hitsujunQuiz(_ items: [StrokeOrderItem], count: Int,
-                             unit: String) -> [KankenQuestion] {
+                             language: AppLanguage) -> [KankenQuestion] {
         var out: [KankenQuestion] = []
         for (index, item) in items.enumerated() where out.count < count {
             let total = item.paths.count
@@ -323,9 +430,13 @@ extension KankenQuestion {
             var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 11))
             let interior = Array(1..<(total - 1))
             guard let marked = interior.shuffled(using: &rng).first else { continue }
-            let answer = "\(marked + 1)\(unit)"
-            let others = (1...total).filter { $0 != marked + 1 }.map { "\($0)\(unit)" }
-            let distractors = others.shuffled(using: &rng).prefix(3)
+            let answer = L.strokeOrdinal(marked + 1, language)
+            // Neighbouring positions are the realistic mistakes.
+            let others = (1...total).filter { $0 != marked + 1 }
+                .sorted { abs($0 - (marked + 1)) < abs($1 - (marked + 1)) }
+                .prefix(5).shuffled(using: &rng)
+                .map { L.strokeOrdinal($0, language) }
+            let distractors = others.prefix(3)
             guard distractors.count == 3 else { continue }
             let options = (Array(distractors) + [answer]).shuffled(using: &rng)
             out.append(KankenQuestion(
@@ -337,23 +448,44 @@ extension KankenQuestion {
         return out
     }
 
-    /// Builds 四字熟語 questions, alternating two exam-authentic facets per idiom:
-    /// its reading (options are readings) and its meaning (options are meanings).
-    /// The idiom is shown; distractors are drawn from the other idioms in the pool.
+    /// Builds 四字熟語 questions, alternating the two things the paper asks:
+    /// write the missing kanji of an idiom (shown with its reading, as the exam
+    /// gives the blank in kana), and pick the idiom's meaning. Blank distractors
+    /// are kanji from the same position of other idioms, never one that would
+    /// spell another idiom in the pool.
     static func yojijukugoQuiz(_ items: [Yojijukugo], count: Int, language: AppLanguage) -> [KankenQuestion] {
         guard items.count >= 4 else { return [] }
+        let known = Set(items.map(\.yoji))
         var out: [KankenQuestion] = []
         for (index, item) in items.prefix(count).enumerated() {
             var rng = SeededRNG(seed: UInt64(item.id &+ index &+ 3))
-            let askReading = index % 2 == 0
-            if askReading {
-                let pool = items.map(\.reading)
-                let options = quizOptions(answer: item.reading, pool: pool, rng: &rng)
-                guard options.count >= 2 else { continue }
+            let chars = Array(item.yoji)
+            let askBlank = index % 2 == 0 && chars.count == 4
+            if askBlank {
+                let position = Int.random(in: 0..<4, using: &rng)
+                let answer = String(chars[position])
+                var candidates = Set<String>()
+                for other in items where other.id != item.id {
+                    let otherChars = Array(other.yoji)
+                    guard otherChars.count == 4 else { continue }
+                    let candidate = String(otherChars[position])
+                    guard candidate != answer, !chars.contains(Character(candidate)) else { continue }
+                    var respelled = chars
+                    respelled[position] = Character(candidate)
+                    guard !known.contains(String(respelled)) else { continue }
+                    candidates.insert(candidate)
+                }
+                let options = quizOptions(answer: answer, pool: Array(candidates), rng: &rng)
+                guard options.count == 4 else { continue }
+                var blanked = chars
+                blanked[position] = "□"
+                let meaning = item.meaning(language).map { " — \($0)" } ?? ""
                 out.append(KankenQuestion(
-                    id: "yoji:r:\(item.id)", type: .yojijukugo, kanjiID: item.id,
-                    prompt: item.yoji, focus: nil, options: options, answer: item.reading,
-                    explanation: item.meaning(language), label: "読み"))
+                    id: "yoji:b:\(item.id)", type: .yojijukugo, kanjiID: item.id,
+                    prompt: "\(String(blanked))\n（\(item.reading)）", focus: nil,
+                    options: options, answer: answer,
+                    explanation: "\(item.yoji)（\(item.reading)）\(meaning)",
+                    label: L.labelYojiBlank[language]))
             } else if let meaning = item.meaning(language), !meaning.isEmpty {
                 let pool = items.compactMap { $0.meaning(language) }
                 let options = quizOptions(answer: meaning, pool: pool, rng: &rng)
@@ -361,16 +493,18 @@ extension KankenQuestion {
                 out.append(KankenQuestion(
                     id: "yoji:m:\(item.id)", type: .yojijukugo, kanjiID: item.id,
                     prompt: item.yoji, focus: nil, options: options, answer: meaning,
-                    explanation: item.reading, label: "意味"))
+                    explanation: "\(item.yoji)（\(item.reading)）",
+                    label: L.labelMeaning[language]))
             }
         }
         return out
     }
 
-    /// Builds 送りがな questions: the word is shown in katakana; pick where the
-    /// kanji ends and the okurigana begins. Distractors shift the okurigana
-    /// boundary (the classic 送りがな trap), keeping the same kanji stem.
-    static func okuriganaQuiz(_ items: [WordEntry], count: Int) -> [KankenQuestion] {
+    /// Builds 送りがな questions: the word is shown in katakana with its meaning;
+    /// pick where the kanji ends and the okurigana begins. Distractors shift the
+    /// okurigana boundary (the classic 送りがな trap), keeping the same kanji stem.
+    static func okuriganaQuiz(_ items: [WordEntry], count: Int,
+                              language: AppLanguage) -> [KankenQuestion] {
         // Endings that mark a conjugating word (verb う-row / i-adj / na-adj か…).
         let okuriEndings: Set<Character> = ["う", "く", "ぐ", "す", "つ", "ぬ", "ぶ", "む", "る", "い", "か"]
         var out: [KankenQuestion] = []
@@ -393,12 +527,15 @@ extension KankenQuestion {
             let readingChars = Array(item.reading)
             let okuriLen = okurigana.count
             let kanjiKanaLen = readingChars.count - okuriLen
+            // The kanji has to carry at least one kana of its own, or every
+            // variant would read as the kanji plus the whole word.
             guard kanjiKanaLen >= 1, !readingChars.isEmpty else { continue }
-            // Boundary-shift distractors: same kanji, different okurigana length.
+            // Boundary-shift distractors: same kanji, different okurigana length,
+            // never swallowing the whole reading.
             var distractors: [String] = []
-            for delta in [1, 2, -1] {
+            for delta in [1, -1, 2] {
                 let newLen = okuriLen + delta
-                guard newLen >= 0, newLen <= readingChars.count - 1 else { continue }
+                guard newLen >= 1, newLen <= readingChars.count - 1 else { continue }
                 let variant = kanjiPart + String(readingChars.suffix(newLen))
                 if variant != surface, !distractors.contains(variant) { distractors.append(variant) }
             }
@@ -407,37 +544,52 @@ extension KankenQuestion {
             var rng = SeededRNG(seed: UInt64(item.id &+ 11))
             let options = (Array(distractors.prefix(3)) + [surface]).shuffled(using: &rng)
             used.insert(surface)
+            let meaning = item.meaning(language)
             out.append(KankenQuestion(
                 id: "okuri:\(item.id)", type: .okurigana, kanjiID: item.id,
-                prompt: kata, focus: nil, options: options, answer: surface,
-                explanation: item.meaningKo, label: "送りがな"))
+                prompt: meaning.map { "\(kata)\n（\($0)）" } ?? kata, focus: kata,
+                options: options, answer: surface,
+                explanation: "\(surface)（\(item.reading)）" + (meaning.map { " — \($0)" } ?? ""),
+                label: L.labelOkurigana[language]))
         }
         return out
     }
 
     /// Builds 対義語・類義語 questions: the prompt word is shown; pick its antonym or
-    /// synonym from four real words (distractors are other answers in the pool).
-    static func taigiruiQuiz(_ items: [TaigiruiPair], count: Int) -> [KankenQuestion] {
+    /// synonym. Distractors are answers of the same relation and the same length,
+    /// so neither the shape nor the other relation's pairs give it away.
+    static func taigiruiQuiz(_ items: [TaigiruiPair], count: Int,
+                             language: AppLanguage) -> [KankenQuestion] {
         guard items.count >= 4 else { return [] }
-        let pool = items.map(\.answer)
         var out: [KankenQuestion] = []
         for (index, item) in items.prefix(count).enumerated() {
             var rng = SeededRNG(seed: UInt64(item.id &+ index &+ 5))
+            let sameRelation = items.filter {
+                $0.relation == item.relation && $0.id != item.id && $0.word != item.answer
+            }
+            var pool = sameRelation.filter { $0.answer.count == item.answer.count }.map(\.answer)
+            if Set(pool).count < 3 { pool = sameRelation.map(\.answer) }
+            if Set(pool).count < 3 { pool = items.map(\.answer) }
+            // The prompt word itself is never an option.
+            pool = pool.filter { $0 != item.word }
             let options = quizOptions(answer: item.answer, pool: pool, rng: &rng)
             guard options.count >= 2 else { continue }
             out.append(KankenQuestion(
                 id: "taigi:\(item.id)", type: .taigirui, kanjiID: item.id,
                 prompt: item.word, focus: nil, options: options, answer: item.answer,
-                explanation: "\(item.answer)（\(item.answerReading)）",
-                label: item.relation == "対義" ? "対義語" : "類義語"))
+                explanation: "\(item.word)（\(item.wordReading)）↔ \(item.answer)（\(item.answerReading)）",
+                label: item.relation == "対義" ? L.labelAntonym[language] : L.labelSynonym[language]))
         }
         return out
     }
 
     /// Builds 音読み・訓読み questions: show the kanji, pick one of its 音読み (or
     /// 訓読み) readings. Distractors are same-type readings (katakana for 音 /
-    /// hiragana for 訓) from other kanji, so the script alone doesn't give it away.
-    static func onKunQuiz(_ items: [OnKunItem], count: Int) -> [KankenQuestion] {
+    /// hiragana for 訓) from other kanji, so the script alone doesn't give it
+    /// away — and never another reading of this same kanji, which would also
+    /// be correct (行: コウ and ギョウ).
+    static func onKunQuiz(_ items: [OnKunItem], count: Int,
+                          language: AppLanguage) -> [KankenQuestion] {
         let onPool = items.flatMap(\.onReadings)
         let kunPool = items.flatMap(\.kunReadings)
         guard onPool.count >= 4 || kunPool.count >= 4 else { return [] }
@@ -453,14 +605,26 @@ extension KankenQuestion {
             else { continue }
             var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 13))
             let answer = askOn ? item.onReadings[0] : item.kunReadings[0]
-            let options = quizOptions(answer: answer, pool: askOn ? onPool : kunPool, rng: &rng)
-            guard options.count >= 2 else { continue }
+            let own = Set(item.onReadings + item.kunReadings)
+            let pool = (askOn ? onPool : kunPool).filter { !own.contains($0) }
+            let options = quizOptions(answer: answer, pool: pool, rng: &rng)
+            guard options.count == 4 else { continue }
             out.append(KankenQuestion(
                 id: "onkun:\(askOn ? "o" : "k"):\(item.kanjiID)", type: .onkun, kanjiID: item.kanjiID,
                 prompt: item.literal, focus: nil, options: options, answer: answer,
-                explanation: nil, label: askOn ? "音読み" : "訓読み"))
+                explanation: explainReadings(item),
+                label: askOn ? L.labelOn[language] : L.labelKun[language]))
         }
         return out
+    }
+
+    /// "音: コウ・ギョウ　訓: い・ゆ" — all of a kanji's readings, shown after
+    /// answering so one question teaches the whole set.
+    private static func explainReadings(_ item: OnKunItem) -> String {
+        var parts: [String] = []
+        if !item.onReadings.isEmpty { parts.append("音: " + item.onReadings.joined(separator: "・")) }
+        if !item.kunReadings.isEmpty { parts.append("訓: " + item.kunReadings.joined(separator: "・")) }
+        return "\(item.literal)　" + parts.joined(separator: "　")
     }
 
     /// The answer plus up to 3 distinct distractors from `pool`, seeded-shuffled.
@@ -472,7 +636,7 @@ extension KankenQuestion {
     }
 
     private static func localizedExplanation(_ dict: [String: String], _ language: AppLanguage) -> String? {
-        for key in [language.glossKey, "ko", "ja", "en", "zh"] {
+        for key in [language.glossKey, "en", "ja", "ko", "zh"] {
             if let value = dict[key], !value.isEmpty { return value }
         }
         return dict.values.first { !$0.isEmpty }

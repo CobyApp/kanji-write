@@ -543,6 +543,7 @@ public struct PracticeView: View {
                 Text(L.writeCompareHint[appLanguage])
                     .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
                     .padding(.top, 8)
+                markSummary
                 LazyVGrid(columns: reviewColumns, spacing: 14) {
                     ForEach(Array(store.questions.enumerated()), id: \.element.id) { index, item in
                         reviewCell(index, item)
@@ -607,8 +608,57 @@ public struct PracticeView: View {
                 }
             }
             .frame(maxWidth: 320)  // keep the pair from ballooning on a wide cell
+            markButtons(index)
         }
         .padding(12).roundedCard()
+    }
+
+    /// ○ / × for one answer. A miss is also starred into 즐겨찾기.
+    private func markButtons(_ index: Int) -> some View {
+        let mark = store.marks[index]
+        return HStack(spacing: 8) {
+            markButton(L.selfMarkWrong[appLanguage], icon: "xmark",
+                       color: Palette.pinkDeep, selected: mark == false) {
+                store.send(.mark(index: index, correct: false))
+            }
+            markButton(L.selfMarkRight[appLanguage], icon: "circle",
+                       color: Palette.mintDeep, selected: mark == true) {
+                store.send(.mark(index: index, correct: true))
+            }
+        }
+        .frame(maxWidth: 320)
+    }
+
+    private func markButton(_ title: String, icon: String, color: Color, selected: Bool,
+                            action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.kawaii(13, weight: .bold, language: appLanguage))
+                .foregroundStyle(selected ? .white : color)
+                .frame(maxWidth: .infinity, minHeight: 40)
+                .background(selected ? color : color.opacity(0.10))
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.bouncy)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .sensoryFeedback(.selection, trigger: selected)
+    }
+
+    /// "○ 12 · × 3 / 15" once anything is marked.
+    @ViewBuilder private var markSummary: some View {
+        let right = store.marks.values.filter { $0 }.count
+        let wrong = store.marks.values.filter { !$0 }.count
+        if right + wrong > 0 {
+            HStack(spacing: 14) {
+                Label("\(right)", systemImage: "circle").foregroundStyle(Palette.mintDeep)
+                Label("\(wrong)", systemImage: "xmark").foregroundStyle(Palette.pinkDeep)
+                Text("/ \(store.questions.count)").foregroundStyle(Palette.inkSoft)
+            }
+            .font(.kawaii(16, weight: .bold)).monospacedDigit()
+            .padding(.horizontal, 16).padding(.vertical, 8)
+            .background(Palette.card).clipShape(Capsule())
+            .accessibilityElement(children: .combine)
+        }
     }
 
     @ViewBuilder private func myWriting(_ index: Int) -> some View {

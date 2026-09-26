@@ -247,7 +247,7 @@ let project = Project(
             bundleId: "com.cobyapp.kanjiwrite.testmodetests",
             deploymentTargets: iOS,
             sources: ["Tests/TestModeTests/**"],
-            dependencies: [.target(name: "TestMode")]
+            dependencies: [.target(name: "TestMode"), .target(name: "Review")]
         ),
         .target(
             name: "Worksheet",

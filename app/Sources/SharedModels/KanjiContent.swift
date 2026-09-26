@@ -34,6 +34,17 @@ public struct WordEntry: Equatable, Identifiable, Sendable {
         self.meaningJa = meaningJa
         self.meaningZh = meaningZh
     }
+
+    /// The gloss in the app language, falling back to English, then Korean.
+    public func meaning(_ language: AppLanguage) -> String? {
+        let preferred: String? = switch language {
+        case .ko: meaningKo
+        case .ja: meaningJa
+        case .zh: meaningZh
+        case .en: meaningEn
+        }
+        return [preferred, meaningEn, meaningKo].compactMap { $0 }.first { !$0.isEmpty }
+    }
 }
 
 /// A Japanese example sentence with translations keyed by language code.

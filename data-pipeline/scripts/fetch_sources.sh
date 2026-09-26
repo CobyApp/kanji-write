@@ -131,7 +131,7 @@ LLM_GLOSSES_SHA256="18f15009ae9df61a3e2b6e5fd81b9b1fdee633a07f16818e6c9389625490
 WORD_GLOSSES_KO_SHA256="fa8517fe61f1bce7019f9f7337c3df504147ad5503084f6680641c71cde7c122"
 WORD_GLOSSES_JAZH_SHA256="a4b094f051b53067e13f7f8d967f6cde5cb8865ee02327bee275fc00aa8bccb1"
 SENTENCE_GLOSSES_SHA256="1fbe37c3ef6ec0666854d5b9788bb6401c1909e9c73fdc25c8161f4487b38a71"
-JLPT_QUESTIONS_SHA256="1578a2620b0f15128ef9985dc4bec1e88f02d3fd2b1f650db7e95fc861b7f510"
+JLPT_QUESTIONS_SHA256="65dce9139c6de9df1eebeef9fbcec4c1f6d9418ad5bac36956c87d1695488b34"
 KANKEN_SUPPLEMENT_SHA256="8952a58aea939cd26fe6d2ae7898471586dcaafec2026aa765162de6e9f8b259"
 YOJIJUKUGO_SHA256="58738cc209b1a11440b31c92a37217c22fcd4bdf875d12e6ca7bc17823314cd8"
 TAIGIRUI_SHA256="34f8be5c9e9c0fb6bfe144981eb33cb803ec533ecd6a75e51da8b4a47fdf525c"
@@ -145,6 +145,15 @@ verify_sha256 "${YOJIJUKUGO_SHA256}" \
   ../app/Sources/DictionaryClient/Resources/yojijukugo.source.json
 verify_sha256 "${TAIGIRUI_SHA256}" \
   ../app/Sources/DictionaryClient/Resources/taigirui.source.json
+
+# JLPT vocabulary lists: jamsinclair/open-anki-jlpt-decks at commit
+# 1ad66734417aca9dbcca6b2d5ee440cb13ab3ba0 (MIT, derived from tanos.co.uk).
+# Checked in under sources/jlpt_vocab/ and verified like the other local inputs.
+verify_sha256 "120911636c019899552aa6d7bd64b036ecef4bedfe272a744f75735c46aae5cd" sources/jlpt_vocab/n1.csv
+verify_sha256 "2d0f1ddd6222881cd9fc2ca701db74300af99b3f1f84d5ac3c18411c20f0c055" sources/jlpt_vocab/n2.csv
+verify_sha256 "ba071571d344e60b0e1fd11cd2e98a6aaa04515361653ca45147129460531297" sources/jlpt_vocab/n3.csv
+verify_sha256 "0e835f40a8d2a1f191d7aa499076002756fa099b95634758376f43c73793e9f6" sources/jlpt_vocab/n4.csv
+verify_sha256 "f89abc86b391c4f2b551bbf8910b0de6cd600973b3a9f8d98347513921929ebe" sources/jlpt_vocab/n5.csv
 
 echo "All source pins verified."
 echo "Done. Now build with: python -m kanjipipe.build_db --out out/kanji.sqlite"

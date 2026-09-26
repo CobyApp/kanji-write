@@ -576,3 +576,35 @@ def _svg_outline(path: Path) -> tuple[str, int]:
     if not box or box.group(1) != box.group(2):
         return "", 0
     return paths[0], int(box.group(1))
+
+
+def load_word_jlpt_levels(
+    conn: sqlite3.Connection,
+    levels: dict[tuple[str, str], str],
+) -> int:
+    """Tag words with the JLPT level of the vocabulary list they appear on.
+
+    Matches on (surface, reading) first. A list entry whose reading differs
+    only in how JMdict chose to spell it still counts when the surface names a
+    single word — two words sharing a surface stay untagged rather than guessed.
+    Returns the number of words tagged.
+    """
+    conn.execute("UPDATE word SET jlpt_level = NULL")
+    ids_by_pair: dict[tuple[str, str], list[int]] = {}
+    ids_by_surface: dict[str, list[int]] = {}
+    for word_id, surface, reading in conn.execute(
+            "SELECT id, surface, reading_kana FROM word"):
+        ids_by_pair.setdefault((surface, reading), []).append(word_id)
+        ids_by_surface.setdefault(surface, []).append(word_id)
+    tagged: dict[int, str] = {}
+    for (surface, reading), level in levels.items():
+        ids = ids_by_pair.get((surface, reading))
+        if ids is None:
+            candidates = ids_by_surface.get(surface, [])
+            ids = candidates if len(candidates) == 1 else []
+        for word_id in ids:
+            tagged.setdefault(word_id, level)
+    conn.executemany("UPDATE word SET jlpt_level = ? WHERE id = ?",
+                     [(level, word_id) for word_id, level in tagged.items()])
+    conn.commit()
+    return len(tagged)

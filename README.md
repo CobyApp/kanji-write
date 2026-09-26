@@ -18,7 +18,8 @@ Every number below comes from the built database, not from an estimate:
 | Four-character idioms (四字熟語) | 398 |
 | Example sentences | 6,602 |
 | Stroke-order records | 71,836 |
-| Practice questions | 20,041 |
+| Practice questions | 22,237 — every 10級〜2級 kanji has 読み and 書き取り items |
+| JLPT vocabulary levels | 6,129 words tagged N5〜N1 |
 | Languages | Korean, Japanese, English, Simplified Chinese — including every gloss and sentence translation |
 
 Everything is bundled, so the app runs with no network and no account. Study
@@ -60,6 +61,17 @@ python -m kanjipipe.build_db     # writes out/kanji.sqlite
 pytest                           # pipeline tests
 ```
 
+EDRDG and Tatoeba publish only a mutable "latest" snapshot, so once they move
+on the pinned from-scratch build cannot be reproduced. Content this repository
+owns — the question banks, 四字熟語, 対義語・類義語 and JLPT word levels — can be
+reloaded into the shipped database in place, with the same content gates:
+
+```bash
+python scripts/refresh_db.py                 # updates the app's kanji.sqlite
+python scripts/check_question_batch.py FILE  # structure of an authored batch
+python scripts/check_ambiguity.py FILE       # distractors that are also right
+```
+
 ## Data sources
 
 The dictionary content is openly licensed, and the app credits each source on
@@ -72,6 +84,7 @@ its support page.
 | [Tatoeba](https://tatoeba.org/) | example sentences | CC BY 2.0 FR |
 | [Unihan](https://www.unicode.org/charts/unihan.html) | character metadata | [Unicode](https://www.unicode.org/license.txt) |
 | [GlyphWiki](https://glyphwiki.org/) | 旧字 outlines | CC BY-SA 3.0 |
+| [open-anki-jlpt-decks](https://github.com/jamsinclair/open-anki-jlpt-decks) | JLPT vocabulary levels | MIT |
 
 ## Licence
 

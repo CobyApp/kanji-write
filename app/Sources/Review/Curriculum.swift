@@ -29,7 +29,9 @@ public func todaysSession(
     let due = records.filter { $0.due <= today }
         .sorted { ($0.due, $0.difficulty) < ($1.due, $1.difficulty) }
         .map(\.kanjiID)
-    let learnedToday = ignoreTodaysProgress ? 0 : records.filter { $0.lastReviewedDay == today }.count
+    // Only kanji *introduced* today use up the new-kanji quota. Counting every
+    // card touched today meant clearing due reviews shrank the day's new batch.
+    let learnedToday = ignoreTodaysProgress ? 0 : learnedToday(records: records, today: today)
     let quota = max(0, newPerDay - learnedToday)
     let pool = clampedTail(order, from: startIndex)
     let new = pool.lazy.filter { !known.contains($0.id) }.prefix(quota).map(\.id)
@@ -97,5 +99,5 @@ public func currentStreak(activeDays: Set<Int>, today: Int) -> Int {
 
 /// How many kanji were reviewed/learned today (records last touched today).
 public func learnedToday(records: [ReviewRecord], today: Int) -> Int {
-    records.filter { $0.lastReviewedDay == today }.count
+    records.filter { $0.lastReviewedDay == today && $0.reps <= 1 }.count
 }
