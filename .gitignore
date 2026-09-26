@@ -55,3 +55,6 @@ scratch/
 !data-pipeline/sources/kanken_shikibetsu_questions.jsonl
 !data-pipeline/sources/kanken_derived_questions.jsonl
 !data-pipeline/sources/kanken_authored_questions.jsonl
+# JLPT vocabulary lists (jamsinclair/open-anki-jlpt-decks, MIT) pinned by
+# SHA-256 in fetch_sources.sh; tag word.jlpt_level.
+!data-pipeline/sources/jlpt_vocab/

@@ -26,6 +26,7 @@ from kanjipipe.ingest.jmdict import parse_jmdict
 from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
 from kanjipipe.ingest.kanjivg import parse_kanjivg
 from kanjipipe.ingest.jlpt_questions import parse_jlpt_questions
+from kanjipipe.ingest.jlpt_vocab import parse_jlpt_vocab
 from kanjipipe.ingest.llm_glosses import parse_llm_glosses
 from kanjipipe.ingest.sentence_glosses import parse_sentence_glosses
 from kanjipipe.ingest.tatoeba import parse_tatoeba
@@ -36,7 +37,7 @@ from kanjipipe.loader import (
     load_kanji_variants,
     load_relations, load_sentence_glosses, load_sentence_words, load_sentences,
     load_stroke_order, load_taigirui, load_word_jazh_glosses,
-    load_word_ko_glosses, load_words, load_yojijukugo)
+    load_word_jlpt_levels, load_word_ko_glosses, load_words, load_yojijukugo)
 from kanjipipe.validate import (
     PRODUCTION_KANKEN_COUNT_POLICY,
     KankenCountPolicy,
@@ -69,6 +70,7 @@ def build(
     shikibetsu_questions_path: str | Path | None = None,
     derived_questions_path: str | Path | None = None,
     authored_questions_path: str | Path | None = None,
+    jlpt_vocab_dir: str | Path | None = None,
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
@@ -137,6 +139,8 @@ def build(
             load_llm_glosses(conn, parse_llm_glosses(llm_glosses_path))
         load_stroke_order(conn, strokes)
         load_words(conn, words, advanced_literals=advanced_literals)
+        if jlpt_vocab_dir is not None and os.path.isdir(jlpt_vocab_dir):
+            load_word_jlpt_levels(conn, parse_jlpt_vocab(jlpt_vocab_dir))
         load_relations(conn, relations)
         word_gloss_mismatches = 0
         if word_ko_path is not None and os.path.exists(word_ko_path):
@@ -224,6 +228,7 @@ def main() -> None:
                         default="sources/kanken_derived_questions.jsonl")
     parser.add_argument("--authored-questions",
                         default="sources/kanken_authored_questions.jsonl")
+    parser.add_argument("--jlpt-vocab", default="sources/jlpt_vocab")
     parser.add_argument("--kanken", default="sources/kanken.csv")
     parser.add_argument("--unihan", default="sources/Unihan.zip")
     parser.add_argument(
@@ -254,6 +259,7 @@ def main() -> None:
                    shikibetsu_questions_path=args.shikibetsu_questions,
                    derived_questions_path=args.derived_questions,
                    authored_questions_path=args.authored_questions,
+                   jlpt_vocab_dir=args.jlpt_vocab,
                    yojijukugo_path=args.yojijukugo,
                    taigirui_path=args.taigirui,
                    unihan_path=args.unihan,
