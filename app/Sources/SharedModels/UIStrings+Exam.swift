@@ -39,10 +39,10 @@ extension L {
     public static let answerModeType = L10nText(
         ko: "직접 쓰기", ja: "書いて答える", zh: "自己写", en: "Write it")
     public static let answerModeHint = L10nText(
-        ko: "실제 칸켄처럼 읽기는 히라가나로 입력하고, 書き取り는 손으로 써 봐요.",
-        ja: "本番の漢検と同じく、読みはひらがなで入力し、書き取りは手で書きます。",
-        zh: "像真正的汉检一样：读音用平假名输入，书写题亲手写。",
-        en: "Like the real 漢検: type readings in hiragana, and write 書き取り answers by hand.")
+        ko: "실제 시험처럼 읽기는 히라가나로 입력하고, 쓰기 문제는 손으로 써 봐요.",
+        ja: "本番と同じく、読みはひらがなで入力し、書き取りは手で書きます。",
+        zh: "像正式考试一样：读音用平假名输入，书写题亲手写。",
+        en: "Like the real exam: type readings in hiragana, and write the writing questions by hand.")
     public static let typeReadingPlaceholder = L10nText(
         ko: "히라가나로 읽기를 입력", ja: "読みをひらがなで入力", zh: "用平假名输入读音", en: "Type the reading in hiragana")
     public static let checkAnswer = L10nText(ko: "채점하기", ja: "答え合わせ", zh: "核对答案", en: "Check")
