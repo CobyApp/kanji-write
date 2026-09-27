@@ -59,3 +59,6 @@ scratch/
 # SHA-256 in fetch_sources.sh; tag word.jlpt_level.
 !data-pipeline/sources/jlpt_vocab/
 !data-pipeline/sources/kanken_rare_kun_questions.jsonl
+# Authored example sentences (word → sentence + ko/zh/en); contextualize_questions.py
+# rewrites the generated banks around these. Tatoeba pull is an intermediate, not tracked.
+!data-pipeline/sources/context_sentences.jsonl
