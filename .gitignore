@@ -62,3 +62,15 @@ scratch/
 # Authored example sentences (word → sentence + ko/zh/en); contextualize_questions.py
 # rewrites the generated banks around these. Tatoeba pull is an intermediate, not tracked.
 !data-pipeline/sources/context_sentences.jsonl
+
+# fastlane / CI build output
+app/build/
+app/fastlane/report.xml
+app/fastlane/Preview.html
+app/fastlane/test_output/
+app/fastlane/*.log
+*.ipa
+*.xcarchive
+# The App Store Connect API key must never be committed — it lives in GitHub Secrets.
+*.p8
+AuthKey_*.p8
