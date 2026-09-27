@@ -53,8 +53,14 @@ def main() -> int:
     args = parser.parse_args()
 
     in_words: set[str] = set()
+    # Readings JMdict gives a kanji written alone (駮 → ふち): a distractor that
+    # is one of these would be a second right answer.
+    solo_readings: dict[str, set[str]] = defaultdict(set)
     if Path(args.lexicon).exists():
         surfaces = json.loads(Path(args.lexicon).read_text("utf-8"))
+        for surface, readings in surfaces.items():
+            if len(surface) == 1:
+                solo_readings[surface].update(readings)
     else:  # read the headwords straight from the JMdict build input
         from lxml import etree
         surfaces = []
@@ -70,10 +76,21 @@ def main() -> int:
     levels: dict[int, set[str]] = defaultdict(set)
     for kid, level in con.execute("SELECT kanji_id, level_label FROM kanken_membership"):
         levels[kid].add(level)
+    # Coverage from every *other* bank. This script's own rows (a bare
+    # underlined kanji, or the 次のカタカナを… stem) may already be in the
+    # database from a previous run and must not count.
     covered: dict[int, set[str]] = defaultdict(set)
-    for kid, kind in con.execute(
-            "SELECT kanji_id, kind FROM jlpt_question WHERE kind IN ('reading','orthography')"):
-        covered[kid].add(kind)
+    literal_by_id = dict(con.execute("SELECT id, literal FROM kanji"))
+    for kid, kind, prompt in con.execute(
+            "SELECT kanji_id, kind, prompt FROM jlpt_question "
+            "WHERE kind IN ('reading','orthography')"):
+        literal = literal_by_id.get(kid, "")
+        own = (prompt.startswith("次のカタカナを漢字に直せ。")
+               or (prompt.startswith("<u>" + literal) and prompt.endswith("</u>")
+                   and len(prompt) <= len(literal) + 12 and kind == "reading"
+                   and all("\u3040" <= c <= "\u309f" for c in prompt[3 + len(literal):-4])))
+        if not own:
+            covered[kid].add(kind)
     kun_all: dict[int, list[str]] = defaultdict(list)
     for kid, value in con.execute(
             "SELECT kanji_id, value FROM reading WHERE lang_axis = 'kun' ORDER BY id"):
@@ -93,6 +110,7 @@ def main() -> int:
         if parts is None:
             continue
         readings = {v.replace(".", "") for v in kun_all[kid] if "-" not in v}
+        readings |= solo_readings.get(literal, set())
         level = "準1級" if "準1級" in levels[kid] else "1級"
         entries.append({"id": kid, "literal": literal, "stem": parts[0],
                         "okuri": parts[1], "readings": readings, "level": level})

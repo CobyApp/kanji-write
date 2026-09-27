@@ -28,10 +28,10 @@ extension L {
         ko: "설정에서 언제든 바꿀 수 있어요", ja: "設定からいつでも変更できます",
         zh: "随时可在设置中更改", en: "You can change these any time in Settings")
     public static let examJLPTDesc = L10nText(
-        ko: "일본어능력시험 N5〜N1", ja: "日本語能力試験 N5〜N1", zh: "日语能力考试 N5〜N1", en: "Japanese-Language Proficiency Test")
+        ko: "일본어능력시험 N5~N1", ja: "日本語能力試験 N5〜N1", zh: "日语能力考试 N5～N1", en: "Japanese-Language Proficiency Test, N5–N1")
     public static let examKankenDesc = L10nText(
-        ko: "일본한자능력검정 10급〜1급", ja: "日本漢字能力検定 10級〜1級", zh: "日本汉字能力检定 10级〜1级",
-        en: "Japan Kanji Aptitude Test, 10級–1級")
+        ko: "일본 한자능력검정 10급~1급", ja: "日本漢字能力検定 10級〜1級", zh: "日本汉字能力检定 10级～1级",
+        en: "Japan Kanji Aptitude Test, Levels 10–1")
     public static let doneTodayPullAhead = L10nText(
         ko: "미리 공부 완료! 수고했어요", ja: "先取り学習、おつかれさま！", zh: "提前学习完成，辛苦了！",
         en: "Studied ahead — nice work!")
@@ -74,4 +74,58 @@ extension L {
 extension L {
     public static let similarKanji = L10nText(
         ko: "모양이 비슷한 한자", ja: "形の似た漢字", zh: "形近字", en: "Look-alike kanji")
+}
+
+extension L {
+    /// "하루 7자" / "1日7字" / "每天7字" / "7 a day" — a pace, not a count.
+    public static func perDayRate(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "하루 \(n)자"
+        case .ja: "1日\(n)字"
+        case .zh: "每天\(n)字"
+        case .en: "\(n) a day"
+        }
+    }
+}
+
+// Counted phrases. English needs a plural; the CJK languages just attach a
+// counter, so each is a function rather than "\(n)" + a unit string.
+extension L {
+    public static let unitItems = L10nText(ko: "개", ja: "個", zh: "个", en: " items")
+
+    public static func questionCount(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "\(n)문항"
+        case .ja: "\(n)問"
+        case .zh: "\(n)题"
+        case .en: n == 1 ? "1 question" : "\(n) questions"
+        }
+    }
+
+    public static func strokeCount(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "\(n)획"
+        case .ja, .zh: "\(n)画"
+        case .en: n == 1 ? "1 stroke" : "\(n) strokes"
+        }
+    }
+
+    /// Where the plan starts in the level — an ordinal, not a count.
+    public static func startFrom(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "\(n)번째부터"
+        case .ja: "\(n)字目から"
+        case .zh: "从第\(n)字开始"
+        case .en: "From #\(n)"
+        }
+    }
+
+    public static func belowPassLine(_ percent: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "합격선까지 \(percent)% 남았어요"
+        case .ja: "合格ラインまであと\(percent)%"
+        case .zh: "距合格线还差\(percent)%"
+        case .en: "\(percent)% below the pass line"
+        }
+    }
 }

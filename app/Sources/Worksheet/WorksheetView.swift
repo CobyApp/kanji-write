@@ -160,10 +160,9 @@ public struct WorksheetView: View {
         // 画数 (stroke count) and 部首 (radical) are 漢検-specific sections — only
         // mix them into the study checks when the learner targets the 漢検.
         if examType == .kanken {
-            let unit = L.strokesUnit[appLanguage]
-            let answerStrokes = "\(kanji.strokeCount)\(unit)"
+            let answerStrokes = L.strokeCount(kanji.strokeCount, appLanguage)
             let strokePool = (max(1, kanji.strokeCount - 4)...(kanji.strokeCount + 4))
-                .filter { $0 != kanji.strokeCount }.map { "\($0)\(unit)" }
+                .filter { $0 != kanji.strokeCount }.map { L.strokeCount($0, appLanguage) }
             let strokeOptions = quizOptions(answer: answerStrokes, pool: strokePool, rng: &rng)
             if strokeOptions.count >= 2 {
                 candidates.append(StudyQuizSpec(

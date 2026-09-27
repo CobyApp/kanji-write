@@ -41,7 +41,7 @@ public struct KanjiListRow: View {
                                 .padding(.horizontal, 6).padding(.vertical, 1)
                                 .background(Palette.background).clipShape(Capsule())
                         }
-                        Text("\(kanji.strokeCount)\(L.strokesUnit[language])")
+                        Text(L.strokeCount(kanji.strokeCount, language))
                             .font(.kawaii(11)).foregroundStyle(Palette.inkSoft)
                     }
                     if !kanji.onReadings.isEmpty {

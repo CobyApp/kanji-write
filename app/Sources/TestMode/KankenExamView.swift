@@ -137,8 +137,15 @@ public struct KankenExamView: View {
                     .background(Palette.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(section.jaTitle)
-                        .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(section.jaTitle)
+                            .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                        if let name = section.localizedName(appLanguage) {
+                            Text(name)
+                                .font(.kawaii(13, weight: .bold, language: appLanguage))
+                                .foregroundStyle(Palette.accent)
+                        }
+                    }
                     Text(section.instruction(appLanguage))
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                         .fixedSize(horizontal: false, vertical: true)
@@ -163,7 +170,7 @@ public struct KankenExamView: View {
                 Text("\(percent)%")
                     .font(.kawaii(15, weight: .bold)).monospacedDigit()
                     .foregroundStyle(good ? Palette.mintDeep : Palette.coralDeep)
-                Text("\(stat.attempts)\(L.unitQuestions[appLanguage])")
+                Text(L.questionCount(stat.attempts, appLanguage))
                     .font(.kawaii(10)).monospacedDigit().foregroundStyle(Palette.inkSoft)
             }
             .accessibilityElement(children: .combine)
@@ -252,7 +259,7 @@ public struct KankenExamView: View {
                         .font(.kawaii(12, weight: .bold, language: appLanguage))
                         .foregroundStyle(Palette.inkSoft)
                     Spacer()
-                    Text("\(perSection * playable)\(L.unitQuestions[appLanguage])")
+                    Text(L.questionCount(perSection * playable, appLanguage))
                         .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.ink)
                 }
                 Picker(L.mockExamSize[appLanguage], selection: $perSection) {
@@ -544,7 +551,7 @@ public struct KankenExamView: View {
             .accessibilityElement(children: .combine)
 
             Text(store.passed ? L.examPassed[appLanguage]
-                              : "\(L.examNotYet[appLanguage]) \(max(0, passPercent - percent))%")
+                              : L.belowPassLine(max(0, passPercent - percent), appLanguage))
                 .font(.kawaii(17, weight: .bold, language: appLanguage))
                 .foregroundStyle(store.passed ? Palette.mintDeep : Palette.coralDeep)
                 .multilineTextAlignment(.center)

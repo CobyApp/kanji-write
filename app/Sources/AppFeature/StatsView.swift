@@ -140,10 +140,17 @@ struct StatsView: View {
 
     private func sectionRow(_ score: StatsFeature.State.SectionScore) -> some View {
         HStack(spacing: 10) {
-            Text(score.section.jaTitle)
-                .font(.kawaiiJP(14, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                .lineLimit(1).minimumScaleFactor(0.7)
-                .frame(width: 120, alignment: .leading)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(score.section.jaTitle)
+                    .font(.kawaiiJP(14, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                if let name = score.section.localizedName(appLanguage) {
+                    Text(name)
+                        .font(.kawaii(10, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                }
+            }
+            .frame(width: 120, alignment: .leading)
             if let stat = score.stat, stat.attempts > 0 {
                 ProgressView(value: stat.accuracy)
                     .tint(stat.accuracy >= store.passRatio ? Palette.mint : Palette.coral)

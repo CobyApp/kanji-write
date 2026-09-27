@@ -56,7 +56,7 @@ public struct ReminderView: View {
     private var examCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.examType[appLanguage], accent: Palette.sky)
-            Picker("Exam", selection: $examType) {
+            Picker(L.examType[appLanguage], selection: $examType) {
                 Text("JLPT").tag(ExamType.jlpt)
                 Text("漢検").tag(ExamType.kanken)
             }
@@ -72,7 +72,7 @@ public struct ReminderView: View {
     private var languageCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(L.language[appLanguage], accent: Palette.lavender)
-            Picker("Language", selection: $appLanguage) {
+            Picker(L.language[appLanguage], selection: $appLanguage) {
                 ForEach(AppLanguage.displayOrder, id: \.self) { language in
                     Text(language.label).tag(language)
                 }

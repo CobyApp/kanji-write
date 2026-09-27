@@ -55,9 +55,15 @@ def load_kanji(conn: sqlite3.Connection, kanji: list[Kanji]) -> None:
                 (kanji_id, r.lang_axis, r.value, 1 if r.is_common else 0),
             )
         for g in k.glosses:
+            if g.lang == "en" and g.text in ("?", "-"):
+                continue  # punctuation-only senses carry no meaning
+            text = g.text
+            if g.lang == "en" and text.startswith("10**"):
+                # KANJIDIC's "10**8" → "10⁸"
+                text = "10" + text[4:].translate(str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹"))
             conn.execute(
                 "INSERT INTO gloss (kanji_id, lang, text) VALUES (?, ?, ?)",
-                (kanji_id, g.lang, g.text),
+                (kanji_id, g.lang, text),
             )
     conn.commit()
 

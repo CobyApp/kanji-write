@@ -86,6 +86,15 @@ def main() -> int:
         print(f"look-alike pairs: {load_similar(conn)}")
         tagged = load_word_jlpt_levels(conn, parse_jlpt_vocab(args.jlpt_vocab))
 
+        # KANJIDIC writes powers of ten as "10**8" and has a few senses that are
+        # bare punctuation ("?", "-"); show them the way a reader expects.
+        sup = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+        for gid, text in conn.execute(
+                "SELECT id, text FROM gloss WHERE lang = 'en' AND text GLOB '10[*][*]*'").fetchall():
+            conn.execute("UPDATE gloss SET text = ? WHERE id = ?",
+                         ("10" + text[4:].translate(sup), gid))
+        conn.execute("DELETE FROM gloss WHERE lang = 'en' AND text IN ('?', '-')")
+
         conn.execute("DELETE FROM jlpt_question")
         for rel in QUESTION_FILES:
             path = ROOT / rel

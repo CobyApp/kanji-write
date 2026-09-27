@@ -428,7 +428,7 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L.studyPlan[appLanguage])
                         .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
-                    Text("\(targetLevel) · \(newPerDay)\(L.perDayUnit[appLanguage]) · ~\(daysToFinish(remaining: remaining, perDay: newPerDay))\(L.daysUnit[appLanguage])")
+                    Text("\(targetLevel) · \(L.perDayRate(newPerDay, appLanguage)) · ~\(daysToFinish(remaining: remaining, perDay: newPerDay))\(L.daysUnit[appLanguage])")
                         .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
                 }
                 Spacer()
@@ -512,7 +512,7 @@ struct HomeView: View {
                     Text(L.writeStartPos[appLanguage])
                         .font(.kawaii(15, weight: .semibold)).foregroundStyle(Palette.inkSoft)
                     Spacer()
-                    Text("\(studyStartIndex + 1)\(L.unitCount[appLanguage])~")
+                    Text(L.startFrom(studyStartIndex + 1, appLanguage))
                         .font(.kawaii(18, weight: .bold)).foregroundStyle(Palette.lavender)
                 }
                 Slider(value: Binding(
@@ -539,7 +539,7 @@ struct HomeView: View {
                        in: Date()..., displayedComponents: .date)
                 .font(.kawaii(15))
             // A one-line plain-language summary of the resulting plan.
-            Text("\(remaining)\(L.perDayUnit[appLanguage]) · \(newPerDay)\(L.perDayUnit[appLanguage])/\(L.daysUnit[appLanguage]) · ~\(goalDays)\(L.daysUnit[appLanguage])")
+            Text("\(remaining)\(L.unitCount[appLanguage]) · \(L.perDayRate(newPerDay, appLanguage)) · ~\(goalDays)\(L.daysUnit[appLanguage])")
                 .font(.kawaii(13)).foregroundStyle(Palette.inkSoft)
         }
         .cardBackground()

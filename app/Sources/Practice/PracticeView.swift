@@ -78,7 +78,7 @@ public struct PracticeView: View {
     }
 
     private var rangeSummary: String {
-        "\(store.start + 1) ~ \(store.rangeEnd) · \(store.count)\(L.unitCount[appLanguage])"
+        "\(store.start + 1) ~ \(store.rangeEnd) · \(store.count)\(countUnit)"
     }
 
     /// How many items this 級 holds, which is what tells you whether a range is
@@ -95,7 +95,7 @@ public struct PracticeView: View {
             Spacer()
             Text("\(store.levelCount)")
                 .font(.kawaii(26, weight: .bold)).monospacedDigit().foregroundStyle(Palette.sky)
-            Text(L.unitCount[appLanguage])
+            Text(countUnit)
                 .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.sky)
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
@@ -109,6 +109,11 @@ public struct PracticeView: View {
         case .word: L.wordWriteTestPrompt[appLanguage]
         case .yoji: L.yojiWriteTestPrompt[appLanguage]
         }
+    }
+
+    /// 字 counts kanji; words and idioms are counted as items.
+    private var countUnit: String {
+        store.mode == .kanji ? L.unitCount[appLanguage] : L.unitItems[appLanguage]
     }
 
     private var totalLabel: String {
@@ -198,7 +203,7 @@ public struct PracticeView: View {
             Spacer()
             Text("\(store.favoriteCount)")
                 .font(.kawaii(26, weight: .bold)).monospacedDigit().foregroundStyle(Palette.butter)
-            Text(L.unitCount[appLanguage])
+            Text(countUnit)
                 .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
         }
         .padding(16).frame(maxWidth: .infinity)

@@ -83,6 +83,9 @@ def main() -> int:
         for lang in ("ko", "ja", "zh", "en"):
             if not (ex.get(lang) or "").strip():
                 problems.append(f"{tag} missing {lang} explanation")
+        for lang in ("ja", "zh", "en"):
+            if re.search(r"[\uac00-\ud7a3]", ex.get(lang) or ""):
+                problems.append(f"{tag} Korean text in the {lang} explanation")
 
     if problems:
         print(f"FAIL ({len(problems)} problems)")
