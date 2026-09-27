@@ -149,7 +149,7 @@ public struct QuizView: View {
             Text("\(Int((ratio * 100).rounded()))%")
                 .font(.kawaii(30, weight: .bold)).monospacedDigit()
                 .foregroundStyle(ratio >= 0.7 ? Palette.mintDeep : Palette.coralDeep)
-            Text("\(L.examFirstTry[appLanguage]) · \(firstTry) / \(store.totalItems)")
+            Text("\(L.quizFirstTry[appLanguage]) · \(firstTry) / \(store.totalItems)")
                 .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
             if firstTry < store.totalItems, !store.isReplay {
                 Text(L.examMissedCount[appLanguage])

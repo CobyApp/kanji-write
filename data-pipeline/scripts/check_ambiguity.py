@@ -104,6 +104,8 @@ def main() -> int:
     parser.add_argument("--db", default="out/kanji.sqlite")
     parser.add_argument("--lexicon", help="JSON {surface: [readings]} to widen the "
                         "lexicon beyond the shipped words (e.g. all of JMdict)")
+    parser.add_argument("--all-warnings", action="store_true",
+                        help="print every context warning, not the first hundred")
     args = parser.parse_args()
     con = sqlite3.connect(args.db)
     by_reading, by_surface = load_lexicon(con)
@@ -136,7 +138,7 @@ def main() -> int:
             else:
                 found += 1
             # Every hard failure is printed; warnings only up to a screenful.
-            if not p.startswith("WARN") or warned <= 100:
+            if not p.startswith("WARN") or warned <= 100 or args.all_warnings:
                 print(f"[{key}:{q.get('kind')}:{q.get('level')}:{q.get('literal')}] {p}")
     print(f"{'FAIL' if found else 'OK'} — {found} ambiguous item(s), "
           f"{warned} context warning(s) in {len(rows)}")

@@ -466,8 +466,7 @@ public struct KankenExamFeature {
             switch section.renderType {
             case .strokes:
                 let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
-                built = KankenQuestion.strokeQuiz(items, count: perSection,
-                                                  unit: L.strokesUnit[language])
+                built = KankenQuestion.strokeQuiz(items, count: perSection, language: language)
             case .yojijukugo:
                 let items = (try? await dictionaryClient.examYojijukugo(level, 80)) ?? []
                 built = KankenQuestion.yojijukugoQuiz(items, count: perSection, language: language)
@@ -542,13 +541,13 @@ extension KankenQuestion {
 
     /// Builds 画数 questions: show the kanji, pick its total stroke count from four
     /// choices. Distractors are nearby counts (±3) so the choice is non-trivial.
-    static func strokeQuiz(_ items: [StrokeItem], count: Int, unit: String) -> [KankenQuestion] {
+    static func strokeQuiz(_ items: [StrokeItem], count: Int, language: AppLanguage) -> [KankenQuestion] {
         var out: [KankenQuestion] = []
         for (index, item) in items.prefix(count).enumerated() {
             var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 7))
-            let answer = "\(item.strokeCount)\(unit)"
+            let answer = L.strokeCount(item.strokeCount, language)
             let nearby = (max(1, item.strokeCount - 3)...(item.strokeCount + 3))
-                .filter { $0 != item.strokeCount }.map { "\($0)\(unit)" }
+                .filter { $0 != item.strokeCount }.map { L.strokeCount($0, language) }
             let distractors = nearby.shuffled(using: &rng).prefix(3)
             guard distractors.count == 3 else { continue }
             let options = (Array(distractors) + [answer]).shuffled(using: &rng)

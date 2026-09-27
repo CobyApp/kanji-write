@@ -286,6 +286,9 @@ def starved_sections(conn: sqlite3.Connection) -> list[str]:
     return starved
 
 
+_HANGUL = re.compile(r"[\uac00-\ud7a3]")
+
+
 def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
     """Structural faults in the question bank, grouped by kind of fault.
 
@@ -340,6 +343,11 @@ def question_defects(conn: sqlite3.Connection) -> dict[str, list[str]]:
         for lang in ("ko", "ja", "zh", "en"):
             if not explanations.get(lang, "").strip():
                 note(f"missing {lang} explanation", where)
+        # A Korean gloss pasted into another language's explanation reads as
+        # gibberish to that reader (「人（사람）」 in the Japanese text).
+        for lang in ("ja", "zh", "en"):
+            if _HANGUL.search(explanations.get(lang, "")):
+                note(f"Korean text in {lang} explanation", where)
         if kind == "reading" and literal not in clean:
             note("reading question does not show its kanji", f"{where} → {literal}")
         if kind in _WRITE_KINDS and str(options[answer]) in clean:
