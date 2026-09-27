@@ -212,101 +212,56 @@ extension ExamType {
     private static var reading: ExamSection { live("reading", "読み", .reading, "reading") }
     private static var writing: ExamSection { live("writing", "書き取り", .writing, "orthography") }
     private static var radical: ExamSection { live("radical", "部首", .radical, nil) }
-    private static var strokes: ExamSection { live("strokes", "画数", .strokes, nil) }
-    private static var yoji: ExamSection { live("yoji", "四字熟語", .yojijukugo, nil) }
-    private static func okuri(_ ja: String) -> ExamSection { live("okuri", ja, .okurigana, nil) }
-    /// 対義語・類義語 — cumulative from 6級 up, drawn from the curated pair table.
-    private static var taigirui: ExamSection { live("taigirui", "対義語・類義語", .taigirui, nil) }
-    private static var onkun: ExamSection { live("onkun", "音読み・訓読み", .onkun, nil) }
-    /// 筆順 — the glyph with one stroke marked; the answer is its place in
-    /// writing order. Generated from the KanjiVG paths, so no bank kind.
-    private static var hitsujun: ExamSection { live("hitsujun", "筆順", .hitsujun, nil) }
-    /// 同音異字 / 同音・同訓異字 — pick the right kanji among homophones. Same
-    /// blank-fill rendering as 書き取り, drawing on the generated bank.
-    private static func doon(_ ja: String) -> ExamSection {
-        live("doonkun", ja, .writing, "doonkun")
-    }
-    /// 漢字識別 — three words missing the same kanji; pick the one that fits
-    /// all three. Blank-fill with kanji options, so it renders like 書き取り.
-    private static var shikibetsu: ExamSection {
-        live("shikibetsu", "漢字識別", .writing, "shikibetsu")
-    }
-    private static var sanji: ExamSection { live("sanji", "三字熟語", .writing, "sanji") }
-    private static var kyotsu: ExamSection {
-        live("common-kanji", "共通の漢字", .writing, "kyotsu")
-    }
-    /// 反対のことば / 対義語 — the answer is a whole word, so it renders like
-    /// 対義語・類義語 rather than as a single-kanji blank.
-    private static func hantai(_ id: String, _ ja: String, _ kind: String) -> ExamSection {
-        live(id, ja, .taigirui, kind)
-    }
-    private static func authored(_ id: String, _ ja: String, _ kind: String,
-                                 _ type: KankenQuestionType = .writing) -> ExamSection {
-        live(id, ja, type, kind)
+
+    /// 漢検 papers in official 大問 order, derived from the official paper
+    /// layout (`KankenPaper`): each section once, named as the paper names
+    /// it (the name of its biggest 大問 when a section answers several).
+    private static func kankenSections(_ level: String) -> [ExamSection] {
+        guard let paper = KankenPaper.official(for: level) else {
+            return [reading, radical, writing]
+        }
+        var order: [String] = []
+        var title: [String: (String, Int)] = [:]
+        for part in paper.parts {
+            if title[part.sectionID] == nil { order.append(part.sectionID) }
+            if (title[part.sectionID]?.1 ?? -1) < part.count {
+                title[part.sectionID] = (part.title, part.count)
+            }
+        }
+        return order.compactMap { id in
+            section(id: id, title: title[id]?.0.replacingOccurrences(of: "（読み）", with: "")
+                .replacingOccurrences(of: "（書き取り）", with: "") ?? id)
+        }
     }
 
-    /// 漢検 papers in official 大問 order.
-    private static func kankenSections(_ level: String) -> [ExamSection] {
-        switch level {
-        case "10級":
-            return [reading, hitsujun, strokes,
-                    hantai("hantai", "反対のことば", "hantai"), writing]
-        case "9級":
-            return [reading, hitsujun, strokes, okuri("送りがな"),
-                    hantai("hantai", "反対のことば", "hantai"), writing]
-        case "8級":
-            return [reading, onkun, radical, strokes,
-                    okuri("送りがな"), hantai("taigi", "対義語", "taigi"),
-                    doon("同音異字"), writing]
-        case "7級":
-            return [reading, onkun, radical, strokes,
-                    okuri("送りがな"), hantai("taigi", "対義語", "taigi"),
-                    doon("同音異字"), sanji, writing]
-        case "6級":
-            return [reading, onkun, radical, strokes,
-                    okuri("送りがな"), taigirui,
-                    doon("同音・同訓異字"), authored("tsukuri", "熟語作り", "tsukuri"), writing]
-        case "5級":
-            return [reading, radical, strokes, okuri("送りがな"),
-                    taigirui, authored("kousei", "熟語の構成", "kousei"),
-                    onkun, yoji,
-                    doon("同音・同訓異字"), writing]
-        case "4級", "3級":
-            return [reading, doon("同音・同訓異字"), shikibetsu,
-                    authored("kousei", "熟語の構成", "kousei"), radical, taigirui,
-                    okuri("漢字と送りがな"), yoji,
-                    authored("goji", "誤字訂正", "goji"), writing]
-        case "準2級", "2級":
-            return [reading, radical, authored("kousei", "熟語の構成", "kousei"), yoji,
-                    taigirui, doon("同音・同訓異字"),
-                    authored("goji", "誤字訂正", "goji"), okuri("漢字と送りがな"), writing]
-        case "準1級":
-            return [
-                reading,
-                authored("hyogai-reading", "表外の読み", "hyogai", .reading),
-                live("jukugo-reading", "熟語の読み・一字訓読み", .reading, "jukugo_kun"),
-                kyotsu,
-                writing,
-                authored("goji", "誤字訂正", "goji"),
-                yoji,
-                taigirui,
-                authored("koji-kotowaza", "故事・諺", "kotowaza"),
-                authored("passage", "文章題", "passage", .reading),
-            ]
-        case "1級":
-            return [
-                reading,
-                writing,
-                authored("word-selection", "語選択", "goselect"),
-                yoji,
-                authored("jukujikun-ateji", "熟字訓・当て字", "jukujikun", .reading),
-                onkun,
-                taigirui,
-                authored("koji-kotowaza", "故事・諺", "kotowaza"),
-                authored("passage", "文章題", "passage", .reading),
-            ]
-        default:
-            return [reading, radical, writing]
+    /// The app section that answers a 大問, by id.
+    public static func section(id: String, title: String) -> ExamSection? {
+        switch id {
+        case "reading": return live(id, title, .reading, "reading")
+        case "writing": return live(id, title, .writing, "orthography")
+        case "radical": return live(id, title, .radical, nil)
+        case "strokes": return live(id, title, .strokes, nil)
+        case "hitsujun": return live(id, title, .hitsujun, nil)
+        case "yoji": return live(id, title, .yojijukugo, nil)
+        case "okuri": return live(id, title, .okurigana, nil)
+        case "taigirui": return live(id, title, .taigirui, nil)
+        case "onkun": return live(id, title, .onkun, nil)
+        case "doonkun": return live(id, title, .writing, "doonkun")
+        case "shikibetsu": return live(id, title, .writing, "shikibetsu")
+        case "sanji": return live(id, title, .writing, "sanji")
+        case "common-kanji": return live(id, title, .writing, "kyotsu")
+        case "hantai": return live(id, title, .taigirui, "hantai")
+        case "taigi": return live(id, title, .taigirui, "taigi")
+        case "kousei": return live(id, title, .writing, "kousei")
+        case "goji": return live(id, title, .writing, "goji")
+        case "tsukuri": return live(id, title, .writing, "tsukuri")
+        case "hyogai-reading": return live(id, title, .reading, "hyogai")
+        case "jukugo-reading": return live(id, title, .reading, "jukugo_kun")
+        case "word-selection": return live(id, title, .writing, "goselect")
+        case "jukujikun-ateji": return live(id, title, .reading, "jukujikun")
+        case "koji-kotowaza": return live(id, title, .writing, "kotowaza")
+        case "passage": return live(id, title, .reading, "passage")
+        default: return nil
         }
     }
 
@@ -352,6 +307,10 @@ public struct KankenQuestion: Equatable, Identifiable, Sendable, Codable {
     /// The 大問 this question was drawn for, so a mock paper can be scored per
     /// section. Optional so notes saved by an older build still decode.
     public var sectionID: String?
+    /// On a real-format paper: the 大問 (index into `KankenPaper.parts`) and
+    /// what the question is worth there.
+    public var partIndex: Int?
+    public var points: Int?
 
     public init(
         id: String, type: KankenQuestionType, kanjiID: Int, prompt: String,

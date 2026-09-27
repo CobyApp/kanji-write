@@ -34,7 +34,9 @@ public struct KankenExamView: View {
         }
         .task { store.send(.onAppear(level: store.level, language: appLanguage)) }
         .sensoryFeedback(trigger: store.chosen) { _, new in
-            guard new != nil else { return nil }
+            // The real-format paper is marked only at the end; a buzz per
+            // answer would mark it as it goes.
+            guard new != nil, !store.isRealExam else { return nil }
             return store.isCorrect ? .success : .error
         }
     }
@@ -46,6 +48,9 @@ public struct KankenExamView: View {
             VStack(spacing: 14) {
                 header
                 answerModeCard
+                if examType == .kanken, let paper = KankenPaper.official(for: store.level) {
+                    realExamCard(paper)
+                }
                 mockExamCard
                 weakMixCard
                 ForEach(examType.sections(for: store.level)) { section in
@@ -285,6 +290,73 @@ public struct KankenExamView: View {
         .shadow(color: Palette.ink.opacity(0.06), radius: 8, y: 3)
     }
 
+    /// 실전 모의고사: the level's paper as the real 漢検 prints it — every 大問
+    /// at its official size and points, the official time, scored in points
+    /// against the official pass mark, and no marking until the end.
+    private func realExamCard(_ paper: KankenPaper) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                Image(systemName: "pencil.and.list.clipboard")
+                    .font(.system(size: 19, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Palette.coral)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(L.realExam[appLanguage]) · \(paper.level)")
+                        .font(.kawaii(17, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                    Text(L.realExamSub[appLanguage])
+                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+
+            FlowLayout(spacing: 8) {
+                infoPill(icon: "rosette",
+                         text: "\(L.paperTotal[appLanguage]) \(paper.total)\(L.points[appLanguage])")
+                infoPill(icon: "flag.checkered",
+                         text: "\(L.passMark[appLanguage]) \(paper.pass)\(L.points[appLanguage])")
+                infoPill(icon: "clock", text: "\(paper.minutes)\(L.minutesUnit[appLanguage])")
+                infoPill(icon: "list.number", text: L.questionCount(paper.questionCount, appLanguage))
+            }
+
+            // The paper's 大問 at a glance: marker, name, points × count.
+            VStack(spacing: 4) {
+                ForEach(paper.parts) { part in
+                    HStack(spacing: 8) {
+                        Text(KankenPaper.numeral(part.index))
+                            .font(.kawaiiJP(12, weight: .bold)).foregroundStyle(Palette.coralDeep)
+                            .frame(width: 26, alignment: .leading)
+                        Text(part.title)
+                            .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                        Spacer(minLength: 6)
+                        Text("\(part.points)×\(part.count) = \(part.maxPoints)")
+                            .font(.kawaii(12)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .padding(12)
+            .background(Palette.background)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+            Button { store.send(.selectRealExam) } label: {
+                Text(L.realExamStart[appLanguage])
+                    .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(LinearGradient(colors: [Palette.coral, Palette.pink],
+                                               startPoint: .leading, endPoint: .trailing))
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.bouncy)
+        }
+        .padding(16)
+        .background(Palette.card)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .shadow(color: Palette.ink.opacity(0.06), radius: 8, y: 3)
+    }
+
     private func infoPill(icon: String, text: String) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon).font(.system(size: 11, weight: .bold))
@@ -383,6 +455,13 @@ public struct KankenExamView: View {
                 Text(store.sessionTitle)
                     .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
+                if store.isRealExam, let points = store.current?.points {
+                    Text("\(points)\(L.points[appLanguage])")
+                        .font(.kawaii(11, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.coralDeep)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Palette.coral.opacity(0.15)).clipShape(Capsule())
+                }
                 Spacer(minLength: 8)
                 if let limit = store.timeLimit, let started = store.startedAt {
                     countdown(limit: limit, started: started)
@@ -446,7 +525,8 @@ public struct KankenExamView: View {
     private func answerArea(_ item: KankenQuestion) -> some View {
         Group {
             if canType(item) {
-                TypedReadingAnswer(answer: item.answer, chosen: store.chosen, language: appLanguage) {
+                TypedReadingAnswer(answer: item.answer, chosen: store.chosen, language: appLanguage,
+                                   submitTitle: store.isRealExam ? L.next[appLanguage] : nil) {
                     store.send(.chose($0))
                 }
             } else if canHandwrite(item) {
@@ -530,7 +610,110 @@ public struct KankenExamView: View {
     private var mockResult: some View {
         let percent = Int((store.scoreRatio * 100).rounded())
         let passPercent = Int((store.passRatio * 100).rounded())
+        return Group {
+            if store.isRealExam { realResult } else { shortMockResult(percent, passPercent) }
+        }
+    }
+
+    /// A real-format paper's result: points out of the paper's total against
+    /// its pass mark, per 大問, and every miss to look back over.
+    private var realResult: some View {
+        let ratio = store.maxPoints > 0 ? Double(store.earnedPoints) / Double(store.maxPoints) : 0
         return VStack(spacing: 14) {
+            Text(L.realExamDone[appLanguage])
+                .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+            ZStack {
+                Circle().stroke(Palette.ink.opacity(0.08), lineWidth: 12)
+                Circle()
+                    .trim(from: 0, to: ratio)
+                    .stroke(store.passed ? Palette.mint : Palette.coral,
+                            style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                VStack(spacing: 2) {
+                    Text("\(store.earnedPoints)")
+                        .font(.kawaii(38, weight: .bold)).monospacedDigit().foregroundStyle(Palette.ink)
+                    Text("/ \(store.maxPoints)\(L.points[appLanguage])")
+                        .font(.kawaii(13, weight: .bold, language: appLanguage)).monospacedDigit()
+                        .foregroundStyle(Palette.inkSoft)
+                }
+            }
+            .frame(width: 150, height: 150)
+            .accessibilityElement(children: .combine)
+
+            Text(store.passed ? L.realExamPassed[appLanguage]
+                              : L.belowPassPoints(store.passPoints - store.earnedPoints, appLanguage))
+                .font(.kawaii(17, weight: .bold, language: appLanguage))
+                .foregroundStyle(store.passed ? Palette.mintDeep : Palette.coralDeep)
+                .multilineTextAlignment(.center)
+
+            VStack(spacing: 6) {
+                statRow(L.passMark[appLanguage],
+                        "\(store.passPoints) / \(store.maxPoints)\(L.points[appLanguage])")
+                statRow(L.examFirstTry[appLanguage], "\(store.firstTryCorrect) / \(store.total)")
+                statRow(L.examElapsed[appLanguage], L.clock(store.elapsedSeconds))
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(L.examBySection[appLanguage])
+                    .font(.kawaii(14, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                ForEach(store.sectionTallies) { tally in
+                    sectionBar(tally)
+                }
+            }
+            .padding(14)
+            .background(Palette.background)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            if !store.missedItems.isEmpty { missedReview }
+        }
+    }
+
+    /// The paper is marked only at the end, so this is where the learner
+    /// sees what they got wrong: their answer, the right one, and why.
+    private var missedReview: some View {
+        DisclosureGroup {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(store.missedItems) { item in
+                    VStack(alignment: .leading, spacing: 4) {
+                        if let index = item.partIndex {
+                            Text(store.sectionTitles["p\(index)"] ?? "")
+                                .font(.kawaiiJP(11, weight: .bold)).foregroundStyle(Palette.coralDeep)
+                        }
+                        Text(item.prompt.components(separatedBy: "\n")[0])
+                            .font(.kawaiiJP(15, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let chosen = store.chosenAnswers[item.id],
+                           chosen != ExamKana.selfMarkedWrong {
+                            Text("\(L.yourAnswer[appLanguage]): \(chosen)")
+                                .font(.kawaiiJP(13)).japaneseGlyphs().foregroundStyle(Palette.pinkDeep)
+                        }
+                        Text("\(L.correctAnswer[appLanguage]): \(item.answer)")
+                            .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.mintDeep)
+                        if let explanation = item.explanation, !explanation.isEmpty {
+                            Text(explanation)
+                                .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(Palette.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+            .padding(.top, 8)
+        } label: {
+            Text(L.reviewMissed(store.missedItems.count, appLanguage))
+                .font(.kawaii(14, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+        }
+        .tint(Palette.ink)
+        .padding(14)
+        .background(Palette.background)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func shortMockResult(_ percent: Int, _ passPercent: Int) -> some View {
+        VStack(spacing: 14) {
             Text(L.examMockDone[appLanguage])
                 .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(Palette.inkSoft)
             ZStack {
@@ -584,8 +767,14 @@ public struct KankenExamView: View {
                     .font(.kawaiiJP(14, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
                     .lineLimit(1).minimumScaleFactor(0.7)
                 Spacer()
-                Text("\(tally.correct)/\(tally.total)")
-                    .font(.kawaii(13, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                if let earned = tally.earnedPoints, let worth = tally.maxPoints {
+                    Text("\(earned)/\(worth)\(L.points[appLanguage])")
+                        .font(.kawaii(13, weight: .bold, language: appLanguage)).monospacedDigit()
+                        .foregroundStyle(Palette.inkSoft)
+                } else {
+                    Text("\(tally.correct)/\(tally.total)")
+                        .font(.kawaii(13, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                }
             }
             ProgressView(value: ratio)
                 .tint(ratio >= store.passRatio ? Palette.mint : Palette.coral)

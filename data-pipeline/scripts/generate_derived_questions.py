@@ -370,7 +370,7 @@ def main() -> int:
         })
         stats["iikae"] += 1
 
-    # ── 熟語の読み・一字訓読み (準1級) ───────────────────────────────────────
+    # ── 熟語の読み・一字訓読み (準1級・1級) ───────────────────────────────────────
     # The paper gives a compound, then the same kanji alone with its okurigana,
     # and asks for the 訓読み of the single character. The compound is context,
     # not the question — which is what keeps this distinct from 読み (compound
@@ -382,7 +382,8 @@ def main() -> int:
         # 「托する」「撰する」 are サ変 verbs: the stem is the 音読み, so asking for
         # it as a 訓読み is simply wrong. And a leading or trailing "-" marks a
         # prefix/suffix form in kanjidic2, not a reading that stands alone.
-        if value.endswith(".する") or "-" in value:
+        # 「諜ずる」 (ちょう.ずる) is the same サ変 shape with rendaku.
+        if value.endswith((".する", ".ずる")) or "-" in value:
             continue
         kun_forms[literal].append(value)
     compounds_by_kanji: dict[str, list[tuple[str, str]]] = defaultdict(list)
@@ -393,33 +394,49 @@ def main() -> int:
 
     all_kun = sorted({v.split(".")[0] for vs in kun_forms.values() for v in vs})
     for literal in sorted(kun_forms):
-        if level_of.get(literal) != "準1級":
+        level = level_of.get(literal)
+        if level not in ("準1級", "1級"):
             continue
         pairs = compounds_by_kanji.get(literal)
         if not pairs:
             continue
+        # The compound has to be read kanji by kanji. A 当て字/熟字訓 such as
+        # 剃刀（かみそり） or 胡坐（あぐら） shows the kanji with a reading it
+        # does not carry, which is no help as context and often out of level.
+        pairs = [(s, r) for s, r in pairs if decomposable(s, r)]
+        if not pairs:
+            continue
         form = kun_forms[literal][0]
-        okurigana = form.replace(".", "")
-        answer = form.split(".")[0]
+        answer, okurigana = form.split(".", 1)
+        kun = answer + okurigana
         compound, compound_reading = pairs[0]
-        same_length = [k for k in all_kun if k != answer and len(k) == len(answer)]
+        # Another 訓読み of the same kanji would be a second right answer.
+        own_stems = {v.split(".")[0] for v in kun_forms[literal]}
+        same_length = [k for k in all_kun
+                       if k not in own_stems and len(k) == len(answer)]
         if len(same_length) < 3:
             continue
         rng.shuffle(same_length)
         options = same_length[:3] + [answer]
         rng.shuffle(options)
+        # Underline the kanji and leave the okurigana after it (「惣て」). The
+        # old prompt underlined the kana reading itself, which printed the
+        # answer in the question.
+        written = literal + okurigana
         out.append({
-            "literal": literal, "level": "準1級", "kind": "jukugo_kun",
-            "prompt": f"{compound}（{compound_reading}）　—　<u>{okurigana}</u>",
-            "options": options, "answer": options.index(answer), "focus": okurigana,
+            "literal": literal, "level": level, "kind": "jukugo_kun",
+            "prompt": f"{compound}（{compound_reading}）　—　<u>{literal}</u>{okurigana}",
+            "options": options, "answer": options.index(answer), "focus": literal,
             "explanations": explanations(
-                f"「{okurigana}」의 훈독은 「{answer}」입니다. 숙어 「{compound}」"
-                f"({compound_reading})와 같은 한자입니다.",
-                f"「{okurigana}」の訓読みは「{answer}」です。熟語「{compound}」"
-                f"（{compound_reading}）と同じ漢字です。",
-                f"「{okurigana}」的训读是「{answer}」，与熟语「{compound}」"
-                f"（{compound_reading}）用同一个汉字。",
-                f"「{okurigana}」is read {answer}. Same kanji as in 「{compound}」."),
+                f"「{written}」는 「{kun}」로 읽으며, 「{literal}」 부분의 훈독은 "
+                f"「{answer}」입니다. 숙어 「{compound}」({compound_reading})에 쓰인 것과 "
+                f"같은 한자입니다.",
+                f"「{written}」は「{kun}」と読み、「{literal}」の訓読みは「{answer}」です。"
+                f"熟語「{compound}」（{compound_reading}）の「{literal}」と同じ漢字です。",
+                f"「{written}」读作「{kun}」，所以「{literal}」的训读是「{answer}」。"
+                f"与熟语「{compound}」（{compound_reading}）中的「{literal}」是同一个汉字。",
+                f"「{written}」 is read {kun}, so the kun reading of {literal} here is "
+                f"{answer}. It is the same kanji as in 「{compound}」 ({compound_reading})."),
         })
         stats["jukugo_kun"] += 1
 

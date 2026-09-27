@@ -9,9 +9,17 @@ import pytest
 
 from kanjipipe.questions import (
     WordRow,
+    align_reading,
     build_orthography_question,
     build_reading_question,
+    fits_kana_frame,
+    kanji_reading_table,
+    load_jmdict_lexicon,
     perturb_reading,
+    reading_distractors,
+    reading_infos,
+    surface_shape_ok,
+    target_frame,
 )
 
 
@@ -214,3 +222,184 @@ def test_generation_is_deterministic_for_a_fixed_seed():
     first = build_reading_question(word, rng=_rng(3), **kwargs)
     second = build_reading_question(word, rng=_rng(3), **kwargs)
     assert first == second
+
+
+# ── rules from the 準1級/1級 sample reviews ─────────────────────────────────
+
+_TABLE = kanji_reading_table([
+    ("砧", "on", "チン"), ("砧", "kun", "きぬた"),
+    ("声", "on", "セイ"), ("声", "on", "ショウ"), ("声", "kun", "こえ"),
+    ("嬲", "on", "ジョウ"), ("嬲", "kun", "なぶ.る"),
+    ("嘖", "on", "サク"), ("肋", "on", "ロク"), ("肋", "kun", "あばら"),
+    ("骨", "on", "コツ"), ("骨", "kun", "ほね"),
+])
+
+
+def test_reading_aligns_to_characters_with_sandhi_and_okurigana():
+    assert [s for s, _ in align_reading("砧声", "ちんせい", _TABLE)] == ["ちん", "せい"]
+    # 促音便 and 連濁 are how readings surface inside compounds.
+    assert [s for s, _ in align_reading("肋骨", "ろっこつ", _TABLE)] == ["ろっ", "こつ"]
+    assert [s for s, _ in align_reading("肋骨", "あばらぼね", _TABLE)] == ["あばら", "ぼね"]
+    assert [s for s, _ in align_reading("嬲る", "なぶる", _TABLE)] == ["なぶ", "る"]
+    assert [s for s, _ in align_reading("嘖々", "さくさく", _TABLE)] == ["さく", "さく"]
+
+
+def test_target_frame_lets_an_unknown_target_reading_take_the_remainder():
+    # 砧 read irregularly: the other kanji still pins the frame.
+    segs, slots = target_frame("砧声", "きんせい", "砧", _TABLE)
+    assert segs == ["きん", "せい"] and slots == {0}
+    # 々 repeating the target belongs to the target.
+    assert target_frame("嘖々", "さくさく", "嘖", _TABLE)[1] == {0, 1}
+
+
+def test_reading_distractors_only_change_the_target_slice():
+    """砧声: every option must end in 声=せい, or the easy kanji alone picks
+    the answer."""
+    out = reading_distractors(
+        ["ちん", "せい"], {0}, "砧声",
+        alternatives={"frame": ["じゅう", "かん", "めい"], "own": ["きぬた"],
+                      "lookalike": ["せき"], "near": ["じん"]},
+        banned={"ちんせい"}, rng=_rng())
+    assert len(out) == 3
+    assert all(d.endswith("せい") and d != "ちんせい" for d in out)
+
+
+def test_reading_distractors_keep_reduplication():
+    out = reading_distractors(
+        ["さく", "さく"], {0, 1}, "嘖々",
+        alternatives={"frame": ["こう", "とう"], "own": [], "lookalike": ["せき"],
+                      "near": ["ざく"]},
+        banned={"さくさく"}, rng=_rng())
+    assert all(d[:len(d) // 2] == d[len(d) // 2:] for d in out)
+
+
+def test_reading_distractors_never_three_near_misses():
+    assert reading_distractors(
+        ["ちん", "せい"], {0}, "砧声",
+        alternatives={"frame": [], "own": [], "lookalike": [],
+                      "near": ["じん", "ちいん", "ちゅん"]},
+        banned={"ちんせい"}, rng=_rng()) is None
+
+
+def test_kana_frame_rejects_distractors_that_drop_the_okurigana():
+    assert fits_kana_frame("嬲る", "なぶる", "いじる")
+    assert not fits_kana_frame("嬲る", "なぶる", "かなう")
+    assert not fits_kana_frame("嘖々", "さくさく", "こうぶん")
+    assert fits_kana_frame("嘖々", "さくさく", "こうこう")
+
+
+def test_fallback_reading_distractors_keep_the_okurigana():
+    word = WordRow(surface="嬲る", reading="なぶる")
+    q = build_reading_question(
+        word, literal="嬲", level="1級",
+        other_readings=["かなう", "うずき", "せかす", "いじる", "なじる", "ねぶる"],
+        forbidden={"なぶる"}, rng=_rng())
+    assert all(o.endswith("る") for o in q["options"])
+
+
+def test_surface_shape_allows_only_trailing_okurigana():
+    assert surface_shape_ok("嬲る")
+    assert surface_shape_ok("顰蹙")
+    assert not surface_shape_ok("割り鏨")
+    assert not surface_shape_ok("鬼の霍乱")
+    assert not surface_shape_ok("あい嚢鈔")
+    assert surface_shape_ok("包み釦", allow_inner_okurigana=True)
+    assert not surface_shape_ok("鬼の霍乱", allow_inner_okurigana=True)
+
+
+def test_orthography_rejects_a_substitution_that_spells_any_word_with_the_reading():
+    # 濯ぐ is also すすぐ in JMdict, though not a vocabulary row of its own.
+    word = WordRow(surface="漱ぐ", reading="すすぐ")
+    q = build_orthography_question(
+        word, literal="漱", level="1級", candidates=["濯", "溯", "滌", "潸"],
+        real_surfaces={"漱ぐ"}, reading_spellings={"濯ぐ": {"すすぐ"}},
+        rng=_rng())
+    assert "濯" not in q["options"]
+
+
+def test_orthography_never_offers_compat_twins_or_characters_in_the_word():
+    word = WordRow(surface="窈窕", reading="ようちょう")
+    q = build_orthography_question(
+        word, literal="窈", level="1級",
+        candidates=["\u7a81", "\ufa55", "窕", "竇", "窄", "窗"],
+        real_surfaces={"窈窕"}, rng=_rng())
+    assert "\ufa55" not in q["options"]      # compatibility ideograph of 突
+    assert "窕" not in q["options"]           # already printed in the word
+
+
+def test_korean_particles_follow_the_final_sound():
+    word = WordRow(surface="焜炉", reading="こんろ", ko="풍로")
+    q = build_reading_question(
+        word, literal="焜", level="1級",
+        other_readings=["かいろ", "でんろ", "おろ"], forbidden={"こんろ"},
+        rng=_rng())
+    assert q["explanations"]["ko"].startswith("「焜炉」는 こんろ라고")
+    assert "풍로" in q["explanations"]["ko"]
+    word = WordRow(surface="慇懃", reading="いんぎん", ja="丁寧なこと")
+    q = build_reading_question(
+        word, literal="懃", level="1級",
+        other_readings=["いんけん", "いんしん", "いんもん"],
+        forbidden={"いんぎん"}, rng=_rng())
+    assert q["explanations"]["ko"].startswith("「慇懃」은 いんぎん이라고")
+    assert "丁寧なこと" in q["explanations"]["ja"]
+
+
+_JMDICT = """<JMdict>
+<entry>
+<ent_seq>1585320</ent_seq>
+<k_ele>
+<keb>肋骨</keb>
+</k_ele>
+<r_ele>
+<reb>あばらぼね</reb>
+</r_ele>
+<r_ele>
+<reb>ろっこつ</reb>
+</r_ele>
+<sense>
+<pos>&n;</pos>
+<gloss>rib</gloss>
+<gloss xml:lang="dut">rib</gloss>
+</sense>
+</entry>
+<entry>
+<ent_seq>2007780</ent_seq>
+<k_ele>
+<keb>搦み</keb>
+</k_ele>
+<r_ele>
+<reb>がらみ</reb>
+</r_ele>
+<sense>
+<pos>&suf;</pos>
+<misc>&uk;</misc>
+<gloss>about</gloss>
+</sense>
+</entry>
+<entry>
+<ent_seq>9</ent_seq>
+<k_ele>
+<keb>山一證券</keb>
+</k_ele>
+<r_ele>
+<reb>やまいちしょうけん</reb>
+</r_ele>
+<sense>
+<misc>&company;</misc>
+<gloss>Yamaichi Securities</gloss>
+</sense>
+</entry>
+</JMdict>
+"""
+
+
+def test_jmdict_lexicon_keeps_every_reading_and_the_tags(tmp_path):
+    path = tmp_path / "jmdict.xml"
+    path.write_text(_JMDICT, encoding="utf-8")
+    lex = load_jmdict_lexicon(path)
+    assert lex.all_readings("肋骨") == {"あばらぼね", "ろっこつ"}
+    [suffix] = reading_infos(lex, "搦み")
+    assert suffix.affix_only
+    [company] = reading_infos(lex, "山一證券")
+    assert "company" in company.misc
+    assert reading_infos(lex, "肋骨")[0].en_gloss == "rib"

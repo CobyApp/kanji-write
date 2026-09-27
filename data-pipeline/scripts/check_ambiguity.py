@@ -7,7 +7,10 @@ defensible. This checks the cases the dictionary can decide:
 
 * 書き取り / 表記 (orthography): the prompt spells a word in kana (the focus);
   a distractor that JMdict also spells that way is a second right answer —
-  「いっちょう」 offered as both 一丁 and 一朝.
+  「いっちょう」 offered as both 一丁 and 一朝. When the focus is the blanked
+  word (「すすぐ　—　<u>□ぐ</u>」), the reading comes from the prompt and each
+  option is substituted into the blank: 濯ぐ is also すすぐ, so 濯 is a second
+  right answer.
 * 読み (reading): a distractor that JMdict lists as a reading of the focus word
   is a second right answer — 「今日」 offered as both きょう and こんにち.
 * 同音・同訓異字 (doonkun): the blank sits in a word whose reading is in the
@@ -24,6 +27,7 @@ import json
 import re
 import sqlite3
 import sys
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -55,7 +59,26 @@ def problems_for(q: dict, by_reading, by_surface) -> list[str]:
     focus = q.get("focus") or ""
     clean = UNDERLINE.sub("", q.get("prompt") or "")
     out: list[str] = []
-    if kind == "orthography" and focus:
+    if kind == "orthography" and BLANK in focus:
+        # Generated 書き取り: the reading is printed before the dash
+        # (「こんろ　—　<u>□炉</u>」) and the focus is the blanked word. A
+        # distractor that fills the blank to spell a word with that reading
+        # is a second right answer (濯ぐ for すすぐ), with no sentence to
+        # rule it out.
+        reading = kata_to_hira(re.split(r"\s*[—–-]\s*", clean, 1)[0].strip())
+        if len({unicodedata.normalize("NFKC", o) for o in options}) < len(options):
+            out.append("two options are the same character (compatibility "
+                       "ideograph or NFKC duplicate)")
+        for i, opt in enumerate(options):
+            if i == answer:
+                continue
+            alt = focus.replace(BLANK, opt, 1)
+            if reading in by_surface.get(alt, set()):
+                out.append(f"distractor {opt!r} also makes {alt} ({reading})")
+            elif alt in by_surface:
+                out.append(f"WARN distractor {opt!r} spells the word {alt} "
+                           f"(read {'/'.join(sorted(by_surface[alt]))})")
+    elif kind == "orthography" and focus:
         reading = kata_to_hira(focus)
         spellings = by_reading.get(reading, set())
         correct = options[answer]
