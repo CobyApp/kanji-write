@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 import KanjiDetail
 import KanjiListFeature
 import Practice
@@ -80,6 +81,8 @@ public struct RootFeature {
         case openExpressionDictionary
         case openYojiDictionary
         case openStats(level: String)
+        /// mykanji://review | study | notebook — from a notification or widget.
+        case openLink(URL)
         case bookmarksAppeared
         case bookmarksLoaded([Int])
         case refreshWrongDue(level: String)
@@ -152,6 +155,23 @@ public struct RootFeature {
             case .openYojiDictionary:
                 state.path.append(.yojiDictionary(YojiDictionaryFeature.State()))
                 return .none
+
+            case let .openLink(url):
+                guard url.scheme == "mykanji" else { return .none }
+                // The plan lives in @AppStorage; read it the same way the views do.
+                let defaults = UserDefaults.standard
+                let exam = ExamType(rawValue: defaults.string(forKey: "examType") ?? "") ?? .jlpt
+                let level = defaults.string(forKey: "targetLevel").flatMap {
+                    exam.levels.contains($0) ? $0 : nil
+                } ?? exam.defaultLevel
+                let language = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .ko
+                state.path.removeAll()
+                state.showSettings = false
+                switch url.host() {
+                case "study": return .send(.startStudy(pullAhead: false))
+                case "notebook": return .send(.startWrongNoteReview(level: level, language: language))
+                default: return .send(.startQuiz(level: level, planned: []))
+                }
 
             case let .openStats(level):
                 state.path.append(.stats(StatsFeature.State(
@@ -282,6 +302,10 @@ public struct RootFeature {
             case let .sessionPath(.element(id: _, action: .word(.kanjiTapped(kanji)))):
                 state.sessionPath.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
+            case let .sessionPath(.element(id: _, action: .kanji(.similarTapped(ref)))):
+                guard let kanji = state.review.kanji[id: ref.id] else { return .none }
+                state.sessionPath.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
+                return .none
             case let .sessionPath(.element(id: _, action: .kanjiList(.kanjiTapped(kanji)))):
                 state.sessionPath.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
@@ -297,6 +321,10 @@ public struct RootFeature {
                 if case let .kanjiList(list)? = state.path[id: id] { siblings = list.kanji }
                 let idx = siblings.firstIndex(of: kanji) ?? 0
                 state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji, siblings: siblings, index: idx)))
+                return .none
+            case let .path(.element(id: _, action: .kanji(.similarTapped(ref)))):
+                guard let kanji = state.review.kanji[id: ref.id] else { return .none }
+                state.path.append(.kanji(KanjiDetailFeature.State(kanji: kanji)))
                 return .none
             case let .path(.element(id: _, action: .kanji(.wordTapped(word)))):
                 state.path.append(.word(WordDetailFeature.State(word: word)))

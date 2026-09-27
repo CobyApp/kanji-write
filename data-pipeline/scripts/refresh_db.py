@@ -33,6 +33,7 @@ from kanjipipe.build_db import RESOURCE_DIR  # noqa: E402
 from kanjipipe.ingest.jlpt_questions import parse_jlpt_questions  # noqa: E402
 from kanjipipe.ingest.jlpt_vocab import parse_jlpt_vocab  # noqa: E402
 from kanjipipe.ingest.kanjivg_parts import parse_kanjivg_parts  # noqa: E402
+from kanjipipe.similar import load_similar  # noqa: E402
 from kanjipipe.loader import (  # noqa: E402
     load_jlpt_questions, load_kanji_parts, load_taigirui, load_word_jlpt_levels,
     load_yojijukugo)
@@ -82,6 +83,7 @@ def main() -> int:
         if Path(args.kanjivg).exists():
             with_parts = load_kanji_parts(conn, parse_kanjivg_parts(args.kanjivg))
             print(f"kanji with a radical form: {with_parts}")
+        print(f"look-alike pairs: {load_similar(conn)}")
         tagged = load_word_jlpt_levels(conn, parse_jlpt_vocab(args.jlpt_vocab))
 
         conn.execute("DELETE FROM jlpt_question")

@@ -293,6 +293,11 @@ let project = Project(
                 // Home-screen name: マイカンジ (mykanji).
                 "CFBundleDisplayName": "マイカンジ",
                 "UILaunchScreen": ["UIColorName": ""],
+                // mykanji://review | study | notebook — opened by the daily
+                // reminder and the home-screen widget.
+                "CFBundleURLTypes": [
+                    ["CFBundleURLName": "com.cobyapp.kanjiwrite", "CFBundleURLSchemes": ["mykanji"]],
+                ],
                 // Portrait-only on iPhone — the whole UI is one portrait column.
                 "UISupportedInterfaceOrientations": ["UIInterfaceOrientationPortrait"],
                 // iPad has to offer all four. An iPad app that participates in

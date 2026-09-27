@@ -26,6 +26,7 @@ from kanjipipe.ingest.jmdict import parse_jmdict
 from kanjipipe.ingest.jmdict_relations import parse_jmdict_relations
 from kanjipipe.ingest.kanjivg import parse_kanjivg
 from kanjipipe.ingest.kanjivg_parts import parse_kanjivg_parts
+from kanjipipe.similar import load_similar
 from kanjipipe.ingest.jlpt_questions import parse_jlpt_questions
 from kanjipipe.ingest.jlpt_vocab import parse_jlpt_vocab
 from kanjipipe.ingest.llm_glosses import parse_llm_glosses
@@ -141,6 +142,7 @@ def build(
             load_llm_glosses(conn, parse_llm_glosses(llm_glosses_path))
         load_stroke_order(conn, strokes)
         load_kanji_parts(conn, parse_kanjivg_parts(kanjivg_path))
+        load_similar(conn)
         load_words(conn, words, advanced_literals=advanced_literals)
         if jlpt_vocab_dir is not None and os.path.isdir(jlpt_vocab_dir):
             load_word_jlpt_levels(conn, parse_jlpt_vocab(jlpt_vocab_dir))

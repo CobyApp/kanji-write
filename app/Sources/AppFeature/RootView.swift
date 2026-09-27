@@ -84,6 +84,7 @@ public struct RootView: View {
         // the drawing canvas's ink) in dark styling on white cards — strokes
         // drawn in white on a white canvas vanished.
         .preferredColorScheme(.light)
+        .onOpenURL { store.send(.openLink($0)) }
         .environment(\.locale, Locale(identifier: appLanguage.localeIdentifier))
         .task {
             if needsOnboarding {

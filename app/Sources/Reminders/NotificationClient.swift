@@ -32,6 +32,8 @@ extension NotificationClient: DependencyKey {
             content.title = L.notifTitle[language]
             content.body = L.notifBody[language]
             content.sound = .default
+            // Tapping the reminder opens today's review rather than just the app.
+            content.userInfo = ["link": "mykanji://review"]
             var components = DateComponents()
             components.hour = hour
             components.minute = minute

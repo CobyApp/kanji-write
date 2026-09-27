@@ -47,6 +47,16 @@ public struct WordEntry: Equatable, Identifiable, Sendable {
     }
 }
 
+/// A lightweight pointer to a kanji — enough to show it and look it up.
+public struct KanjiRef: Equatable, Identifiable, Sendable, Hashable {
+    public let id: Int
+    public let literal: String
+    public init(id: Int, literal: String) {
+        self.id = id
+        self.literal = literal
+    }
+}
+
 /// A Japanese example sentence with translations keyed by language code.
 public struct ExampleSentence: Equatable, Identifiable, Sendable {
     public let id: Int

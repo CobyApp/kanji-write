@@ -139,12 +139,22 @@ struct HomeView: View {
             FloatingBlobs()
             ScrollView {
                 Group {
-                    if sizeClass == .compact { compactLayout } else { padPortraitLayout }
+                    if sizeClass == .compact {
+                        compactLayout.readableWidth(sizeClass)
+                    } else {
+                        // A wide iPad / Mac window gets two panes; anything
+                        // narrower keeps the single centred column.
+                        ViewThatFits(in: .horizontal) {
+                            padLandscapeLayout
+                                .frame(minWidth: 1000, maxWidth: 1280)
+                                .frame(maxWidth: .infinity)
+                            padPortraitLayout.readableWidth(sizeClass)
+                        }
+                    }
                 }
                 .padding(.horizontal, sizeClass == .compact ? 22 : 34)
                 .padding(.top, 22)
                 .padding(.bottom, 56)
-                .readableWidth(sizeClass)
             }
             .scrollIndicators(.hidden)
             // Settings opens from a round button aligned to the top-right of the
@@ -305,6 +315,23 @@ struct HomeView: View {
             planButton.popIn(delay: 0.16)
             if levelComplete { levelCompleteCard.popIn(delay: 0.18) }
             launchersGrid.popIn(delay: 0.22)
+        }
+    }
+
+    /// iPad landscape / wide Mac window: progress on the left, every launcher
+    /// on the right — the single column left most of a landscape screen empty.
+    @ViewBuilder private var padLandscapeLayout: some View {
+        HStack(alignment: .top, spacing: 32) {
+            VStack(spacing: 22) {
+                greeting.popIn(delay: 0.02)
+                ring(220).popIn(delay: 0.08)
+                HStack(spacing: 12) { streakChip; goalChip }.popIn(delay: 0.12)
+                planButton.popIn(delay: 0.16)
+                if levelComplete { levelCompleteCard.popIn(delay: 0.18) }
+            }
+            .frame(width: 380)
+            launchersGrid.popIn(delay: 0.22)
+                .frame(maxWidth: .infinity)
         }
     }
 

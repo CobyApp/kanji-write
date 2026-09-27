@@ -326,7 +326,11 @@ public struct WorksheetView: View {
         case .example: exampleCard
         case let .quiz(i):
             let quizzes = studyQuizzes(kanji)
-            if quizzes.indices.contains(i) { StudyQuizCard(spec: quizzes[i], language: appLanguage) }
+            if quizzes.indices.contains(i) {
+                StudyQuizCard(spec: quizzes[i], language: appLanguage) {
+                    store.send(.quizAnswered(correct: $0))
+                }
+            }
         }
     }
 
