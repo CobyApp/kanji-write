@@ -30,6 +30,12 @@ let project = Project(
         // certificate…") and the install fails.
         "DEVELOPMENT_TEAM": "3Y8YH8GWMM",
         "CODE_SIGN_STYLE": "Automatic",
+        // App version, shared by every target so the app, widget and watch
+        // extension always ship the same numbers (a mismatch fails App Store
+        // validation). Bump MARKETING_VERSION for a user-facing release and
+        // CURRENT_PROJECT_VERSION for every upload of that version.
+        "MARKETING_VERSION": "1.1.0",
+        "CURRENT_PROJECT_VERSION": "2",
     ]),
     targets: [
         .target(
