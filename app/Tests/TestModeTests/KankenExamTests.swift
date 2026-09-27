@@ -225,3 +225,96 @@ final class WeakSpotAndTimerTests: XCTestCase {
         await store.send(.exitToHub)                   // cancels the timer
     }
 }
+
+final class KankenPaperTests: XCTestCase {
+    private let levels = ["10級", "9級", "8級", "7級", "6級", "5級",
+                          "4級", "3級", "準2級", "2級", "準1級", "1級"]
+
+    func testEveryPaperAddsUpToItsOfficialTotal() {
+        for level in levels {
+            let paper = try? XCTUnwrap(KankenPaper.official(for: level))
+            XCTAssertNotNil(paper, level)
+            guard let paper else { continue }
+            XCTAssertEqual(paper.parts.reduce(0) { $0 + $1.maxPoints }, paper.total, level)
+            XCTAssertEqual(Double(paper.pass) / Double(paper.total),
+                           ExamType.kanken.passRatio(for: level), accuracy: 0.001, level)
+            XCTAssertEqual(paper.minutes, ExamType.kanken.officialMinutes(for: level), level)
+        }
+    }
+
+    func testEveryPartIsAnsweredByAPlayableHubSection() {
+        for level in levels {
+            guard let paper = KankenPaper.official(for: level) else { continue }
+            let hub = Set(ExamType.kanken.sections(for: level).filter(\.available).map(\.id))
+            for part in paper.parts {
+                XCTAssertTrue(hub.contains(part.sectionID), "\(level) \(part.title)")
+            }
+        }
+    }
+
+    func testAssembleFillsEachPartOnceAndTopsUpShortOnes() {
+        let paper = try! XCTUnwrap(KankenPaper.official(for: "10級"))
+        func pool(_ prefix: String, _ n: Int, _ section: String) -> [KankenQuestion] {
+            (0..<n).map {
+                KankenQuestion(id: "\(prefix)\($0)", type: .reading, kanjiID: 1, prompt: "p",
+                               options: ["a", "b"], answer: "a", sectionID: section)
+            }
+        }
+        // Reading answers three 大問 (20 + 8 + 5); 筆順 comes up 2 short.
+        let pools = [
+            "reading": pool("r", 33 + 30, "reading"),
+            "hitsujun": pool("h", 10, "hitsujun"),
+            "okuri": pool("o", 6, "okuri"),
+            "hantai": pool("t", 10, "hantai"),
+            "writing": pool("w", 20 + 30, "writing"),
+        ]
+        let items = KankenExamFeature.assemble(paper, pools: pools)
+        XCTAssertEqual(items.count, paper.questionCount)
+        XCTAssertEqual(Set(items.map(\.id)).count, items.count)       // no repeats
+        XCTAssertEqual(items.reduce(0) { $0 + ($1.points ?? 0) }, paper.total)
+        let hitsujun = items.filter { $0.partIndex == 1 }
+        XCTAssertEqual(hitsujun.count, 12)
+        XCTAssertEqual(hitsujun.filter { $0.sectionID == "writing" }.count, 2)
+        XCTAssertEqual(items.map { $0.partIndex ?? -1 }, items.map { $0.partIndex ?? -1 }.sorted())
+    }
+}
+
+@MainActor
+final class RealExamFeatureTests: XCTestCase {
+    func testRealPaperScoresInPointsAndMarksOnlyAtTheEnd() async {
+        var state = KankenExamFeature.State(level: "2級")
+        state.isMockExam = true
+        state.paper = KankenPaper.official(for: "2級")
+        let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
+            $0.date.now = Date(timeIntervalSince1970: 1_000)
+            $0.wrongNoteStore.update = { transform in transform([]) }
+        }
+        store.exhaustivity = .off
+        func item(_ id: String, points: Int, part: Int) -> KankenQuestion {
+            var q = KankenQuestion(id: id, type: .reading, kanjiID: 1, prompt: "p",
+                                   options: ["a", "b"], answer: "a", sectionID: "reading")
+            q.points = points
+            q.partIndex = part
+            return q
+        }
+        await store.send(.loaded([item("r", points: 1, part: 0), item("w", points: 2, part: 8)]))
+        XCTAssertEqual(store.state.timeLimit, 60 * 60)
+        await store.send(.chose("b"))            // wrong — moves straight on
+        await store.receive(\.next)
+        XCTAssertEqual(store.state.queue.map(\.id), ["w"])
+        await store.send(.chose("a"))
+        await store.receive(\.next)
+
+        XCTAssertTrue(store.state.isFinished)
+        XCTAssertEqual(store.state.earnedPoints, 2)
+        XCTAssertEqual(store.state.maxPoints, 3)
+        // 160/200 scaled to a 3-point sitting.
+        XCTAssertEqual(store.state.passPoints, 3)
+        XCTAssertFalse(store.state.passed)
+        XCTAssertEqual(store.state.sectionTallies.map(\.earnedPoints), [0, 2])
+        XCTAssertEqual(store.state.missedItems.map(\.id), ["r"])
+        XCTAssertEqual(store.state.chosenAnswers["r"], "b")
+        await store.send(.exitToHub)
+        XCTAssertNil(store.state.paper)
+    }
+}

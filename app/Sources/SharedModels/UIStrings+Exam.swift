@@ -27,7 +27,7 @@ extension L {
     public static let examPracticeDone = L10nText(
         ko: "연습 완료!", ja: "練習完了！", zh: "练习完成！", en: "Practice complete!")
     public static let examMockDone = L10nText(
-        ko: "모의고사 채점 결과", ja: "模擬試験の採点結果", zh: "模拟考试成绩", en: "Mock exam results")
+        ko: "미니 모의고사 결과", ja: "ミニ模試の採点結果", zh: "迷你模拟考试成绩", en: "Quick mock results")
     public static let points = L10nText(ko: "점", ja: "点", zh: "分", en: " pts")
     public static let minutesUnit = L10nText(ko: "분", ja: "分", zh: "分钟", en: " min")
     public static let loadingQuestions = L10nText(
@@ -55,6 +55,44 @@ extension L {
     public static let selfMarkRight = L10nText(ko: "맞았어요", ja: "書けた", zh: "写对了", en: "Got it")
     public static let selfMarkWrong = L10nText(ko: "틀렸어요", ja: "書けなかった", zh: "没写对", en: "Missed it")
     public static let clearCanvas = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
+    public static let correctAnswer = L10nText(ko: "정답", ja: "正解", zh: "正确答案", en: "Answer")
+    // Real-format paper (실전 모의고사)
+    public static let realExam = L10nText(
+        ko: "실전 모의고사", ja: "本番形式の模擬試験", zh: "实战模拟考试", en: "Full practice exam")
+    public static let realExamSub = L10nText(
+        ko: "실제 시험지와 같은 문제 구성·배점·시간. 채점은 끝나고 한 번에",
+        ja: "本番と同じ大問構成・配点・時間。採点は最後にまとめて",
+        zh: "与正式试卷相同的大题结构、配分和时间，最后统一评分",
+        en: "The real paper's sections, points and time limit — marked at the end")
+    public static let realExamStart = L10nText(
+        ko: "실전 모의고사 시작", ja: "本番形式で始める", zh: "开始实战模拟", en: "Start full exam")
+    public static let realExamDone = L10nText(
+        ko: "실전 모의고사 채점 결과", ja: "本番形式 模擬試験の結果", zh: "实战模拟考试成绩",
+        en: "Full practice exam results")
+    public static let realExamPassed = L10nText(
+        ko: "합격 점수를 넘었어요!", ja: "合格点に達しました！", zh: "达到合格分数！",
+        en: "You reached the pass mark!")
+    public static let paperTotal = L10nText(ko: "만점", ja: "満点", zh: "满分", en: "Total")
+    public static let passMark = L10nText(ko: "합격 점수", ja: "合格点", zh: "合格分数", en: "Pass mark")
+
+    public static func belowPassPoints(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "합격 점수까지 \(n)점 남았어요"
+        case .ja: "合格点まであと\(n)点"
+        case .zh: "距合格分数还差\(n)分"
+        case .en: "\(n) points short of the pass mark"
+        }
+    }
+
+    public static func reviewMissed(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "틀린 문제 다시 보기 (\(n))"
+        case .ja: "間違えた問題を見直す（\(n)）"
+        case .zh: "查看答错的题（\(n)）"
+        case .en: "Review missed questions (\(n))"
+        }
+    }
+
     public static let yourAnswer = L10nText(ko: "내 답", ja: "あなたの答え", zh: "你的答案", en: "Your answer")
 
     // Hub

@@ -95,6 +95,8 @@ struct TypedReadingAnswer: View {
     let answer: String
     let chosen: String?
     let language: AppLanguage
+    /// The submit button's title; 채점 unless the answer isn't marked now.
+    var submitTitle: String?
     /// Called with the normalized input, or with `answer` itself on a match.
     let onSubmit: (String) -> Void
 
@@ -120,7 +122,8 @@ struct TypedReadingAnswer: View {
                     .stroke(borderColor, lineWidth: 2))
                 .disabled(answered)
             if !answered {
-                ExamPrimaryButton(title: L.checkAnswer[language], language: language, action: submit)
+                ExamPrimaryButton(title: submitTitle ?? L.checkAnswer[language], language: language,
+                                  action: submit)
                     .disabled(ExamKana.normalize(typed).isEmpty)
             }
         }

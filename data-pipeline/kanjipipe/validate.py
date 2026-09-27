@@ -179,20 +179,22 @@ _WRITE_KINDS = (
 )
 
 
-# What the app marks playable, mirrored from ExamType.kankenSections. A bank
+# What the app marks playable, mirrored from the official paper layouts in
+# KankenPaper.swift (which ExamType.kankenSections is derived from). A bank
 # section names its `kind`; the two table-backed ones name their table.
 _PLAYABLE: dict[str, tuple[tuple[str, str], ...]] = {
-    "10級": (("読み", "reading"), ("書き取り", "orthography"), ("反対のことば", "hantai")),
-    "9級": (("読み", "reading"), ("書き取り", "orthography"), ("反対のことば", "hantai")),
+    "10級": (("読み", "reading"), ("書き取り", "orthography"), ("反対の意味", "hantai")),
+    "9級": (("読み", "reading"), ("書き取り", "orthography"), ("反対の意味", "hantai")),
     "8級": (("読み", "reading"), ("書き取り", "orthography"), ("対義語", "taigi"),
             ("同音異字", "doonkun")),
     "7級": (("読み", "reading"), ("書き取り", "orthography"), ("対義語", "taigi"),
             ("同音異字", "doonkun"), ("三字熟語", "sanji")),
     "6級": (("読み", "reading"), ("書き取り", "orthography"),
-            ("同音・同訓異字", "doonkun"), ("熟語作り", "tsukuri"),
+            ("じゅく語の構成", "kousei"), ("三字のじゅく語", "sanji"),
+            ("同じ読みの漢字", "doonkun"), ("じゅく語作り", "tsukuri"),
             ("対義語・類義語", "table:taigirui")),
     "5級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
-            ("同音・同訓異字", "doonkun"), ("四字熟語", "table:yojijukugo"),
+            ("同じ読みの漢字", "doonkun"), ("熟語作り", "tsukuri"), ("四字熟語", "table:yojijukugo"),
             ("対義語・類義語", "table:taigirui")),
     "4級": (("読み", "reading"), ("書き取り", "orthography"), ("熟語の構成", "kousei"),
             ("同音・同訓異字", "doonkun"), ("漢字識別", "shikibetsu"),
@@ -209,12 +211,13 @@ _PLAYABLE: dict[str, tuple[tuple[str, str], ...]] = {
             ("同音・同訓異字", "doonkun"), ("誤字訂正", "goji"),
             ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
     "準1級": (("読み", "reading"), ("書き取り", "orthography"), ("表外の読み", "hyogai"),
-              ("熟語の読み・一字訓読み", "jukugo_kun"),
+              ("熟語と一字訓の読み", "jukugo_kun"),
               ("共通の漢字", "kyotsu"), ("誤字訂正", "goji"), ("故事・諺", "kotowaza"),
               ("文章題", "passage"),
               ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
     "1級": (("読み", "reading"), ("書き取り", "orthography"), ("語選択", "goselect"),
-            ("熟字訓・当て字", "jukujikun"), ("故事・諺", "kotowaza"),
+            ("熟字訓・当て字", "jukujikun"), ("熟語と一字訓の読み", "jukugo_kun"),
+            ("故事・諺", "kotowaza"),
             ("文章題", "passage"),
             ("四字熟語", "table:yojijukugo"), ("対義語・類義語", "table:taigirui")),
 }

@@ -279,16 +279,16 @@ public enum L {
         ko: "반대말 고르기", ja: "反対のことばを選ぶ",
         zh: "选择反义词", en: "Pick the opposite")
     public static let mockExam = L10nText(
-        ko: "모의고사", ja: "模擬試験", zh: "模拟考试", en: "Mock exam")
+        ko: "미니 모의고사", ja: "ミニ模試", zh: "迷你模拟考试", en: "Quick mock exam")
     public static let mockExamSub = L10nText(
-        ko: "모든 유형을 한 번에", ja: "全出題形式を通しで",
-        zh: "一次涵盖所有题型", en: "Every section in one sitting")
+        ko: "모든 유형을 원하는 문항 수만큼 짧게", ja: "全出題形式を好きな問題数で手短に",
+        zh: "所有题型，按需选择题数", en: "Every section, as many questions as you like")
     public static let mockExamSize = L10nText(
         ko: "유형당 문항 수", ja: "大問ごとの問題数", zh: "每题型题数",
         en: "Questions per section")
     public static let mockExamStart = L10nText(
-        ko: "모의고사 시작", ja: "模擬試験を始める",
-        zh: "开始模拟考试", en: "Start mock exam")
+        ko: "미니 모의고사 시작", ja: "ミニ模試を始める",
+        zh: "开始迷你模拟考试", en: "Start quick mock")
     public static let unitQuestions = L10nText(ko: "문항", ja: "問", zh: "题", en: " questions")
     public static let kankenHub = L10nText(
         ko: "칸켄 유형별 학습", ja: "漢検 出題形式別の学習",

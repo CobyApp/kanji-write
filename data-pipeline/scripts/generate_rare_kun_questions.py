@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """読み / 書き取り for 準1級・1級 kanji that no dictionary word uses.
 
-About 950 advanced kanji appear in no JMdict compound, so there is no attested
+About 950 advanced kanji appear in no JMdict compound (and a few more appear
+only in names or set phrases the word bank skips), so there is no attested
 word to build a sentence question on — and inventing one would be a guess. What
 these kanji do have is a KANJIDIC 訓読み, which is exactly what the 1級 paper's
 一字訓読み asks for (鰯 → いわし, 俛せる → ふせる). So each gets:
@@ -22,6 +23,7 @@ import argparse
 import json
 import random
 import sqlite3
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -71,6 +73,12 @@ def main() -> int:
     for surface in surfaces:
         if 2 <= len(surface) <= 4:
             in_words.update(surface)
+    # Every reading JMdict attests for any word — a distractor must be one of
+    # these, so a broken split like わだち.い → わだちい never shows up.
+    attested: set[str] = set()
+    if isinstance(surfaces, dict):
+        for readings in surfaces.values():
+            attested.update(readings)
 
     con = sqlite3.connect(args.db)
     levels: dict[int, set[str]] = defaultdict(set)
@@ -106,14 +114,30 @@ def main() -> int:
     for kid, literal in literal_of.items():
         if not (levels[kid] & set(LEVELS)):
             continue
-        parts = next((p for p in map(split_kun, kun_all[kid]) if p), None)
+        # A compatibility/variant code point (梅 U+FA44 for 梅) displays as the
+        # everyday kanji; asking for it as a 1級 kanji would be absurd.
+        if unicodedata.normalize("NFC", literal) != literal:
+            continue
+        ja_gloss = glosses[kid].get("ja", "")
+        candidates = [p for p in map(split_kun, kun_all[kid]) if p]
+        # Old kana spellings and number words aren't what the paper asks.
+        candidates = [p for p in candidates
+                      if not any(ch in p[0] + p[1] for ch in "ゐゑ")
+                      and not (p[0] + p[1]).endswith("じゅう")]
+        # Prefer the reading the kanji's own Japanese gloss uses (椛 → もみじ,
+        # not かば); otherwise the first.
+        parts = next((p for p in candidates if (p[0] + p[1]) in ja_gloss),
+                     candidates[0] if candidates else None)
         if parts is None:
             continue
         readings = {v.replace(".", "") for v in kun_all[kid] if "-" not in v}
         readings |= solo_readings.get(literal, set())
         level = "準1級" if "準1級" in levels[kid] else "1級"
+        katakana = all("ァ" <= c <= "ヺ" or c == "ー" for c in parts[0] + parts[1])
         entries.append({"id": kid, "literal": literal, "stem": parts[0],
-                        "okuri": parts[1], "readings": readings, "level": level})
+                        "okuri": parts[1], "readings": readings, "level": level,
+                        "katakana": katakana,
+                        "gloss_matches": (parts[0] + parts[1]) in ja_gloss})
     by_okuri: dict[str, list[dict]] = defaultdict(list)
     for entry in entries:
         by_okuri[entry["okuri"]].append(entry)
@@ -121,16 +145,23 @@ def main() -> int:
     rng = random.Random(SEED)
     out: list[dict] = []
     for entry in entries:
-        if entry["literal"] in in_words:
-            continue
         need = {"reading", "orthography"} - covered[entry["id"]]
+        # A kanji used in dictionary words is normally left to the word-based
+        # bank; only when that bank made nothing of it (its words are all
+        # names, species or set phrases — 國, 鯡) does it fall to its 訓読み.
+        if entry["literal"] in in_words and need != {"reading", "orthography"}:
+            continue
         if not need:
             continue
         answer_reading = entry["stem"] + entry["okuri"]
         pool = [e for e in by_okuri[entry["okuri"]]
                 if e["id"] != entry["id"]
                 and not (e["readings"] & entry["readings"])
-                and abs(len(e["stem"]) - len(entry["stem"])) <= 1]
+                and abs(len(e["stem"]) - len(entry["stem"])) <= 1
+                # same script, or the lone katakana/hiragana option gives it away
+                and e["katakana"] == entry["katakana"]
+                and (not attested or e["stem"] + e["okuri"] in attested
+                     or to_katakana(e["stem"] + e["okuri"]) in attested)]
         if len(pool) < 3:
             continue
         rng.shuffle(pool)
@@ -144,8 +175,13 @@ def main() -> int:
         if len(picks) < 3:
             continue
         g = glosses[entry["id"]]
-        meaning = {lang: (g.get(lang) or g.get("en") or "").rstrip("。.．")
-                   for lang in ("ko", "ja", "zh", "en")}
+        # Only show a meaning when it is the meaning of *this* reading; a gloss
+        # for another sense (歐う/うたう glossed "Europe") misleads.
+        if entry["gloss_matches"]:
+            meaning = {lang: (g.get(lang) or g.get("en") or "").rstrip("。.．")
+                       for lang in ("ko", "ja", "zh", "en")}
+        else:
+            meaning = {lang: "" for lang in ("ko", "ja", "zh", "en")}
         shown = entry["literal"] + entry["okuri"]
 
         def explain(kind: str) -> dict[str, str]:

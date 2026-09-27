@@ -33,6 +33,10 @@ public struct KankenExamFeature {
         public var isMockExam = false
         /// A drill over the learner's weakest sections, mixed together.
         public var isWeakMix = false
+        /// A real-format 漢検 paper: every 大問 at its official size and
+        /// points, the official sitting time and pass mark. Set only while one
+        /// is being sat (it is also a mock paper, so `isMockExam` is true).
+        public var paper: KankenPaper?
         /// Mock papers are timed: seconds allowed for the whole paper.
         public var timeLimit: Int?
         public var queue: [KankenQuestion] = []
@@ -47,6 +51,8 @@ public struct KankenExamFeature {
         /// A drill requeues misses until they are cleared, so this — not
         /// `mastered` — is what the result reports.
         public var firstTry: [String: Bool] = [:]
+        /// The first answer given to each question, for the review list.
+        public var chosenAnswers: [String: String] = [:]
         /// 大問 titles by section id, for the mock paper's breakdown.
         public var sectionTitles: [String: String] = [:]
         public var startedAt: Date?
@@ -69,6 +75,12 @@ public struct KankenExamFeature {
         /// Section title shown in the session header.
         public var sessionTitle: String {
             if isWrongNote { return L.wrongNote[language] }
+            if let paper {
+                guard let index = current?.partIndex, paper.parts.indices.contains(index)
+                else { return L.realExam[language] }
+                let part = paper.parts[index]
+                return "\(KankenPaper.numeral(index))　\(part.title)"
+            }
             if isMockExam { return L.mockExam[language] }
             if isWeakMix { return L.weakMix[language] }
             return activeSection.map { "\($0.numeral)　\($0.jaTitle)" } ?? ""
@@ -100,7 +112,31 @@ public struct KankenExamFeature {
             total > 0 ? Double(firstTryCorrect) / Double(total) : 0
         }
         public var passRatio: Double { ExamType.of(level: level).passRatio(for: level) }
-        public var passed: Bool { scoreRatio >= passRatio }
+        public var passed: Bool {
+            paper != nil ? earnedPoints >= passPoints : scoreRatio >= passRatio
+        }
+        public var isRealExam: Bool { paper != nil }
+
+        /// Points scored on a real-format paper: each 大問's points for every
+        /// question right on the first (and only) try.
+        public var earnedPoints: Int {
+            sessionItems.reduce(0) { $0 + (firstTry[$1.id] == true ? ($1.points ?? 1) : 0) }
+        }
+        /// What the paper as sat is worth — the official total unless a 大問
+        /// came up short of questions.
+        public var maxPoints: Int { sessionItems.reduce(0) { $0 + ($1.points ?? 1) } }
+        /// The official pass mark, scaled to `maxPoints` when the sitting is
+        /// smaller than the official paper.
+        public var passPoints: Int {
+            guard let paper else { return 0 }
+            if maxPoints == paper.total { return paper.pass }
+            return Int((Double(paper.pass) * Double(maxPoints) / Double(paper.total)).rounded(.up))
+        }
+        /// Every question missed on this run, in paper order, for the review
+        /// list under a mock paper's result.
+        public var missedItems: [KankenQuestion] {
+            sessionItems.filter { firstTry[$0.id] == false }
+        }
         public var elapsedSeconds: Int {
             guard let startedAt, let finishedAt else { return 0 }
             return Int(finishedAt.timeIntervalSince(startedAt))
@@ -111,15 +147,25 @@ public struct KankenExamFeature {
             var order: [String] = []
             var right: [String: Int] = [:]
             var count: [String: Int] = [:]
+            var earned: [String: Int] = [:]
+            var worth: [String: Int] = [:]
             for item in sessionItems {
-                let key = item.sectionID ?? ""
+                // A real-format paper is scored per 大問, and one section can
+                // answer several 大問 (10級 has three reading ones).
+                let key = item.partIndex.map { "p\($0)" } ?? item.sectionID ?? ""
                 if count[key] == nil { order.append(key) }
                 count[key, default: 0] += 1
-                if firstTry[item.id] == true { right[key, default: 0] += 1 }
+                worth[key, default: 0] += item.points ?? 1
+                if firstTry[item.id] == true {
+                    right[key, default: 0] += 1
+                    earned[key, default: 0] += item.points ?? 1
+                }
             }
             return order.map { key in
                 SectionTally(id: key, title: sectionTitles[key] ?? key,
-                             correct: right[key, default: 0], total: count[key, default: 0])
+                             correct: right[key, default: 0], total: count[key, default: 0],
+                             earnedPoints: isRealExam ? earned[key, default: 0] : nil,
+                             maxPoints: isRealExam ? worth[key, default: 0] : nil)
             }
         }
     }
@@ -129,6 +175,9 @@ public struct KankenExamFeature {
         public let title: String
         public let correct: Int
         public let total: Int
+        /// Real-format papers only: points scored and available in this 大問.
+        public var earnedPoints: Int?
+        public var maxPoints: Int?
     }
 
     public enum Action: Equatable {
@@ -142,6 +191,8 @@ public struct KankenExamFeature {
         case selectSection(ExamSection)
         case selectWrongNote
         case selectMockExam(perSection: Int)
+        /// Sit the level's paper in its official format.
+        case selectRealExam
         case loaded([KankenQuestion])
         case chose(String)
         case next
@@ -193,6 +244,7 @@ public struct KankenExamFeature {
             case .selectWeakMix:
                 let sections = state.weakSections
                 guard !sections.isEmpty else { return .none }
+                state.paper = nil
                 state.isWeakMix = true
                 state.isMockExam = false
                 state.activeSection = nil
@@ -227,6 +279,7 @@ public struct KankenExamFeature {
                 return .none
 
             case let .selectMockExam(perSection):
+                state.paper = nil
                 state.isMockExam = true
                 state.activeSection = nil
                 state.isWrongNote = false
@@ -254,7 +307,41 @@ public struct KankenExamFeature {
                 }
                 .cancellable(id: CancelID.load, cancelInFlight: true)
 
+            case .selectRealExam:
+                guard let paper = KankenPaper.official(for: state.level) else { return .none }
+                state.paper = paper
+                state.isMockExam = true
+                state.activeSection = nil
+                state.isWrongNote = false
+                state.isWeakMix = false
+                state.isLoading = true
+                state.started = false
+                state.sectionTitles = Dictionary(
+                    paper.parts.map { ("p\($0.index)", "\(KankenPaper.numeral($0.index))　\($0.title)") },
+                    uniquingKeysWith: { first, _ in first })
+                let level = state.level
+                let language = state.language
+                return .run { send in
+                    // One fetch per section, sized for every 大問 it answers;
+                    // 読み and 書き取り get extra to stand in for a 大問 that
+                    // comes up short.
+                    var need: [String: Int] = [:]
+                    for part in paper.parts { need[part.sectionID, default: 0] += part.count }
+                    need["reading", default: 0] += Self.reserve
+                    need["writing", default: 0] += Self.reserve
+                    var pools: [String: [KankenQuestion]] = [:]
+                    for (id, count) in need {
+                        guard let section = ExamType.section(id: id, title: id) else { continue }
+                        pools[id] = (try? await questions(
+                            for: section, level: level, language: language,
+                            perSection: count)) ?? []
+                    }
+                    await send(.loaded(Self.assemble(paper, pools: pools)))
+                }
+                .cancellable(id: CancelID.load, cancelInFlight: true)
+
             case let .selectSection(section):
+                state.paper = nil
                 state.activeSection = section
                 state.isWrongNote = false
                 state.isMockExam = false
@@ -263,6 +350,7 @@ public struct KankenExamFeature {
                 return loadSection(state: &state, section: section)
 
             case .selectWrongNote:
+                state.paper = nil
                 state.activeSection = nil
                 state.isWrongNote = true
                 state.isMockExam = false
@@ -296,15 +384,20 @@ public struct KankenExamFeature {
             case let .chose(option):
                 guard state.chosen == nil else { return .none }
                 state.chosen = option
-                return .none
+                // The real paper gives no marks until the end: answer and move on.
+                return state.isRealExam ? .send(.next) : .none
 
             case .next:
                 guard let item = state.queue.first else { return .none }
                 let correct = state.chosen == item.answer
+                let chosen = state.chosen
                 state.queue.removeFirst()
                 state.chosen = nil
                 let isFirstTry = state.firstTry[item.id] == nil
-                if isFirstTry { state.firstTry[item.id] = correct }
+                if isFirstTry {
+                    state.firstTry[item.id] = correct
+                    state.chosenAnswers[item.id] = chosen
+                }
                 let level = state.level
                 let today = state.today
                 var effect: Effect<Action> = .none
@@ -363,6 +456,8 @@ public struct KankenExamFeature {
                 // The notebook may have shrunk since this run began; re-read it
                 // rather than replaying notes that were already cleared.
                 if state.isWrongNote { return .send(.selectWrongNote) }
+                // A fresh paper each sitting, as a real retake would be.
+                if state.isRealExam { return .send(.selectRealExam) }
                 // A mock paper keeps paper order, as the real sitting does.
                 if !state.isMockExam { state.sessionItems.shuffle() }
                 state.queue = state.sessionItems
@@ -370,6 +465,7 @@ public struct KankenExamFeature {
                 return startTimer(&state)
 
             case .exitToHub:
+                state.paper = nil
                 state.activeSection = nil
                 state.isWrongNote = false
                 state.isMockExam = false
@@ -396,6 +492,7 @@ public struct KankenExamFeature {
     }
 
     private func beginRun(_ state: inout State) {
+        state.chosenAnswers = [:]
         state.mastered = 0
         state.missed = []
         state.firstTry = [:]
@@ -424,13 +521,54 @@ public struct KankenExamFeature {
             state.timeLimit = nil
             return .cancel(id: CancelID.timer)
         }
-        let limit = state.total * Self.secondsPerQuestion
+        let limit = state.paper.map { $0.minutes * 60 } ?? state.total * Self.secondsPerQuestion
         state.timeLimit = limit
         return .run { send in
             try await Task.sleep(for: .seconds(limit))
             await send(.timeUp)
         }
         .cancellable(id: CancelID.timer, cancelInFlight: true)
+    }
+
+    /// Extra 読み / 書き取り drawn for a real-format paper, to fill any 大問
+    /// whose own section has too few questions at this level.
+    static let reserve = 30
+
+    /// Lays questions out as the paper: each 大問 in order takes its count
+    /// from its section's pool (never the same question twice), and a 大問 left
+    /// short is topped up from 読み (for reading-type sections) or 書き取り. Each
+    /// question is stamped with its 大問 and points.
+    static func assemble(_ paper: KankenPaper,
+                         pools: [String: [KankenQuestion]]) -> [KankenQuestion] {
+        var pools = pools
+        var used: Set<String> = []
+        func take(_ id: String, _ n: Int) -> [KankenQuestion] {
+            var picked: [KankenQuestion] = []
+            var rest: [KankenQuestion] = []
+            for item in pools[id] ?? [] {
+                if picked.count < n, used.insert(item.id).inserted { picked.append(item) }
+                else if !used.contains(item.id) { rest.append(item) }
+            }
+            pools[id] = rest
+            return picked
+        }
+        var out: [KankenQuestion] = []
+        for part in paper.parts {
+            var items = take(part.sectionID, part.count)
+            if items.count < part.count {
+                let readingLike = ExamType.section(id: part.sectionID, title: "")?.renderType == .reading
+                let first = readingLike ? "reading" : "writing"
+                items += take(first, part.count - items.count)
+                items += take(first == "reading" ? "writing" : "reading", part.count - items.count)
+            }
+            out += items.map { item in
+                var item = item
+                item.partIndex = part.index
+                item.points = part.points
+                return item
+            }
+        }
+        return out
     }
 
     /// Loads and builds one section's questions from real data.
