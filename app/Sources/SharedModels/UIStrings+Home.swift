@@ -70,3 +70,8 @@ extension L {
         ko: "최근 14일 동안의 기록이 아직 없어요", ja: "直近14日の記録はまだありません",
         zh: "最近14天还没有记录", en: "Nothing recorded in the last 14 days yet")
 }
+
+extension L {
+    public static let similarKanji = L10nText(
+        ko: "모양이 비슷한 한자", ja: "形の似た漢字", zh: "形近字", en: "Look-alike kanji")
+}

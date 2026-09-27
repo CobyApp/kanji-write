@@ -19,6 +19,8 @@ public struct KanjiDetailFeature {
         public var relations: [RelationEntry] = []
         /// 旧字 forms, when this kanji has one. Almost none do.
         public var variants: [KanjiVariant] = []
+        /// Look-alike kanji (same parts), for telling 待 from 持 and 特.
+        public var similar: [KanjiRef] = []
         public var strokePaths: [String] = []
         public var isLoading = false
         public var addedToReview = false
@@ -39,6 +41,8 @@ public struct KanjiDetailFeature {
         case loaded([String: String], [WordEntry], [ExampleSentence], [RelationEntry], [String],
                 [KanjiVariant])
         case bookmarkLoaded(Bool)
+        case similarLoaded([KanjiRef])
+        case similarTapped(KanjiRef)  // delegate → parent pushes that kanji
         case showSibling(delta: Int)   // prev (-1) / next (+1)
         case writeTapped
         case wordTapped(WordEntry)  // delegate → parent pushes the word detail
@@ -74,6 +78,7 @@ public struct KanjiDetailFeature {
                 state.sentences = []
                 state.relations = []
                 state.variants = []
+                state.similar = []
                 state.strokePaths = []
                 state.addedToReview = false
                 state.isLoading = true
@@ -90,6 +95,11 @@ public struct KanjiDetailFeature {
             case let .bookmarkLoaded(bookmarked):
                 state.isBookmarked = bookmarked
                 return .none
+            case let .similarLoaded(similar):
+                state.similar = similar
+                return .none
+            case .similarTapped:
+                return .none  // handled by the parent (navigation)
             case .toggleBookmark:
                 state.isBookmarked.toggle()
                 let id = state.kanji.id
@@ -156,6 +166,7 @@ public struct KanjiDetailFeature {
                 (try? await variants) ?? []
             ))
             await send(.bookmarkLoaded(await kanjiBookmarkStore.load().contains(id)))
+            await send(.similarLoaded((try? await dictionaryClient.similarKanji(id, 6)) ?? []))
         }
     }
 }

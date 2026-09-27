@@ -27,6 +27,7 @@ public struct KanjiDetailView: View {
                     if !store.sentences.isEmpty { sentencesSection.popIn(delay: 0.28) }
                     if !store.variants.isEmpty { variantsSection.popIn(delay: 0.34) }
                     if !store.relations.isEmpty { relationsSection.popIn(delay: 0.40) }
+                    if !store.similar.isEmpty { similarSection.popIn(delay: 0.44) }
                 }
                 .padding(16)
                 .readableWidth(sizeClass)
@@ -229,6 +230,31 @@ public struct KanjiDetailView: View {
             if !related.isEmpty {
                 Text(L.relatedWords[appLanguage]).font(.kawaii(14, weight: .bold)).foregroundStyle(Palette.inkSoft)
                 relationChips(related, tint: Palette.sky)
+            }
+        }
+        .roundedCard()
+    }
+
+    /// 形の似た漢字 — kanji built from the same parts; each opens its own page.
+    private var similarSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(L.similarKanji[appLanguage], accent: Palette.coral)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(store.similar) { ref in
+                        Button { store.send(.similarTapped(ref)) } label: {
+                            Text(ref.literal)
+                                .font(.kawaiiJP(30, weight: .bold)).japaneseGlyphs()
+                                .foregroundStyle(Palette.ink)
+                                .frame(width: 56, height: 56)
+                                .background(Palette.coralSoft)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        .buttonStyle(.bouncy)
+                        .accessibilityLabel(ref.literal)
+                    }
+                }
+                .padding(.vertical, 1)
             }
         }
         .roundedCard()

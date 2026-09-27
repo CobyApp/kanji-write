@@ -117,6 +117,8 @@ struct KanjiWidget: Widget {
         StaticConfiguration(kind: "KanjiWidget", provider: KanjiProvider()) { entry in
             KanjiWidgetView(entry: entry)
                 .containerBackground(Palette.background, for: .widget)
+                // Tapping the widget starts today's study, not just the app.
+                .widgetURL(URL(string: "mykanji://study"))
         }
         // The widget gallery is drawn by the system before the app runs, so these
         // two cannot come from `L` like the rest of the chrome — they resolve

@@ -119,17 +119,23 @@ public struct WorksheetFeature {
         case closeTapped          // delegate → parent dismisses the session
         case kanjiTapped(Kanji)   // delegate → parent drills into the kanji detail
         case wordTapped(WordEntry) // delegate → parent drills into the word detail
+        case quizAnswered(correct: Bool)  // a study card's mini-quiz → the day's log
     }
 
     @Dependency(\.reviewStore) var reviewStore
     @Dependency(\.dictionaryClient) var dictionaryClient
     @Dependency(\.date) var date
+    @Dependency(\.studyLogStore) var studyLogStore
 
     public init() {}
 
     public var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
+            case let .quizAnswered(correct):
+                let today = Int(date.now.timeIntervalSince1970 / 86_400)
+                return .run { _ in await studyLogStore.record(today, correct) }
+
             case let .onAppear(newPerDay, level, startIndex):
                 guard state.queue.isEmpty, !state.isFinished, !state.isLoading else { return .none }
                 state.isLoading = true

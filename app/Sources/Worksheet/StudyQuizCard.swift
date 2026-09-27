@@ -10,6 +10,9 @@ import SwiftUI
 struct StudyQuizCard: View {
     let spec: StudyQuizSpec
     let language: AppLanguage
+    /// Told whether the first choice was right, so the answer counts toward
+    /// the day's record like any other quiz.
+    var onAnswer: ((Bool) -> Void)? = nil
     @State private var choice: String?
 
     var body: some View {
@@ -93,7 +96,11 @@ struct StudyQuizCard: View {
     private var options: some View {
         VStack(spacing: 10) {
             ForEach(spec.options, id: \.self) { option in
-                Button { if choice == nil { choice = option } } label: {
+                Button {
+                    guard choice == nil else { return }
+                    choice = option
+                    onAnswer?(option == spec.answer)
+                } label: {
                     HStack {
                         Text(option)
                             .font(optionFont()).japaneseGlyphs()

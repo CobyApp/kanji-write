@@ -713,6 +713,20 @@ extension DictionaryClient: DependencyKey {
                         meaningJa: try gloss("ja"), meaningZh: try gloss("zh"))
                 }
             }
+        },
+        similarKanji: { kanjiID, limit in
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [KanjiRef] in
+                guard try db.tableExists("kanji_similar") else { return [] }
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT k.id, k.literal FROM kanji_similar s
+                    JOIN kanji k ON k.id = s.similar_id
+                    WHERE s.kanji_id = ?
+                    ORDER BY s.rank
+                    LIMIT ?
+                    """, arguments: [kanjiID, limit])
+                return rows.map { KanjiRef(id: $0["id"], literal: $0["literal"]) }
+            }
         }
     )
 

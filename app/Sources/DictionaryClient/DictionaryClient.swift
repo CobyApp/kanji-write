@@ -84,6 +84,9 @@ public struct DictionaryClient: Sendable {
     /// draws on), in list order. Unlike `quizWords` this is word-level, not
     /// "any word containing a kanji of this level".
     public var jlptVocabulary: @Sendable (_ level: String, _ limit: Int) async throws -> [WordEntry]
+    /// Kanji built from the same parts (待 → 持 特 時 侍), most alike first —
+    /// the look-alikes 誤字訂正 is made of.
+    public var similarKanji: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [KanjiRef]
 }
 
 extension DictionaryClient: TestDependencyKey {
