@@ -240,8 +240,8 @@ public enum L {
         ko: "세 글자 숙어 완성", ja: "三字熟語を完成させる",
         zh: "补全三字词", en: "Complete the three-kanji compound")
     public static let kankenDoonDesc = L10nText(
-        ko: "같은 음의 한자 구별", ja: "同じ音の漢字を使い分ける",
-        zh: "区分同音汉字", en: "Tell homophone kanji apart")
+        ko: "밑줄 친 가타카나에 맞는 한자 고르기", ja: "傍線部のカタカナにあてはまる漢字を選べ",
+        zh: "选出与画线片假名相符的汉字", en: "Pick the kanji for the underlined katakana")
     public static let kankenTsukuriDesc = L10nText(
         ko: "뜻에 맞는 숙어 만들기", ja: "意味に合う熟語を作る",
         zh: "组成符合意思的词语", en: "Build the compound for the meaning")
@@ -324,7 +324,8 @@ public enum L {
     public static let kankenRadicalDesc = L10nText(
         ko: "한자의 부수 고르기", ja: "漢字の部首", zh: "选择汉字的部首", en: "The kanji's radical")
     public static let kankenWritingDesc = L10nText(
-        ko: "읽기에 맞는 한자 표기", ja: "正しい漢字表記", zh: "写出对应读音的汉字", en: "Write it in kanji")
+        ko: "밑줄 친 가타카나를 한자로", ja: "傍線部のカタカナを漢字に直せ", zh: "把画线的片假名写成汉字",
+        en: "Write the underlined katakana in kanji")
     public static let wrongNote = L10nText(ko: "오답노트", ja: "間違いノート", zh: "错题本", en: "Mistake notebook")
     public static let wrongNoteDesc = L10nText(
         ko: "틀린 문제 다시 풀기", ja: "間違えた問題を解き直す", zh: "重做错题", en: "Retry missed questions")

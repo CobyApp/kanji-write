@@ -440,6 +440,10 @@ def main() -> int:
         })
         stats["jukugo_kun"] += 1
 
+    # JLPT 言い換え類義 and 語形成 are always asked inside a sentence; these
+    # bare-word versions are not how the paper asks them, and the authored
+    # sentence-form bank covers every level, so they are not shipped.
+    out = [q for q in out if q["kind"] not in ("iikae", "gokeisei")]
     Path(args.out).write_text(
         "\n".join(json.dumps(q, ensure_ascii=False) for q in out) + "\n",
         encoding="utf-8")
