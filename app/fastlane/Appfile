@@ -1,0 +1,5 @@
+app_identifier("com.cobyapp.kanjiwrite")
+team_id("3Y8YH8GWMM") # Apple Developer team (also set as DEVELOPMENT_TEAM in Project.swift)
+
+# Auth is done with an App Store Connect API key (ASC_* env vars), so no
+# apple_id / app-specific password is needed here.

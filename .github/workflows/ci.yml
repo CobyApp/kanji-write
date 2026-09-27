@@ -1,0 +1,44 @@
+name: CI
+
+# Trunk-based: test every push to master and every PR into it. Releases are cut
+# by pushing a v* tag (see deploy.yml), not by merging.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # NOTE: this project targets iOS 26 / watchOS 11 and needs Xcode 26+.
+    # GitHub-hosted runners may not have that Xcode yet. If the Xcode or build
+    # step fails on the version, point `runs-on` at a self-hosted macOS runner
+    # (your Mac) — see docs/ci-deploy.md.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install Tuist
+        uses: jdx/mise-action@v2
+        with:
+          working_directory: app
+
+      - name: Set up Ruby + fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: app
+
+      - name: Run tests
+        working-directory: app
+        run: bundle exec fastlane test

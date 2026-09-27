@@ -1,0 +1,4 @@
+# Pins the Tuist version so local dev and CI generate the same project.
+# Optional locally (ignored if you don't use mise); CI installs from it.
+[tools]
+tuist = "4.120.0"

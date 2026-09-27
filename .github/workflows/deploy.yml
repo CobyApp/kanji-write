@@ -1,0 +1,68 @@
+name: Deploy to TestFlight
+
+# Cut a release by tagging a commit on master:
+#   git tag v1.1.0 && git push origin v1.1.0
+# The tag version must match MARKETING_VERSION in app/Project.swift, or the run
+# fails before building. Final App Store submission stays manual in
+# App Store Connect — this only uploads the build to TestFlight.
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  testflight:
+    # See the runner note in ci.yml — needs Xcode 26+.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches MARKETING_VERSION
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PROJ=$(sed -nE 's/.*"MARKETING_VERSION": *"([^"]+)".*/\1/p' app/Project.swift | head -1)
+          echo "tag=$TAG  project=$PROJ"
+          if [ "$TAG" != "$PROJ" ]; then
+            echo "::error::Tag v$TAG does not match MARKETING_VERSION $PROJ in app/Project.swift"
+            exit 1
+          fi
+          echo "RELEASE_VERSION=$TAG" >> "$GITHUB_ENV"
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install Tuist
+        uses: jdx/mise-action@v2
+        with:
+          working_directory: app
+
+      - name: Set up Ruby + fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: app
+
+      - name: Build and upload to TestFlight
+        working-directory: app
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
+        run: bundle exec fastlane beta
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            app/build/
+            ~/Library/Logs/gym/
+          if-no-files-found: ignore
