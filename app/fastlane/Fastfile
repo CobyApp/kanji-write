@@ -72,8 +72,9 @@ platform :ios do
     UI.message("Building #{version} (#{build_number}) for TestFlight")
 
     # gym takes no api_key; automatic ("cloud") signing needs the App Store
-    # Connect key handed to xcodebuild directly, on both the archive and the
-    # export steps, alongside -allowProvisioningUpdates.
+    # Connect key handed to xcodebuild for the archive step. gym injects the
+    # same authentication flags into the export step itself, so passing them
+    # again via export_xcargs would duplicate -authenticationKeyID and fail.
     auth = "-authenticationKeyID #{key_id} " \
            "-authenticationKeyIssuerID #{issuer_id} " \
            "-authenticationKeyPath #{key_path}"
@@ -83,7 +84,6 @@ platform :ios do
       configuration: "Release",
       export_method: "app-store",
       xcargs: "-allowProvisioningUpdates #{auth} CURRENT_PROJECT_VERSION=#{build_number}",
-      export_xcargs: "-allowProvisioningUpdates #{auth}",
       output_directory: "build",
       clean: true
     )
