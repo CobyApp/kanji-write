@@ -732,15 +732,16 @@ extension KankenQuestion {
             var rng = SeededRNG(seed: UInt64(item.kanjiID &+ index &+ 11))
             let interior = Array(1..<(total - 1))
             guard let marked = interior.shuffled(using: &rng).first else { continue }
-            let answer = L.strokeOrdinal(marked + 1, language)
+            let target = marked + 1
+            let answer = L.strokeOrdinal(target, language)
             // Neighbouring positions are the realistic mistakes.
-            let others = (1...total).filter { $0 != marked + 1 }
-                .sorted { abs($0 - (marked + 1)) < abs($1 - (marked + 1)) }
-                .prefix(5).shuffled(using: &rng)
-                .map { L.strokeOrdinal($0, language) }
-            let distractors = others.prefix(3)
+            var positions: [Int] = Array(1...total).filter { $0 != target }
+            positions.sort { abs($0 - target) < abs($1 - target) }
+            let nearest: [Int] = Array(positions.prefix(5)).shuffled(using: &rng)
+            let others: [String] = nearest.map { L.strokeOrdinal($0, language) }
+            let distractors: [String] = Array(others.prefix(3))
             guard distractors.count == 3 else { continue }
-            let options = (Array(distractors) + [answer]).shuffled(using: &rng)
+            let options = (distractors + [answer]).shuffled(using: &rng)
             out.append(KankenQuestion(
                 id: "\(KankenQuestionType.hitsujun.rawValue):\(item.kanjiID):\(marked)",
                 type: .hitsujun, kanjiID: item.kanjiID, prompt: item.literal,
