@@ -298,6 +298,12 @@ let project = Project(
             infoPlist: .extendingDefault(with: [
                 // Home-screen name: マイカンジ (mykanji).
                 "CFBundleDisplayName": "マイカンジ",
+                // Ship the version from the build settings. Tuist's default
+                // Info.plist otherwise hardcodes CFBundleShortVersionString 1.0
+                // / CFBundleVersion 1, so the upload ships 1.0 no matter what
+                // MARKETING_VERSION says.
+                "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+                "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
                 "UILaunchScreen": ["UIColorName": ""],
                 // mykanji://review | study | notebook — opened by the daily
                 // reminder and the home-screen widget.
@@ -348,6 +354,10 @@ let project = Project(
                 // Shown in the widget gallery, and required by App Store
                 // validation for an embedded extension.
                 "CFBundleDisplayName": "マイカンジ",
+                // Match the app's version (embedded extensions must, or the
+                // upload is rejected); from the build settings, not Tuist's 1.0.
+                "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+                "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
                 "NSExtension": [
                     "NSExtensionPointIdentifier": "com.apple.widgetkit-extension",
                 ],
@@ -371,6 +381,9 @@ let project = Project(
             deploymentTargets: .watchOS("11.0"),
             infoPlist: .extendingDefault(with: [
                 "CFBundleDisplayName": "マイカンジ",
+                // Match the app's version, from the build settings (not 1.0).
+                "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+                "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
                 "WKApplication": true,
                 "WKCompanionAppBundleIdentifier": "com.cobyapp.kanjiwrite",
             ]),
