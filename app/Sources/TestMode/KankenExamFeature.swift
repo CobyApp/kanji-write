@@ -120,11 +120,19 @@ public struct KankenExamFeature {
         /// Points scored on a real-format paper: each 大問's points for every
         /// question right on the first (and only) try.
         public var earnedPoints: Int {
-            sessionItems.reduce(0) { $0 + (firstTry[$1.id] == true ? ($1.points ?? 1) : 0) }
+            var total = 0
+            for item in sessionItems where firstTry[item.id] == true {
+                total += item.points ?? 1
+            }
+            return total
         }
         /// What the paper as sat is worth — the official total unless a 大問
         /// came up short of questions.
-        public var maxPoints: Int { sessionItems.reduce(0) { $0 + ($1.points ?? 1) } }
+        public var maxPoints: Int {
+            var total = 0
+            for item in sessionItems { total += item.points ?? 1 }
+            return total
+        }
         /// The official pass mark, scaled to `maxPoints` when the sitting is
         /// smaller than the official paper.
         public var passPoints: Int {
@@ -152,21 +160,32 @@ public struct KankenExamFeature {
             for item in sessionItems {
                 // A real-format paper is scored per 大問, and one section can
                 // answer several 大問 (10級 has three reading ones).
-                let key = item.partIndex.map { "p\($0)" } ?? item.sectionID ?? ""
+                let key: String
+                if let part = item.partIndex {
+                    key = "p\(part)"
+                } else {
+                    key = item.sectionID ?? ""
+                }
                 if count[key] == nil { order.append(key) }
+                let points = item.points ?? 1
                 count[key, default: 0] += 1
-                worth[key, default: 0] += item.points ?? 1
+                worth[key, default: 0] += points
                 if firstTry[item.id] == true {
                     right[key, default: 0] += 1
-                    earned[key, default: 0] += item.points ?? 1
+                    earned[key, default: 0] += points
                 }
             }
-            return order.map { key in
-                SectionTally(id: key, title: sectionTitles[key] ?? key,
-                             correct: right[key, default: 0], total: count[key, default: 0],
-                             earnedPoints: isRealExam ? earned[key, default: 0] : nil,
-                             maxPoints: isRealExam ? worth[key, default: 0] : nil)
+            let real = isRealExam
+            var tallies: [SectionTally] = []
+            for key in order {
+                let earnedPoints: Int? = real ? earned[key, default: 0] : nil
+                let maxPoints: Int? = real ? worth[key, default: 0] : nil
+                tallies.append(SectionTally(
+                    id: key, title: sectionTitles[key] ?? key,
+                    correct: right[key, default: 0], total: count[key, default: 0],
+                    earnedPoints: earnedPoints, maxPoints: maxPoints))
             }
+            return tallies
         }
     }
 
