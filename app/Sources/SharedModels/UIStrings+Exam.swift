@@ -57,6 +57,17 @@ extension L {
     public static let clearCanvas = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
     public static let correctAnswer = L10nText(ko: "정답", ja: "正解", zh: "正确答案", en: "Answer")
     public static let gradeTitle = L10nText(ko: "채점", ja: "採点", zh: "评分", en: "Grade")
+    // 실전 모의고사 채점 시점 선택
+    public static let gradeMode = L10nText(ko: "채점", ja: "採点", zh: "评分", en: "Grading")
+    public static let gradeModeInstant = L10nText(
+        ko: "바로", ja: "その場", zh: "即时", en: "As you go")
+    public static let gradeModeEnd = L10nText(
+        ko: "끝나고", ja: "最後に", zh: "最后", en: "At the end")
+    public static let gradeModeHint = L10nText(
+        ko: "실전 모의고사에 적용 — 끝나고 한 번에 채점할지, 문제마다 바로 채점할지",
+        ja: "本番形式の模試に適用 — 最後にまとめて採点するか、問題ごとに採点するか",
+        zh: "应用于实战模拟考试 — 最后统一评分，还是每题即时评分",
+        en: "For the full practice exam — mark everything at the end, or each question as you go")
     // Real-format paper (실전 모의고사)
     public static let realExam = L10nText(
         ko: "실전 모의고사", ja: "本番形式の模擬試験", zh: "实战模拟考试", en: "Full practice exam")

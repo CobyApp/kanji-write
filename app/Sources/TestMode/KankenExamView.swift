@@ -16,6 +16,9 @@ public struct KankenExamView: View {
     // multiple-choice, so it defaults off.
     @AppStorage("kankenWriteMode") private var kankenWriteMode = true
     @AppStorage("jlptWriteMode") private var jlptWriteMode = false
+    // 실전 모의고사: self-mark written answers all at the end (true) vs. as you
+    // go (false). Honors what the real exam does by default — all at the end.
+    @AppStorage("examDeferGrading") private var deferGrading = true
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -127,6 +130,24 @@ public struct KankenExamView: View {
             }
             if writeMode {
                 Text(L.answerModeHint[appLanguage])
+                    .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if examType == .kanken {
+                Divider().padding(.vertical, 2)
+                HStack {
+                    Text(L.gradeMode[appLanguage])
+                        .font(.kawaii(13, weight: .bold, language: appLanguage))
+                        .foregroundStyle(Palette.inkSoft)
+                    Spacer()
+                    Picker(L.gradeMode[appLanguage], selection: $deferGrading) {
+                        Text(L.gradeModeInstant[appLanguage]).tag(false)
+                        Text(L.gradeModeEnd[appLanguage]).tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: 220)
+                }
+                Text(L.gradeModeHint[appLanguage])
                     .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -417,8 +438,9 @@ public struct KankenExamView: View {
                     store.send(.chose($0))
                 }
             } else if canHandwrite(item) {
-                if store.isRealExam {
-                    // Real exam: write it and move on; it's self-marked at the end.
+                if store.isRealExam, deferGrading {
+                    // Real exam, "grade at the end": write it and move on; it's
+                    // self-marked after the whole sitting.
                     HandwrittenAnswer(answer: item.answer, answered: false, language: appLanguage,
                                       deferred: true, submitTitle: L.next[appLanguage],
                                       onSubmit: { store.send(.deferAnswer) })
