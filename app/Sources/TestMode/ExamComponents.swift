@@ -148,7 +148,12 @@ struct HandwrittenAnswer: View {
     let answer: String
     let answered: Bool
     let language: AppLanguage
-    let onMark: (Bool) -> Void
+    /// Real exam: write and move on without seeing the answer. The answer is
+    /// self-marked after the whole sitting, not here.
+    var deferred = false
+    var submitTitle: String? = nil
+    var onSubmit: (() -> Void)? = nil
+    var onMark: (Bool) -> Void = { _ in }
 
     @State private var drawing = PKDrawing()
     @State private var revealed = false
@@ -162,7 +167,7 @@ struct HandwrittenAnswer: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(Palette.ink.opacity(0.10), lineWidth: 2))
-                    .allowsHitTesting(!revealed)
+                    .allowsHitTesting(deferred || !revealed)
                 Button { drawing = PKDrawing() } label: {
                     Image(systemName: "eraser")
                         .font(.system(size: 16, weight: .semibold))
@@ -170,9 +175,14 @@ struct HandwrittenAnswer: View {
                         .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel(L.clearCanvas[language])
-                .disabled(revealed)
+                .disabled(!deferred && revealed)
             }
-            if !revealed {
+            if deferred {
+                // No reveal, no marking — just submit and move to the next question.
+                ExamPrimaryButton(title: submitTitle ?? L.next[language], language: language) {
+                    onSubmit?()
+                }
+            } else if !revealed {
                 ExamPrimaryButton(title: L.revealAnswer[language], language: language) { revealed = true }
             } else if !answered {
                 VStack(spacing: 10) {

@@ -56,6 +56,7 @@ extension L {
     public static let selfMarkWrong = L10nText(ko: "틀렸어요", ja: "書けなかった", zh: "没写对", en: "Missed it")
     public static let clearCanvas = L10nText(ko: "지우기", ja: "消す", zh: "清除", en: "Clear")
     public static let correctAnswer = L10nText(ko: "정답", ja: "正解", zh: "正确答案", en: "Answer")
+    public static let gradeTitle = L10nText(ko: "채점", ja: "採点", zh: "评分", en: "Grade")
     // Real-format paper (실전 모의고사)
     public static let realExam = L10nText(
         ko: "실전 모의고사", ja: "本番形式の模擬試験", zh: "实战模拟考试", en: "Full practice exam")

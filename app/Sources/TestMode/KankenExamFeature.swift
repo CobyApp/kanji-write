@@ -53,6 +53,15 @@ public struct KankenExamFeature {
         public var firstTry: [String: Bool] = [:]
         /// The first answer given to each question, for the review list.
         public var chosenAnswers: [String: String] = [:]
+        /// Real-exam handwriting answers are not graded as you go — you write,
+        /// move on, and self-mark them all after the sitting. These are the
+        /// written-but-ungraded questions, in paper order.
+        public var pending: [KankenQuestion] = []
+        /// How many of those have already been self-marked (for "3 / 20").
+        public var graded = 0
+        /// True after the last question, while the written answers are being
+        /// self-marked. The results screen waits until this is done.
+        public var isGrading = false
         /// 大問 titles by section id, for the mock paper's breakdown.
         public var sectionTitles: [String: String] = [:]
         public var startedAt: Date?
@@ -69,7 +78,10 @@ public struct KankenExamFeature {
         /// True while a section / 오답노트 session is running (vs. the hub).
         public var isPlaying: Bool { activeSection != nil || isWrongNote || isMockExam || isWeakMix }
         public var current: KankenQuestion? { queue.first }
-        public var isFinished: Bool { started && total > 0 && queue.isEmpty }
+        public var isFinished: Bool { started && total > 0 && queue.isEmpty && !isGrading }
+        /// The written answer being self-marked, and how far through grading.
+        public var gradingItem: KankenQuestion? { pending.first }
+        public var gradingTotal: Int { graded + pending.count }
         public var answered: Bool { chosen != nil }
         public var isCorrect: Bool { chosen == current?.answer }
         /// Section title shown in the session header.
@@ -215,6 +227,10 @@ public struct KankenExamFeature {
         case loaded([KankenQuestion])
         case chose(String)
         case next
+        /// Real exam: the written answer is set aside to be graded at the end.
+        case deferAnswer
+        /// Grade the current pending written answer ○ / ×.
+        case grade(Bool)
         case restart
         case exitToHub
         case closeTapped   // delegate → parent dismisses the session
@@ -295,6 +311,8 @@ public struct KankenExamFeature {
                 state.queue = []
                 state.chosen = nil
                 state.finishedAt = date.now
+                // Written answers still get self-marked even when time runs out.
+                state.isGrading = !state.pending.isEmpty
                 return .none
 
             case let .selectMockExam(perSection):
@@ -412,63 +430,39 @@ public struct KankenExamFeature {
                 let chosen = state.chosen
                 state.queue.removeFirst()
                 state.chosen = nil
-                let isFirstTry = state.firstTry[item.id] == nil
-                if isFirstTry {
-                    state.firstTry[item.id] = correct
-                    state.chosenAnswers[item.id] = chosen
-                }
-                let level = state.level
-                let today = state.today
-                var effect: Effect<Action> = .none
-                if isFirstTry, state.isWrongNote {
-                    // A review answer moves the note along its schedule: a clear
-                    // pushes it out (1 → 3 → 7 days, then it retires), a miss
-                    // brings it back tomorrow.
-                    let id = item.id
-                    effect = .run { send in
-                        let notes = await wrongNoteStore.update { notes in
-                            notes.compactMap { note in
-                                note.id == id ? note.reviewed(correct: correct, today: today) : note
-                            }
-                        }
-                        let mine = notes.filter { $0.belongs(to: level) }
-                        await send(.wrongCountLoaded(mine.count))
-                        await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
-                    }
-                } else if isFirstTry, let section = item.sectionID {
-                    let key = SectionStat.key(level: level, section: section)
-                    let delta = SectionStat(attempts: 1, correct: correct ? 1 : 0, lastDay: today)
-                    effect = .run { send in
-                        await send(.statsLoaded(await sectionStatsStore.record([key: delta])))
-                    }
-                }
-                if isFirstTry {
-                    effect = .merge(effect, .run { _ in await studyLogStore.record(today, correct) })
-                }
-                if correct {
-                    state.mastered += 1
-                } else {
-                    // A drill brings a miss back until it is cleared; a mock
-                    // paper, like the real one, is sat once through.
-                    if !state.isMockExam { state.queue.append(item) }
-                    // A first miss is saved to the 오답노트 (once).
-                    if !state.isWrongNote, state.missed.insert(item.id).inserted {
-                        let note = WrongNote(question: item, savedDay: state.today, level: level)
-                        effect = .merge(effect, .run { send in
-                            let notes = await wrongNoteStore.update { notes in
-                                notes.filter { $0.id != note.id } + [note]
-                            }
-                            let mine = notes.filter { $0.belongs(to: level) }
-                            await send(.wrongCountLoaded(mine.count))
-                            await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
-                        })
-                    }
-                }
+                let effect = record(item, correct: correct, chosen: chosen, state: &state)
                 state.attempt += 1
                 if state.queue.isEmpty {
                     state.finishedAt = date.now
+                    state.isGrading = !state.pending.isEmpty
                     return .merge(effect, .cancel(id: CancelID.timer))
                 }
+                return effect
+
+            case .deferAnswer:
+                // Real exam: a handwritten answer can't be auto-checked, so it is
+                // set aside and self-marked after the sitting rather than revealed
+                // now. Nothing is recorded yet.
+                guard let item = state.queue.first else { return .none }
+                state.queue.removeFirst()
+                state.chosen = nil
+                state.pending.append(item)
+                state.attempt += 1
+                if state.queue.isEmpty {
+                    state.finishedAt = date.now
+                    state.isGrading = !state.pending.isEmpty
+                    return .cancel(id: CancelID.timer)
+                }
+                return .none
+
+            case let .grade(correct):
+                guard let item = state.pending.first else { return .none }
+                state.pending.removeFirst()
+                let chosen = correct ? item.answer : ExamKana.selfMarkedWrong
+                let effect = record(item, correct: correct, chosen: chosen, state: &state)
+                state.graded += 1
+                state.attempt += 1
+                if state.pending.isEmpty { state.isGrading = false }
                 return effect
 
             case .restart:
@@ -497,6 +491,9 @@ public struct KankenExamFeature {
                 state.mastered = 0
                 state.missed = []
                 state.firstTry = [:]
+                state.pending = []
+                state.graded = 0
+                state.isGrading = false
                 state.chosen = nil
                 state.started = false
                 state.startedAt = nil
@@ -510,8 +507,71 @@ public struct KankenExamFeature {
         }
     }
 
+    /// Finalize one answered question: record the first-try result, move a
+    /// 오답노트 along its schedule or log a section stat, requeue a drill miss,
+    /// and save a first miss to the notebook. Shared by `.next` (answered as you
+    /// go) and `.grade` (self-marked after a real exam).
+    private func record(_ item: KankenQuestion, correct: Bool, chosen: String?,
+                        state: inout State) -> Effect<Action> {
+        let isFirstTry = state.firstTry[item.id] == nil
+        if isFirstTry {
+            state.firstTry[item.id] = correct
+            state.chosenAnswers[item.id] = chosen
+        }
+        let level = state.level
+        let today = state.today
+        var effect: Effect<Action> = .none
+        if isFirstTry, state.isWrongNote {
+            // A review answer moves the note along its schedule: a clear pushes
+            // it out (1 → 3 → 7 days, then it retires), a miss brings it back.
+            let id = item.id
+            effect = .run { send in
+                let notes = await wrongNoteStore.update { notes in
+                    notes.compactMap { note in
+                        note.id == id ? note.reviewed(correct: correct, today: today) : note
+                    }
+                }
+                let mine = notes.filter { $0.belongs(to: level) }
+                await send(.wrongCountLoaded(mine.count))
+                await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
+            }
+        } else if isFirstTry, let section = item.sectionID {
+            let key = SectionStat.key(level: level, section: section)
+            let delta = SectionStat(attempts: 1, correct: correct ? 1 : 0, lastDay: today)
+            effect = .run { send in
+                await send(.statsLoaded(await sectionStatsStore.record([key: delta])))
+            }
+        }
+        if isFirstTry {
+            effect = .merge(effect, .run { _ in await studyLogStore.record(today, correct) })
+        }
+        if correct {
+            state.mastered += 1
+        } else {
+            // A drill brings a miss back until it is cleared; a mock paper, like
+            // the real one, is sat once through.
+            if !state.isMockExam { state.queue.append(item) }
+            // A first miss is saved to the 오답노트 (once).
+            if !state.isWrongNote, state.missed.insert(item.id).inserted {
+                let note = WrongNote(question: item, savedDay: state.today, level: level)
+                effect = .merge(effect, .run { send in
+                    let notes = await wrongNoteStore.update { notes in
+                        notes.filter { $0.id != note.id } + [note]
+                    }
+                    let mine = notes.filter { $0.belongs(to: level) }
+                    await send(.wrongCountLoaded(mine.count))
+                    await send(.wrongDueLoaded(mine.filter { $0.isDue(on: today) }.count))
+                })
+            }
+        }
+        return effect
+    }
+
     private func beginRun(_ state: inout State) {
         state.chosenAnswers = [:]
+        state.pending = []
+        state.graded = 0
+        state.isGrading = false
         state.mastered = 0
         state.missed = []
         state.firstTry = [:]

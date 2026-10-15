@@ -317,4 +317,44 @@ final class RealExamFeatureTests: XCTestCase {
         await store.send(.exitToHub)
         XCTAssertNil(store.state.paper)
     }
+
+    func testRealExamDefersWrittenAnswersUntilEndGrading() async {
+        var state = KankenExamFeature.State(level: "2級")
+        state.isMockExam = true
+        state.paper = KankenPaper.official(for: "2級")
+        let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
+            $0.date.now = Date(timeIntervalSince1970: 1_000)
+            $0.wrongNoteStore.update = { transform in transform([]) }
+        }
+        store.exhaustivity = .off
+        func written(_ id: String) -> KankenQuestion {
+            var q = KankenQuestion(id: id, type: .writing, kanjiID: 1, prompt: "p",
+                                   options: [], answer: "漢", sectionID: "writing")
+            q.points = 2
+            q.partIndex = 8
+            return q
+        }
+        await store.send(.loaded([written("w1"), written("w2")]))
+
+        // Writing is set aside, not graded, and nothing is finished yet.
+        await store.send(.deferAnswer)
+        XCTAssertEqual(store.state.pending.map(\.id), ["w1"])
+        XCTAssertFalse(store.state.isGrading)
+        await store.send(.deferAnswer)
+        XCTAssertTrue(store.state.queue.isEmpty)
+        XCTAssertTrue(store.state.isGrading)       // grading, not results
+        XCTAssertFalse(store.state.isFinished)
+        XCTAssertEqual(store.state.gradingTotal, 2)
+        XCTAssertNil(store.state.firstTry["w1"])   // ungraded so far
+
+        // Self-mark each written answer after the sitting.
+        await store.send(.grade(true))             // w1 ○
+        XCTAssertEqual(store.state.gradingItem?.id, "w2")
+        await store.send(.grade(false))            // w2 ×
+        XCTAssertFalse(store.state.isGrading)
+        XCTAssertTrue(store.state.isFinished)
+        XCTAssertEqual(store.state.earnedPoints, 2)   // only w1 counted
+        XCTAssertEqual(store.state.firstTryCorrect, 1)
+        XCTAssertEqual(store.state.missedItems.map(\.id), ["w2"])
+    }
 }

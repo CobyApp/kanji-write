@@ -270,6 +270,14 @@ public struct KankenExamView: View {
         VStack(spacing: 0) {
             if store.isLoading {
                 loadingCard
+            } else if store.isGrading, let item = store.gradingItem {
+                ScrollView {
+                    gradingCard(item)
+                        .padding(16)
+                        .readableWidth(sizeClass)
+                        .id(store.attempt)
+                }
+                .scrollIndicators(.hidden)
             } else if store.isFinished {
                 ScrollView {
                     resultCard
@@ -409,8 +417,16 @@ public struct KankenExamView: View {
                     store.send(.chose($0))
                 }
             } else if canHandwrite(item) {
-                HandwrittenAnswer(answer: item.answer, answered: store.answered, language: appLanguage) {
-                    store.send(.chose($0 ? item.answer : ExamKana.selfMarkedWrong))
+                if store.isRealExam {
+                    // Real exam: write it and move on; it's self-marked at the end.
+                    HandwrittenAnswer(answer: item.answer, answered: false, language: appLanguage,
+                                      deferred: true, submitTitle: L.next[appLanguage],
+                                      onSubmit: { store.send(.deferAnswer) })
+                } else {
+                    HandwrittenAnswer(answer: item.answer, answered: store.answered,
+                                      language: appLanguage) {
+                        store.send(.chose($0 ? item.answer : ExamKana.selfMarkedWrong))
+                    }
                 }
             } else {
                 ExamOptionList(options: item.options, answer: item.answer, chosen: store.chosen,
@@ -429,6 +445,67 @@ public struct KankenExamView: View {
 
     private var nextButton: some View {
         ExamPrimaryButton(title: L.next[appLanguage], language: appLanguage) { store.send(.next) }
+    }
+
+    // MARK: Grading (real exam, after the sitting)
+
+    /// One written answer being self-marked after the paper is done: the
+    /// question, the correct answer, and ○ / × — the real exam's "mark it all
+    /// at the end" instead of revealing as you go.
+    private func gradingCard(_ item: KankenQuestion) -> some View {
+        VStack(spacing: 20) {
+            VStack(spacing: 8) {
+                HStack {
+                    Text(L.gradeTitle[appLanguage])
+                        .font(.kawaii(15, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                    Spacer()
+                    Text("\(store.graded + 1) / \(store.gradingTotal)")
+                        .font(.kawaii(15, weight: .bold)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                }
+                ProgressView(value: Double(store.graded), total: Double(max(store.gradingTotal, 1)))
+                    .tint(Palette.accent)
+            }
+            .roundedCard()
+
+            questionCard(item)
+
+            VStack(spacing: 8) {
+                Text(L.correctAnswer[appLanguage])
+                    .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                Text(item.answer)
+                    .font(.kawaiiJP(40, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                if let explanation = item.explanation, !explanation.isEmpty {
+                    Text(explanation)
+                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity).roundedCard()
+
+            Text(L.selfMarkPrompt[appLanguage])
+                .font(.kawaii(14, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+            HStack(spacing: 12) {
+                gradeButton(L.selfMarkWrong[appLanguage], icon: "xmark", color: Palette.pinkDeep) {
+                    store.send(.grade(false))
+                }
+                gradeButton(L.selfMarkRight[appLanguage], icon: "checkmark", color: Palette.mintDeep) {
+                    store.send(.grade(true))
+                }
+            }
+        }
+    }
+
+    private func gradeButton(_ title: String, icon: String, color: Color,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: icon)
+                .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
+                .frame(maxWidth: .infinity).padding(.vertical, 13)
+                .background(color).clipShape(Capsule())
+        }
+        .buttonStyle(.bouncy)
     }
 
     // MARK: Results
