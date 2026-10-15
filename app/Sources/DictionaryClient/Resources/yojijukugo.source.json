@@ -3580,5 +3580,968 @@
   "level": "準1級",
   "meaningZh": "风中进食、露天而宿，形容旅途或野外的艰苦。",
   "meaningEn": "eating in the wind and sleeping in the dew; the hardship of travel"
+ },
+ {
+  "yoji": "一心同体",
+  "reading": "いっしんどうたい",
+  "meaningJa": "複数の人が心を一つにして固く結びつくこと。",
+  "meaningKo": "여러 사람이 한마음 한몸처럼 굳게 결합함.",
+  "level": "5級",
+  "meaningZh": "同心同体，齐心协力如一人。",
+  "meaningEn": "Being of one mind and body; closely united."
+ },
+ {
+  "yoji": "一喜一憂",
+  "reading": "いっきいちゆう",
+  "meaningJa": "状況の変化のたびに喜んだり心配したりすること。",
+  "meaningKo": "상황 변화마다 기뻐했다 걱정했다 하는 것.",
+  "level": "3級",
+  "meaningZh": "时而欢喜时而忧虑。",
+  "meaningEn": "Alternating between joy and worry over each change."
+ },
+ {
+  "yoji": "一字一句",
+  "reading": "いちじいっく",
+  "meaningJa": "一つ一つの文字や語句。わずかな言葉。",
+  "meaningKo": "한 글자 한 구절. 아주 작은 말까지도.",
+  "level": "3級",
+  "meaningZh": "每一字每一句。",
+  "meaningEn": "Each and every word."
+ },
+ {
+  "yoji": "二人三脚",
+  "reading": "ににんさんきゃく",
+  "meaningJa": "二人が協力して一つの物事に取り組むこと。",
+  "meaningKo": "두 사람이 협력하여 한 가지 일에 힘을 모음.",
+  "level": "4級",
+  "meaningZh": "两人同心协力，共同完成一事。",
+  "meaningEn": "Two people working together toward one goal."
+ },
+ {
+  "yoji": "十中八九",
+  "reading": "じっちゅうはっく",
+  "meaningJa": "ほとんど。十のうち八か九まで。",
+  "meaningKo": "십중팔구. 거의 대부분.",
+  "level": "5級",
+  "meaningZh": "十有八九，几乎总是。",
+  "meaningEn": "In most cases; eight or nine times out of ten."
+ },
+ {
+  "yoji": "平身低頭",
+  "reading": "へいしんていとう",
+  "meaningJa": "ひれ伏して、ひたすら恐れ入ること。",
+  "meaningKo": "납작 엎드려 머리를 조아리며 사죄함.",
+  "level": "5級",
+  "meaningZh": "俯首帖耳，卑躬屈膝地谢罪。",
+  "meaningEn": "Prostrating oneself and bowing low in apology."
+ },
+ {
+  "yoji": "平穏無事",
+  "reading": "へいおんぶじ",
+  "meaningJa": "何事もなく穏やかなこと。",
+  "meaningKo": "아무 일 없이 평온함.",
+  "level": "3級",
+  "meaningZh": "平安无事。",
+  "meaningEn": "Calm and uneventful."
+ },
+ {
+  "yoji": "公平無私",
+  "reading": "こうへいむし",
+  "meaningJa": "私心を交えず、かたよりのないこと。",
+  "meaningKo": "공평무사. 사심 없이 치우치지 않음.",
+  "level": "5級",
+  "meaningZh": "公平无私，不偏不倚。",
+  "meaningEn": "Fair and impartial, without self-interest."
+ },
+ {
+  "yoji": "言行一致",
+  "reading": "げんこういっち",
+  "meaningJa": "口にした言葉と実際の行いが食い違わないこと。",
+  "meaningKo": "말과 행동이 어긋나지 않고 일치함.",
+  "level": "4級",
+  "meaningZh": "言行一致，说到做到。",
+  "meaningEn": "One's words and deeds being in agreement."
+ },
+ {
+  "yoji": "自問自答",
+  "reading": "じもんじとう",
+  "meaningJa": "自分で問いかけ、自分で答えること。",
+  "meaningKo": "스스로 묻고 스스로 답함.",
+  "level": "5級",
+  "meaningZh": "自问自答。",
+  "meaningEn": "Asking and answering one's own questions."
+ },
+ {
+  "yoji": "利害得失",
+  "reading": "りがいとくしつ",
+  "meaningJa": "利益と損害。得をすることと損をすること。",
+  "meaningKo": "이해득실. 이익과 손해.",
+  "level": "5級",
+  "meaningZh": "利害得失，得与失。",
+  "meaningEn": "Gains and losses; pros and cons."
+ },
+ {
+  "yoji": "空理空論",
+  "reading": "くうりくうろん",
+  "meaningJa": "現実に役立たない、机上だけの理屈。",
+  "meaningKo": "현실에 도움이 되지 않는 탁상공론.",
+  "level": "4級",
+  "meaningZh": "脱离实际、毫无用处的空谈。",
+  "meaningEn": "Empty theories with no practical use."
+ },
+ {
+  "yoji": "大同団結",
+  "reading": "だいどうだんけつ",
+  "meaningJa": "小さな違いを越えて、大きな目的のために団結すること。",
+  "meaningKo": "작은 차이를 넘어 큰 목적을 위해 단결함.",
+  "level": "4級",
+  "meaningZh": "抛开小分歧，为大目标而团结。",
+  "meaningEn": "Uniting for a common cause despite minor differences."
+ },
+ {
+  "yoji": "意気消沈",
+  "reading": "いきしょうちん",
+  "meaningJa": "元気をなくして、がっかりすること。",
+  "meaningKo": "기운을 잃고 풀이 죽음.",
+  "level": "4級",
+  "meaningZh": "意志消沉，灰心丧气。",
+  "meaningEn": "Losing heart; becoming dejected."
+ },
+ {
+  "yoji": "一挙一動",
+  "reading": "いっきょいちどう",
+  "meaningJa": "一つ一つの動作やふるまい。",
+  "meaningKo": "하나하나의 동작과 행동.",
+  "level": "2級",
+  "meaningZh": "一举一动、每个动作。",
+  "meaningEn": "Every single movement and action."
+ },
+ {
+  "yoji": "暗中模索",
+  "reading": "あんちゅうもさく",
+  "meaningJa": "手がかりのないまま、あれこれ試し探ること。",
+  "meaningKo": "실마리 없이 이것저것 더듬어 찾음.",
+  "level": "準2級",
+  "meaningZh": "在黑暗中摸索，无头绪地尝试寻找。",
+  "meaningEn": "Groping in the dark for a solution."
+ },
+ {
+  "yoji": "油断大敵",
+  "reading": "ゆだんたいてき",
+  "meaningJa": "気のゆるみは思わぬ失敗を招く大きな敵だということ。",
+  "meaningKo": "방심은 큰 적이다. 경계를 늦추지 말라.",
+  "level": "5級",
+  "meaningZh": "大意是最可怕的敌人，不可疏忽。",
+  "meaningEn": "Carelessness is your greatest enemy."
+ },
+ {
+  "yoji": "四方八方",
+  "reading": "しほうはっぽう",
+  "meaningJa": "あらゆる方向。あちこち全て。",
+  "meaningKo": "모든 방향. 사방팔방.",
+  "level": "4級",
+  "meaningZh": "四面八方，各个方向。",
+  "meaningEn": "In every direction; all around."
+ },
+ {
+  "yoji": "年功序列",
+  "reading": "ねんこうじょれつ",
+  "meaningJa": "勤続年数や年齢に応じて地位や賃金が上がる仕組み。",
+  "meaningKo": "근속 연수와 나이에 따라 대우가 오르는 제도.",
+  "level": "2級",
+  "meaningZh": "按资历年功排定次序。",
+  "meaningEn": "Ranking and pay by seniority."
+ },
+ {
+  "yoji": "老若男女",
+  "reading": "ろうにゃくなんにょ",
+  "meaningJa": "年齢や性別を問わず、すべての人。",
+  "meaningKo": "남녀노소. 모든 사람.",
+  "level": "5級",
+  "meaningZh": "男女老少，所有人。",
+  "meaningEn": "People of all ages and both sexes."
+ },
+ {
+  "yoji": "自由奔放",
+  "reading": "じゆうほんぽう",
+  "meaningJa": "周囲にとらわれず思いのままに振る舞うこと。",
+  "meaningKo": "거리낌 없이 자유롭게 행동함.",
+  "level": "2級",
+  "meaningZh": "自由奔放、无拘无束。",
+  "meaningEn": "Acting freely without restraint."
+ },
+ {
+  "yoji": "有名無実",
+  "reading": "ゆうめいむじつ",
+  "meaningJa": "名ばかりで実質が伴わないこと。",
+  "meaningKo": "이름뿐이고 실속이 없음.",
+  "level": "準2級",
+  "meaningZh": "徒有虚名，名不副实。",
+  "meaningEn": "In name only, without substance."
+ },
+ {
+  "yoji": "無理難題",
+  "reading": "むりなんだい",
+  "meaningJa": "とうてい解決できない、むちゃな要求。",
+  "meaningKo": "무리난제. 도저히 들어줄 수 없는 억지 요구.",
+  "level": "5級",
+  "meaningZh": "无理的难题，蛮横的要求。",
+  "meaningEn": "An unreasonable, impossible demand."
+ },
+ {
+  "yoji": "自由自在",
+  "reading": "じゆうじざい",
+  "meaningJa": "思いのままで、何の束縛もないこと。",
+  "meaningKo": "자유자재. 마음대로 거침없이 할 수 있음.",
+  "level": "5級",
+  "meaningZh": "自由自在，无拘无束。",
+  "meaningEn": "Freely and as one pleases, without restraint."
+ },
+ {
+  "yoji": "博学多才",
+  "reading": "はくがくたさい",
+  "meaningJa": "広く学問に通じ、多くの才能に恵まれていること。",
+  "meaningKo": "학식이 넓고 재능이 많음.",
+  "level": "4級",
+  "meaningZh": "学识渊博，多才多艺。",
+  "meaningEn": "Learned and gifted with many talents."
+ },
+ {
+  "yoji": "多種多様",
+  "reading": "たしゅたよう",
+  "meaningJa": "種類が多く、さまざまであること。",
+  "meaningKo": "다종다양. 종류가 많고 가지각색임.",
+  "level": "5級",
+  "meaningZh": "多种多样，种类繁多。",
+  "meaningEn": "Of many kinds; highly varied."
+ },
+ {
+  "yoji": "比翼連理",
+  "reading": "ひよくれんり",
+  "meaningJa": "男女の仲がきわめて睦まじいことのたとえ。",
+  "meaningKo": "남녀의 사이가 더없이 깊고 다정함의 비유.",
+  "level": "4級",
+  "meaningZh": "比喻夫妻恩爱、情深意切。",
+  "meaningEn": "A metaphor for a deeply loving, devoted couple."
+ },
+ {
+  "yoji": "面従腹背",
+  "reading": "めんじゅうふくはい",
+  "meaningJa": "表面は従うふりをして内心では背くこと。",
+  "meaningKo": "겉으로 따르는 척하며 속으론 배반함.",
+  "level": "2級",
+  "meaningZh": "阳奉阴违、面从腹背。",
+  "meaningEn": "Outward obedience while inwardly defiant."
+ },
+ {
+  "yoji": "明鏡止水",
+  "reading": "めいきょうしすい",
+  "meaningJa": "曇りのない鏡と静かな水のように、澄みきった心境。",
+  "meaningKo": "맑은 거울과 고요한 물처럼 티 없이 맑은 마음.",
+  "level": "4級",
+  "meaningZh": "如明镜止水般澄澈宁静的心境。",
+  "meaningEn": "A clear, serene state of mind, like a still mirror and calm water."
+ },
+ {
+  "yoji": "不即不離",
+  "reading": "ふそくふり",
+  "meaningJa": "つきすぎず離れすぎず、ほどよい関係を保つこと。",
+  "meaningKo": "너무 가깝지도 멀지도 않은 적당한 관계.",
+  "level": "準2級",
+  "meaningZh": "不即不离，保持恰当的距离。",
+  "meaningEn": "Keeping a balanced, moderate distance."
+ },
+ {
+  "yoji": "悪事千里",
+  "reading": "あくじせんり",
+  "meaningJa": "悪い行いやうわさはすぐ世間に知れ渡ること。",
+  "meaningKo": "악행이나 나쁜 소문은 금방 널리 퍼짐.",
+  "level": "5級",
+  "meaningZh": "恶事传千里，坏事迅速传开。",
+  "meaningEn": "Bad deeds travel fast and far."
+ },
+ {
+  "yoji": "悪因悪果",
+  "reading": "あくいんあっか",
+  "meaningJa": "悪い行いには必ず悪い報いがあること。",
+  "meaningKo": "악한 원인은 악한 결과를 낳음.",
+  "level": "2級",
+  "meaningZh": "恶因恶果、因果报应。",
+  "meaningEn": "Evil deeds bring evil consequences."
+ },
+ {
+  "yoji": "昼夜兼行",
+  "reading": "ちゅうやけんこう",
+  "meaningJa": "昼も夜も休まず物事を続けること。",
+  "meaningKo": "밤낮을 가리지 않고 쉼 없이 함.",
+  "level": "準2級",
+  "meaningZh": "昼夜兼程，不分昼夜地进行。",
+  "meaningEn": "Working day and night without rest."
+ },
+ {
+  "yoji": "公私混同",
+  "reading": "こうしこんどう",
+  "meaningJa": "公的なことと私的なことを区別せず扱うこと。",
+  "meaningKo": "공사 혼동. 공적인 일과 사적인 일을 뒤섞음.",
+  "level": "5級",
+  "meaningZh": "公私不分，混为一谈。",
+  "meaningEn": "Confusing public and private matters."
+ },
+ {
+  "yoji": "複雑怪奇",
+  "reading": "ふくざつかいき",
+  "meaningJa": "込み入っていて不思議であやしいこと。",
+  "meaningKo": "복잡하고 기이하며 괴상함.",
+  "level": "3級",
+  "meaningZh": "错综复杂离奇古怪。",
+  "meaningEn": "Complicated and bizarre."
+ },
+ {
+  "yoji": "青息吐息",
+  "reading": "あおいきといき",
+  "meaningJa": "苦しくて、ため息が出るほど弱りきった状態。",
+  "meaningKo": "괴로워 한숨이 나올 만큼 지친 상태.",
+  "level": "4級",
+  "meaningZh": "困苦不堪，唉声叹气的样子。",
+  "meaningEn": "Being so distressed that one can only sigh."
+ },
+ {
+  "yoji": "興味本位",
+  "reading": "きょうみほんい",
+  "meaningJa": "面白さだけを重んじて物事を行うこと。",
+  "meaningKo": "재미만을 중시하여 일을 함.",
+  "level": "3級",
+  "meaningZh": "只图有趣以兴趣为重。",
+  "meaningEn": "Driven only by curiosity or amusement."
+ },
+ {
+  "yoji": "前後不覚",
+  "reading": "ぜんごふかく",
+  "meaningJa": "正体をなくし、物事の判断がつかなくなること。",
+  "meaningKo": "전후불각. 정신을 잃어 앞뒤 분간을 못함.",
+  "level": "5級",
+  "meaningZh": "不省人事，失去知觉。",
+  "meaningEn": "Losing all awareness of one's surroundings."
+ },
+ {
+  "yoji": "優勝劣敗",
+  "reading": "ゆうしょうれっぱい",
+  "meaningJa": "優れた者が勝ち、劣った者が負けること。",
+  "meaningKo": "뛰어난 자가 이기고 열등한 자가 짐.",
+  "level": "準2級",
+  "meaningZh": "优者胜、劣者败，弱肉强食。",
+  "meaningEn": "The superior win, the inferior lose."
+ },
+ {
+  "yoji": "適者生存",
+  "reading": "てきしゃせいぞん",
+  "meaningJa": "環境に適した者だけが生き残ること。",
+  "meaningKo": "환경에 적응한 자만이 살아남음.",
+  "level": "準2級",
+  "meaningZh": "适者生存，优胜劣汰。",
+  "meaningEn": "Survival of the fittest."
+ },
+ {
+  "yoji": "独断専行",
+  "reading": "どくだんせんこう",
+  "meaningJa": "自分だけの判断で勝手に事を行うこと。",
+  "meaningKo": "혼자만의 판단으로 제멋대로 처리함.",
+  "level": "準2級",
+  "meaningZh": "独断专行，擅自行事。",
+  "meaningEn": "Acting arbitrarily on one's own judgment."
+ },
+ {
+  "yoji": "独立自尊",
+  "reading": "どくりつじそん",
+  "meaningJa": "他に頼らず、自らの尊厳を保つこと。",
+  "meaningKo": "남에게 의지하지 않고 스스로의 존엄을 지킴.",
+  "level": "2級",
+  "meaningZh": "独立自尊、自立自重。",
+  "meaningEn": "Standing on one's own and keeping one's dignity."
+ },
+ {
+  "yoji": "円転滑脱",
+  "reading": "えんてんかつだつ",
+  "meaningJa": "物事を角を立てず滑らかに運ぶこと。",
+  "meaningKo": "모나지 않고 원만하게 일을 처리함.",
+  "level": "2級",
+  "meaningZh": "圆转滑脱、处事圆通。",
+  "meaningEn": "Handling matters smoothly and tactfully."
+ },
+ {
+  "yoji": "容姿端麗",
+  "reading": "ようしたんれい",
+  "meaningJa": "顔立ちや姿が整っていて美しいこと。",
+  "meaningKo": "용모와 자태가 단정하고 아름다움.",
+  "level": "2級",
+  "meaningZh": "容姿端丽、相貌出众。",
+  "meaningEn": "Of graceful and beautiful appearance."
+ },
+ {
+  "yoji": "気炎万丈",
+  "reading": "きえんばんじょう",
+  "meaningJa": "他を圧するほど意気盛んに論じ立てること。",
+  "meaningKo": "기세가 하늘을 찌를 듯 드높음.",
+  "level": "2級",
+  "meaningZh": "气焰万丈、气势逼人。",
+  "meaningEn": "Holding forth with overwhelming spirit."
+ },
+ {
+  "yoji": "国威発揚",
+  "reading": "こくいはつよう",
+  "meaningJa": "国の威光を内外に高め示すこと。",
+  "meaningKo": "나라의 위엄을 널리 떨침.",
+  "level": "2級",
+  "meaningZh": "振奋国威、扬我国威。",
+  "meaningEn": "Enhancing and displaying national prestige."
+ },
+ {
+  "yoji": "謹厳実直",
+  "reading": "きんげんじっちょく",
+  "meaningJa": "つつしみ深くまじめで正直なこと。",
+  "meaningKo": "근엄하고 성실하며 정직함.",
+  "level": "2級",
+  "meaningZh": "谨严实直、严谨正直。",
+  "meaningEn": "Grave, earnest, and honest."
+ },
+ {
+  "yoji": "社交辞令",
+  "reading": "しゃこうじれい",
+  "meaningJa": "つきあい上の、口先だけのほめ言葉やあいさつ。",
+  "meaningKo": "사교적인 빈말, 의례적인 인사치레.",
+  "level": "5級",
+  "meaningZh": "客套话，应酬的场面话。",
+  "meaningEn": "Social flattery; empty pleasantries."
+ },
+ {
+  "yoji": "門外不出",
+  "reading": "もんがいふしゅつ",
+  "meaningJa": "大切に秘蔵して、外に出さないこと。",
+  "meaningKo": "문외불출. 소중히 간직하여 밖에 내놓지 않음.",
+  "level": "5級",
+  "meaningZh": "珍藏不外传，秘不示人。",
+  "meaningEn": "Kept secret and never shown outside."
+ },
+ {
+  "yoji": "傍若無人",
+  "reading": "ぼうじゃくぶじん",
+  "meaningJa": "周りを気にせず勝手気ままに振る舞うこと。",
+  "meaningKo": "주위를 아랑곳 않고 제멋대로 행동함.",
+  "level": "準2級",
+  "meaningZh": "旁若无人，肆意妄为。",
+  "meaningEn": "Behaving as if no one else were present."
+ },
+ {
+  "yoji": "日常茶飯",
+  "reading": "にちじょうさはん",
+  "meaningJa": "毎日のありふれた、ごく普通のこと。",
+  "meaningKo": "일상다반. 늘 있는 아주 평범한 일.",
+  "level": "5級",
+  "meaningZh": "家常便饭，司空见惯之事。",
+  "meaningEn": "An everyday, commonplace occurrence."
+ },
+ {
+  "yoji": "一言居士",
+  "reading": "いちげんこじ",
+  "meaningJa": "何事にも一言意見を述べないと気のすまない人。",
+  "meaningKo": "무슨 일에든 한마디 해야 직성이 풀리는 사람.",
+  "level": "2級",
+  "meaningZh": "事事都要插一句话的人。",
+  "meaningEn": "One who must always have a word to say."
+ },
+ {
+  "yoji": "臨機応変",
+  "reading": "りんきおうへん",
+  "meaningJa": "その場の状況に応じて適切に対応すること。",
+  "meaningKo": "상황에 맞게 임기응변으로 대처함.",
+  "level": "準2級",
+  "meaningZh": "随机应变，因势而动。",
+  "meaningEn": "Adapting flexibly to the situation."
+ },
+ {
+  "yoji": "冷静沈着",
+  "reading": "れいせいちんちゃく",
+  "meaningJa": "落ち着いていて、物事に動じないこと。",
+  "meaningKo": "침착하고 흔들림이 없음.",
+  "level": "4級",
+  "meaningZh": "冷静沉着，遇事不慌。",
+  "meaningEn": "Calm and composed, unshaken by anything."
+ },
+ {
+  "yoji": "明朗快活",
+  "reading": "めいろうかいかつ",
+  "meaningJa": "明るくほがらかで元気なこと。",
+  "meaningKo": "밝고 명랑하며 활기참.",
+  "level": "3級",
+  "meaningZh": "开朗活泼。",
+  "meaningEn": "Bright, cheerful and lively."
+ },
+ {
+  "yoji": "二転三転",
+  "reading": "にてんさんてん",
+  "meaningJa": "物事が何度も変わって定まらないこと。",
+  "meaningKo": "사정이 여러 번 바뀌어 정해지지 않음.",
+  "level": "3級",
+  "meaningZh": "情况一变再变反复无常。",
+  "meaningEn": "Changing again and again."
+ },
+ {
+  "yoji": "三者三様",
+  "reading": "さんしゃさんよう",
+  "meaningJa": "人それぞれにやり方や考えが違うこと。",
+  "meaningKo": "사람마다 방식과 생각이 제각각임.",
+  "level": "4級",
+  "meaningZh": "各人各有不同的方式与想法。",
+  "meaningEn": "Each person has their own way of doing things."
+ },
+ {
+  "yoji": "有言実行",
+  "reading": "ゆうげんじっこう",
+  "meaningJa": "口にしたことを、その通りに実行すること。",
+  "meaningKo": "유언실행. 말한 것을 그대로 실행함.",
+  "level": "5級",
+  "meaningZh": "说到做到，言出必行。",
+  "meaningEn": "Doing exactly what one has said."
+ },
+ {
+  "yoji": "平和共存",
+  "reading": "へいわきょうぞん",
+  "meaningJa": "立場の異なる者が争わず共に存在すること。",
+  "meaningKo": "처지가 다른 자들이 다투지 않고 함께 존재함.",
+  "level": "3級",
+  "meaningZh": "和平共处。",
+  "meaningEn": "Peaceful coexistence."
+ },
+ {
+  "yoji": "無病息災",
+  "reading": "むびょうそくさい",
+  "meaningJa": "病気をせず、健康であること。",
+  "meaningKo": "무병식재. 병 없이 건강함.",
+  "level": "5級",
+  "meaningZh": "无病无灾，身体健康。",
+  "meaningEn": "Being free of illness and in good health."
+ },
+ {
+  "yoji": "一病息災",
+  "reading": "いちびょうそくさい",
+  "meaningJa": "一つ持病があるほうが体に気を配り、かえって長生きすること。",
+  "meaningKo": "지병 하나 있는 사람이 몸을 챙겨 오히려 오래 삶.",
+  "level": "5級",
+  "meaningZh": "有一种小病反而注意养生，更能长寿。",
+  "meaningEn": "One chronic ailment keeps you mindful and longer-lived."
+ },
+ {
+  "yoji": "春夏秋冬",
+  "reading": "しゅんかしゅうとう",
+  "meaningJa": "四つの季節。一年を通じて。",
+  "meaningKo": "춘하추동. 사계절, 일 년 내내.",
+  "level": "5級",
+  "meaningZh": "春夏秋冬，四季。",
+  "meaningEn": "The four seasons; all year round."
+ },
+ {
+  "yoji": "東西南北",
+  "reading": "とうざいなんぼく",
+  "meaningJa": "東と西と南と北。あらゆる方角。",
+  "meaningKo": "동서남북. 모든 방향.",
+  "level": "4級",
+  "meaningZh": "东西南北，各个方向。",
+  "meaningEn": "North, south, east, and west; all directions."
+ },
+ {
+  "yoji": "花鳥風月",
+  "reading": "かちょうふうげつ",
+  "meaningJa": "自然の美しい景色。また、それを愛でる風雅。",
+  "meaningKo": "화조풍월. 자연의 아름다운 경치와 그 멋.",
+  "level": "5級",
+  "meaningZh": "花鸟风月，自然美景与风雅之趣。",
+  "meaningEn": "The beauties of nature; elegant pursuits."
+ },
+ {
+  "yoji": "得意満面",
+  "reading": "とくいまんめん",
+  "meaningJa": "誇らしさが顔いっぱいにあらわれること。",
+  "meaningKo": "득의만면. 자랑스러움이 얼굴에 가득함.",
+  "level": "5級",
+  "meaningZh": "得意洋洋，满面得色。",
+  "meaningEn": "Beaming with pride and triumph."
+ },
+ {
+  "yoji": "空中楼閣",
+  "reading": "くうちゅうろうかく",
+  "meaningJa": "根拠のない、現実味のない物事。砂上の楼閣。",
+  "meaningKo": "근거 없고 현실성 없는 것.",
+  "level": "3級",
+  "meaningZh": "空中楼阁虚无缥缈。",
+  "meaningEn": "A castle in the air; a groundless notion."
+ },
+ {
+  "yoji": "七転八起",
+  "reading": "しちてんはっき",
+  "meaningJa": "何度失敗してもくじけず立ち上がること。",
+  "meaningKo": "여러 번 실패해도 굴하지 않고 다시 일어남.",
+  "level": "3級",
+  "meaningZh": "七跌八起百折不挠。",
+  "meaningEn": "Falling seven times, rising eight; perseverance."
+ },
+ {
+  "yoji": "七転八倒",
+  "reading": "しちてんばっとう",
+  "meaningJa": "苦しんで激しくのたうち回ること。",
+  "meaningKo": "괴로워 심하게 뒹굶.",
+  "level": "3級",
+  "meaningZh": "七颠八倒痛苦挣扎。",
+  "meaningEn": "Writhing in agony."
+ },
+ {
+  "yoji": "不要不急",
+  "reading": "ふようふきゅう",
+  "meaningJa": "必要でも急ぎでもないこと。",
+  "meaningKo": "불요불급. 필요하지도 급하지도 않음.",
+  "level": "5級",
+  "meaningZh": "不必要也不紧急。",
+  "meaningEn": "Neither necessary nor urgent."
+ },
+ {
+  "yoji": "質疑応答",
+  "reading": "しつぎおうとう",
+  "meaningJa": "疑問を問いただし、それに答えること。",
+  "meaningKo": "의문을 묻고 그에 답함.",
+  "level": "3級",
+  "meaningZh": "质疑与回答问答。",
+  "meaningEn": "Questions and answers."
+ },
+ {
+  "yoji": "一致団結",
+  "reading": "いっちだんけつ",
+  "meaningJa": "多くの人が心を一つにしてまとまること。",
+  "meaningKo": "여러 사람이 마음을 하나로 뭉침.",
+  "level": "3級",
+  "meaningZh": "齐心协力团结一致。",
+  "meaningEn": "Uniting with one mind."
+ },
+ {
+  "yoji": "無念無想",
+  "reading": "むねんむそう",
+  "meaningJa": "いっさいの雑念を捨て去った無心の境地。",
+  "meaningKo": "모든 잡념을 버린 무심의 경지.",
+  "level": "3級",
+  "meaningZh": "无念无想心无杂念。",
+  "meaningEn": "A state of mind free of all thoughts."
+ },
+ {
+  "yoji": "喜色満面",
+  "reading": "きしょくまんめん",
+  "meaningJa": "喜びの表情が顔いっぱいに表れること。",
+  "meaningKo": "기쁜 표정이 얼굴 가득 드러남.",
+  "level": "3級",
+  "meaningZh": "喜色满面满脸喜悦。",
+  "meaningEn": "A face full of joy."
+ },
+ {
+  "yoji": "満場一致",
+  "reading": "まんじょういっち",
+  "meaningJa": "その場の全員の意見が一つに一致すること。",
+  "meaningKo": "그 자리 전원의 의견이 하나로 일치함.",
+  "level": "3級",
+  "meaningZh": "满场一致全体赞同。",
+  "meaningEn": "Unanimous agreement."
+ },
+ {
+  "yoji": "首尾一貫",
+  "reading": "しゅびいっかん",
+  "meaningJa": "初めから終わりまで方針などが変わらないこと。",
+  "meaningKo": "처음부터 끝까지 방침이 변하지 않음.",
+  "level": "3級",
+  "meaningZh": "首尾一贯始终如一。",
+  "meaningEn": "Consistent from start to finish."
+ },
+ {
+  "yoji": "多芸多才",
+  "reading": "たげいたさい",
+  "meaningJa": "多くの技芸と才能を身につけていること。",
+  "meaningKo": "여러 기예와 재능을 갖춤.",
+  "level": "3級",
+  "meaningZh": "多才多艺。",
+  "meaningEn": "Gifted in many arts and talents."
+ },
+ {
+  "yoji": "立身出世",
+  "reading": "りっしんしゅっせ",
+  "meaningJa": "社会的に高い地位を得て名を上げること。",
+  "meaningKo": "입신출세. 사회적으로 성공하여 이름을 떨침.",
+  "level": "5級",
+  "meaningZh": "立身出世，功成名就。",
+  "meaningEn": "Rising in the world and achieving success."
+ },
+ {
+  "yoji": "自力更生",
+  "reading": "じりきこうせい",
+  "meaningJa": "他人に頼らず自分の力で生活や状況を立て直すこと。",
+  "meaningKo": "남에게 기대지 않고 제 힘으로 다시 일어섬.",
+  "level": "3級",
+  "meaningZh": "自力更生依靠自己。",
+  "meaningEn": "Rebuilding one's life by one's own efforts."
+ },
+ {
+  "yoji": "不平不満",
+  "reading": "ふへいふまん",
+  "meaningJa": "心に満たされず、あれこれ文句のある状態。",
+  "meaningKo": "불평불만. 마음에 차지 않아 투덜거림.",
+  "level": "5級",
+  "meaningZh": "满腹牢骚，心怀不满。",
+  "meaningEn": "Discontent and grievances."
+ },
+ {
+  "yoji": "雲散霧消",
+  "reading": "うんさんむしょう",
+  "meaningJa": "雲や霧が消えるように、跡形もなく消えてなくなること。",
+  "meaningKo": "구름과 안개가 걷히듯 자취도 없이 사라짐.",
+  "level": "4級",
+  "meaningZh": "如云消雾散，无影无踪地消失。",
+  "meaningEn": "Vanishing without a trace, like clouds and mist."
+ },
+ {
+  "yoji": "平平凡凡",
+  "reading": "へいへいぼんぼん",
+  "meaningJa": "これといった特色がなく、ごく平凡なこと。",
+  "meaningKo": "이렇다 할 특색 없이 지극히 평범함.",
+  "level": "4級",
+  "meaningZh": "平平常常，毫无特色。",
+  "meaningEn": "Utterly ordinary and unremarkable."
+ },
+ {
+  "yoji": "自己満足",
+  "reading": "じこまんぞく",
+  "meaningJa": "自分だけで満足し、独りよがりになること。",
+  "meaningKo": "혼자서만 만족하는 자기만족.",
+  "level": "4級",
+  "meaningZh": "自我满足，自以为是。",
+  "meaningEn": "Being satisfied only with oneself; complacency."
+ },
+ {
+  "yoji": "人海戦術",
+  "reading": "じんかいせんじゅつ",
+  "meaningJa": "多くの人数を動員して物事を進めるやり方。",
+  "meaningKo": "많은 인원을 동원해 밀어붙이는 방법.",
+  "level": "5級",
+  "meaningZh": "人海战术，靠大量人力取胜。",
+  "meaningEn": "Tackling a task by sheer weight of numbers."
+ },
+ {
+  "yoji": "四角四面",
+  "reading": "しかくしめん",
+  "meaningJa": "きわめてまじめで、堅苦しいこと。",
+  "meaningKo": "지나치게 고지식하고 딱딱함.",
+  "level": "5級",
+  "meaningZh": "古板拘谨，一本正经。",
+  "meaningEn": "Overly formal and stiff."
+ },
+ {
+  "yoji": "再三再四",
+  "reading": "さいさんさいし",
+  "meaningJa": "何度も何度も。たびたび。",
+  "meaningKo": "재삼재사. 여러 번 거듭.",
+  "level": "5級",
+  "meaningZh": "再三再四，一再反复。",
+  "meaningEn": "Again and again; repeatedly."
+ },
+ {
+  "yoji": "外交辞令",
+  "reading": "がいこうじれい",
+  "meaningJa": "相手への調子のよいあいさつやお世辞。",
+  "meaningKo": "외교적 인사치레, 입에 발린 말.",
+  "level": "5級",
+  "meaningZh": "外交辞令，客套的恭维话。",
+  "meaningEn": "Diplomatic niceties; flattering pleasantries."
+ },
+ {
+  "yoji": "大願成就",
+  "reading": "たいがんじょうじゅ",
+  "meaningJa": "大きな願いがかなうこと。",
+  "meaningKo": "대원성취. 큰 소원이 이루어짐.",
+  "level": "5級",
+  "meaningZh": "大愿得偿，夙愿实现。",
+  "meaningEn": "The fulfillment of a great wish."
+ },
+ {
+  "yoji": "三位一体",
+  "reading": "さんみいったい",
+  "meaningJa": "三つのものが一つにまとまって働くこと。",
+  "meaningKo": "삼위일체. 셋이 하나로 합쳐 움직임.",
+  "level": "5級",
+  "meaningZh": "三位一体，三者合而为一。",
+  "meaningEn": "Three elements working as one."
+ },
+ {
+  "yoji": "四捨五入",
+  "reading": "ししゃごにゅう",
+  "meaningJa": "端数を、四以下は切り捨て五以上は切り上げること。",
+  "meaningKo": "사사오입. 반올림.",
+  "level": "5級",
+  "meaningZh": "四舍五入。",
+  "meaningEn": "Rounding a number up or down."
+ },
+ {
+  "yoji": "一宿一飯",
+  "reading": "いっしゅくいっぱん",
+  "meaningJa": "一晩の宿と一度の食事。ちょっとした恩義。",
+  "meaningKo": "하룻밤 묵고 한 끼 얻어먹은 작은 은혜.",
+  "level": "5級",
+  "meaningZh": "一宿一饭之恩，小小的恩惠。",
+  "meaningEn": "A night's lodging and a meal; a small debt of gratitude."
+ },
+ {
+  "yoji": "正正堂堂",
+  "reading": "せいせいどうどう",
+  "meaningJa": "態度や方法が公明で、りっぱなさま。",
+  "meaningKo": "정정당당. 떳떳하고 당당함.",
+  "level": "5級",
+  "meaningZh": "正正堂堂，光明磊落。",
+  "meaningEn": "Fair and square; honorable and aboveboard."
+ },
+ {
+  "yoji": "理路整然",
+  "reading": "りろせいぜん",
+  "meaningJa": "話や考えの筋道がきちんと整っているさま。",
+  "meaningKo": "논리의 갈피가 가지런히 정돈된 모양.",
+  "level": "準2級",
+  "meaningZh": "条理分明，有条不紊。",
+  "meaningEn": "Logical and coherent."
+ },
+ {
+  "yoji": "力戦奮闘",
+  "reading": "りきせんふんとう",
+  "meaningJa": "力の限り努力して戦うこと。",
+  "meaningKo": "있는 힘을 다해 분투함.",
+  "level": "準2級",
+  "meaningZh": "竭尽全力奋战。",
+  "meaningEn": "Fighting with all one's might."
+ },
+ {
+  "yoji": "連戦連勝",
+  "reading": "れんせんれんしょう",
+  "meaningJa": "戦うたびに次々と勝つこと。",
+  "meaningKo": "싸울 때마다 계속 이김.",
+  "level": "準2級",
+  "meaningZh": "连战连胜，屡战屡捷。",
+  "meaningEn": "Winning one battle after another."
+ },
+ {
+  "yoji": "名所旧跡",
+  "reading": "めいしょきゅうせき",
+  "meaningJa": "景色の良い名高い所と、歴史に残る古い場所。",
+  "meaningKo": "이름난 경승지와 역사 유적.",
+  "level": "準2級",
+  "meaningZh": "名胜与古迹。",
+  "meaningEn": "Scenic spots and historic sites."
+ },
+ {
+  "yoji": "本領発揮",
+  "reading": "ほんりょうはっき",
+  "meaningJa": "持ち前の実力を存分に見せること。",
+  "meaningKo": "본래의 실력을 마음껏 발휘함.",
+  "level": "準2級",
+  "meaningZh": "充分发挥本来的实力。",
+  "meaningEn": "Displaying one's true ability."
+ },
+ {
+  "yoji": "暴飲暴食",
+  "reading": "ぼういんぼうしょく",
+  "meaningJa": "度を越して飲み食いすること。",
+  "meaningKo": "지나치게 먹고 마심.",
+  "level": "準2級",
+  "meaningZh": "暴饮暴食，饮食无度。",
+  "meaningEn": "Excessive eating and drinking."
+ },
+ {
+  "yoji": "美人薄命",
+  "reading": "びじんはくめい",
+  "meaningJa": "美しい人は不幸だったり短命だったりしがちなこと。",
+  "meaningKo": "미인은 불행하거나 명이 짧기 쉬움.",
+  "level": "準2級",
+  "meaningZh": "红颜薄命，美人多不幸。",
+  "meaningEn": "Beauties tend to meet unhappy fates."
+ },
+ {
+  "yoji": "直情径行",
+  "reading": "ちょくじょうけいこう",
+  "meaningJa": "感情のままにまっすぐ行動すること。",
+  "meaningKo": "감정대로 거침없이 행동함.",
+  "level": "準2級",
+  "meaningZh": "率性而为，直情径行。",
+  "meaningEn": "Acting straight on one's impulses."
+ },
+ {
+  "yoji": "速戦即決",
+  "reading": "そくせんそっけつ",
+  "meaningJa": "短期間で勝負をつけること。手早く物事を決めること。",
+  "meaningKo": "단기간에 승부를 냄. 재빨리 결정함.",
+  "level": "準2級",
+  "meaningZh": "速战速决，迅速解决。",
+  "meaningEn": "Settling things quickly and decisively."
+ },
+ {
+  "yoji": "時代錯誤",
+  "reading": "じだいさくご",
+  "meaningJa": "時代の流れに合わない古い考え方。アナクロニズム。",
+  "meaningKo": "시대에 뒤떨어진 낡은 사고방식.",
+  "level": "準2級",
+  "meaningZh": "时代错误，不合时宜的旧观念。",
+  "meaningEn": "Anachronism; being out of step with the times."
+ },
+ {
+  "yoji": "事実無根",
+  "reading": "じじつむこん",
+  "meaningJa": "事実に基づく根拠がまったくないこと。",
+  "meaningKo": "사실에 근거가 전혀 없음.",
+  "level": "準2級",
+  "meaningZh": "毫无事实根据，纯属捏造。",
+  "meaningEn": "Utterly groundless and untrue."
+ },
+ {
+  "yoji": "枝葉末節",
+  "reading": "しようまっせつ",
+  "meaningJa": "本質から外れた、取るに足りない細かな部分。",
+  "meaningKo": "본질에서 벗어난 사소한 부분.",
+  "level": "準2級",
+  "meaningZh": "枝节末梢，无关紧要的细节。",
+  "meaningEn": "Trivial, nonessential details."
+ },
+ {
+  "yoji": "思慮分別",
+  "reading": "しりょふんべつ",
+  "meaningJa": "物事を深く考え、道理をわきまえて判断すること。",
+  "meaningKo": "깊이 생각하고 사리를 분별함.",
+  "level": "準2級",
+  "meaningZh": "深思熟虑、明辨事理。",
+  "meaningEn": "Careful thought and sound judgment."
+ },
+ {
+  "yoji": "生殺与奪",
+  "reading": "せいさつよだつ",
+  "meaningJa": "生かすも殺すも、与えるも奪うも思いのままにする権力。",
+  "meaningKo": "살리고 죽이고 주고 빼앗음을 마음대로 하는 권력.",
+  "level": "準2級",
+  "meaningZh": "生杀予夺，掌握他人命运的大权。",
+  "meaningEn": "Absolute power over life and death."
+ },
+ {
+  "yoji": "前途多難",
+  "reading": "ぜんとたなん",
+  "meaningJa": "これから先に困難が多く予想されること。",
+  "meaningKo": "앞길에 어려움이 많을 것으로 예상됨.",
+  "level": "準2級",
+  "meaningZh": "前途多难，前路坎坷。",
+  "meaningEn": "Many hardships lie ahead."
+ },
+ {
+  "yoji": "四通八達",
+  "reading": "しつうはったつ",
+  "meaningJa": "道路や交通が四方八方に通じていること。",
+  "meaningKo": "도로·교통이 사방팔방으로 통함.",
+  "level": "準2級",
+  "meaningZh": "四通八达，交通便利。",
+  "meaningEn": "Roads leading in all directions."
  }
 ]
