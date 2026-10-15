@@ -401,6 +401,14 @@ public enum L {
     public static let reading = L10nText(ko: "읽기", ja: "読み", zh: "读音", en: "Reading")
     public static let writeWhat = L10nText(
         ko: "무엇을 쓸까요", ja: "何を書く", zh: "写什么", en: "What to write")
+    public static let writeHideReading = L10nText(
+        ko: "고난도 모드", ja: "難易度アップ", zh: "进阶模式", en: "Hard mode")
+    public static let writeHideReadingSub = L10nText(
+        ko: "읽기 힌트를 숨기고 뜻만 보고 쓰기", ja: "読みを隠し、意味だけ見て書く",
+        zh: "隐藏读音，仅凭意思书写", en: "Hide the reading — write from the meaning alone")
+    public static let writeHideReadingOn = L10nText(
+        ko: "뜻만 보고 써 보세요", ja: "意味だけで書いてみよう",
+        zh: "仅凭意思试着书写", en: "Write from the meaning")
     public static let writeModeKanji = L10nText(ko: "한자", ja: "漢字", zh: "汉字", en: "Kanji")
     public static let writeModeWord = L10nText(ko: "단어", ja: "単語", zh: "单词", en: "Word")
     public static let wordWriteTestTitle = L10nText(

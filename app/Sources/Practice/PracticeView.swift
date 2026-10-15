@@ -20,6 +20,8 @@ public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("examType") private var examType: ExamType = .kanken
+    /// Hard mode: hide the reading/radical clues and write from the meaning alone.
+    @AppStorage("practiceHideReading") private var hideReading = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// The current question's canvas.
     @State private var drawing = PKDrawing()
@@ -164,6 +166,15 @@ public struct PracticeView: View {
                     favoriteScopeCards
                 } else {
                     levelScopeCards
+                }
+
+                settingCard(L.writeHideReading[appLanguage]) {
+                    Toggle(isOn: $hideReading) {
+                        Text(L.writeHideReadingSub[appLanguage])
+                            .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .tint(Palette.accent)
                 }
 
                 Button { store.send(.startTest) } label: {
@@ -360,22 +371,29 @@ public struct PracticeView: View {
                 .lineLimit(2, reservesSpace: true).minimumScaleFactor(0.7)
             ZStack(alignment: .top) {
                 readingBlockTemplate.hidden()
-                VStack(spacing: 6) {
-                    // A word is pinned by its kana reading; a single kanji by its
-                    // 음/훈 lines, since it has no one reading in isolation.
-                    if let reading = item.reading, !reading.isEmpty {
-                        readingLine(L.reading[appLanguage], [reading], Palette.lavender)
-                    }
-                    if !item.onReadings.isEmpty {
-                        readingLine(L.onReading[appLanguage], item.onReadings, Palette.sky)
-                    }
-                    if !item.kunReadings.isEmpty {
-                        readingLine(L.kunReading[appLanguage], item.kunReadings, Palette.mint)
-                    }
-                    // The 部首 is a clue to the shape, not just trivia: knowing the
-                    // radical tells you which side of the character to start from.
-                    if let radical = item.radical, !radical.isEmpty {
-                        readingLine(L.radical[appLanguage], [radical], Palette.coral)
+                // Hard mode hides every clue so only the meaning is left to
+                // write from.
+                if hideReading {
+                    Text(L.writeHideReadingOn[appLanguage])
+                        .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                } else {
+                    VStack(spacing: 6) {
+                        // A word is pinned by its kana reading; a single kanji by its
+                        // 음/훈 lines, since it has no one reading in isolation.
+                        if let reading = item.reading, !reading.isEmpty {
+                            readingLine(L.reading[appLanguage], [reading], Palette.lavender)
+                        }
+                        if !item.onReadings.isEmpty {
+                            readingLine(L.onReading[appLanguage], item.onReadings, Palette.sky)
+                        }
+                        if !item.kunReadings.isEmpty {
+                            readingLine(L.kunReading[appLanguage], item.kunReadings, Palette.mint)
+                        }
+                        // The 部首 is a clue to the shape, not just trivia: knowing the
+                        // radical tells you which side of the character to start from.
+                        if let radical = item.radical, !radical.isEmpty {
+                            readingLine(L.radical[appLanguage], [radical], Palette.coral)
+                        }
                     }
                 }
             }
@@ -613,9 +631,35 @@ public struct PracticeView: View {
                 }
             }
             .frame(maxWidth: 320)  // keep the pair from ballooning on a wide cell
+            if let example = store.examples[item.id] {
+                exampleLine(example)
+            }
             markButtons(index)
         }
         .padding(12).roundedCard()
+    }
+
+    /// The word/kanji seen in use, under its review cell: the Japanese sentence
+    /// with the learner-language translation, so writing it is followed by
+    /// meeting it in context.
+    private func exampleLine(_ example: ExampleSentence) -> some View {
+        VStack(spacing: 2) {
+            Text(example.textJa)
+                .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs()
+                .foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.center)
+                .lineLimit(2).minimumScaleFactor(0.7)
+                .fixedSize(horizontal: false, vertical: true)
+            if let t = example.translations[appLanguage.rawValue] ?? example.translations["en"], !t.isEmpty {
+                Text(t)
+                    .font(.kawaii(11, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2).minimumScaleFactor(0.7)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: 320)
+        .padding(.top, 2)
     }
 
     /// ○ / × for one answer. A miss is also starred into 즐겨찾기.

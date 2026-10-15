@@ -99,6 +99,10 @@ public struct PracticeFeature {
         /// Nothing grades handwriting automatically, so the learner's own ○/×
         /// is the only score the run has.
         public var marks: [Int: Bool] = [:]
+        /// An example sentence per run item (item id → sentence), loaded when a
+        /// run starts and shown on the review screen so a word/kanji is seen in
+        /// use after writing it. 四字熟語 have none.
+        public var examples: [Int: ExampleSentence] = [:]
         /// 힌트: the answer kanji and its stroke order, hidden until asked for.
         /// Reset on every navigation so the next question starts covered.
         public var hintShown = false
@@ -206,6 +210,7 @@ public struct PracticeFeature {
         case prev
         case toggleHint
         case hintStrokesLoaded([String])
+        case examplesLoaded([Int: ExampleSentence])
         case finish              // → review
         case mark(index: Int, correct: Bool)
         case restart             // → setup
@@ -247,6 +252,32 @@ public struct PracticeFeature {
     /// A JLPT level writes the words on that level's vocabulary list — the old
     /// "any word containing a kanji of the level" pulled in words written with
     /// harder kanji.
+    /// One example sentence per item in the run, shown on the review screen.
+    /// Words look up by word id, single kanji by kanji id; 四字熟語 have none.
+    private func loadExamples(_ state: inout State) -> Effect<Action> {
+        state.examples = [:]
+        let items = state.questions
+        let mode = state.mode
+        guard mode != .yoji, !items.isEmpty else { return .none }
+        return .run { send in
+            var out: [Int: ExampleSentence] = [:]
+            for item in items {
+                let found: [ExampleSentence]
+                switch mode {
+                case .word:
+                    found = (try? await dictionaryClient.sentencesForWord(item.id, 1)) ?? []
+                case .kanji:
+                    let kid = item.strokeOrderKanjiID ?? item.id
+                    found = (try? await dictionaryClient.sentences(kid, 1)) ?? []
+                case .yoji:
+                    found = []
+                }
+                if let first = found.first { out[item.id] = first }
+            }
+            await send(.examplesLoaded(out))
+        }
+    }
+
     private func loadWords(_ level: String) -> Effect<Action> {
         .run { send in
             var words: [WordEntry] = []
@@ -424,7 +455,7 @@ public struct PracticeFeature {
                     state.hintShown = false
                     state.hintStrokes = nil
                     state.phase = .testing
-                    return .none
+                    return loadExamples(&state)
                 }
                 let lk = state.levelItems
                 guard !lk.isEmpty else { return .none }
@@ -443,7 +474,7 @@ public struct PracticeFeature {
                 state.hintShown = false
                 state.hintStrokes = nil
                 state.phase = .testing
-                return .none
+                return loadExamples(&state)
 
             case let .saveDrawing(data):
                 state.drawings[state.index] = data
@@ -466,6 +497,10 @@ public struct PracticeFeature {
 
             case let .hintStrokesLoaded(paths):
                 state.hintStrokes = paths
+                return .none
+
+            case let .examplesLoaded(examples):
+                state.examples = examples
                 return .none
 
             case .next:
