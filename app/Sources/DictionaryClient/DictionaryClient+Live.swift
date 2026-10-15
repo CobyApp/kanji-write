@@ -342,16 +342,37 @@ extension DictionaryClient: DependencyKey {
         },
         quizWords: { level, limit in
             let queue = try openBundledDatabase()
-            let predicate = Self.kanjiLevelPredicate(level)
+            // A level's words must be *readable at that level*: they introduce a
+            // kanji of this 級, and every other kanji is this 級 or easier.
+            // Without the second rule a 5級 drill showed words like 憂鬱 whose 鬱
+            // is a 1級 kanji — far too hard. (JLPT levels load tagged vocab via
+            // jlptVocabulary and never reach here.)
+            guard let target = ExamType.kankenRank(level) else { return [] }
+            let rankOfLabel = Self.kankenRankSQL
+                .replacingOccurrences(of: "kanken_level", with: "km2.level_label")
             return try await queue.read { db -> [WordEntry] in
                 let rows = try Row.fetchAll(db, sql: """
                     SELECT DISTINCT w.id, w.surface, w.reading_kana FROM word w
                     JOIN word_kanji wk ON wk.word_id = w.id
                     JOIN kanji k ON k.id = wk.kanji_id
-                    WHERE \(predicate)
+                    WHERE EXISTS (
+                        SELECT 1 FROM kanken_membership km
+                        WHERE km.kanji_id = k.id AND km.level_label = ?
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1 FROM word_kanji wkx
+                        JOIN kanji kx ON kx.id = wkx.kanji_id
+                        WHERE wkx.word_id = w.id AND NOT EXISTS (
+                            SELECT 1 FROM kanken_membership km2
+                            WHERE km2.kanji_id = kx.id AND \(rankOfLabel) <= ?
+                        )
+                    )
+                    -- A practice word, not a phrase: drop long entries like
+                    -- 「お誕生日おめでとうございます」 (~18 bytes ≈ 6 Japanese chars).
+                    AND LENGTH(w.surface) <= 18
                     ORDER BY w.is_common DESC, w.id
                     LIMIT ?
-                    """, arguments: [level, limit])
+                    """, arguments: [level, target, limit])
                 return try rows.map { row in
                     let id: Int = row["id"]
                     func gloss(_ lang: String) throws -> String? {
