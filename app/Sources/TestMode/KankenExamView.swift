@@ -34,7 +34,9 @@ public struct KankenExamView: View {
     public var body: some View {
         ZStack {
             AuroraBackground()
-            if store.isPlaying {
+            if store.isRealExamIntro, let paper = KankenPaper.official(for: store.level) {
+                realExamIntro(paper)
+            } else if store.isPlaying {
                 player
             } else {
                 hub
@@ -67,6 +69,102 @@ public struct KankenExamView: View {
             .readableWidth(sizeClass)
         }
         .scrollIndicators(.hidden)
+    }
+
+    // MARK: - Real exam briefing
+
+    /// Shown before the official-format sitting starts (launched from Home): the
+    /// paper's layout, the grading-method choice, and Start.
+    private func realExamIntro(_ paper: KankenPaper) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(spacing: 6) {
+                    Text("\(L.realExam[appLanguage]) · \(paper.level)")
+                        .font(.kawaii(22, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
+                    Text(L.realExamSub[appLanguage])
+                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity).padding(.top, 8)
+
+                FlowLayout(spacing: 8) {
+                    infoPill(icon: "rosette",
+                             text: "\(L.paperTotal[appLanguage]) \(paper.total)\(L.points[appLanguage])")
+                    infoPill(icon: "flag.checkered",
+                             text: "\(L.passMark[appLanguage]) \(paper.pass)\(L.points[appLanguage])")
+                    infoPill(icon: "clock", text: "\(paper.minutes)\(L.minutesUnit[appLanguage])")
+                    infoPill(icon: "list.number", text: L.questionCount(paper.questionCount, appLanguage))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                VStack(spacing: 4) {
+                    ForEach(paper.parts) { part in
+                        HStack(spacing: 8) {
+                            Text(KankenPaper.numeral(part.index))
+                                .font(.kawaiiJP(12, weight: .bold)).foregroundStyle(Palette.coralDeep)
+                                .frame(width: 26, alignment: .leading)
+                            Text(part.title)
+                                .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                            Spacer(minLength: 6)
+                            Text("\(part.points)×\(part.count) = \(part.maxPoints)")
+                                .font(.kawaii(12)).monospacedDigit().foregroundStyle(Palette.inkSoft)
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity)
+                .background(Palette.background)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                // Grading choice, right where you start the sitting.
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text(L.gradeMode[appLanguage])
+                            .font(.kawaii(13, weight: .bold, language: appLanguage))
+                            .foregroundStyle(Palette.inkSoft)
+                        Spacer()
+                        Picker(L.gradeMode[appLanguage], selection: $deferGrading) {
+                            Text(L.gradeModeInstant[appLanguage]).tag(false)
+                            Text(L.gradeModeEnd[appLanguage]).tag(true)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(maxWidth: 220)
+                    }
+                    Text(L.gradeModeHint[appLanguage])
+                        .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .roundedCard(padding: 14)
+
+                Button { store.send(.selectRealExam) } label: {
+                    Text(L.realExamStart[appLanguage])
+                        .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
+                        .frame(maxWidth: .infinity).padding(.vertical, 14)
+                        .background(LinearGradient(colors: [Palette.coral, Palette.pink],
+                                                   startPoint: .leading, endPoint: .trailing))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.bouncy)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(16)
+            .readableWidth(sizeClass)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private func infoPill(icon: String, text: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon).font(.system(size: 11, weight: .bold))
+            Text(text).font(.kawaii(12, weight: .bold, language: appLanguage))
+                .lineLimit(1).minimumScaleFactor(0.75)
+        }
+        .foregroundStyle(Palette.ink)
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Palette.lavenderSoft)
+        .clipShape(Capsule())
     }
 
     /// "JLPT 문제" / "칸켄 문제", per the active exam.
@@ -130,24 +228,6 @@ public struct KankenExamView: View {
             }
             if writeMode {
                 Text(L.answerModeHint[appLanguage])
-                    .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            if examType == .kanken {
-                Divider().padding(.vertical, 2)
-                HStack {
-                    Text(L.gradeMode[appLanguage])
-                        .font(.kawaii(13, weight: .bold, language: appLanguage))
-                        .foregroundStyle(Palette.inkSoft)
-                    Spacer()
-                    Picker(L.gradeMode[appLanguage], selection: $deferGrading) {
-                        Text(L.gradeModeInstant[appLanguage]).tag(false)
-                        Text(L.gradeModeEnd[appLanguage]).tag(true)
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(maxWidth: 220)
-                }
-                Text(L.gradeModeHint[appLanguage])
                     .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                     .fixedSize(horizontal: false, vertical: true)
             }

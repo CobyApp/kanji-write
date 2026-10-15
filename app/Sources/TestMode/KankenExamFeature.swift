@@ -62,6 +62,9 @@ public struct KankenExamFeature {
         /// True after the last question, while the written answers are being
         /// self-marked. The results screen waits until this is done.
         public var isGrading = false
+        /// Showing the pre-exam briefing (paper layout + grading choice) before
+        /// the real-format sitting starts.
+        public var isRealExamIntro = false
         /// 大問 titles by section id, for the mock paper's breakdown.
         public var sectionTitles: [String: String] = [:]
         public var startedAt: Date?
@@ -222,6 +225,8 @@ public struct KankenExamFeature {
         case selectSection(ExamSection)
         case selectWrongNote
         case selectMockExam(perSection: Int)
+        /// Show the pre-exam briefing before the official-format sitting.
+        case showRealExamIntro
         /// Sit the level's paper in its official format.
         case selectRealExam
         case loaded([KankenQuestion])
@@ -344,8 +349,18 @@ public struct KankenExamFeature {
                 }
                 .cancellable(id: CancelID.load, cancelInFlight: true)
 
+            case .showRealExamIntro:
+                state.isRealExamIntro = true
+                state.isMockExam = false
+                state.activeSection = nil
+                state.isWrongNote = false
+                state.isWeakMix = false
+                state.started = false
+                return .none
+
             case .selectRealExam:
                 guard let paper = KankenPaper.official(for: state.level) else { return .none }
+                state.isRealExamIntro = false
                 state.paper = paper
                 state.isMockExam = true
                 state.activeSection = nil
@@ -494,6 +509,7 @@ public struct KankenExamFeature {
                 state.pending = []
                 state.graded = 0
                 state.isGrading = false
+                state.isRealExamIntro = false
                 state.chosen = nil
                 state.started = false
                 state.startedAt = nil

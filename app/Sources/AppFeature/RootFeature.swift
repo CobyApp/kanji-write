@@ -279,9 +279,10 @@ public struct RootFeature {
             case let .startKankenRealExam(level, language):
                 state.sessionPath.removeAll()
                 state.session = .kanken(KankenExamFeature.State(level: level, language: language))
+                // Open on the pre-exam briefing; the sitting starts from there.
                 return .concatenate(
                     .send(.session(.presented(.kanken(.onAppear(level: level, language: language))))),
-                    .send(.session(.presented(.kanken(.selectRealExam)))))
+                    .send(.session(.presented(.kanken(.showRealExamIntro)))))
             case let .startKankenMock(level, perSection, language):
                 state.sessionPath.removeAll()
                 state.session = .kanken(KankenExamFeature.State(level: level, language: language))
