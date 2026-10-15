@@ -458,10 +458,18 @@ public struct KankenExamView: View {
 
     private func questionCard(_ item: KankenQuestion) -> some View {
         VStack(spacing: 10) {
-            Text(item.label ?? item.type.instruction(appLanguage))
-                .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
+            // The directive in Japanese, as the real paper prints it, with the
+            // learner-language gloss beneath so it is still understood.
+            VStack(spacing: 3) {
+                Text(ExamSection.japaneseDirective(for: item.sectionID, type: item.type))
+                    .font(.kawaiiJP(14, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(item.label ?? item.type.instruction(appLanguage))
+                    .font(.kawaii(12, language: appLanguage)).foregroundStyle(Palette.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let paths = item.strokePaths, let marked = item.markedStroke {
                 // 筆順 cannot be asked in text: the question is "this stroke,
                 // where does it come?", so the stroke has to be pointed at.
