@@ -287,6 +287,8 @@ struct HomeView: View {
                     kankenButton
                 }
                 launcherSection(L.sectionTests[appLanguage], Palette.butter) {
+                    if examType == .kanken { realExamButton }
+                    miniMockButton
                     practiceButton
                     favoritesButton
                 }
@@ -380,6 +382,8 @@ struct HomeView: View {
                 kankenButton
             }
             launcherSection(L.sectionTests[appLanguage], Palette.butter, grid: true) {
+                if examType == .kanken { realExamButton }
+                miniMockButton
                 practiceButton
                 favoritesButton
             }
@@ -639,6 +643,25 @@ struct HomeView: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
             .stroke(Palette.mint.opacity(0.45), lineWidth: 1.5))
+    }
+
+    /// 실전 모의고사 — the level's official 漢検 paper, in real format. 漢検 전용
+    /// (official papers exist only per 級); launches straight into the sitting.
+    private var realExamButton: some View {
+        launcher(icon: "pencil.and.list.clipboard", title: L.realExam[appLanguage],
+                 subtitle: L.realExamSub[appLanguage], count: nil,
+                 soft: Palette.coralSoft, accent: Palette.coral) {
+            store.send(.startKankenRealExam(level: targetLevel, language: appLanguage))
+        }
+    }
+
+    /// 미니 모의고사 — every section in a short sitting (5 per section).
+    private var miniMockButton: some View {
+        launcher(icon: "doc.text.fill", title: L.mockExam[appLanguage],
+                 subtitle: L.mockExamSub[appLanguage], count: nil,
+                 soft: Palette.lavenderSoft, accent: Palette.lavender) {
+            store.send(.startKankenMock(level: targetLevel, perSection: 5, language: appLanguage))
+        }
     }
 
     /// 쓰기 테스트 — free handwriting practice. Available on every device (iPhone

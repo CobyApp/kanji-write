@@ -11,16 +11,21 @@ public struct KankenExamView: View {
     @Bindable public var store: StoreOf<KankenExamFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("examType") private var examType: ExamType = .jlpt
-    /// Answer readings by typing and 書き取り by hand, instead of choosing.
-    @AppStorage("examWriteMode") private var writeMode = false
+    // Answer by writing (type the reading, write the kanji by hand) vs. choosing.
+    // Kept per exam: 漢検 is a writing exam, so it defaults on; JLPT 文字・語彙 is
+    // multiple-choice, so it defaults off.
+    @AppStorage("kankenWriteMode") private var kankenWriteMode = true
+    @AppStorage("jlptWriteMode") private var jlptWriteMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// How many questions the mock paper draws from each 大問.
-    @State private var perSection = 5
-
 
     public init(store: StoreOf<KankenExamFeature>) {
         self.store = store
+    }
+
+    private var writeMode: Bool { examType == .kanken ? kankenWriteMode : jlptWriteMode }
+    private var writeModeBinding: Binding<Bool> {
+        examType == .kanken ? $kankenWriteMode : $jlptWriteMode
     }
 
     public var body: some View {
@@ -48,16 +53,13 @@ public struct KankenExamView: View {
             VStack(spacing: 14) {
                 header
                 answerModeCard
-                if examType == .kanken, let paper = KankenPaper.official(for: store.level) {
-                    realExamCard(paper)
-                }
-                mockExamCard
                 weakMixCard
                 ForEach(examType.sections(for: store.level)) { section in
                     sectionCard(section)
                 }
                 wrongNoteCard
             }
+            .frame(maxWidth: .infinity)
             .padding(16)
             .readableWidth(sizeClass)
         }
@@ -116,7 +118,7 @@ public struct KankenExamView: View {
                     .font(.kawaii(13, weight: .bold, language: appLanguage))
                     .foregroundStyle(Palette.inkSoft)
                 Spacer()
-                Picker(L.answerMode[appLanguage], selection: $writeMode) {
+                Picker(L.answerMode[appLanguage], selection: writeModeBinding) {
                     Text(L.answerModeChoice[appLanguage]).tag(false)
                     Text(L.answerModeType[appLanguage]).tag(true)
                 }
@@ -142,19 +144,24 @@ public struct KankenExamView: View {
                     .background(Palette.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(section.jaTitle)
-                            .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                        if let name = section.localizedName(appLanguage) {
-                            Text(name)
-                                .font(.kawaii(13, weight: .bold, language: appLanguage))
-                                .foregroundStyle(Palette.accent)
-                        }
+                    // Title + localized name stack vertically and wrap. Keeping
+                    // them side by side in one line pushed long titles (準1級's
+                    // 熟語と一字訓の読み) past the screen, so the whole hub scrolled
+                    // sideways at those levels.
+                    Text(section.jaTitle)
+                        .font(.kawaiiJP(18, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let name = section.localizedName(appLanguage) {
+                        Text(name)
+                            .font(.kawaii(13, weight: .bold, language: appLanguage))
+                            .foregroundStyle(Palette.accent)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     Text(section.instruction(appLanguage))
                         .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 Spacer(minLength: 0)
                 accuracyBadge(store.state.stat(for: section))
                 Image(systemName: "chevron.right")
@@ -221,153 +228,6 @@ public struct KankenExamView: View {
         .roundedCard()
     }
 
-    /// A full paper: every playable 大問 at this level, back to back, scored
-    /// against the level's pass line. It leads the hub because sitting the
-    /// whole thing is a different exercise from drilling one section.
-    private var mockExamCard: some View {
-        let playable = examType.sections(for: store.level).filter(\.available).count
-        let passPercent = Int((examType.passRatio(for: store.level) * 100).rounded())
-        return VStack(spacing: 10) {
-            HStack(spacing: 14) {
-                Image(systemName: "doc.text.fill")
-                    .font(.system(size: 19, weight: .bold)).foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Palette.lavender)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L.mockExam[appLanguage])
-                        .font(.kawaii(17, weight: .bold)).foregroundStyle(Palette.ink)
-                    Text(L.mockExamSub[appLanguage])
-                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-
-            FlowLayout(spacing: 8) {
-                infoPill(icon: "flag.checkered",
-                         text: "\(examType.hasOfficialPassLine ? L.examPassLine[appLanguage] : L.examGuideLine[appLanguage]) \(passPercent)%")
-                infoPill(icon: "timer",
-                         text: "\(L.timeLimit[appLanguage]) \(L.clock(perSection * playable * KankenExamFeature.secondsPerQuestion))")
-                if let minutes = examType.officialMinutes(for: store.level) {
-                    infoPill(icon: "clock",
-                             text: "\(L.examOfficialTime[appLanguage]) \(minutes)\(L.minutesUnit[appLanguage])")
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
-            // How long a sitting: the total is this times the playable sections,
-            // so it is shown rather than left to be worked out.
-            VStack(spacing: 6) {
-                HStack {
-                    Text(L.mockExamSize[appLanguage])
-                        .font(.kawaii(12, weight: .bold, language: appLanguage))
-                        .foregroundStyle(Palette.inkSoft)
-                    Spacer()
-                    Text(L.questionCount(perSection * playable, appLanguage))
-                        .font(.kawaii(13, weight: .bold)).foregroundStyle(Palette.ink)
-                }
-                Picker(L.mockExamSize[appLanguage], selection: $perSection) {
-                    ForEach([3, 5, 10], id: \.self) { Text("\($0)").tag($0) }
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Button { store.send(.selectMockExam(perSection: perSection)) } label: {
-                Text(L.mockExamStart[appLanguage])
-                    .font(.kawaii(16, weight: .bold)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(LinearGradient(colors: [Palette.lavender, Palette.sky],
-                                               startPoint: .leading, endPoint: .trailing))
-                    .clipShape(Capsule())
-            }
-            .buttonStyle(.bouncy)
-            .disabled(playable == 0)
-        }
-        .padding(16)
-        .background(Palette.card)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Palette.ink.opacity(0.06), radius: 8, y: 3)
-    }
-
-    /// 실전 모의고사: the level's paper as the real 漢検 prints it — every 大問
-    /// at its official size and points, the official time, scored in points
-    /// against the official pass mark, and no marking until the end.
-    private func realExamCard(_ paper: KankenPaper) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 14) {
-                Image(systemName: "pencil.and.list.clipboard")
-                    .font(.system(size: 19, weight: .bold)).foregroundStyle(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Palette.coral)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("\(L.realExam[appLanguage]) · \(paper.level)")
-                        .font(.kawaii(17, weight: .bold, language: appLanguage)).foregroundStyle(Palette.ink)
-                    Text(L.realExamSub[appLanguage])
-                        .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-            }
-
-            FlowLayout(spacing: 8) {
-                infoPill(icon: "rosette",
-                         text: "\(L.paperTotal[appLanguage]) \(paper.total)\(L.points[appLanguage])")
-                infoPill(icon: "flag.checkered",
-                         text: "\(L.passMark[appLanguage]) \(paper.pass)\(L.points[appLanguage])")
-                infoPill(icon: "clock", text: "\(paper.minutes)\(L.minutesUnit[appLanguage])")
-                infoPill(icon: "list.number", text: L.questionCount(paper.questionCount, appLanguage))
-            }
-
-            // The paper's 大問 at a glance: marker, name, points × count.
-            VStack(spacing: 4) {
-                ForEach(paper.parts) { part in
-                    HStack(spacing: 8) {
-                        Text(KankenPaper.numeral(part.index))
-                            .font(.kawaiiJP(12, weight: .bold)).foregroundStyle(Palette.coralDeep)
-                            .frame(width: 26, alignment: .leading)
-                        Text(part.title)
-                            .font(.kawaiiJP(13, weight: .bold)).japaneseGlyphs().foregroundStyle(Palette.ink)
-                            .lineLimit(1).minimumScaleFactor(0.7)
-                        Spacer(minLength: 6)
-                        Text("\(part.points)×\(part.count) = \(part.maxPoints)")
-                            .font(.kawaii(12)).monospacedDigit().foregroundStyle(Palette.inkSoft)
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-            }
-            .padding(12)
-            .background(Palette.background)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-            Button { store.send(.selectRealExam) } label: {
-                Text(L.realExamStart[appLanguage])
-                    .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(LinearGradient(colors: [Palette.coral, Palette.pink],
-                                               startPoint: .leading, endPoint: .trailing))
-                    .clipShape(Capsule())
-            }
-            .buttonStyle(.bouncy)
-        }
-        .padding(16)
-        .background(Palette.card)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Palette.ink.opacity(0.06), radius: 8, y: 3)
-    }
-
-    private func infoPill(icon: String, text: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon).font(.system(size: 11, weight: .bold))
-            Text(text).font(.kawaii(12, weight: .bold, language: appLanguage))
-                .lineLimit(1).minimumScaleFactor(0.75)
-        }
-        .foregroundStyle(Palette.ink)
-        .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(Palette.lavenderSoft)
-        .clipShape(Capsule())
-    }
 
     private var wrongNoteCard: some View {
         Button { store.send(.selectWrongNote) } label: {
@@ -508,15 +368,34 @@ public struct KankenExamView: View {
 
     // MARK: Answer input
 
-    /// Kana-only answers can be typed: the real 読み section is written, not chosen.
-    private func canType(_ item: KankenQuestion) -> Bool {
-        writeMode && item.type == .reading && ExamKana.isKanaOnly(item.answer)
+    /// A few sections are multiple-choice (or visual) even on the real paper, so
+    /// they stay choice no matter the answer mode: 熟語の構成 (pick ア〜オ), 画数
+    /// (a number), 筆順 (which stroke), 部首 (pick the radical).
+    private func isChoiceOnly(_ item: KankenQuestion) -> Bool {
+        switch item.sectionID {
+        case "kousei", "strokes", "hitsujun", "radical": return true
+        default: return false
+        }
     }
 
-    /// 書き取り / 表記 can be written by hand, then checked against the answer.
+    /// Kana-only answers are typed — the real 読み・音訓 are written, not chosen.
+    private func canType(_ item: KankenQuestion) -> Bool {
+        writeMode && !isChoiceOnly(item) && ExamKana.isKanaOnly(item.answer)
+    }
+
+    /// Anything answered by writing kanji — 書き取り, 同音・同訓異字, 四字熟語,
+    /// 対義語・類義語, 誤字訂正, 送りがな, 漢字識別 … — is written by hand on 漢検,
+    /// so in write mode any kanji answer goes to the canvas.
     private func canHandwrite(_ item: KankenQuestion) -> Bool {
-        writeMode && item.type == .writing
-            && (item.sectionID == "writing" || item.sectionID == "orthography")
+        guard writeMode, !isChoiceOnly(item) else { return false }
+        // A short kanji word is something you write; a long phrase (四字熟語's
+        // "pick the meaning", 用法's example sentences) is something you choose.
+        guard item.answer.count <= 6 else { return false }
+        return item.answer.unicodeScalars.contains { scalar in
+            (0x4E00...0x9FFF).contains(scalar.value)
+                || (0x3400...0x4DBF).contains(scalar.value)
+                || (0xF900...0xFAFF).contains(scalar.value)
+        }
     }
 
     /// Keyed by the attempt, so a fresh attempt starts from an empty field or

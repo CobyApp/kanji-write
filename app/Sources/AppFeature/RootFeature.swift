@@ -92,6 +92,9 @@ public struct RootFeature {
         case startPractice(mode: PracticeFeature.State.Mode, favorites: Bool = false)
         case startQuiz(level: String, planned: [Int])
         case startKanken(level: String)
+        // Mock papers launch straight from Home, bypassing the section hub.
+        case startKankenRealExam(level: String, language: AppLanguage)
+        case startKankenMock(level: String, perSection: Int, language: AppLanguage)
         case path(StackActionOf<Path>)
         case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
@@ -271,6 +274,20 @@ public struct RootFeature {
                 state.sessionPath.removeAll()
                 state.session = .kanken(KankenExamFeature.State(level: level))
                 return .none
+            // Straight into a mock paper (official format / quick mini), skipping
+            // the hub — the mock menus now live on Home.
+            case let .startKankenRealExam(level, language):
+                state.sessionPath.removeAll()
+                state.session = .kanken(KankenExamFeature.State(level: level, language: language))
+                return .concatenate(
+                    .send(.session(.presented(.kanken(.onAppear(level: level, language: language))))),
+                    .send(.session(.presented(.kanken(.selectRealExam)))))
+            case let .startKankenMock(level, perSection, language):
+                state.sessionPath.removeAll()
+                state.session = .kanken(KankenExamFeature.State(level: level, language: language))
+                return .concatenate(
+                    .send(.session(.presented(.kanken(.onAppear(level: level, language: language))))),
+                    .send(.session(.presented(.kanken(.selectMockExam(perSection: perSection))))))
 
             // Tapping a word / kanji while studying drills into its detail on the
             // in-session stack (stays inside the full-screen session).
