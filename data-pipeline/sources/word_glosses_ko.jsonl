@@ -6027,7 +6027,7 @@
 {"surface": "凹み", "reading": "くぼみ", "ko": "오목한 곳, 웅덩이"}
 {"surface": "凹む", "reading": "へこむ", "ko": "움푹 들어가다"}
 {"surface": "凹凸", "reading": "おうとつ", "ko": "요철"}
-{"surface": "出", "reading": "で", "ko": "나옴, 나감; 출현; 출신"}
+{"surface": "出", "reading": "で", "ko": "나옴; 나감; 유출, 흘러나옴"}
 {"surface": "出かける", "reading": "でかける", "ko": "외출하다; 나가다; 떠나다"}
 {"surface": "出くわす", "reading": "でくわす", "ko": "우연히 마주치다"}
 {"surface": "出し", "reading": "だし", "ko": "다시마 육수"}
@@ -26724,7 +26724,7 @@
 {"surface": "畑違い", "reading": "はたけちがい", "ko": "전문 분야가 다름"}
 {"surface": "畑鼠", "reading": "はたねずみ", "ko": "밭쥐(들쥐의 일종)"}
 {"surface": "留め", "reading": "とめ", "ko": "멈춤"}
-{"surface": "留める", "reading": "とどめる", "ko": "멈추다, 세우다; 머무르게 하다; 만류하다"}
+{"surface": "留める", "reading": "とどめる", "ko": "멈추다, 세우다; 머무르게 하다; 중단시키다"}
 {"surface": "留め置き", "reading": "とめおき", "ko": "억류"}
 {"surface": "留め金", "reading": "とめがね", "ko": "걸쇠, 잠금장치"}
 {"surface": "留任", "reading": "りゅうにん", "ko": "유임"}
