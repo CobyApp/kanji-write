@@ -370,7 +370,13 @@ extension DictionaryClient: DependencyKey {
                     -- A practice word, not a phrase: drop long entries like
                     -- 「お誕生日おめでとうございます」 (~18 bytes ≈ 6 Japanese chars).
                     AND LENGTH(w.surface) <= 18
-                    ORDER BY w.is_common DESC, w.id
+                    -- Lead with the words worth knowing: JLPT-tagged (core/frequent,
+                    -- and the ones with enriched multi-sense glosses) first, then
+                    -- common ones, and prefer real compound words over single
+                    -- kanji (those are the 한자 test's job) — so word practice opens
+                    -- on 圧縮/異常/衣装 rather than 否々 or a column of lone kanji.
+                    ORDER BY (w.jlpt_level IS NOT NULL) DESC, w.is_common DESC,
+                             (LENGTH(w.surface) >= 6) DESC, w.id
                     LIMIT ?
                     """, arguments: [level, target, limit])
                 return try rows.map { row in
