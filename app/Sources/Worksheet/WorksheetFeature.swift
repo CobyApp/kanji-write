@@ -10,7 +10,7 @@ import SharedModels
 /// unshowable lesson. Order is preserved from `newIDs` (JLPT → strokes → id).
 public func buildWorksheetQueue(
     records: [ReviewRecord], kanji: [Kanji], today: Int, newPerDay: Int,
-    level: String? = nil, startIndex: Int = 0, pullAhead: Bool = false
+    level: ExamLevel? = nil, startIndex: Int = 0, pullAhead: Bool = false
 ) -> [Kanji] {
     let session = todaysSession(
         records: records, order: studyOrder(kanji, exam: ExamType.current, level: level), today: today,
@@ -51,7 +51,7 @@ public struct WorksheetFeature {
         public var newPerDay = 7
         /// Target JLPT level for the plan (from `@AppStorage("targetLevel")`); new
         /// kanji are drawn only from this level. nil = all levels.
-        public var targetLevel: String? = "N5"
+        public var targetLevel: ExamLevel? = .n5
         /// How many kanji to skip at the front of the level (the study plan's
         /// start position), so study can begin mid-level.
         public var startIndex = 0
@@ -110,7 +110,7 @@ public struct WorksheetFeature {
     }
 
     public enum Action: Equatable {
-        case onAppear(newPerDay: Int, level: String?, startIndex: Int)
+        case onAppear(newPerDay: Int, level: ExamLevel?, startIndex: Int)
         case loaded([ReviewRecord], [Kanji], Int)
         case contentLoaded([Int: CardContent])  // all queue kanji, prefetched
         case nextTapped
@@ -171,7 +171,7 @@ public struct WorksheetFeature {
                     return .none
                 }
                 let isAdvancedKanken = ExamType.current == .kanken
-                    && state.targetLevel.map { ["準1級", "1級"].contains($0) } == true
+                    && state.targetLevel.map { [.kPre1, .k1].contains($0) } == true
                 return prefetch(state.queue, includeJLPTQuestions: !isAdvancedKanken)
 
             case let .contentLoaded(content):

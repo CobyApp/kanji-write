@@ -43,7 +43,7 @@ public struct YojiDictionaryFeature {
         /// and no chip, because the list predated them.
         public var levels: [String] {
             let present = Set(all.map(\.level))
-            return ExamType.kanken.levels.filter(present.contains)
+            return ExamType.kanken.levels.map(\.rawValue).filter(present.contains)
         }
     }
 

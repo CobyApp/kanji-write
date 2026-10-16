@@ -225,7 +225,7 @@ public struct WorksheetView: View {
         }
         .navigationTitle(L.study[appLanguage])
         .navigationBarTitleDisplayMode(.inline)
-        .task { store.send(.onAppear(newPerDay: max(1, newPerDay), level: targetLevel, startIndex: studyStartIndex)) }
+        .task { store.send(.onAppear(newPerDay: max(1, newPerDay), level: ExamLevel(rawValue: targetLevel), startIndex: studyStartIndex)) }
     }
 
     @ViewBuilder

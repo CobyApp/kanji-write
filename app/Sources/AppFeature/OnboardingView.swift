@@ -66,7 +66,7 @@ struct OnboardingView: View {
 
                     step(L.onboardingLevel[appLanguage]) {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 8)], spacing: 8) {
-                            ForEach(examType.levels, id: \.self) { level in
+                            ForEach(examType.levels.map(\.rawValue), id: \.self) { level in
                                 choiceButton(level, selected: targetLevel == level, japanese: true) {
                                     targetLevel = level
                                 }
@@ -107,7 +107,9 @@ struct OnboardingView: View {
             .scrollIndicators(.hidden)
         }
         .onChange(of: examType) { _, exam in
-            if !exam.levels.contains(targetLevel) { targetLevel = exam.defaultLevel }
+            if !exam.levels.contains(where: { $0.rawValue == targetLevel }) {
+                targetLevel = exam.defaultLevel.rawValue
+            }
         }
     }
 

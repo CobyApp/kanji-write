@@ -34,13 +34,26 @@ final class KanjiFilterTests: XCTestCase {
     }
 
     func testSharedKankenItemBelongsToBothAdvancedLevels() {
-        XCTAssertTrue(Kanji.a.belongs(to: "準1級", exam: .kanken))
-        XCTAssertTrue(Kanji.a.belongs(to: "1級", exam: .kanken))
-        XCTAssertFalse(Kanji.a.belongs(to: "2級", exam: .kanken))
+        XCTAssertTrue(Kanji.a.belongs(to: .kPre1))
+        XCTAssertTrue(Kanji.a.belongs(to: .k1))
+        XCTAssertFalse(Kanji.a.belongs(to: .k2))
     }
 
     func testKankenLevelsIncludeAdvancedLevels() {
-        XCTAssertEqual(Array(ExamType.kanken.levels.suffix(2)), ["準1級", "1級"])
+        XCTAssertEqual(Array(ExamType.kanken.levels.suffix(2)).map(\.rawValue), ["準1級", "1級"])
+    }
+
+    /// Serialization contract: the enum's rawValues must stay byte-identical to the
+    /// labels stored in the bundled DB, @AppStorage and the widget payload. If this
+    /// drifts, existing installs lose their progress/stats.
+    func testExamLevelRawValuesMatchStoredLabels() {
+        XCTAssertEqual(ExamLevel.jlptLevels.map(\.rawValue), ["N5", "N4", "N3", "N2", "N1"])
+        XCTAssertEqual(ExamLevel.kankenLevels.map(\.rawValue),
+                       ["10級", "9級", "8級", "7級", "6級", "5級",
+                        "4級", "3級", "準2級", "2級", "準1級", "1級"])
+        for label in ExamLevel.allCases.map(\.rawValue) {
+            XCTAssertEqual(ExamLevel(rawValue: label)?.rawValue, label)
+        }
     }
 
     func testKanjiInKankenLevelUsesMemberships() {

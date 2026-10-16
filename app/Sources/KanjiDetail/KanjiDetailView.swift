@@ -102,7 +102,7 @@ public struct KanjiDetailView: View {
                 HStack(spacing: 8) {
                     // The level tag follows the active exam — 漢検 급수 or JLPT レベル.
                     if let level = store.kanji.level(for: examType) {
-                        CandyChip(level, soft: Palette.skySoft, accent: Palette.sky)
+                        CandyChip(level.label, soft: Palette.skySoft, accent: Palette.sky)
                     }
                     if let radical = store.kanji.radicalGlyph {
                         CandyChip("\(L.radical[appLanguage]) \(radical)",

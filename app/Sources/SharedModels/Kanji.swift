@@ -8,16 +8,9 @@ public enum ExamType: String, CaseIterable, Sendable {
     case kanken
 
     /// Levels from easiest to hardest.
-    public var levels: [String] {
-        switch self {
-        case .jlpt: ["N5", "N4", "N3", "N2", "N1"]
-        case .kanken:
-            ["10級", "9級", "8級", "7級", "6級", "5級", "4級", "3級",
-             "準2級", "2級", "準1級", "1級"]
-        }
-    }
+    public var levels: [ExamLevel] { ExamLevel.levels(for: self) }
 
-    public var defaultLevel: String { levels.first ?? "" }
+    public var defaultLevel: ExamLevel { levels[0] }
 
     /// The currently selected exam, read from the shared `examType` default.
     /// Lets non-View code (reducers, helpers) resolve it without a Binding.
@@ -78,18 +71,19 @@ public struct Kanji: Equatable, Identifiable, Sendable {
     }
 
     /// This kanji's level for the given exam (jlptLevel or kankenLevel).
-    public func level(for exam: ExamType) -> String? {
+    public func level(for exam: ExamType) -> ExamLevel? {
         switch exam {
-        case .jlpt: jlptLevel
-        case .kanken: kankenLevel
+        case .jlpt: jlptLevel.flatMap(ExamLevel.init(rawValue:))
+        case .kanken: kankenLevel.flatMap(ExamLevel.init(rawValue:))
         }
     }
 
-    /// Whether this kanji is included in the requested exam level.
-    public func belongs(to level: String, exam: ExamType) -> Bool {
-        switch exam {
-        case .jlpt: jlptLevel == level
-        case .kanken: kankenMemberships.contains(level)
+    /// Whether this kanji is included in the requested exam level. The level
+    /// knows its own exam, so JLPT equality and 漢検 membership are picked from it.
+    public func belongs(to level: ExamLevel) -> Bool {
+        switch level.exam {
+        case .jlpt: jlptLevel == level.rawValue
+        case .kanken: kankenMemberships.contains(level.rawValue)
         }
     }
 }

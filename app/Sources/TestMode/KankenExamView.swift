@@ -184,15 +184,15 @@ public struct KankenExamView: View {
                         store.send(.levelChanged(level))
                     } label: {
                         if level == store.level {
-                            Label(level, systemImage: "checkmark")
+                            Label(level.label, systemImage: "checkmark")
                         } else {
-                            Text(level)
+                            Text(level.label)
                         }
                     }
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text(store.level)
+                    Text(store.level.label)
                         .font(.kawaiiJP(16, weight: .bold)).japaneseGlyphs()
                     Image(systemName: "chevron.down")
                         .font(.system(size: 11, weight: .bold))
@@ -203,7 +203,7 @@ public struct KankenExamView: View {
                 .clipShape(Capsule())
                 .contentShape(Capsule())
             }
-            .accessibilityLabel("\(L.examLevelPicker[appLanguage]): \(store.level)")
+            .accessibilityLabel("\(L.examLevelPicker[appLanguage]): \(store.level.label)")
             Text(L.kankenHubSubtitle[appLanguage])
                 .font(.kawaii(13, language: appLanguage)).foregroundStyle(Palette.inkSoft)
                 .multilineTextAlignment(.center)

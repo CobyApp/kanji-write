@@ -36,7 +36,7 @@ public struct KanjiListRow: View {
                                 .foregroundStyle(Palette.ink)
                         }
                         if let level = kanji.level(for: examType) {
-                            Text(level).font(.kawaii(11, weight: .bold))
+                            Text(level.label).font(.kawaii(11, weight: .bold))
                                 .foregroundStyle(Palette.inkSoft)
                                 .padding(.horizontal, 6).padding(.vertical, 1)
                                 .background(Palette.background).clipShape(Capsule())

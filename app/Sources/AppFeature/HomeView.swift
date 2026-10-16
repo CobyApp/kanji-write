@@ -24,7 +24,11 @@ struct HomeView: View {
     /// The saved words' own spaced-repetition review (built, never reachable).
     @State private var showWordReview = false
 
-    private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, exam: examType, level: targetLevel) }
+    /// The stored `targetLevel` label as a typed level, falling back to the
+    /// exam's first level if the stored string isn't a level of this exam.
+    private var targetExamLevel: ExamLevel { ExamLevel(rawValue: targetLevel) ?? examType.defaultLevel }
+
+    private var levelOrder: [Kanji] { studyOrder(store.review.kanji.elements, exam: examType, level: ExamLevel(rawValue: targetLevel)) }
     private var learnedInLevel: Int {
         let tracked = Set(store.review.records.ids)
         // Kanji before the plan's start position count as already known (the
@@ -41,8 +45,9 @@ struct HomeView: View {
     /// The next 급수/level after the current one, if any (nil at the last level).
     private var nextLevel: String? {
         let levels = examType.levels
-        guard let i = levels.firstIndex(of: targetLevel), i + 1 < levels.count else { return nil }
-        return levels[i + 1]
+        guard let i = levels.firstIndex(where: { $0.rawValue == targetLevel }),
+              i + 1 < levels.count else { return nil }
+        return levels[i + 1].rawValue
     }
     /// Advance the plan to the next level and start it from the beginning.
     private func advanceLevel() {
@@ -187,15 +192,17 @@ struct HomeView: View {
         .task {
             // Keep the plan's level valid for the current exam (guards against a
             // stale JLPT level lingering after switching to 漢検, or vice versa).
-            if !examType.levels.contains(targetLevel) { targetLevel = examType.defaultLevel }
+            if !examType.levels.contains(where: { $0.rawValue == targetLevel }) {
+                targetLevel = examType.defaultLevel.rawValue
+            }
             store.send(.bookmarksAppeared)
             store.send(.wordReview(.onAppear))
-            store.send(.refreshWrongDue(level: targetLevel))
+            store.send(.refreshWrongDue(level: targetExamLevel))
             writeSnapshot()
         }
         .onChange(of: examType) { _, newExam in
-            if !newExam.levels.contains(targetLevel) {
-                targetLevel = newExam.defaultLevel
+            if !newExam.levels.contains(where: { $0.rawValue == targetLevel }) {
+                targetLevel = newExam.defaultLevel.rawValue
                 studyStartIndex = 0
             }
         }
@@ -203,7 +210,7 @@ struct HomeView: View {
         .onChange(of: targetLevel) { _, level in
             studyStartIndex = 0
             writeSnapshot()
-            store.send(.refreshWrongDue(level: level))
+            store.send(.refreshWrongDue(level: ExamLevel(rawValue: level) ?? examType.defaultLevel))
         }
         .onChange(of: levelTotal) { _, _ in writeSnapshot() }
         .onChange(of: store.review.records.count) { _, _ in writeSnapshot() }
@@ -481,7 +488,7 @@ struct HomeView: View {
                 Text(L.targetLevel[appLanguage])
                     .font(.kawaii(14, weight: .semibold)).foregroundStyle(Palette.inkSoft)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 56), spacing: 8)], spacing: 8) {
-                    ForEach(examType.levels, id: \.self) { level in
+                    ForEach(examType.levels.map(\.rawValue), id: \.self) { level in
                         levelChip(level)
                     }
                 }
@@ -576,7 +583,7 @@ struct HomeView: View {
         launcher(icon: "exclamationmark.bubble.fill", title: L.reviewWrongNotes[appLanguage],
                  subtitle: L.reviewWrongNotesSub[appLanguage], count: store.wrongDue,
                  soft: Palette.pinkSoft, accent: Palette.pinkDeep) {
-            store.send(.startWrongNoteReview(level: targetLevel, language: appLanguage))
+            store.send(.startWrongNoteReview(level: targetExamLevel, language: appLanguage))
         }
     }
 
@@ -593,7 +600,7 @@ struct HomeView: View {
         return launcher(icon: "checklist", title: title,
                         subtitle: L.kankenHubSubtitle[appLanguage], count: nil,
                         soft: Palette.lavenderSoft, accent: Palette.lavender) {
-            store.send(.startKanken(level: targetLevel))
+            store.send(.startKanken(level: targetExamLevel))
         }
     }
 
@@ -651,7 +658,7 @@ struct HomeView: View {
         launcher(icon: "pencil.and.list.clipboard", title: L.realExam[appLanguage],
                  subtitle: L.realExamSub[appLanguage], count: nil,
                  soft: Palette.coralSoft, accent: Palette.coral) {
-            store.send(.startKankenRealExam(level: targetLevel, language: appLanguage))
+            store.send(.startKankenRealExam(level: targetExamLevel, language: appLanguage))
         }
     }
 
@@ -660,7 +667,7 @@ struct HomeView: View {
         launcher(icon: "doc.text.fill", title: L.mockExam[appLanguage],
                  subtitle: L.mockExamSub[appLanguage], count: nil,
                  soft: Palette.lavenderSoft, accent: Palette.lavender) {
-            store.send(.startKankenMock(level: targetLevel, perSection: 5, language: appLanguage))
+            store.send(.startKankenMock(level: targetExamLevel, perSection: 5, language: appLanguage))
         }
     }
 
@@ -698,7 +705,7 @@ struct HomeView: View {
         launcher(icon: "chart.bar.xaxis", title: L.studyStats[appLanguage],
                  subtitle: L.studyStatsSub[appLanguage], count: nil,
                  soft: Palette.skySoft, accent: Palette.sky) {
-            store.send(.openStats(level: targetLevel))
+            store.send(.openStats(level: targetExamLevel))
         }
     }
 

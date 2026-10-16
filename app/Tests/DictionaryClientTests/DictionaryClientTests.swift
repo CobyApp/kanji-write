@@ -63,17 +63,17 @@ final class DictionaryClientTests: XCTestCase {
 
         for (level, expectedCount) in legacyCounts {
             XCTAssertEqual(
-                kanji.filter { $0.belongs(to: level, exam: .kanken) }.count,
+                kanji.filter { $0.belongs(to: ExamLevel(rawValue: level)!) }.count,
                 expectedCount,
                 level
             )
         }
 
         let pre1IDs = Set(
-            kanji.filter { $0.belongs(to: "準1級", exam: .kanken) }.map(\.id)
+            kanji.filter { $0.belongs(to: .kPre1) }.map(\.id)
         )
         let level1IDs = Set(
-            kanji.filter { $0.belongs(to: "1級", exam: .kanken) }.map(\.id)
+            kanji.filter { $0.belongs(to: .k1) }.map(\.id)
         )
         XCTAssertFalse(pre1IDs.isEmpty)
         XCTAssertFalse(level1IDs.isEmpty)
@@ -87,8 +87,8 @@ final class DictionaryClientTests: XCTestCase {
     func testLiveLoadsWritingCapabilityIndependentlyOfStrokeCount() async throws {
         let kanji = try await DictionaryClient.liveValue.allKanji()
         let advanced = kanji.filter {
-            $0.belongs(to: "準1級", exam: .kanken)
-                || $0.belongs(to: "1級", exam: .kanken)
+            $0.belongs(to: .kPre1)
+                || $0.belongs(to: .k1)
         }
 
         XCTAssertTrue(advanced.contains { !$0.hasVerifiedStrokeOrder && $0.strokeCount > 0 })
@@ -100,7 +100,7 @@ final class DictionaryClientTests: XCTestCase {
 
         for level in ["準1級", "1級"] {
             let memberIDs = Set(
-                kanji.filter { $0.belongs(to: level, exam: .kanken) }.map(\.id)
+                kanji.filter { $0.belongs(to: ExamLevel(rawValue: level)!) }.map(\.id)
             )
             let radicals = try await client.examRadicalItems(level, 10_000)
             let strokes = try await client.examStrokeItems(level, 10_000)

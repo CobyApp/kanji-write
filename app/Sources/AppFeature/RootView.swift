@@ -345,7 +345,7 @@ private struct WordDictionaryView: View {
     private var levelChips: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
-                ForEach(examType.levels, id: \.self) { level in
+                ForEach(examType.levels.map(\.rawValue), id: \.self) { level in
                     let selected = store.level == level
                     Button { store.send(.levelSelected(level)) } label: {
                         Text(level)

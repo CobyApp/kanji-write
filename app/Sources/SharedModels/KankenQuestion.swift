@@ -20,21 +20,12 @@ public enum KankenQuestionType: String, CaseIterable, Sendable, Equatable, Codab
 }
 
 extension ExamType {
-    /// 漢検 級 in ascending difficulty (10級 = 1 … 1級 = 12). Tables that are
-    /// cumulative — 四字熟語, 対義語・類義語 — draw everything at or below the
-    /// target rank. nil for a JLPT level.
-    public static func kankenRank(_ level: String) -> Int? {
-        let order = ["10級", "9級", "8級", "7級", "6級", "5級", "4級", "3級",
-                     "準2級", "2級", "準1級", "1級"]
-        return order.firstIndex(of: level).map { $0 + 1 }
-    }
-
     /// The share of the paper a candidate needs to pass, per the official
     /// 合格基準: 10〜8級 80% (120/150), 7級〜準2級 70% (140/200), 2級 and above
     /// 80% (160/200). JLPT has no pass line for 文字・語彙 on its own — it is
     /// scored with 文法・読解 — so 60% is shown as a guide rather than a rule.
-    public func passRatio(for level: String) -> Double {
-        guard self == .kanken, let rank = Self.kankenRank(level) else { return 0.6 }
+    public func passRatio(for level: ExamLevel) -> Double {
+        guard self == .kanken, let rank = level.kankenRank else { return 0.6 }
         switch rank {
         case 1...3: return 0.8
         case 4...9: return 0.7
@@ -42,26 +33,21 @@ extension ExamType {
         }
     }
 
-    /// The exam a level belongs to: "N…" is JLPT, a 級 is 漢検.
-    public static func of(level: String) -> ExamType {
-        level.hasPrefix("N") ? .jlpt : .kanken
-    }
-
     /// True when `passRatio` is an official line rather than a guide.
     public var hasOfficialPassLine: Bool { self == .kanken }
 
     /// The official sitting length in minutes (漢検 10〜8級 40分, the rest 60分;
     /// JLPT 文字・語彙 N5 20分 / N4 25分 / N3 30分, and shared with 文法・読解 above).
-    public func officialMinutes(for level: String) -> Int? {
+    public func officialMinutes(for level: ExamLevel) -> Int? {
         switch self {
         case .kanken:
-            guard let rank = Self.kankenRank(level) else { return nil }
+            guard let rank = level.kankenRank else { return nil }
             return rank <= 3 ? 40 : 60
         case .jlpt:
             switch level {
-            case "N5": return 20
-            case "N4": return 25
-            case "N3": return 30
+            case .n5: return 20
+            case .n4: return 25
+            case .n3: return 30
             default: return nil
             }
         }
@@ -79,6 +65,7 @@ public struct Yojijukugo: Equatable, Identifiable, Sendable {
     public let meaningKo: String?
     public let meaningZh: String?
     public let meaningEn: String?
+    /// Stored as the raw 級 label (DB mirror), like `Kanji.kankenLevel`.
     public let level: String
 
     public init(id: Int, yoji: String, reading: String,
@@ -116,6 +103,7 @@ public struct TaigiruiPair: Equatable, Identifiable, Sendable {
     public let answer: String
     public let answerReading: String
     public let relation: String   // "対義" | "類義"
+    /// Stored as the raw 級 label (DB mirror).
     public let level: String
 
     public init(id: Int, word: String, wordReading: String, answer: String,
@@ -184,7 +172,7 @@ extension ExamType {
     /// The exam paper's 大問 list for a specific level, in paper order — the real
     /// per-level structure (漢検 級 / JLPT レベル). Data-backed sections are playable;
     /// the rest are shown for accuracy and marked 준비 중.
-    public func sections(for level: String) -> [ExamSection] {
+    public func sections(for level: ExamLevel) -> [ExamSection] {
         var list = self == .kanken ? Self.kankenSections(level) : Self.jlptSections(level)
         let numerals = self.numerals(count: list.count)
         for i in list.indices { list[i].numeral = numerals[i] }
@@ -216,7 +204,7 @@ extension ExamType {
     /// 漢検 papers in official 大問 order, derived from the official paper
     /// layout (`KankenPaper`): each section once, named as the paper names
     /// it (the name of its biggest 大問 when a section answers several).
-    private static func kankenSections(_ level: String) -> [ExamSection] {
+    private static func kankenSections(_ level: ExamLevel) -> [ExamSection] {
         guard let paper = KankenPaper.official(for: level) else {
             return [reading, radical, writing]
         }
@@ -266,19 +254,19 @@ extension ExamType {
     }
 
     /// JLPT N5〜N1 文字・語彙 sections (問題1〜, per the official 大問のねらい).
-    private static func jlptSections(_ level: String) -> [ExamSection] {
+    private static func jlptSections(_ level: ExamLevel) -> [ExamSection] {
         let reading = live("reading", "漢字読み", .reading, "reading")
         let hyoki = live("orthography", "表記", .writing, "orthography")
         let bunmyaku = live("context", "文脈規定", .context, "context")
         switch level {
-        case "N5":
+        case .n5:
             return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae")]
-        case "N4", "N3":
+        case .n4, .n3:
             return [reading, hyoki, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), live("youhou", "用法", .taigirui, "youhou")]
-        case "N2":
+        case .n2:
             return [reading, hyoki, live("gokeisei", "語形成", .writing, "gokeisei"), bunmyaku,
                     live("iikae", "言い換え類義", .taigirui, "iikae"), live("youhou", "用法", .taigirui, "youhou")]
-        case "N1":
+        case .n1:
             return [reading, bunmyaku, live("iikae", "言い換え類義", .taigirui, "iikae"), live("youhou", "用法", .taigirui, "youhou")]
         default:
             return [reading, hyoki, bunmyaku]
@@ -393,8 +381,10 @@ public struct WrongNote: Equatable, Identifiable, Sendable, Codable {
         self.due = due
     }
 
-    public func belongs(to level: String) -> Bool {
-        self.level == nil || self.level == level
+    /// `level` stays a stored `String?` so existing 오답노트 entries keep decoding;
+    /// the comparison is typed through the level's rawValue.
+    public func belongs(to level: ExamLevel) -> Bool {
+        self.level == nil || self.level == level.rawValue
     }
 
     public func isDue(on today: Int) -> Bool { (due ?? 0) <= today }
@@ -434,7 +424,7 @@ public struct SectionStat: Equatable, Sendable, Codable {
 
     public var accuracy: Double { attempts > 0 ? Double(correct) / Double(attempts) : 0 }
 
-    public static func key(level: String, section: String) -> String { "\(level)|\(section)" }
+    public static func key(level: ExamLevel, section: String) -> String { "\(level.rawValue)|\(section)" }
 }
 
 /// One day's answering activity across the exam hub and the daily quiz — the

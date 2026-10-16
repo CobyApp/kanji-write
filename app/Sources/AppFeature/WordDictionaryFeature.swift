@@ -12,7 +12,7 @@ public struct WordDictionaryFeature {
     @ObservableState
     public struct State: Equatable {
         /// Current level, seeded from the active exam (JLPT "N5" / 漢検 "10級").
-        public var level: String = ExamType.current.defaultLevel
+        public var level: String = ExamType.current.defaultLevel.rawValue
         public var words: [WordEntry] = []          // current level's words
         public var searchText = ""
         public var searchResults: [WordEntry] = []
@@ -100,7 +100,7 @@ public struct WordDictionaryFeature {
             // 文字・語彙 paper actually asks. 漢検 has no word list, so it keeps
             // "words written with this 級's kanji".
             var words: [WordEntry] = []
-            if level.hasPrefix("N") {
+            if ExamLevel(rawValue: level)?.exam == .jlpt {
                 words = (try? await dictionaryClient.jlptVocabulary(level, 3000)) ?? []
             }
             if words.isEmpty {

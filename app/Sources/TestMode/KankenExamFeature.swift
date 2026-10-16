@@ -16,7 +16,7 @@ import SharedModels
 public struct KankenExamFeature {
     @ObservableState
     public struct State: Equatable {
-        public var level: String
+        public var level: ExamLevel
         public var language: AppLanguage
         /// Count of saved 오답노트 entries at this level (badge on the hub).
         public var wrongCount = 0
@@ -73,7 +73,7 @@ public struct KankenExamFeature {
         /// straight back (same id) — the view resets its answer input on it.
         public var attempt = 0
 
-        public init(level: String, language: AppLanguage = .ko) {
+        public init(level: ExamLevel, language: AppLanguage = .ko) {
             self.level = level
             self.language = language
         }
@@ -114,7 +114,7 @@ public struct KankenExamFeature {
         /// accuracy among those tried at least five times, then any not yet
         /// tried at all — up to three.
         public var weakSections: [ExamSection] {
-            let playable = ExamType.of(level: level).sections(for: level).filter(\.available)
+            let playable = level.exam.sections(for: level).filter(\.available)
             let tried = playable
                 .compactMap { section in stat(for: section).map { (section, $0) } }
                 .filter { $0.1.attempts >= 5 }
@@ -126,7 +126,7 @@ public struct KankenExamFeature {
         public var scoreRatio: Double {
             total > 0 ? Double(firstTryCorrect) / Double(total) : 0
         }
-        public var passRatio: Double { ExamType.of(level: level).passRatio(for: level) }
+        public var passRatio: Double { level.exam.passRatio(for: level) }
         public var passed: Bool {
             paper != nil ? earnedPoints >= passPoints : scoreRatio >= passRatio
         }
@@ -215,8 +215,8 @@ public struct KankenExamFeature {
     }
 
     public enum Action: Equatable {
-        case onAppear(level: String, language: AppLanguage)
-        case levelChanged(String)
+        case onAppear(level: ExamLevel, language: AppLanguage)
+        case levelChanged(ExamLevel)
         case wrongCountLoaded(Int)
         case wrongDueLoaded(Int)
         case statsLoaded([String: SectionStat])
@@ -333,7 +333,7 @@ public struct KankenExamFeature {
                 // Paper order, not shuffled: a sitting works through its 大問 one
                 // after another, and keeping that makes the practice feel like
                 // the exam rather than a shuffled quiz.
-                let sections = ExamType.of(level: level).sections(for: level).filter(\.available)
+                let sections = level.exam.sections(for: level).filter(\.available)
                 state.sectionTitles = Dictionary(
                     sections.map { ($0.id, "\($0.numeral)　\($0.jaTitle)") },
                     uniquingKeysWith: { first, _ in first })
@@ -569,7 +569,7 @@ public struct KankenExamFeature {
             if !state.isMockExam { state.queue.append(item) }
             // A first miss is saved to the 오답노트 (once).
             if !state.isWrongNote, state.missed.insert(item.id).inserted {
-                let note = WrongNote(question: item, savedDay: state.today, level: level)
+                let note = WrongNote(question: item, savedDay: state.today, level: level.rawValue)
                 effect = .merge(effect, .run { send in
                     let notes = await wrongNoteStore.update { notes in
                         notes.filter { $0.id != note.id } + [note]
@@ -598,7 +598,7 @@ public struct KankenExamFeature {
         state.attempt += 1
     }
 
-    private func refreshWrongCount(level: String, today: Int) -> Effect<Action> {
+    private func refreshWrongCount(level: ExamLevel, today: Int) -> Effect<Action> {
         .run { send in
             let mine = await wrongNoteStore.load().filter { $0.belongs(to: level) }
             await send(.wrongCountLoaded(mine.count))
@@ -682,12 +682,12 @@ public struct KankenExamFeature {
 
     /// Every question for one 大問, at the level given. Shared by a single
     /// section and by the mock paper, which needs all of them.
-    private func questions(for section: ExamSection, level: String,
+    private func questions(for section: ExamSection, level: ExamLevel,
                            language: AppLanguage,
                            perSection: Int) async throws -> [KankenQuestion] {
         let built: [KankenQuestion]
         if let kind = section.kind {
-            let bank = (try? await dictionaryClient.examQuestions(level, kind, perSection)) ?? []
+            let bank = (try? await dictionaryClient.examQuestions(level.rawValue, kind, perSection)) ?? []
             // Every bank section carries its own instruction: ten of them share
             // a render type, and the type's generic wording would ask for the
             // wrong thing (用法 is not a synonym question, 誤字訂正 not 書き取り).
@@ -698,25 +698,25 @@ public struct KankenExamFeature {
         } else {
             switch section.renderType {
             case .strokes:
-                let items = (try? await dictionaryClient.examStrokeItems(level, 80)) ?? []
+                let items = (try? await dictionaryClient.examStrokeItems(level.rawValue, 80)) ?? []
                 built = KankenQuestion.strokeQuiz(items, count: perSection, language: language)
             case .yojijukugo:
-                let items = (try? await dictionaryClient.examYojijukugo(level, 80)) ?? []
+                let items = (try? await dictionaryClient.examYojijukugo(level.rawValue, 80)) ?? []
                 built = KankenQuestion.yojijukugoQuiz(items, count: perSection, language: language)
             case .okurigana:
-                let items = (try? await dictionaryClient.examOkurigana(level, 120)) ?? []
+                let items = (try? await dictionaryClient.examOkurigana(level.rawValue, 120)) ?? []
                 built = KankenQuestion.okuriganaQuiz(items, count: perSection, language: language)
             case .taigirui:
-                let items = (try? await dictionaryClient.examTaigirui(level, nil, 60)) ?? []
+                let items = (try? await dictionaryClient.examTaigirui(level.rawValue, nil, 60)) ?? []
                 built = KankenQuestion.taigiruiQuiz(items, count: perSection, language: language)
             case .hitsujun:
-                let items = (try? await dictionaryClient.examStrokeOrderItems(level, 60)) ?? []
+                let items = (try? await dictionaryClient.examStrokeOrderItems(level.rawValue, 60)) ?? []
                 built = KankenQuestion.hitsujunQuiz(items, count: perSection, language: language)
             case .onkun:
-                let items = (try? await dictionaryClient.examOnKun(level, 60)) ?? []
+                let items = (try? await dictionaryClient.examOnKun(level.rawValue, 60)) ?? []
                 built = KankenQuestion.onKunQuiz(items, count: perSection, language: language)
             default:
-                let items = (try? await dictionaryClient.examRadicalItems(level, 80)) ?? []
+                let items = (try? await dictionaryClient.examRadicalItems(level.rawValue, 80)) ?? []
                 built = KankenQuestion.radicalQuiz(items, count: perSection)
             }
         }

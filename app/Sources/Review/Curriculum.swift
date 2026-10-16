@@ -50,8 +50,8 @@ func clampedTail(_ order: [Kanji], from start: Int) -> [Kanji] {
 public func studyOrder(_ kanji: [Kanji], exam: ExamType) -> [Kanji] {
     let rank = Dictionary(uniqueKeysWithValues: exam.levels.enumerated().map { ($1, $0) })
     return kanji.sorted { a, b in
-        let la = rank[a.level(for: exam) ?? ""] ?? 99
-        let lb = rank[b.level(for: exam) ?? ""] ?? 99
+        let la = a.level(for: exam).flatMap { rank[$0] } ?? 99
+        let lb = b.level(for: exam).flatMap { rank[$0] } ?? 99
         if la != lb { return la < lb }
         if a.strokeCount != b.strokeCount { return a.strokeCount < b.strokeCount }
         return a.id < b.id
@@ -59,9 +59,9 @@ public func studyOrder(_ kanji: [Kanji], exam: ExamType) -> [Kanji] {
 }
 
 /// Study order scoped to a single level of the exam (nil = all levels).
-public func studyOrder(_ kanji: [Kanji], exam: ExamType, level: String?) -> [Kanji] {
+public func studyOrder(_ kanji: [Kanji], exam: ExamType, level: ExamLevel?) -> [Kanji] {
     guard let level else { return studyOrder(kanji, exam: exam) }
-    return studyOrder(kanji.filter { $0.belongs(to: level, exam: exam) }, exam: exam)
+    return studyOrder(kanji.filter { $0.belongs(to: level) }, exam: exam)
 }
 
 /// How many kanji in `order` (from `startIndex` onward) have not been started yet.

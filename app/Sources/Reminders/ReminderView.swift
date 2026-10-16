@@ -64,7 +64,7 @@ public struct ReminderView: View {
         }
         .roundedCard()
         .onChange(of: examType) { _, newExam in
-            targetLevel = newExam.defaultLevel
+            targetLevel = newExam.defaultLevel.rawValue
             studyStartIndex = 0
         }
     }

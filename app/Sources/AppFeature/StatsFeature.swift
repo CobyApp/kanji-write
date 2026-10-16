@@ -10,14 +10,14 @@ public struct StatsFeature {
     @ObservableState
     public struct State: Equatable {
         public var exam: ExamType
-        public var level: String
+        public var level: ExamLevel
         public var kanji: [Kanji]
         public var records: [ReviewRecord]
         public var today: Int
         public var stats: [String: SectionStat] = [:]
         public var log: [Int: DayLog] = [:]
 
-        public init(exam: ExamType, level: String, kanji: [Kanji], records: [ReviewRecord], today: Int) {
+        public init(exam: ExamType, level: ExamLevel, kanji: [Kanji], records: [ReviewRecord], today: Int) {
             self.exam = exam
             self.level = level
             self.kanji = kanji
@@ -52,8 +52,8 @@ public struct StatsFeature {
         public var totalCorrect: Int { log.values.reduce(0) { $0 + $1.correct } }
 
         public struct LevelProgress: Equatable, Identifiable, Sendable {
-            public var id: String { level }
-            public let level: String
+            public var id: String { level.rawValue }
+            public let level: ExamLevel
             public let learned: Int
             public let total: Int
             public var ratio: Double { total > 0 ? Double(learned) / Double(total) : 0 }
@@ -62,7 +62,7 @@ public struct StatsFeature {
         public var levelProgress: [LevelProgress] {
             let known = Set(records.map(\.kanjiID))
             return exam.levels.map { level in
-                let members = kanji.filter { $0.belongs(to: level, exam: exam) }
+                let members = kanji.filter { $0.belongs(to: level) }
                 return LevelProgress(level: level,
                                      learned: members.filter { known.contains($0.id) }.count,
                                      total: members.count)

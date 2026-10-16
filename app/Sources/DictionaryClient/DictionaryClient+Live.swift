@@ -347,7 +347,7 @@ extension DictionaryClient: DependencyKey {
             // Without the second rule a 5級 drill showed words like 憂鬱 whose 鬱
             // is a 1級 kanji — far too hard. (JLPT levels load tagged vocab via
             // jlptVocabulary and never reach here.)
-            guard let target = ExamType.kankenRank(level) else { return [] }
+            guard let target = ExamLevel(rawValue: level)?.kankenRank else { return [] }
             let rankOfLabel = Self.kankenRankSQL
                 .replacingOccurrences(of: "kanken_level", with: "km2.level_label")
             return try await queue.read { db -> [WordEntry] in
@@ -537,7 +537,7 @@ extension DictionaryClient: DependencyKey {
         examYojijukugo: { level, limit in
             // 四字熟語 are cumulative: a 級's paper draws from that 級 and easier.
             // 準1級 / 1級 included — they have their own idioms and were left out.
-            guard let target = ExamType.kankenRank(level) else { return [] }  // JLPT → none
+            guard let target = ExamLevel(rawValue: level)?.kankenRank else { return [] }  // JLPT → none
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [Yojijukugo] in
                 let rows = try Row.fetchAll(db, sql: """
@@ -640,7 +640,7 @@ extension DictionaryClient: DependencyKey {
         },
         examTaigirui: { level, relationOnly, limit in
             // Cumulative like 四字熟語; the table starts at 6級 and runs to 1級.
-            guard let target = ExamType.kankenRank(level) else { return [] }
+            guard let target = ExamLevel(rawValue: level)?.kankenRank else { return [] }
             let queue = try openBundledDatabase()
             return try await queue.read { db -> [TaigiruiPair] in
                 var sql = """
@@ -758,7 +758,7 @@ extension DictionaryClient: DependencyKey {
     )
 
     /// A 漢検 級 as its difficulty rank, for cumulative level filters. Mirrors
-    /// `ExamType.kankenRank`.
+    /// `ExamLevel.kankenRank`.
     static let kankenRankSQL = """
         (CASE kanken_level WHEN '10級' THEN 1 WHEN '9級' THEN 2 WHEN '8級' THEN 3 WHEN '7級' THEN 4 WHEN '6級' THEN 5 WHEN '5級' THEN 6 WHEN '4級' THEN 7 WHEN '3級' THEN 8 WHEN '準2級' THEN 9 WHEN '2級' THEN 10 WHEN '準1級' THEN 11 WHEN '1級' THEN 12 ELSE 99 END)
         """

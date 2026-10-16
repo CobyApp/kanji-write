@@ -10,7 +10,7 @@ final class StatsFeatureTests: XCTestCase {
     }
 
     func testRecentDaysCountNewKanjiAndAnswers() {
-        var state = StatsFeature.State(exam: .kanken, level: "10級", kanji: [],
+        var state = StatsFeature.State(exam: .kanken, level: .k10, kanji: [],
                                        records: [record(1, day: 100), record(2, day: 100),
                                                  record(3, day: 99, reps: 3)],
                                        today: 100)
@@ -24,11 +24,11 @@ final class StatsFeatureTests: XCTestCase {
     }
 
     func testEstimateNeedsFiveAnswersPerSection() {
-        var state = StatsFeature.State(exam: .kanken, level: "5級", kanji: [], records: [], today: 0)
-        let sections = ExamType.kanken.sections(for: "5級")
-        state.stats = [SectionStat.key(level: "5級", section: sections[0].id): SectionStat(attempts: 3, correct: 3)]
+        var state = StatsFeature.State(exam: .kanken, level: .k5, kanji: [], records: [], today: 0)
+        let sections = ExamType.kanken.sections(for: .k5)
+        state.stats = [SectionStat.key(level: .k5, section: sections[0].id): SectionStat(attempts: 3, correct: 3)]
         XCTAssertNil(state.estimatedScore)
-        state.stats[SectionStat.key(level: "5級", section: sections[1].id)] = SectionStat(attempts: 10, correct: 6)
+        state.stats[SectionStat.key(level: .k5, section: sections[1].id)] = SectionStat(attempts: 10, correct: 6)
         XCTAssertEqual(state.estimatedScore, 0.6)
         // Weakest tried section first, untried last.
         XCTAssertEqual(state.sectionScores.first?.section.id, sections[1].id)

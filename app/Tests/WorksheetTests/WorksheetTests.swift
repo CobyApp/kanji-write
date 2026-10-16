@@ -125,7 +125,7 @@ final class WorksheetFeatureReducerTests: XCTestCase {
         }
         store.exhaustivity = .off
 
-        await store.send(.onAppear(newPerDay: 1, level: "準1級", startIndex: 0))
+        await store.send(.onAppear(newPerDay: 1, level: .kPre1, startIndex: 0))
         await store.receive(\.loaded)
         await store.receive(\.contentLoaded)
 

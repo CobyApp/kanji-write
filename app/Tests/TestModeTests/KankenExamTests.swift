@@ -8,19 +8,19 @@ import XCTest
 
 final class ExamScoringTests: XCTestCase {
     func testKankenRankOrdersEveryLevel() {
-        XCTAssertEqual(ExamType.kankenRank("10級"), 1)
-        XCTAssertEqual(ExamType.kankenRank("2級"), 10)
-        XCTAssertEqual(ExamType.kankenRank("1級"), 12)
-        XCTAssertNil(ExamType.kankenRank("N3"))
+        XCTAssertEqual(ExamLevel.k10.kankenRank, 1)
+        XCTAssertEqual(ExamLevel.k2.kankenRank, 10)
+        XCTAssertEqual(ExamLevel.k1.kankenRank, 12)
+        XCTAssertNil(ExamLevel.n3.kankenRank)
     }
 
     func testPassLinesFollowTheOfficialCriteria() {
-        XCTAssertEqual(ExamType.kanken.passRatio(for: "10級"), 0.8)   // 120/150
-        XCTAssertEqual(ExamType.kanken.passRatio(for: "5級"), 0.7)    // 140/200
-        XCTAssertEqual(ExamType.kanken.passRatio(for: "準2級"), 0.7)
-        XCTAssertEqual(ExamType.kanken.passRatio(for: "2級"), 0.8)    // 160/200
-        XCTAssertEqual(ExamType.kanken.officialMinutes(for: "8級"), 40)
-        XCTAssertEqual(ExamType.kanken.officialMinutes(for: "7級"), 60)
+        XCTAssertEqual(ExamType.kanken.passRatio(for: .k10), 0.8)   // 120/150
+        XCTAssertEqual(ExamType.kanken.passRatio(for: .k5), 0.7)    // 140/200
+        XCTAssertEqual(ExamType.kanken.passRatio(for: .kPre2), 0.7)
+        XCTAssertEqual(ExamType.kanken.passRatio(for: .k2), 0.8)    // 160/200
+        XCTAssertEqual(ExamType.kanken.officialMinutes(for: .k8), 40)
+        XCTAssertEqual(ExamType.kanken.officialMinutes(for: .k7), 60)
         XCTAssertFalse(ExamType.jlpt.hasOfficialPassLine)
     }
 }
@@ -88,7 +88,7 @@ final class KankenExamFeatureTests: XCTestCase {
     }
 
     func testMockPaperIsSatOnceAndScored() async {
-        var state = KankenExamFeature.State(level: "5級")
+        var state = KankenExamFeature.State(level: .k5)
         state.isMockExam = true
         let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
             $0.date.now = Date(timeIntervalSince1970: 1_000)
@@ -112,8 +112,8 @@ final class KankenExamFeatureTests: XCTestCase {
     }
 
     func testDrillRequeuesAMissUntilCleared() async {
-        var state = KankenExamFeature.State(level: "5級")
-        state.activeSection = ExamType.kanken.sections(for: "5級").first
+        var state = KankenExamFeature.State(level: .k5)
+        state.activeSection = ExamType.kanken.sections(for: .k5).first
         let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
             $0.date.now = Date(timeIntervalSince1970: 1_000)
             $0.wrongNoteStore.update = { transform in transform([]) }
@@ -136,7 +136,7 @@ final class KankenExamFeatureTests: XCTestCase {
             WrongNote(question: question("k2"), savedDay: 2, level: "2級"),
             WrongNote(question: question("old"), savedDay: 0),   // saved before levels
         ]
-        let store = TestStore(initialState: KankenExamFeature.State(level: "2級")) {
+        let store = TestStore(initialState: KankenExamFeature.State(level: .k2)) {
             KankenExamFeature()
         } withDependencies: {
             $0.wrongNoteStore.load = { notes }
@@ -144,7 +144,7 @@ final class KankenExamFeatureTests: XCTestCase {
         }
         store.exhaustivity = .off
 
-        await store.send(.onAppear(level: "2級", language: .ko))
+        await store.send(.onAppear(level: .k2, language: .ko))
         await store.receive(\.wrongCountLoaded) { $0.wrongCount = 2 }
         await store.send(.selectWrongNote)
         await store.receive(\.loaded)
@@ -152,7 +152,7 @@ final class KankenExamFeatureTests: XCTestCase {
     }
 
     func testLateLoadAfterLeavingIsIgnored() async {
-        let store = TestStore(initialState: KankenExamFeature.State(level: "5級")) {
+        let store = TestStore(initialState: KankenExamFeature.State(level: .k5)) {
             KankenExamFeature()
         }
         store.exhaustivity = .off
@@ -190,14 +190,14 @@ final class WrongNoteScheduleTests: XCTestCase {
 @MainActor
 final class WeakSpotAndTimerTests: XCTestCase {
     func testWeakSectionsAreLowestAccuracyThenUntried() {
-        var state = KankenExamFeature.State(level: "5級")
-        let sections = ExamType.kanken.sections(for: "5級")
+        var state = KankenExamFeature.State(level: .k5)
+        let sections = ExamType.kanken.sections(for: .k5)
         let strong = sections[0], weak = sections[1], thin = sections[2]
         state.stats = [
-            SectionStat.key(level: "5級", section: strong.id): SectionStat(attempts: 10, correct: 9),
-            SectionStat.key(level: "5級", section: weak.id): SectionStat(attempts: 10, correct: 3),
+            SectionStat.key(level: .k5, section: strong.id): SectionStat(attempts: 10, correct: 9),
+            SectionStat.key(level: .k5, section: weak.id): SectionStat(attempts: 10, correct: 3),
             // Too few answers to judge — not "weak", but not untried either.
-            SectionStat.key(level: "5級", section: thin.id): SectionStat(attempts: 2, correct: 0),
+            SectionStat.key(level: .k5, section: thin.id): SectionStat(attempts: 2, correct: 0),
         ]
         let picked = state.weakSections.map(\.id)
         XCTAssertEqual(picked.first, weak.id)
@@ -206,7 +206,7 @@ final class WeakSpotAndTimerTests: XCTestCase {
     }
 
     func testTimeUpCountsTheRestAsUnanswered() async {
-        var state = KankenExamFeature.State(level: "5級")
+        var state = KankenExamFeature.State(level: .k5)
         state.isMockExam = true
         let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
             $0.date.now = Date(timeIntervalSince1970: 1_000)
@@ -227,18 +227,17 @@ final class WeakSpotAndTimerTests: XCTestCase {
 }
 
 final class KankenPaperTests: XCTestCase {
-    private let levels = ["10級", "9級", "8級", "7級", "6級", "5級",
-                          "4級", "3級", "準2級", "2級", "準1級", "1級"]
+    private let levels = ExamType.kanken.levels
 
     func testEveryPaperAddsUpToItsOfficialTotal() {
         for level in levels {
             let paper = try? XCTUnwrap(KankenPaper.official(for: level))
-            XCTAssertNotNil(paper, level)
+            XCTAssertNotNil(paper, level.rawValue)
             guard let paper else { continue }
-            XCTAssertEqual(paper.parts.reduce(0) { $0 + $1.maxPoints }, paper.total, level)
+            XCTAssertEqual(paper.parts.reduce(0) { $0 + $1.maxPoints }, paper.total, level.rawValue)
             XCTAssertEqual(Double(paper.pass) / Double(paper.total),
-                           ExamType.kanken.passRatio(for: level), accuracy: 0.001, level)
-            XCTAssertEqual(paper.minutes, ExamType.kanken.officialMinutes(for: level), level)
+                           ExamType.kanken.passRatio(for: level), accuracy: 0.001, level.rawValue)
+            XCTAssertEqual(paper.minutes, ExamType.kanken.officialMinutes(for: level), level.rawValue)
         }
     }
 
@@ -247,13 +246,13 @@ final class KankenPaperTests: XCTestCase {
             guard let paper = KankenPaper.official(for: level) else { continue }
             let hub = Set(ExamType.kanken.sections(for: level).filter(\.available).map(\.id))
             for part in paper.parts {
-                XCTAssertTrue(hub.contains(part.sectionID), "\(level) \(part.title)")
+                XCTAssertTrue(hub.contains(part.sectionID), "\(level.rawValue) \(part.title)")
             }
         }
     }
 
     func testAssembleFillsEachPartOnceAndTopsUpShortOnes() {
-        let paper = try! XCTUnwrap(KankenPaper.official(for: "10級"))
+        let paper = try! XCTUnwrap(KankenPaper.official(for: .k10))
         func pool(_ prefix: String, _ n: Int, _ section: String) -> [KankenQuestion] {
             (0..<n).map {
                 KankenQuestion(id: "\(prefix)\($0)", type: .reading, kanjiID: 1, prompt: "p",
@@ -282,9 +281,9 @@ final class KankenPaperTests: XCTestCase {
 @MainActor
 final class RealExamFeatureTests: XCTestCase {
     func testRealPaperScoresInPointsAndMarksOnlyAtTheEnd() async {
-        var state = KankenExamFeature.State(level: "2級")
+        var state = KankenExamFeature.State(level: .k2)
         state.isMockExam = true
-        state.paper = KankenPaper.official(for: "2級")
+        state.paper = KankenPaper.official(for: .k2)
         let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
             $0.date.now = Date(timeIntervalSince1970: 1_000)
             $0.wrongNoteStore.update = { transform in transform([]) }
@@ -319,9 +318,9 @@ final class RealExamFeatureTests: XCTestCase {
     }
 
     func testRealExamDefersWrittenAnswersUntilEndGrading() async {
-        var state = KankenExamFeature.State(level: "2級")
+        var state = KankenExamFeature.State(level: .k2)
         state.isMockExam = true
-        state.paper = KankenPaper.official(for: "2級")
+        state.paper = KankenPaper.official(for: .k2)
         let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
             $0.date.now = Date(timeIntervalSince1970: 1_000)
             $0.wrongNoteStore.update = { transform in transform([]) }

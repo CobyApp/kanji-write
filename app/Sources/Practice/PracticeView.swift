@@ -28,7 +28,7 @@ public struct PracticeView: View {
     /// review's capture rect so the saved drawing never clips or rescales.
     @State private var canvasSide: CGFloat = 320
 
-    private var levels: [String] { examType.levels }
+    private var levels: [String] { examType.levels.map(\.rawValue) }
     private let countOptions = [10, 20, 30, 50]
 
     public init(store: StoreOf<PracticeFeature>) { self.store = store }

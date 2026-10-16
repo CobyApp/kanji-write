@@ -132,7 +132,7 @@ public struct PracticeFeature {
 
         /// The level's kanji in study order (JLPT → strokes → id).
         public var levelKanji: [Kanji] {
-            studyOrder(kanji.elements, exam: ExamType.current, level: level)
+            studyOrder(kanji.elements, exam: ExamType.current, level: ExamLevel(rawValue: level))
                 .filter(\.hasVerifiedStrokeOrder)
         }
         /// Every item available at this level, in the current mode.
@@ -368,8 +368,8 @@ public struct PracticeFeature {
                 state.glossesByID = glosses
                 // Keep the chosen level valid for the current exam (e.g. after
                 // switching JLPT↔漢検 the old "N5" wouldn't exist under 漢検).
-                if !ExamType.current.levels.contains(state.level) {
-                    state.level = ExamType.current.defaultLevel
+                if !ExamType.current.levels.contains(where: { $0.rawValue == state.level }) {
+                    state.level = ExamType.current.defaultLevel.rawValue
                 }
                 // Favourites load in parallel with the kanji list and usually win
                 // the race, and a kanji favourite can only be resolved once the

@@ -15,12 +15,14 @@ public struct KanjiLevel: Equatable, Hashable, Identifiable, Sendable {
 
 /// The ordered levels of the exam, easiest first.
 public func levels(for exam: ExamType = .current) -> [KanjiLevel] {
-    exam.levels.map { KanjiLevel(level: $0) }
+    exam.levels.map { KanjiLevel(level: $0.rawValue) }
 }
 
-/// The kanji belonging to a level of the given exam.
+/// The kanji belonging to a level of the given exam. The level label carries its
+/// own exam (`ExamLevel.exam`), so `exam` is only a fallback for an unknown label.
 public func kanjiIn(_ all: [Kanji], in level: KanjiLevel, exam: ExamType = .current) -> [Kanji] {
-    all.filter { $0.belongs(to: level.level, exam: exam) }
+    guard let lvl = ExamLevel(rawValue: level.level) else { return [] }
+    return all.filter { $0.belongs(to: lvl) }
 }
 
 /// Free-text match: the literal, any on/kun reading (kun dots ignored), or the

@@ -37,7 +37,7 @@ public struct KankenPaper: Equatable, Sendable {
         }
     }
 
-    public static func official(for level: String) -> KankenPaper? { papers[level] }
+    public static func official(for level: ExamLevel) -> KankenPaper? { papers[level.rawValue] }
 
     /// The 大問 marker printed on the paper: 一, 二, … 十一.
     public static func numeral(_ index: Int) -> String {

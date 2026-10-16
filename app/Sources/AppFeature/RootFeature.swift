@@ -55,7 +55,7 @@ public struct RootFeature {
         public var bookmarkedIDs: [Int] = []
         // 오답노트 entries due today at the plan's level (Home's 오답 복습 tile).
         public var wrongDue = 0
-        public var wrongDueLevel: String?
+        public var wrongDueLevel: ExamLevel?
         public var path = StackState<Path.State>()
         // The active full-screen study session, if any.
         @Presents public var session: Session.State?
@@ -80,21 +80,21 @@ public struct RootFeature {
         case openWordDictionary
         case openExpressionDictionary
         case openYojiDictionary
-        case openStats(level: String)
+        case openStats(level: ExamLevel)
         /// mykanji://review | study | notebook — from a notification or widget.
         case openLink(URL)
         case bookmarksAppeared
         case bookmarksLoaded([Int])
-        case refreshWrongDue(level: String)
+        case refreshWrongDue(level: ExamLevel)
         case wrongDueLoaded(Int)
-        case startWrongNoteReview(level: String, language: AppLanguage)
+        case startWrongNoteReview(level: ExamLevel, language: AppLanguage)
         case startStudy(pullAhead: Bool)
         case startPractice(mode: PracticeFeature.State.Mode, favorites: Bool = false)
         case startQuiz(level: String, planned: [Int])
-        case startKanken(level: String)
+        case startKanken(level: ExamLevel)
         // Mock papers launch straight from Home, bypassing the section hub.
-        case startKankenRealExam(level: String, language: AppLanguage)
-        case startKankenMock(level: String, perSection: Int, language: AppLanguage)
+        case startKankenRealExam(level: ExamLevel, language: AppLanguage)
+        case startKankenMock(level: ExamLevel, perSection: Int, language: AppLanguage)
         case path(StackActionOf<Path>)
         case sessionPath(StackActionOf<Path>)
         case session(PresentationAction<Session.Action>)
@@ -135,7 +135,7 @@ public struct RootFeature {
                 return .none
 
             case let .levelSelected(level):
-                let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: level.level)
+                let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: ExamLevel(rawValue: level.level))
                 state.path.append(
                     .kanjiList(KanjiListPathFeature.State(
                         title: level.label, kanji: items, glosses: state.review.glosses)))
@@ -164,21 +164,21 @@ public struct RootFeature {
                 // The plan lives in @AppStorage; read it the same way the views do.
                 let defaults = UserDefaults.standard
                 let exam = ExamType(rawValue: defaults.string(forKey: "examType") ?? "") ?? .jlpt
-                let level = defaults.string(forKey: "targetLevel").flatMap {
-                    exam.levels.contains($0) ? $0 : nil
-                } ?? exam.defaultLevel
+                let level = defaults.string(forKey: "targetLevel")
+                    .flatMap(ExamLevel.init(rawValue:))
+                    .flatMap { exam.levels.contains($0) ? $0 : nil } ?? exam.defaultLevel
                 let language = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .ko
                 state.path.removeAll()
                 state.showSettings = false
                 switch url.host() {
                 case "study": return .send(.startStudy(pullAhead: false))
                 case "notebook": return .send(.startWrongNoteReview(level: level, language: language))
-                default: return .send(.startQuiz(level: level, planned: []))
+                default: return .send(.startQuiz(level: level.rawValue, planned: []))
                 }
 
             case let .openStats(level):
                 state.path.append(.stats(StatsFeature.State(
-                    exam: ExamType.of(level: level), level: level,
+                    exam: level.exam, level: level,
                     kanji: state.review.kanji.elements, records: state.review.records.elements,
                     today: state.review.today)))
                 return .none
@@ -233,7 +233,7 @@ public struct RootFeature {
 
             // Dictionary browse (from the study hub) → drill into a level / a searched kanji.
             case let .path(.element(id: _, action: .dictionary(.levelSelected(level)))):
-                let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: level.level)
+                let items = studyOrder(state.review.kanji.elements, exam: ExamType.current, level: ExamLevel(rawValue: level.level))
                 state.path.append(
                     .kanjiList(KanjiListPathFeature.State(
                         title: level.label, kanji: items, glosses: state.review.glosses)))

@@ -202,7 +202,7 @@ struct StatsView: View {
             SectionHeader(L.byLevel[appLanguage], accent: Palette.teal)
             ForEach(store.levelProgress) { progress in
                 HStack(spacing: 10) {
-                    Text(progress.level)
+                    Text(progress.level.label)
                         .font(.kawaiiJP(14, weight: .bold)).japaneseGlyphs()
                         .foregroundStyle(progress.level == store.level ? Palette.accent : Palette.ink)
                         .frame(width: 52, alignment: .leading)

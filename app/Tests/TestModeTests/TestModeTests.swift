@@ -46,7 +46,7 @@ final class QuizItemUnderlineTests: XCTestCase {
 
 final class AdvancedKankenSectionTests: XCTestCase {
     func testPreFirstSectionsMatchOfficialPaperOrder() {
-        let sections = ExamType.kanken.sections(for: "準1級")
+        let sections = ExamType.kanken.sections(for: .kPre1)
 
         XCTAssertEqual(
             sections.map(\.jaTitle),
@@ -61,7 +61,7 @@ final class AdvancedKankenSectionTests: XCTestCase {
     }
 
     func testFirstSectionsMatchOfficialPaperOrder() {
-        let sections = ExamType.kanken.sections(for: "1級")
+        let sections = ExamType.kanken.sections(for: .k1)
 
         XCTAssertEqual(
             sections.map(\.jaTitle),

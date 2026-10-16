@@ -22,7 +22,7 @@ final class CurriculumTests: XCTestCase {
                      k(2, strokes: 3, grade: 1, jlpt: "N4"),
                      k(3, strokes: 2, grade: 1, jlpt: "N5")]
         // Only N5, ordered by strokes: id 3 (2str) then id 1 (5str).
-        XCTAssertEqual(studyOrder(input, exam: .jlpt, level: "N5").map(\.id), [3, 1])
+        XCTAssertEqual(studyOrder(input, exam: .jlpt, level: .n5).map(\.id), [3, 1])
         // nil level = all.
         XCTAssertEqual(studyOrder(input, exam: .jlpt, level: nil).count, 3)
     }
@@ -37,8 +37,8 @@ final class CurriculumTests: XCTestCase {
               memberships: ["10級"]),
         ]
 
-        XCTAssertEqual(studyOrder(input, exam: .kanken, level: "準1級").map(\.id), [1])
-        XCTAssertEqual(studyOrder(input, exam: .kanken, level: "1級").map(\.id), [1, 2])
+        XCTAssertEqual(studyOrder(input, exam: .kanken, level: .kPre1).map(\.id), [1])
+        XCTAssertEqual(studyOrder(input, exam: .kanken, level: .k1).map(\.id), [1, 2])
     }
 
     func testRemainingNewAndDaysToFinish() {
