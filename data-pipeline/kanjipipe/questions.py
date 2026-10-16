@@ -41,6 +41,8 @@ _DAKUTEN_PAIRS = [
 _DAKUTEN = str.maketrans(dict(_DAKUTEN_PAIRS))
 _UNDAKUTEN = str.maketrans({v: k for k, v in _DAKUTEN_PAIRS})
 _HANDAKUTEN = {"は": "ぱ", "ひ": "ぴ", "ふ": "ぷ", "へ": "ぺ", "ほ": "ぽ"}
+_HANDAKU = str.maketrans(_HANDAKUTEN)
+_UNHANDAKU = str.maketrans({v: k for k, v in _HANDAKUTEN.items()})
 _UNVOICE = {**{v: k for k, v in _DAKUTEN_PAIRS},
             **{v: k for k, v in _HANDAKUTEN.items()}}
 # 促音便: 学(がく)+校 → がっこう, 骨(こつ)+折 → こっせつ.
@@ -160,16 +162,23 @@ def perturb_reading(reading: str) -> list[str]:
     Only kana come back, and never the input itself — a "distractor" equal to
     the answer would make the question unanswerable.
     """
-    out: list[str] = []
-    for candidate in (
+    candidates: list[str] = [
         reading.translate(_DAKUTEN),        # 濁点をつけてしまう
         reading.translate(_UNDAKUTEN),      # 濁点を落とす
+        reading.translate(_HANDAKU),        # 半濁点をつけてしまう (ほう→ぽう)
+        reading.translate(_UNHANDAKU),      # 半濁点を落とす
         reading.replace("っ", "") if "っ" in reading else reading + "っ",
-        reading.replace("ゅ", "") if "ゅ" in reading else reading,
         reading.replace("ょう", "ゅう") if "ょう" in reading
         else reading.replace("ゅう", "ょう"),
-        reading.replace("う", "") if reading.endswith("う") else reading + "う",
-    ):
+        # 長音の付け落とし: trailing う (お/う段) と trailing い (え段): こう→こ, けい→け.
+        reading[:-1] if reading.endswith("う") else reading + "う",
+        reading[:-1] if reading.endswith("い") else reading + "い",
+    ]
+    # 拗音を落とす: きゃ→き, しょ→し.
+    candidates += [reading.replace(small, "") for small in ("ゃ", "ゅ", "ょ")
+                   if small in reading]
+    out: list[str] = []
+    for candidate in candidates:
         if candidate != reading and _is_kana(candidate) and candidate not in out:
             out.append(candidate)
     return out
@@ -624,10 +633,15 @@ def reading_distractors(
 
     add_near()
     round_robin(loose_b)
+    # Prefer a second confusable near miss over a bland generic filler — but
+    # only beside at least one real reading (near_used < len(chosen)), so three
+    # near misses never stand together.
+    if len(chosen) < _OPTION_COUNT - 1 and near_used < len(chosen):
+        add_near()
     order = ["generic"]
     round_robin(close_b)
     round_robin(loose_b)
-    # A second near miss only beside at least one real reading.
+    # Last resort: a second near miss rather than come up short.
     if len(chosen) == _OPTION_COUNT - 2 and near_used < len(chosen):
         add_near()
     if len(chosen) < _OPTION_COUNT - 1:

@@ -99,6 +99,25 @@ def test_perturbations_are_kana_and_differ_from_the_source(reading):
         assert all("ぁ" <= ch <= "ゟ" for ch in variant), variant
 
 
+def test_perturbations_trap_o_row_long_vowels():
+    # 長音を落とす: こう → こ (the classic 漢検 読み trap).
+    assert "こ" in perturb_reading("こう")
+    assert "しょ" in perturb_reading("しょう")
+
+
+def test_perturbations_trap_e_row_long_vowels():
+    # えい段の長音: けい → け, せい → せ — missed before (only trailing う).
+    assert "け" in perturb_reading("けい")
+    assert "せい" in perturb_reading("ぜい")  # and the dakuten pair besides
+    assert "せ" in perturb_reading("せい")
+
+
+def test_perturbations_trap_handakuten():
+    # 半濁点の付け間違い: ひゃく → ぴゃく, ほう → ぽう.
+    assert "ぴゃく" in perturb_reading("ひゃく")
+    assert "ぽう" in perturb_reading("ほう")
+
+
 # ── orthography (書き取り) ──────────────────────────────────────────────────
 
 def test_orthography_blanks_the_target_kanji_and_shows_the_reading():
@@ -279,6 +298,21 @@ def test_reading_distractors_never_three_near_misses():
         alternatives={"frame": [], "own": [], "lookalike": [],
                       "near": ["じん", "ちいん", "ちゅん"]},
         banned={"ちんせい"}, rng=_rng()) is None
+
+
+def test_reading_distractors_prefer_a_near_miss_over_bland_generic():
+    """With one real reading to anchor the question, a confusable near miss
+    beats a generic same-length filler — two traps, not one."""
+    out = reading_distractors(
+        ["ちん", "せい"], {0}, "砧声",
+        alternatives={"frame": ["じゅう"], "own": [], "lookalike": [],
+                      "near": ["じん", "ちいん"],
+                      "generic": ["ばん", "もん"]},
+        banned={"ちんせい"}, rng=_rng())
+    assert out is not None and len(out) == 3
+    # both near misses are shown; the bland generic fillers are not needed.
+    assert "じんせい" in out and "ちいんせい" in out
+    assert "ばんせい" not in out and "もんせい" not in out
 
 
 def test_kana_frame_rejects_distractors_that_drop_the_okurigana():
