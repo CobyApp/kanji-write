@@ -145,12 +145,13 @@ final class DictionaryClientTests: XCTestCase {
         XCTAssertTrue(strokes.allSatisfy { memberIDs.contains($0.kanjiID) })
         XCTAssertTrue(onKun.allSatisfy { memberIDs.contains($0.kanjiID) })
         XCTAssertTrue(questions.allSatisfy { memberIDs.contains($0.kanjiID) })
-        try await assertWords(
-            try await client.quizWords(level, 20),
-            containAnyKanjiIn: memberIDs,
-            client: client,
-            level: level
-        )
+        // Words at a JLPT level come from the tagged vocabulary list, not the
+        // 漢検 quizWords query (which scopes by kanji 級 membership and returns
+        // nothing for an N-level). jlptVocabulary is scoped by word.jlpt_level
+        // in SQL, so the contract here is simply that the level has vocabulary;
+        // WordEntry carries no level to re-check kanji membership against.
+        let jlptWords = try await client.jlptVocabulary(level, 20)
+        XCTAssertFalse(jlptWords.isEmpty)
         try await assertWords(
             try await client.examOkurigana(level, 20),
             containAnyKanjiIn: memberIDs,
