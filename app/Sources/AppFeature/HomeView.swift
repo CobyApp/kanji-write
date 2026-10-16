@@ -304,6 +304,7 @@ struct HomeView: View {
                     wordDictionaryButton
                     expressionDictionaryButton
                     if examType == .kanken { yojiDictionaryButton }
+                    radicalButton
                 }
                 launcherSection(L.sectionCollection[appLanguage], Palette.teal) {
                     statsButton
@@ -399,6 +400,7 @@ struct HomeView: View {
                 wordDictionaryButton
                 expressionDictionaryButton
                 if examType == .kanken { yojiDictionaryButton }
+                radicalButton
             }
             launcherSection(L.sectionCollection[appLanguage], Palette.teal, grid: true) {
                 statsButton
@@ -610,6 +612,15 @@ struct HomeView: View {
                  subtitle: L.kankenYojiDesc[appLanguage], count: nil,
                  soft: Palette.grapeSoft, accent: Palette.grape) {
             store.send(.openYojiDictionary)
+        }
+    }
+
+    /// 부수 사전 — browse the 214 radicals and the kanji that use each.
+    private var radicalButton: some View {
+        launcher(icon: "square.grid.3x3.topleft.filled", title: L.radicalDictionary[appLanguage],
+                 subtitle: L.radicalDictionarySub[appLanguage], count: nil,
+                 soft: Palette.lavenderSoft, accent: Palette.lavender) {
+            store.send(.openRadicalDictionary)
         }
     }
 

@@ -87,6 +87,10 @@ public struct DictionaryClient: Sendable {
     /// Kanji built from the same parts (待 → 持 特 時 侍), most alike first —
     /// the look-alikes 誤字訂正 is made of.
     public var similarKanji: @Sendable (_ kanjiID: Int, _ limit: Int) async throws -> [KanjiRef]
+    /// The 214 Kangxi radicals with their 部首名 / meanings and how many kanji
+    /// carry each — the browsable 부수 reference. Empty on an older bundle that
+    /// predates the `radical_reference` table.
+    public var radicals: @Sendable () async throws -> [RadicalEntry]
 }
 
 extension DictionaryClient: TestDependencyKey {

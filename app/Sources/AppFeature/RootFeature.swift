@@ -25,6 +25,7 @@ public struct RootFeature {
         case wordDictionary(WordDictionaryFeature)
         case yojiDictionary(YojiDictionaryFeature)
         case yojiDetail(YojiDetailFeature)
+        case radicalDictionary(RadicalReferenceFeature)
         case stats(StatsFeature)
     }
 
@@ -80,6 +81,7 @@ public struct RootFeature {
         case openWordDictionary
         case openExpressionDictionary
         case openYojiDictionary
+        case openRadicalDictionary
         case openStats(level: ExamLevel)
         /// mykanji://review | study | notebook — from a notification or widget.
         case openLink(URL)
@@ -157,6 +159,20 @@ public struct RootFeature {
 
             case .openYojiDictionary:
                 state.path.append(.yojiDictionary(YojiDictionaryFeature.State()))
+                return .none
+
+            case .openRadicalDictionary:
+                state.path.append(.radicalDictionary(RadicalReferenceFeature.State()))
+                return .none
+
+            case let .path(.element(id: _, action: .radicalDictionary(.radicalTapped(radical)))):
+                // Drill into the kanji that use this radical, in study order.
+                let items = studyOrder(
+                    state.review.kanji.elements.filter { $0.radical == radical.number },
+                    exam: ExamType.current)
+                state.path.append(.kanjiList(KanjiListPathFeature.State(
+                    title: "\(radical.glyph) \(radical.nameJa)",
+                    kanji: items, glosses: state.review.glosses)))
                 return .none
 
             case let .openLink(url):

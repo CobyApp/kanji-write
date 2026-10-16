@@ -754,6 +754,32 @@ extension DictionaryClient: DependencyKey {
                     """, arguments: [kanjiID, limit])
                 return rows.map { KanjiRef(id: $0["id"], literal: $0["literal"]) }
             }
+        },
+        radicals: {
+            let queue = try openBundledDatabase()
+            return try await queue.read { db -> [RadicalEntry] in
+                guard try db.tableExists("radical_reference") else { return [] }
+                var countByNumber: [Int: Int] = [:]
+                for row in try Row.fetchAll(db, sql: """
+                    SELECT radical AS n, COUNT(*) AS c FROM kanji
+                    WHERE radical IS NOT NULL GROUP BY radical
+                    """) {
+                    countByNumber[row["n"]] = row["c"]
+                }
+                let rows = try Row.fetchAll(db, sql: """
+                    SELECT number, glyph, strokes, name_ja,
+                           meaning_ja, meaning_ko, meaning_zh, meaning_en
+                    FROM radical_reference ORDER BY number
+                    """)
+                return rows.map { row in
+                    RadicalEntry(
+                        number: row["number"], glyph: row["glyph"], strokes: row["strokes"],
+                        nameJa: row["name_ja"], meaningJa: row["meaning_ja"],
+                        meaningKo: row["meaning_ko"], meaningZh: row["meaning_zh"],
+                        meaningEn: row["meaning_en"],
+                        kanjiCount: countByNumber[row["number"]] ?? 0)
+                }
+            }
         }
     )
 

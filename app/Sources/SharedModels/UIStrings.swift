@@ -316,6 +316,25 @@ public enum L {
     public static let noYojiFound = L10nText(
         ko: "사자성어를 찾을 수 없어요", ja: "四字熟語が見つかりません",
         zh: "找不到四字成语", en: "No idioms found")
+    public static let radicalDictionary = L10nText(
+        ko: "부수 사전", ja: "部首辞典", zh: "部首词典", en: "Radical dictionary")
+    public static let radicalDictionarySub = L10nText(
+        ko: "부수 이름·뜻과 그 부수의 한자", ja: "部首名・意味とその漢字",
+        zh: "部首名称、意思及其汉字", en: "Radical names, meanings, and their kanji")
+    public static let radicalSearchPrompt = L10nText(
+        ko: "부수·이름·뜻으로 검색", ja: "部首・名前・意味で検索",
+        zh: "按部首、名称、意思搜索", en: "Search radicals, names, meanings")
+    public static let noRadicalFound = L10nText(
+        ko: "부수를 찾을 수 없어요", ja: "部首が見つかりません",
+        zh: "找不到部首", en: "No radicals found")
+    public static func radicalKanjiCount(_ n: Int, _ language: AppLanguage) -> String {
+        switch language {
+        case .ko: "한자 \(n)자"
+        case .ja: "漢字\(n)字"
+        case .zh: "\(n)个汉字"
+        case .en: n == 1 ? "1 kanji" : "\(n) kanji"
+        }
+    }
     public static let allLevels = L10nText(ko: "전체", ja: "すべて", zh: "全部", en: "All")
     public static let kankenHubSubtitle = L10nText(
         ko: "출제 유형별 연습", ja: "出題形式ごとの練習", zh: "按题型练习", en: "Practice by exam section")

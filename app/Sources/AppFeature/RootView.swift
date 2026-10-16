@@ -197,6 +197,8 @@ func pathDestination(_ store: StoreOf<RootFeature.Path>) -> some View {
         YojiDictionaryView(store: s)
     case let .yojiDetail(s):
         YojiDetailView(store: s)
+    case let .radicalDictionary(s):
+        RadicalReferenceView(store: s)
     case let .stats(s):
         StatsView(store: s)
     }
