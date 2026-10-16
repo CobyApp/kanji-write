@@ -278,15 +278,21 @@ public struct RootFeature {
             // the hub — the mock menus now live on Home.
             case let .startKankenRealExam(level, language):
                 state.sessionPath.removeAll()
-                state.session = .kanken(KankenExamFeature.State(level: level, language: language))
-                // Open on the pre-exam briefing; the sitting starts from there.
-                return .concatenate(
-                    .send(.session(.presented(.kanken(.onAppear(level: level, language: language))))),
-                    .send(.session(.presented(.kanken(.showRealExamIntro)))))
+                // Open ON the pre-exam briefing. Set the intro flag synchronously
+                // at creation so the hub (the 유형별 학습 section list) never flashes
+                // first — `.concatenate` would gate the briefing behind onAppear's
+                // async stat loads and show the hub until they finished.
+                var realExam = KankenExamFeature.State(level: level, language: language)
+                realExam.isRealExamIntro = true
+                state.session = .kanken(realExam)
+                return .send(.session(.presented(.kanken(.onAppear(level: level, language: language)))))
             case let .startKankenMock(level, perSection, language):
                 state.sessionPath.removeAll()
                 state.session = .kanken(KankenExamFeature.State(level: level, language: language))
-                return .concatenate(
+                // `.merge`, not `.concatenate`: start building the paper right away
+                // rather than waiting for onAppear's stat loads (which would show
+                // the hub in the meantime).
+                return .merge(
                     .send(.session(.presented(.kanken(.onAppear(level: level, language: language))))),
                     .send(.session(.presented(.kanken(.selectMockExam(perSection: perSection))))))
 

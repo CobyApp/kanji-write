@@ -37,6 +37,10 @@ public struct KankenExamFeature {
         /// points, the official sitting time and pass mark. Set only while one
         /// is being sat (it is also a mock paper, so `isMockExam` is true).
         public var paper: KankenPaper?
+        /// Real exam grading method: true = mark everything at the end (the real
+        /// sitting), false = check each question as you go. Chosen in the
+        /// pre-exam briefing; the reducer needs it to decide whether to reveal.
+        public var deferGrading = true
         /// Mock papers are timed: seconds allowed for the whole paper.
         public var timeLimit: Int?
         public var queue: [KankenQuestion] = []
@@ -227,8 +231,9 @@ public struct KankenExamFeature {
         case selectMockExam(perSection: Int)
         /// Show the pre-exam briefing before the official-format sitting.
         case showRealExamIntro
-        /// Sit the level's paper in its official format.
-        case selectRealExam
+        /// Sit the level's paper in its official format. `deferGrading` carries
+        /// the briefing's grading-method choice into the session.
+        case selectRealExam(deferGrading: Bool)
         case loaded([KankenQuestion])
         case chose(String)
         case next
@@ -358,9 +363,10 @@ public struct KankenExamFeature {
                 state.started = false
                 return .none
 
-            case .selectRealExam:
+            case let .selectRealExam(deferGrading):
                 guard let paper = KankenPaper.official(for: state.level) else { return .none }
                 state.isRealExamIntro = false
+                state.deferGrading = deferGrading
                 state.paper = paper
                 state.isMockExam = true
                 state.activeSection = nil
@@ -436,8 +442,10 @@ public struct KankenExamFeature {
             case let .chose(option):
                 guard state.chosen == nil else { return .none }
                 state.chosen = option
-                // The real paper gives no marks until the end: answer and move on.
-                return state.isRealExam ? .send(.next) : .none
+                // The real paper with "grade at the end" gives no marks until the
+                // end: answer and move straight on. With "check as you go" (or any
+                // non-real session) we stop so the result and explanation show.
+                return (state.isRealExam && state.deferGrading) ? .send(.next) : .none
 
             case .next:
                 guard let item = state.queue.first else { return .none }
@@ -485,7 +493,7 @@ public struct KankenExamFeature {
                 // rather than replaying notes that were already cleared.
                 if state.isWrongNote { return .send(.selectWrongNote) }
                 // A fresh paper each sitting, as a real retake would be.
-                if state.isRealExam { return .send(.selectRealExam) }
+                if state.isRealExam { return .send(.selectRealExam(deferGrading: state.deferGrading)) }
                 // A mock paper keeps paper order, as the real sitting does.
                 if !state.isMockExam { state.sessionItems.shuffle() }
                 state.queue = state.sessionItems

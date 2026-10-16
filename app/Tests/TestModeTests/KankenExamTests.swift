@@ -317,6 +317,33 @@ final class RealExamFeatureTests: XCTestCase {
         XCTAssertNil(store.state.paper)
     }
 
+    func testRealExamInstantGradingStopsOnEachAnswer() async {
+        // "Check as you go" (deferGrading = false): a chosen answer is NOT
+        // auto-advanced — it stays revealed so the result/explanation show, and
+        // the learner taps Next themselves.
+        var state = KankenExamFeature.State(level: .k2)
+        state.isMockExam = true
+        state.paper = KankenPaper.official(for: .k2)
+        state.deferGrading = false
+        let store = TestStore(initialState: state) { KankenExamFeature() } withDependencies: {
+            $0.date.now = Date(timeIntervalSince1970: 1_000)
+            $0.wrongNoteStore.update = { transform in transform([]) }
+        }
+        store.exhaustivity = .off
+        func item(_ id: String) -> KankenQuestion {
+            var q = KankenQuestion(id: id, type: .reading, kanjiID: 1, prompt: "p",
+                                   options: ["a", "b"], answer: "a", sectionID: "reading")
+            q.points = 1; q.partIndex = 0
+            return q
+        }
+        await store.send(.loaded([item("r1"), item("r2")]))
+        await store.send(.chose("a"))
+        XCTAssertEqual(store.state.chosen, "a")              // revealed, not cleared
+        XCTAssertEqual(store.state.queue.map(\.id), ["r1", "r2"])  // did not advance
+        await store.send(.next)
+        XCTAssertEqual(store.state.queue.map(\.id), ["r2"])  // advances on Next
+    }
+
     func testRealExamDefersWrittenAnswersUntilEndGrading() async {
         var state = KankenExamFeature.State(level: .k2)
         state.isMockExam = true

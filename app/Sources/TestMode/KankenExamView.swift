@@ -46,7 +46,7 @@ public struct KankenExamView: View {
         .sensoryFeedback(trigger: store.chosen) { _, new in
             // The real-format paper is marked only at the end; a buzz per
             // answer would mark it as it goes.
-            guard new != nil, !store.isRealExam else { return nil }
+            guard new != nil, !(store.isRealExam && deferGrading) else { return nil }
             return store.isCorrect ? .success : .error
         }
     }
@@ -138,7 +138,7 @@ public struct KankenExamView: View {
                 }
                 .roundedCard(padding: 14)
 
-                Button { store.send(.selectRealExam) } label: {
+                Button { store.send(.selectRealExam(deferGrading: deferGrading)) } label: {
                     Text(L.realExamStart[appLanguage])
                         .font(.kawaii(16, weight: .bold, language: appLanguage)).foregroundStyle(.white)
                         .frame(maxWidth: .infinity).padding(.vertical, 14)
@@ -522,7 +522,7 @@ public struct KankenExamView: View {
         Group {
             if canType(item) {
                 TypedReadingAnswer(answer: item.answer, chosen: store.chosen, language: appLanguage,
-                                   submitTitle: store.isRealExam ? L.next[appLanguage] : nil) {
+                                   submitTitle: (store.isRealExam && deferGrading) ? L.next[appLanguage] : nil) {
                     store.send(.chose($0))
                 }
             } else if canHandwrite(item) {
