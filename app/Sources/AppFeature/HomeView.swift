@@ -688,7 +688,7 @@ struct HomeView: View {
     private var favoritesButton: some View {
         launcher(icon: "star.fill", title: L.favorites[appLanguage],
                  subtitle: L.writeFavoriteSub[appLanguage], count: nil,
-                 soft: Palette.butterSoft, accent: Palette.butter) {
+                 soft: Palette.pinkSoft, accent: Palette.pink) {
             store.send(.startPractice(mode: .kanji, favorites: true))
         }
     }
@@ -697,7 +697,7 @@ struct HomeView: View {
     private var expressionDictionaryButton: some View {
         launcher(icon: "quote.opening", title: L.expressionDictionary[appLanguage],
                  subtitle: L.expressionSub[appLanguage], count: nil,
-                 soft: Palette.coralSoft, accent: Palette.coral) { store.send(.openExpressionDictionary) }
+                 soft: Palette.tealSoft, accent: Palette.teal) { store.send(.openExpressionDictionary) }
     }
 
     /// 학습 기록 — daily activity, per-level progress, exam readiness.

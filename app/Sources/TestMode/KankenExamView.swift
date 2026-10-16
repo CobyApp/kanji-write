@@ -59,8 +59,8 @@ public struct KankenExamView: View {
                 header
                 answerModeCard
                 weakMixCard
-                ForEach(examType.sections(for: store.level)) { section in
-                    sectionCard(section)
+                ForEach(Array(examType.sections(for: store.level).enumerated()), id: \.element.id) { i, section in
+                    sectionCard(section, tint: Palette.tint(i))
                 }
                 wrongNoteCard
             }
@@ -235,14 +235,14 @@ public struct KankenExamView: View {
         .roundedCard(padding: 14)
     }
 
-    private func sectionCard(_ section: ExamSection) -> some View {
+    private func sectionCard(_ section: ExamSection, tint: (soft: Color, accent: Color)) -> some View {
         Button { store.send(.selectSection(section)) } label: {
             HStack(spacing: 14) {
                 Text(section.numeral)
                     .font(.kawaiiJP(20, weight: .bold)).foregroundStyle(.white)
                     .lineLimit(1).minimumScaleFactor(0.5)
                     .frame(width: 44, height: 44)
-                    .background(Palette.accent)
+                    .background(tint.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 VStack(alignment: .leading, spacing: 3) {
                     // Title + localized name stack vertically and wrap. Keeping
@@ -255,7 +255,7 @@ public struct KankenExamView: View {
                     if let name = section.localizedName(appLanguage) {
                         Text(name)
                             .font(.kawaii(13, weight: .bold, language: appLanguage))
-                            .foregroundStyle(Palette.accent)
+                            .foregroundStyle(tint.accent)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Text(section.instruction(appLanguage))
