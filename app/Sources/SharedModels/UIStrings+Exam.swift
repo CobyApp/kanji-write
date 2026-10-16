@@ -37,12 +37,14 @@ extension L {
     public static let answerMode = L10nText(ko: "답하는 방법", ja: "解答方法", zh: "作答方式", en: "Answer by")
     public static let answerModeChoice = L10nText(ko: "보기 선택", ja: "選択肢", zh: "选择", en: "Choices")
     public static let answerModeType = L10nText(
-        ko: "직접 쓰기", ja: "書いて答える", zh: "自己写", en: "Write it")
+        ko: "입력", ja: "入力", zh: "输入", en: "Type")
+    public static let answerModeWrite = L10nText(
+        ko: "손글씨", ja: "手書き", zh: "手写", en: "Write")
     public static let answerModeHint = L10nText(
-        ko: "실제 시험처럼 읽기는 히라가나로 입력하고, 쓰기 문제는 손으로 써 봐요.",
-        ja: "本番と同じく、読みはひらがなで入力し、書き取りは手で書きます。",
-        zh: "像正式考试一样：读音用平假名输入，书写题亲手写。",
-        en: "Like the real exam: type readings in hiragana, and write the writing questions by hand.")
+        ko: "실제 시험처럼 읽기는 히라가나로 입력하거나 손으로 쓰고, 쓰기 문제는 손으로 써 봐요.",
+        ja: "本番と同じく、読みはひらがなで入力または手書きし、書き取りは手で書きます。",
+        zh: "像正式考试一样：读音可用平假名输入或手写，书写题亲手写。",
+        en: "Like the real exam: answer readings by typing or writing hiragana, and write the writing questions by hand.")
     public static let typeReadingPlaceholder = L10nText(
         ko: "히라가나로 읽기를 입력", ja: "読みをひらがなで入力", zh: "用平假名输入读音", en: "Type the reading in hiragana")
     public static let checkAnswer = L10nText(ko: "채점하기", ja: "答え合わせ", zh: "核对答案", en: "Check")

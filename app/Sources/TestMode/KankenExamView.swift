@@ -12,10 +12,11 @@ public struct KankenExamView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("examType") private var examType: ExamType = .kanken
     // Answer by writing (type the reading, write the kanji by hand) vs. choosing.
-    // Kept per exam: 漢検 is a writing exam, so it defaults on; JLPT 文字・語彙 is
-    // multiple-choice, so it defaults off.
-    @AppStorage("kankenWriteMode") private var kankenWriteMode = true
-    @AppStorage("jlptWriteMode") private var jlptWriteMode = false
+    // Kept per exam: 漢検 is a writing exam, so it defaults to typing readings +
+    // handwriting kanji; JLPT 文字・語彙 is multiple-choice, so it defaults to 選ぶ.
+    // "손글씨" writes every answer (readings included) by hand and self-marks it.
+    @AppStorage("kankenAnswerMode") private var kankenAnswerMode: ExamAnswerMode = .type
+    @AppStorage("jlptAnswerMode") private var jlptAnswerMode: ExamAnswerMode = .choose
     // 실전 모의고사: self-mark written answers all at the end (true) vs. as you
     // go (false). Honors what the real exam does by default — all at the end.
     @AppStorage("examDeferGrading") private var deferGrading = true
@@ -26,10 +27,12 @@ public struct KankenExamView: View {
         self.store = store
     }
 
-    private var writeMode: Bool { examType == .kanken ? kankenWriteMode : jlptWriteMode }
-    private var writeModeBinding: Binding<Bool> {
-        examType == .kanken ? $kankenWriteMode : $jlptWriteMode
+    private var answerMode: ExamAnswerMode { examType == .kanken ? kankenAnswerMode : jlptAnswerMode }
+    private var answerModeBinding: Binding<ExamAnswerMode> {
+        examType == .kanken ? $kankenAnswerMode : $jlptAnswerMode
     }
+    /// Anything other than 選ぶ: the hint applies and answers aren't multiple choice.
+    private var writeMode: Bool { answerMode != .choose }
 
     public var body: some View {
         ZStack {
@@ -219,9 +222,10 @@ public struct KankenExamView: View {
                     .font(.kawaii(13, weight: .bold, language: appLanguage))
                     .foregroundStyle(Palette.inkSoft)
                 Spacer()
-                Picker(L.answerMode[appLanguage], selection: writeModeBinding) {
-                    Text(L.answerModeChoice[appLanguage]).tag(false)
-                    Text(L.answerModeType[appLanguage]).tag(true)
+                Picker(L.answerMode[appLanguage], selection: answerModeBinding) {
+                    Text(L.answerModeChoice[appLanguage]).tag(ExamAnswerMode.choose)
+                    Text(L.answerModeType[appLanguage]).tag(ExamAnswerMode.type)
+                    Text(L.answerModeWrite[appLanguage]).tag(ExamAnswerMode.write)
                 }
                 .pickerStyle(.segmented)
                 .frame(maxWidth: 220)
@@ -495,23 +499,33 @@ public struct KankenExamView: View {
         }
     }
 
-    /// Kana-only answers are typed — the real 読み・音訓 are written, not chosen.
+    /// Typed kana input — only in 입력(type) mode, for a kana-only answer.
     private func canType(_ item: KankenQuestion) -> Bool {
-        writeMode && !isChoiceOnly(item) && ExamKana.isKanaOnly(item.answer)
+        answerMode == .type && !isChoiceOnly(item) && ExamKana.isKanaOnly(item.answer)
     }
 
-    /// Anything answered by writing kanji — 書き取り, 同音・同訓異字, 四字熟語,
-    /// 対義語・類義語, 誤字訂正, 送りがな, 漢字識別 … — is written by hand on 漢検,
-    /// so in write mode any kanji answer goes to the canvas.
-    private func canHandwrite(_ item: KankenQuestion) -> Bool {
-        guard writeMode, !isChoiceOnly(item) else { return false }
-        // A short kanji word is something you write; a long phrase (四字熟語's
-        // "pick the meaning", 用法's example sentences) is something you choose.
-        guard item.answer.count <= 6 else { return false }
-        return item.answer.unicodeScalars.contains { scalar in
+    private func hasKanji(_ text: String) -> Bool {
+        text.unicodeScalars.contains { scalar in
             (0x4E00...0x9FFF).contains(scalar.value)
                 || (0x3400...0x4DBF).contains(scalar.value)
                 || (0xF900...0xFAFF).contains(scalar.value)
+        }
+    }
+
+    /// Handwritten answers on the canvas.
+    /// * 입력(type): only kanji answers (書き取り, 同音異字 …); kana go to `canType`.
+    /// * 손글씨(write): every short answer by hand, readings included — long
+    ///   meaning phrases (四字熟語 "pick the meaning", 用法) still fall to choices.
+    private func canHandwrite(_ item: KankenQuestion) -> Bool {
+        guard !isChoiceOnly(item) else { return false }
+        switch answerMode {
+        case .choose:
+            return false
+        case .type:
+            return item.answer.count <= 6 && hasKanji(item.answer)
+        case .write:
+            return item.answer.count <= 10
+                && (ExamKana.isKanaOnly(item.answer) || hasKanji(item.answer))
         }
     }
 
