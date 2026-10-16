@@ -27,6 +27,8 @@ import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
+from kanjipipe.questions import perturb_reading
+
 SEED = 20260927
 LEVELS = ("準1級", "1級")
 
@@ -43,6 +45,24 @@ def split_kun(value: str) -> tuple[str, str] | None:
 
 def to_katakana(text: str) -> str:
     return "".join(chr(ord(c) + 0x60) if "ぁ" <= c <= "ゖ" else c for c in text)
+
+
+def near_miss_traps(answer: str, forbidden: set[str]) -> list[str]:
+    """Confusable near-miss readings for a 一字訓読み question — the 長音/短音,
+    濁点/半濁点, 促音 and 拗音 slips a careless reader makes (perturb_reading).
+
+    A trap is dropped when it is itself a real reading of the answer kanji
+    (hiragana or katakana form in `forbidden`), which would be a second right
+    answer. Katakana-only answers yield nothing (perturb_reading works on kana
+    and returns only hiragana), so those questions keep their real-reading pool.
+    """
+    out: list[str] = []
+    for trap in perturb_reading(answer):
+        if trap == answer or trap in forbidden or to_katakana(trap) in forbidden:
+            continue
+        if trap not in out:
+            out.append(trap)
+    return out
 
 
 def main() -> int:
@@ -194,7 +214,14 @@ def main() -> int:
             }
 
         if "reading" in need:
-            options = [answer_reading] + [p["stem"] + p["okuri"] for p in picks]
+            # Up to two confusable near-miss traps (長短音/濁点/促音/拗音), the rest
+            # real other-kanji 訓読み — always at least one real reading, so three
+            # near misses never stand alone and point at the answer.
+            traps = near_miss_traps(answer_reading, entry["readings"])
+            rng.shuffle(traps)
+            real = [p["stem"] + p["okuri"] for p in picks]
+            distractors = list(dict.fromkeys(traps[:2] + real))[:3]
+            options = [answer_reading] + distractors
             rng.shuffle(options)
             out.append({
                 "literal": entry["literal"], "level": entry["level"], "kind": "reading",
