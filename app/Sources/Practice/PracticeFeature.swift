@@ -83,7 +83,7 @@ public struct PracticeFeature {
         public var favoriteItems: [PracticeItem] = []
 
         /// Chosen level + range.
-        public var level = "N5"
+        public var level = "10級"
         /// Inclusive 0-based range within levelItems. `count` follows from it —
         /// picking "51st to 80th" is how you actually resume a long 級, and a
         /// start-plus-length control makes you do that arithmetic yourself.

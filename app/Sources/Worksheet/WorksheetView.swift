@@ -41,10 +41,10 @@ private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage
 public struct WorksheetView: View {
     @Bindable public var store: StoreOf<WorksheetFeature>
     @AppStorage("newPerDay") private var newPerDay = 7
-    @AppStorage("targetLevel") private var targetLevel = "N5"
+    @AppStorage("targetLevel") private var targetLevel = "10級"
     @AppStorage("studyStartIndex") private var studyStartIndex = 0
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("examType") private var examType: ExamType = .jlpt
+    @AppStorage("examType") private var examType: ExamType = .kanken
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// Which card of the current kanji is showing (0…`lastCard`).
     @State private var card = 0

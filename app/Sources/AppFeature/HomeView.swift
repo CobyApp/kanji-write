@@ -12,8 +12,8 @@ import WidgetKit
 struct HomeView: View {
     @Bindable var store: StoreOf<RootFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("examType") private var examType: ExamType = .jlpt
-    @AppStorage("targetLevel") private var targetLevel = "N5"
+    @AppStorage("examType") private var examType: ExamType = .kanken
+    @AppStorage("targetLevel") private var targetLevel = "10級"
     @AppStorage("newPerDay") private var newPerDay = 7
     // Study-plan start position: how many kanji to skip at the front of the level.
     @AppStorage("studyStartIndex") private var studyStartIndex = 0

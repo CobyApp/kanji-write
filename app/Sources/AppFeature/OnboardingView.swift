@@ -7,8 +7,8 @@ import SwiftUI
 /// and a 漢検 learner had to find the gear button to discover the other exam.
 struct OnboardingView: View {
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("examType") private var examType: ExamType = .jlpt
-    @AppStorage("targetLevel") private var targetLevel = "N5"
+    @AppStorage("examType") private var examType: ExamType = .kanken
+    @AppStorage("targetLevel") private var targetLevel = "10級"
     @AppStorage("newPerDay") private var newPerDay = 7
     @AppStorage("studyStartIndex") private var studyStartIndex = 0
     @Environment(\.horizontalSizeClass) private var sizeClass

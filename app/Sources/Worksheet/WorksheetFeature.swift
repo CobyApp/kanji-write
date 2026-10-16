@@ -51,7 +51,7 @@ public struct WorksheetFeature {
         public var newPerDay = 7
         /// Target JLPT level for the plan (from `@AppStorage("targetLevel")`); new
         /// kanji are drawn only from this level. nil = all levels.
-        public var targetLevel: ExamLevel? = .n5
+        public var targetLevel: ExamLevel? = .k10
         /// How many kanji to skip at the front of the level (the study plan's
         /// start position), so study can begin mid-level.
         public var startIndex = 0

@@ -301,7 +301,7 @@ private struct WordDictionaryView: View {
     @Bindable var store: StoreOf<WordDictionaryFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
     @AppStorage("dictGridMode") private var gridMode = false
-    @AppStorage("examType") private var examType: ExamType = .jlpt
+    @AppStorage("examType") private var examType: ExamType = .kanken
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 

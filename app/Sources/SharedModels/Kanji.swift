@@ -15,7 +15,7 @@ public enum ExamType: String, CaseIterable, Sendable {
     /// The currently selected exam, read from the shared `examType` default.
     /// Lets non-View code (reducers, helpers) resolve it without a Binding.
     public static var current: ExamType {
-        UserDefaults.standard.string(forKey: "examType").flatMap(ExamType.init(rawValue:)) ?? .jlpt
+        UserDefaults.standard.string(forKey: "examType").flatMap(ExamType.init(rawValue:)) ?? .kanken
     }
 }
 

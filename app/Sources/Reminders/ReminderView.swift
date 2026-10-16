@@ -6,8 +6,8 @@ import SwiftUI
 public struct ReminderView: View {
     @Bindable public var store: StoreOf<ReminderFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("examType") private var examType: ExamType = .jlpt
-    @AppStorage("targetLevel") private var targetLevel = "N5"
+    @AppStorage("examType") private var examType: ExamType = .kanken
+    @AppStorage("targetLevel") private var targetLevel = "10級"
     @AppStorage("studyStartIndex") private var studyStartIndex = 0
     @AppStorage("reminderEnabled") private var enabled = false
     @AppStorage("reminderHour") private var hour = 20

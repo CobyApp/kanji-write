@@ -19,7 +19,7 @@ private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage
 public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("examType") private var examType: ExamType = .jlpt
+    @AppStorage("examType") private var examType: ExamType = .kanken
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// The current question's canvas.
     @State private var drawing = PKDrawing()

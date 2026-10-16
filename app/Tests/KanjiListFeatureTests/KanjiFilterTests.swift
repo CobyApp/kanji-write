@@ -22,7 +22,7 @@ final class KanjiFilterTests: XCTestCase {
     let all: [Kanji] = [.yama, .gaku, .ai, .oyobu]
 
     func testJLPTLevelsOrderAndLabels() {
-        let ls = levels()
+        let ls = levels(for: .jlpt)
         XCTAssertEqual(ls.map(\.label), ["N5", "N4", "N3", "N2", "N1"])
         XCTAssertEqual(ls.map(\.id), ["N5", "N4", "N3", "N2", "N1"])
     }

@@ -10,7 +10,7 @@ import WritingCanvas
 public struct KankenExamView: View {
     @Bindable public var store: StoreOf<KankenExamFeature>
     @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
-    @AppStorage("examType") private var examType: ExamType = .jlpt
+    @AppStorage("examType") private var examType: ExamType = .kanken
     // Answer by writing (type the reading, write the kanji by hand) vs. choosing.
     // Kept per exam: 漢検 is a writing exam, so it defaults on; JLPT 文字・語彙 is
     // multiple-choice, so it defaults off.

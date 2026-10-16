@@ -163,7 +163,7 @@ public struct RootFeature {
                 guard url.scheme == "mykanji" else { return .none }
                 // The plan lives in @AppStorage; read it the same way the views do.
                 let defaults = UserDefaults.standard
-                let exam = ExamType(rawValue: defaults.string(forKey: "examType") ?? "") ?? .jlpt
+                let exam = ExamType(rawValue: defaults.string(forKey: "examType") ?? "") ?? .kanken
                 let level = defaults.string(forKey: "targetLevel")
                     .flatMap(ExamLevel.init(rawValue:))
                     .flatMap { exam.levels.contains($0) ? $0 : nil } ?? exam.defaultLevel

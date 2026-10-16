@@ -12,7 +12,7 @@ public struct KanjiListRow: View {
     private let onSelect: () -> Void
     // The level tag follows the exam the learner picked — showing N2 while they
     // study for the 漢検 (or a 級 in JLPT mode) is just noise.
-    @AppStorage("examType") private var examType: ExamType = .jlpt
+    @AppStorage("examType") private var examType: ExamType = .kanken
 
     public init(kanji: Kanji, meaning: String?, tint: (soft: Color, accent: Color),
                 language: AppLanguage, onSelect: @escaping () -> Void) {
