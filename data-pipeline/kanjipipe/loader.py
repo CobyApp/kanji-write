@@ -159,6 +159,32 @@ def load_yojijukugo(
     conn.commit()
 
 
+def load_radical_reference(
+    conn: sqlite3.Connection,
+    path: str | Path,
+) -> None:
+    entries = json.loads(Path(path).read_text(encoding="utf-8"))
+    conn.executemany(
+        "INSERT INTO radical_reference "
+        "(number, glyph, strokes, name_ja, meaning_ja, meaning_ko, meaning_zh, meaning_en) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [
+            (
+                entry["number"],
+                entry["glyph"],
+                entry["strokes"],
+                entry["nameJa"],
+                entry["meaningJa"],
+                entry["meaningKo"],
+                entry["meaningZh"],
+                entry["meaningEn"],
+            )
+            for entry in entries
+        ],
+    )
+    conn.commit()
+
+
 def load_taigirui(
     conn: sqlite3.Connection,
     path: str | Path,

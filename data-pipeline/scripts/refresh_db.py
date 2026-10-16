@@ -35,9 +35,10 @@ from kanjipipe.ingest.jlpt_vocab import parse_jlpt_vocab  # noqa: E402
 from kanjipipe.ingest.kanjivg_parts import parse_kanjivg_parts  # noqa: E402
 from kanjipipe.similar import load_similar  # noqa: E402
 from kanjipipe.loader import (  # noqa: E402
-    load_jlpt_questions, load_kanji_parts, load_taigirui, load_word_jlpt_levels,
-    load_yojijukugo)
-from kanjipipe.validate import question_defects, starved_sections  # noqa: E402
+    load_jlpt_questions, load_kanji_parts, load_radical_reference, load_taigirui,
+    load_word_jlpt_levels, load_yojijukugo)
+from kanjipipe.validate import (  # noqa: E402
+    question_defects, radical_reference_defects, starved_sections)
 
 QUESTION_FILES = (  # build_db's load order; INSERT OR IGNORE keeps the first
     "sources/jlpt_questions.jsonl",
@@ -55,6 +56,22 @@ def ensure_kanji_part_columns(conn: sqlite3.Connection) -> None:
     for name in ("radical_form", "parts"):
         if name not in columns:
             conn.execute(f"ALTER TABLE kanji ADD COLUMN {name} TEXT")
+
+
+def ensure_radical_reference_table(conn: sqlite3.Connection) -> None:
+    # The shipped DB predates this table, so create it before reloading.
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS radical_reference (
+            number     INTEGER PRIMARY KEY,
+            glyph      TEXT NOT NULL,
+            strokes    INTEGER NOT NULL,
+            name_ja    TEXT NOT NULL,
+            meaning_ja TEXT NOT NULL,
+            meaning_ko TEXT NOT NULL,
+            meaning_zh TEXT NOT NULL,
+            meaning_en TEXT NOT NULL
+        )
+    """)
 
 
 def ensure_word_jlpt_column(conn: sqlite3.Connection) -> None:
@@ -105,6 +122,9 @@ def main() -> int:
         load_yojijukugo(conn, RESOURCE_DIR / "yojijukugo.source.json")
         conn.execute("DELETE FROM taigirui")
         load_taigirui(conn, RESOURCE_DIR / "taigirui.source.json")
+        ensure_radical_reference_table(conn)
+        conn.execute("DELETE FROM radical_reference")
+        load_radical_reference(conn, RESOURCE_DIR / "radical_reference.source.json")
         conn.commit()
 
         questions = conn.execute("SELECT COUNT(*) FROM jlpt_question").fetchone()[0]
@@ -127,6 +147,12 @@ def main() -> int:
                 print(f"{name}: {len(cases)}")
                 for case in cases[:5]:
                     print("  " + case)
+        radical_problems = radical_reference_defects(conn)
+        if radical_problems:
+            failed = True
+            print(f"radical reference: {len(radical_problems)}")
+            for line in radical_problems[:5]:
+                print("  " + line)
         if failed:
             print(f"not written; the refreshed copy is at {work}")
             return 1

@@ -194,4 +194,18 @@ CREATE TABLE jlpt_question (
 );
 
 CREATE INDEX idx_jlpt_question_kanji ON jlpt_question(kanji_id);
+
+-- The 214 Kangxi radicals (部首) as a browsable reference: the Japanese 部首名,
+-- a short meaning, and its ko/zh/en translations. Repo-owned curated data
+-- (sources/radical_reference.json), reloadable via refresh_db.
+CREATE TABLE radical_reference (
+    number      INTEGER PRIMARY KEY,   -- Kangxi radical number 1..214
+    glyph       TEXT    NOT NULL,      -- the radical as drawn (艸 → 艹 shown form)
+    strokes     INTEGER NOT NULL,
+    name_ja     TEXT    NOT NULL,      -- 部首名 in hiragana (くさかんむり)
+    meaning_ja  TEXT    NOT NULL,
+    meaning_ko  TEXT    NOT NULL,
+    meaning_zh  TEXT    NOT NULL,
+    meaning_en  TEXT    NOT NULL
+);
 """

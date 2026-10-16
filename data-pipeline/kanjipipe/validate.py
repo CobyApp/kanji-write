@@ -245,6 +245,38 @@ _MAX_UNMATCHED_WORD_GLOSSES = 50
 _MIN_PER_SECTION = 15
 
 
+def radical_reference_defects(conn: sqlite3.Connection) -> list[str]:
+    """The radical reference must cover every Kangxi radical (1..214), each with
+    a glyph, a Japanese 部首名, and a meaning in every language. A reference with
+    gaps would show blank rows."""
+    problems: list[str] = []
+    rows = {
+        n: (glyph, strokes, name_ja, m_ja, m_ko, m_zh, m_en)
+        for n, glyph, strokes, name_ja, m_ja, m_ko, m_zh, m_en in conn.execute(
+            "SELECT number, glyph, strokes, name_ja, meaning_ja, meaning_ko, "
+            "meaning_zh, meaning_en FROM radical_reference"
+        )
+    }
+    for number in range(1, 215):
+        row = rows.get(number)
+        if row is None:
+            problems.append(f"radical {number}: missing")
+            continue
+        glyph, strokes, name_ja, m_ja, m_ko, m_zh, m_en = row
+        if not (glyph or "").strip():
+            problems.append(f"radical {number}: blank glyph")
+        if not isinstance(strokes, int) or strokes < 1:
+            problems.append(f"radical {number}: bad stroke count {strokes!r}")
+        for label, value in (("name_ja", name_ja), ("meaning_ja", m_ja),
+                             ("meaning_ko", m_ko), ("meaning_zh", m_zh),
+                             ("meaning_en", m_en)):
+            if not (value or "").strip():
+                problems.append(f"radical {number}: blank {label}")
+    extra = sorted(n for n in rows if not 1 <= n <= 214)
+    problems += [f"radical {n}: out of range" for n in extra]
+    return problems
+
+
 def starved_sections(conn: sqlite3.Connection) -> list[str]:
     """Playable 大問 with nothing, or too little, behind them."""
     bank: dict[tuple[str, str], int] = {}

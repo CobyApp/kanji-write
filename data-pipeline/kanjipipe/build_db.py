@@ -39,7 +39,8 @@ from kanjipipe.loader import (
     load_kanji_variants,
     load_relations, load_sentence_glosses, load_sentence_words, load_sentences,
     load_stroke_order, load_taigirui, load_word_jazh_glosses,
-    load_kanji_parts, load_word_jlpt_levels, load_word_ko_glosses, load_words, load_yojijukugo)
+    load_kanji_parts, load_radical_reference, load_word_jlpt_levels, load_word_ko_glosses,
+    load_words, load_yojijukugo)
 from kanjipipe.validate import (
     PRODUCTION_KANKEN_COUNT_POLICY,
     KankenCountPolicy,
@@ -76,6 +77,7 @@ def build(
     jlpt_vocab_dir: str | Path | None = None,
     yojijukugo_path: str | Path | None = RESOURCE_DIR / "yojijukugo.source.json",
     taigirui_path: str | Path | None = RESOURCE_DIR / "taigirui.source.json",
+    radical_reference_path: str | Path | None = RESOURCE_DIR / "radical_reference.source.json",
     unihan_path: str | Path | None = "sources/Unihan.zip",
     resolved_literals_path: str | Path | None = DEFAULT_RESOLVED_LITERALS_PATH,
     glyph_manifest_path: str | Path | None = "sources/kanken_glyph_map.csv",
@@ -199,6 +201,8 @@ def build(
             load_yojijukugo(conn, yojijukugo_path)
         if taigirui_path is not None:
             load_taigirui(conn, taigirui_path)
+        if radical_reference_path is not None and os.path.exists(radical_reference_path):
+            load_radical_reference(conn, radical_reference_path)
         report = assert_core_gates(
             conn,
             kanken_allocations=allocations,

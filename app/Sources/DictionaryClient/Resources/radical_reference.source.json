@@ -1,0 +1,2142 @@
+[
+{
+"number": 1,
+"glyph": "一",
+"strokes": 1,
+"nameJa": "いち",
+"meaningJa": "一",
+"meaningKo": "하나",
+"meaningZh": "一",
+"meaningEn": "one"
+},
+{
+"number": 2,
+"glyph": "丨",
+"strokes": 1,
+"nameJa": "ぼう",
+"meaningJa": "棒・縦棒",
+"meaningKo": "막대·세로획",
+"meaningZh": "竖",
+"meaningEn": "line"
+},
+{
+"number": 3,
+"glyph": "丶",
+"strokes": 1,
+"nameJa": "てん",
+"meaningJa": "点",
+"meaningKo": "점",
+"meaningZh": "点",
+"meaningEn": "dot"
+},
+{
+"number": 4,
+"glyph": "丿",
+"strokes": 1,
+"nameJa": "の",
+"meaningJa": "左払い",
+"meaningKo": "삐침",
+"meaningZh": "撇",
+"meaningEn": "slash"
+},
+{
+"number": 5,
+"glyph": "乙",
+"strokes": 1,
+"nameJa": "おつ",
+"meaningJa": "二番目・きのと",
+"meaningKo": "둘째 천간(乙)",
+"meaningZh": "乙(第二)",
+"meaningEn": "second"
+},
+{
+"number": 6,
+"glyph": "亅",
+"strokes": 1,
+"nameJa": "はねぼう",
+"meaningJa": "はねぼう",
+"meaningKo": "갈고리",
+"meaningZh": "钩",
+"meaningEn": "hook"
+},
+{
+"number": 7,
+"glyph": "二",
+"strokes": 2,
+"nameJa": "に",
+"meaningJa": "二",
+"meaningKo": "둘",
+"meaningZh": "二",
+"meaningEn": "two"
+},
+{
+"number": 8,
+"glyph": "亠",
+"strokes": 2,
+"nameJa": "なべぶた",
+"meaningJa": "ふた・なべぶた",
+"meaningKo": "뚜껑",
+"meaningZh": "盖头",
+"meaningEn": "lid"
+},
+{
+"number": 9,
+"glyph": "人",
+"strokes": 2,
+"nameJa": "ひと",
+"meaningJa": "人",
+"meaningKo": "사람",
+"meaningZh": "人",
+"meaningEn": "person"
+},
+{
+"number": 10,
+"glyph": "儿",
+"strokes": 2,
+"nameJa": "ひとあし",
+"meaningJa": "人の足",
+"meaningKo": "어진사람",
+"meaningZh": "人(走之)",
+"meaningEn": "legs"
+},
+{
+"number": 11,
+"glyph": "入",
+"strokes": 2,
+"nameJa": "いる",
+"meaningJa": "入る",
+"meaningKo": "들다",
+"meaningZh": "入",
+"meaningEn": "enter"
+},
+{
+"number": 12,
+"glyph": "八",
+"strokes": 2,
+"nameJa": "はち",
+"meaningJa": "八",
+"meaningKo": "여덟·나누다",
+"meaningZh": "八",
+"meaningEn": "eight"
+},
+{
+"number": 13,
+"glyph": "冂",
+"strokes": 2,
+"nameJa": "けいがまえ",
+"meaningJa": "囲い",
+"meaningKo": "먼데경",
+"meaningZh": "冂",
+"meaningEn": "down box"
+},
+{
+"number": 14,
+"glyph": "冖",
+"strokes": 2,
+"nameJa": "わかんむり",
+"meaningJa": "おおい",
+"meaningKo": "민갓머리",
+"meaningZh": "秃宝盖",
+"meaningEn": "cover"
+},
+{
+"number": 15,
+"glyph": "冫",
+"strokes": 2,
+"nameJa": "にすい",
+"meaningJa": "氷",
+"meaningKo": "이수변(얼음)",
+"meaningZh": "两点水(冰)",
+"meaningEn": "ice"
+},
+{
+"number": 16,
+"glyph": "几",
+"strokes": 2,
+"nameJa": "つくえ",
+"meaningJa": "机",
+"meaningKo": "안석",
+"meaningZh": "几",
+"meaningEn": "table"
+},
+{
+"number": 17,
+"glyph": "凵",
+"strokes": 2,
+"nameJa": "うけばこ",
+"meaningJa": "うけばこ",
+"meaningKo": "위튼입구",
+"meaningZh": "凵",
+"meaningEn": "open box"
+},
+{
+"number": 18,
+"glyph": "刀",
+"strokes": 2,
+"nameJa": "かたな",
+"meaningJa": "刀",
+"meaningKo": "칼",
+"meaningZh": "刀",
+"meaningEn": "knife"
+},
+{
+"number": 19,
+"glyph": "力",
+"strokes": 2,
+"nameJa": "ちから",
+"meaningJa": "力",
+"meaningKo": "힘",
+"meaningZh": "力",
+"meaningEn": "power"
+},
+{
+"number": 20,
+"glyph": "勹",
+"strokes": 2,
+"nameJa": "つつみがまえ",
+"meaningJa": "つつむ",
+"meaningKo": "쌀포",
+"meaningZh": "勹",
+"meaningEn": "wrap"
+},
+{
+"number": 21,
+"glyph": "匕",
+"strokes": 2,
+"nameJa": "さじ",
+"meaningJa": "さじ・匕",
+"meaningKo": "비수",
+"meaningZh": "匕",
+"meaningEn": "spoon"
+},
+{
+"number": 22,
+"glyph": "匚",
+"strokes": 2,
+"nameJa": "はこがまえ",
+"meaningJa": "はこ",
+"meaningKo": "튼입구",
+"meaningZh": "匚",
+"meaningEn": "box"
+},
+{
+"number": 23,
+"glyph": "匸",
+"strokes": 2,
+"nameJa": "かくしがまえ",
+"meaningJa": "かくす",
+"meaningKo": "감출혜",
+"meaningZh": "匸",
+"meaningEn": "hiding"
+},
+{
+"number": 24,
+"glyph": "十",
+"strokes": 2,
+"nameJa": "じゅう",
+"meaningJa": "十",
+"meaningKo": "열",
+"meaningZh": "十",
+"meaningEn": "ten"
+},
+{
+"number": 25,
+"glyph": "卜",
+"strokes": 2,
+"nameJa": "ぼく",
+"meaningJa": "うらない",
+"meaningKo": "점복",
+"meaningZh": "卜",
+"meaningEn": "divination"
+},
+{
+"number": 26,
+"glyph": "卩",
+"strokes": 2,
+"nameJa": "ふしづくり",
+"meaningJa": "わりふ",
+"meaningKo": "병부절",
+"meaningZh": "卩",
+"meaningEn": "seal"
+},
+{
+"number": 27,
+"glyph": "厂",
+"strokes": 2,
+"nameJa": "がんだれ",
+"meaningJa": "がけ",
+"meaningKo": "민엄호",
+"meaningZh": "厂",
+"meaningEn": "cliff"
+},
+{
+"number": 28,
+"glyph": "厶",
+"strokes": 2,
+"nameJa": "む",
+"meaningJa": "私・む",
+"meaningKo": "마늘모",
+"meaningZh": "厶",
+"meaningEn": "private"
+},
+{
+"number": 29,
+"glyph": "又",
+"strokes": 2,
+"nameJa": "また",
+"meaningJa": "又",
+"meaningKo": "또·손",
+"meaningZh": "又",
+"meaningEn": "again"
+},
+{
+"number": 30,
+"glyph": "口",
+"strokes": 3,
+"nameJa": "くち",
+"meaningJa": "口",
+"meaningKo": "입",
+"meaningZh": "口",
+"meaningEn": "mouth"
+},
+{
+"number": 31,
+"glyph": "囗",
+"strokes": 3,
+"nameJa": "くにがまえ",
+"meaningJa": "かこい",
+"meaningKo": "큰입구",
+"meaningZh": "囗",
+"meaningEn": "enclosure"
+},
+{
+"number": 32,
+"glyph": "土",
+"strokes": 3,
+"nameJa": "つち",
+"meaningJa": "土",
+"meaningKo": "흙",
+"meaningZh": "土",
+"meaningEn": "earth"
+},
+{
+"number": 33,
+"glyph": "士",
+"strokes": 3,
+"nameJa": "さむらい",
+"meaningJa": "士",
+"meaningKo": "선비",
+"meaningZh": "士",
+"meaningEn": "scholar"
+},
+{
+"number": 34,
+"glyph": "夂",
+"strokes": 3,
+"nameJa": "ふゆがしら",
+"meaningJa": "ふゆがしら",
+"meaningKo": "뒤처져올치",
+"meaningZh": "夂",
+"meaningEn": "go"
+},
+{
+"number": 35,
+"glyph": "夊",
+"strokes": 3,
+"nameJa": "すいにょう",
+"meaningJa": "ゆっくり歩く",
+"meaningKo": "천천히걸을쇠",
+"meaningZh": "夊",
+"meaningEn": "slow"
+},
+{
+"number": 36,
+"glyph": "夕",
+"strokes": 3,
+"nameJa": "ゆうべ",
+"meaningJa": "夕",
+"meaningKo": "저녁",
+"meaningZh": "夕",
+"meaningEn": "evening"
+},
+{
+"number": 37,
+"glyph": "大",
+"strokes": 3,
+"nameJa": "だい",
+"meaningJa": "大",
+"meaningKo": "크다",
+"meaningZh": "大",
+"meaningEn": "big"
+},
+{
+"number": 38,
+"glyph": "女",
+"strokes": 3,
+"nameJa": "おんな",
+"meaningJa": "女",
+"meaningKo": "여자",
+"meaningZh": "女",
+"meaningEn": "woman"
+},
+{
+"number": 39,
+"glyph": "子",
+"strokes": 3,
+"nameJa": "こ",
+"meaningJa": "子",
+"meaningKo": "아이",
+"meaningZh": "子",
+"meaningEn": "child"
+},
+{
+"number": 40,
+"glyph": "宀",
+"strokes": 3,
+"nameJa": "うかんむり",
+"meaningJa": "家・屋根",
+"meaningKo": "갓머리",
+"meaningZh": "宝盖",
+"meaningEn": "roof"
+},
+{
+"number": 41,
+"glyph": "寸",
+"strokes": 3,
+"nameJa": "すん",
+"meaningJa": "寸",
+"meaningKo": "마디",
+"meaningZh": "寸",
+"meaningEn": "inch"
+},
+{
+"number": 42,
+"glyph": "小",
+"strokes": 3,
+"nameJa": "しょう",
+"meaningJa": "小",
+"meaningKo": "작다",
+"meaningZh": "小",
+"meaningEn": "small"
+},
+{
+"number": 43,
+"glyph": "尢",
+"strokes": 3,
+"nameJa": "だいのまげあし",
+"meaningJa": "まがる",
+"meaningKo": "절름발이왕",
+"meaningZh": "尢",
+"meaningEn": "lame"
+},
+{
+"number": 44,
+"glyph": "尸",
+"strokes": 3,
+"nameJa": "しかばね",
+"meaningJa": "しかばね",
+"meaningKo": "주검시",
+"meaningZh": "尸",
+"meaningEn": "corpse"
+},
+{
+"number": 45,
+"glyph": "屮",
+"strokes": 3,
+"nameJa": "てつ",
+"meaningJa": "芽・ちぐさ",
+"meaningKo": "싹날철",
+"meaningZh": "屮",
+"meaningEn": "sprout"
+},
+{
+"number": 46,
+"glyph": "山",
+"strokes": 3,
+"nameJa": "やま",
+"meaningJa": "山",
+"meaningKo": "산",
+"meaningZh": "山",
+"meaningEn": "mountain"
+},
+{
+"number": 47,
+"glyph": "巛",
+"strokes": 3,
+"nameJa": "まがりがわ",
+"meaningJa": "川",
+"meaningKo": "개미허리(내)",
+"meaningZh": "巛(川)",
+"meaningEn": "river"
+},
+{
+"number": 48,
+"glyph": "工",
+"strokes": 3,
+"nameJa": "たくみ",
+"meaningJa": "工",
+"meaningKo": "장인·만들다",
+"meaningZh": "工",
+"meaningEn": "work"
+},
+{
+"number": 49,
+"glyph": "己",
+"strokes": 3,
+"nameJa": "おのれ",
+"meaningJa": "己",
+"meaningKo": "몸·자기",
+"meaningZh": "己",
+"meaningEn": "self"
+},
+{
+"number": 50,
+"glyph": "巾",
+"strokes": 3,
+"nameJa": "はば",
+"meaningJa": "布・巾",
+"meaningKo": "수건",
+"meaningZh": "巾",
+"meaningEn": "cloth"
+},
+{
+"number": 51,
+"glyph": "干",
+"strokes": 3,
+"nameJa": "いちじゅう",
+"meaningJa": "干",
+"meaningKo": "방패·마르다",
+"meaningZh": "干",
+"meaningEn": "dry"
+},
+{
+"number": 52,
+"glyph": "幺",
+"strokes": 3,
+"nameJa": "いとがしら",
+"meaningJa": "小さい・幺",
+"meaningKo": "작을요",
+"meaningZh": "幺",
+"meaningEn": "short thread"
+},
+{
+"number": 53,
+"glyph": "广",
+"strokes": 3,
+"nameJa": "まだれ",
+"meaningJa": "建物・广",
+"meaningKo": "엄호",
+"meaningZh": "广",
+"meaningEn": "house"
+},
+{
+"number": 54,
+"glyph": "廴",
+"strokes": 3,
+"nameJa": "えんにょう",
+"meaningJa": "のびる",
+"meaningKo": "민책받침",
+"meaningZh": "廴",
+"meaningEn": "stride"
+},
+{
+"number": 55,
+"glyph": "廾",
+"strokes": 3,
+"nameJa": "にじゅうあし",
+"meaningJa": "両手・廾",
+"meaningKo": "밑스물입",
+"meaningZh": "廾",
+"meaningEn": "two hands"
+},
+{
+"number": 56,
+"glyph": "弋",
+"strokes": 3,
+"nameJa": "しきがまえ",
+"meaningJa": "弋",
+"meaningKo": "주살익",
+"meaningZh": "弋",
+"meaningEn": "shoot"
+},
+{
+"number": 57,
+"glyph": "弓",
+"strokes": 3,
+"nameJa": "ゆみ",
+"meaningJa": "弓",
+"meaningKo": "활",
+"meaningZh": "弓",
+"meaningEn": "bow"
+},
+{
+"number": 58,
+"glyph": "彐",
+"strokes": 3,
+"nameJa": "けいがしら",
+"meaningJa": "ぶたのあたま・彐",
+"meaningKo": "튼가로왈",
+"meaningZh": "彐",
+"meaningEn": "snout"
+},
+{
+"number": 59,
+"glyph": "彡",
+"strokes": 3,
+"nameJa": "さんづくり",
+"meaningJa": "かざり・毛",
+"meaningKo": "터럭삼",
+"meaningZh": "彡",
+"meaningEn": "bristle"
+},
+{
+"number": 60,
+"glyph": "彳",
+"strokes": 3,
+"nameJa": "ぎょうにんべん",
+"meaningJa": "行く・道",
+"meaningKo": "두인변",
+"meaningZh": "彳",
+"meaningEn": "step"
+},
+{
+"number": 61,
+"glyph": "心",
+"strokes": 4,
+"nameJa": "こころ",
+"meaningJa": "心",
+"meaningKo": "마음",
+"meaningZh": "心",
+"meaningEn": "heart"
+},
+{
+"number": 62,
+"glyph": "戈",
+"strokes": 4,
+"nameJa": "ほこ",
+"meaningJa": "戈",
+"meaningKo": "창",
+"meaningZh": "戈",
+"meaningEn": "halberd"
+},
+{
+"number": 63,
+"glyph": "戶",
+"strokes": 4,
+"nameJa": "と",
+"meaningJa": "戸",
+"meaningKo": "지게·문짝",
+"meaningZh": "户",
+"meaningEn": "door"
+},
+{
+"number": 64,
+"glyph": "手",
+"strokes": 4,
+"nameJa": "て",
+"meaningJa": "手",
+"meaningKo": "손",
+"meaningZh": "手",
+"meaningEn": "hand"
+},
+{
+"number": 65,
+"glyph": "支",
+"strokes": 4,
+"nameJa": "し",
+"meaningJa": "支える",
+"meaningKo": "지탱할지",
+"meaningZh": "支",
+"meaningEn": "branch"
+},
+{
+"number": 66,
+"glyph": "攴",
+"strokes": 4,
+"nameJa": "ぼくづくり",
+"meaningJa": "打つ・攴",
+"meaningKo": "칠복",
+"meaningZh": "攵(攴)",
+"meaningEn": "rap"
+},
+{
+"number": 67,
+"glyph": "文",
+"strokes": 4,
+"nameJa": "ぶん",
+"meaningJa": "文",
+"meaningKo": "글월",
+"meaningZh": "文",
+"meaningEn": "script"
+},
+{
+"number": 68,
+"glyph": "斗",
+"strokes": 4,
+"nameJa": "とます",
+"meaningJa": "ます・斗",
+"meaningKo": "말두",
+"meaningZh": "斗",
+"meaningEn": "dipper"
+},
+{
+"number": 69,
+"glyph": "斤",
+"strokes": 4,
+"nameJa": "おの",
+"meaningJa": "斤",
+"meaningKo": "도끼",
+"meaningZh": "斤",
+"meaningEn": "axe"
+},
+{
+"number": 70,
+"glyph": "方",
+"strokes": 4,
+"nameJa": "ほう",
+"meaningJa": "方",
+"meaningKo": "모·방향",
+"meaningZh": "方",
+"meaningEn": "square"
+},
+{
+"number": 71,
+"glyph": "无",
+"strokes": 4,
+"nameJa": "むなし",
+"meaningJa": "無・无",
+"meaningKo": "없을무",
+"meaningZh": "无",
+"meaningEn": "not"
+},
+{
+"number": 72,
+"glyph": "日",
+"strokes": 4,
+"nameJa": "ひ",
+"meaningJa": "日",
+"meaningKo": "해·날",
+"meaningZh": "日",
+"meaningEn": "sun"
+},
+{
+"number": 73,
+"glyph": "曰",
+"strokes": 4,
+"nameJa": "いわく",
+"meaningJa": "言う・曰",
+"meaningKo": "가로왈",
+"meaningZh": "曰",
+"meaningEn": "say"
+},
+{
+"number": 74,
+"glyph": "月",
+"strokes": 4,
+"nameJa": "つき",
+"meaningJa": "月",
+"meaningKo": "달",
+"meaningZh": "月",
+"meaningEn": "moon"
+},
+{
+"number": 75,
+"glyph": "木",
+"strokes": 4,
+"nameJa": "き",
+"meaningJa": "木",
+"meaningKo": "나무",
+"meaningZh": "木",
+"meaningEn": "tree"
+},
+{
+"number": 76,
+"glyph": "欠",
+"strokes": 4,
+"nameJa": "あくび",
+"meaningJa": "欠ける・あくび",
+"meaningKo": "하품흠",
+"meaningZh": "欠",
+"meaningEn": "lack"
+},
+{
+"number": 77,
+"glyph": "止",
+"strokes": 4,
+"nameJa": "とめる",
+"meaningJa": "止",
+"meaningKo": "그치다",
+"meaningZh": "止",
+"meaningEn": "stop"
+},
+{
+"number": 78,
+"glyph": "歹",
+"strokes": 4,
+"nameJa": "がつへん",
+"meaningJa": "死・歹",
+"meaningKo": "죽을사변",
+"meaningZh": "歹",
+"meaningEn": "death"
+},
+{
+"number": 79,
+"glyph": "殳",
+"strokes": 4,
+"nameJa": "るまた",
+"meaningJa": "ほこ・殳",
+"meaningKo": "창수·몽둥이",
+"meaningZh": "殳",
+"meaningEn": "weapon"
+},
+{
+"number": 80,
+"glyph": "毋",
+"strokes": 4,
+"nameJa": "なかれ",
+"meaningJa": "母・毋",
+"meaningKo": "말무",
+"meaningZh": "毋",
+"meaningEn": "do not"
+},
+{
+"number": 81,
+"glyph": "比",
+"strokes": 4,
+"nameJa": "くらべる",
+"meaningJa": "比",
+"meaningKo": "견주다",
+"meaningZh": "比",
+"meaningEn": "compare"
+},
+{
+"number": 82,
+"glyph": "毛",
+"strokes": 4,
+"nameJa": "け",
+"meaningJa": "毛",
+"meaningKo": "털",
+"meaningZh": "毛",
+"meaningEn": "fur"
+},
+{
+"number": 83,
+"glyph": "氏",
+"strokes": 4,
+"nameJa": "うじ",
+"meaningJa": "氏",
+"meaningKo": "성씨·각시",
+"meaningZh": "氏",
+"meaningEn": "clan"
+},
+{
+"number": 84,
+"glyph": "气",
+"strokes": 4,
+"nameJa": "きがまえ",
+"meaningJa": "息・气",
+"meaningKo": "기운기",
+"meaningZh": "气",
+"meaningEn": "steam"
+},
+{
+"number": 85,
+"glyph": "水",
+"strokes": 4,
+"nameJa": "みず",
+"meaningJa": "水",
+"meaningKo": "물",
+"meaningZh": "水",
+"meaningEn": "water"
+},
+{
+"number": 86,
+"glyph": "火",
+"strokes": 4,
+"nameJa": "ひ",
+"meaningJa": "火",
+"meaningKo": "불",
+"meaningZh": "火",
+"meaningEn": "fire"
+},
+{
+"number": 87,
+"glyph": "爪",
+"strokes": 4,
+"nameJa": "つめ",
+"meaningJa": "爪",
+"meaningKo": "손톱·발톱",
+"meaningZh": "爪",
+"meaningEn": "claw"
+},
+{
+"number": 88,
+"glyph": "父",
+"strokes": 4,
+"nameJa": "ちち",
+"meaningJa": "父",
+"meaningKo": "아버지",
+"meaningZh": "父",
+"meaningEn": "father"
+},
+{
+"number": 89,
+"glyph": "爻",
+"strokes": 4,
+"nameJa": "こう",
+"meaningJa": "交わる・爻",
+"meaningKo": "점괘효",
+"meaningZh": "爻",
+"meaningEn": "lines"
+},
+{
+"number": 90,
+"glyph": "爿",
+"strokes": 4,
+"nameJa": "しょうへん",
+"meaningJa": "寝台・爿",
+"meaningKo": "장수장변",
+"meaningZh": "爿",
+"meaningEn": "bed"
+},
+{
+"number": 91,
+"glyph": "片",
+"strokes": 4,
+"nameJa": "かた",
+"meaningJa": "片",
+"meaningKo": "조각",
+"meaningZh": "片",
+"meaningEn": "slice"
+},
+{
+"number": 92,
+"glyph": "牙",
+"strokes": 4,
+"nameJa": "きば",
+"meaningJa": "牙",
+"meaningKo": "어금니",
+"meaningZh": "牙",
+"meaningEn": "fang"
+},
+{
+"number": 93,
+"glyph": "牛",
+"strokes": 4,
+"nameJa": "うし",
+"meaningJa": "牛",
+"meaningKo": "소",
+"meaningZh": "牛",
+"meaningEn": "cow"
+},
+{
+"number": 94,
+"glyph": "犬",
+"strokes": 4,
+"nameJa": "いぬ",
+"meaningJa": "犬",
+"meaningKo": "개",
+"meaningZh": "犬",
+"meaningEn": "dog"
+},
+{
+"number": 95,
+"glyph": "玄",
+"strokes": 5,
+"nameJa": "げん",
+"meaningJa": "玄",
+"meaningKo": "검다·그윽하다",
+"meaningZh": "玄",
+"meaningEn": "dark"
+},
+{
+"number": 96,
+"glyph": "玉",
+"strokes": 5,
+"nameJa": "たま",
+"meaningJa": "玉",
+"meaningKo": "구슬·옥",
+"meaningZh": "玉",
+"meaningEn": "jade"
+},
+{
+"number": 97,
+"glyph": "瓜",
+"strokes": 5,
+"nameJa": "うり",
+"meaningJa": "瓜",
+"meaningKo": "오이",
+"meaningZh": "瓜",
+"meaningEn": "melon"
+},
+{
+"number": 98,
+"glyph": "瓦",
+"strokes": 5,
+"nameJa": "かわら",
+"meaningJa": "瓦",
+"meaningKo": "기와",
+"meaningZh": "瓦",
+"meaningEn": "tile"
+},
+{
+"number": 99,
+"glyph": "甘",
+"strokes": 5,
+"nameJa": "あまい",
+"meaningJa": "甘",
+"meaningKo": "달다",
+"meaningZh": "甘",
+"meaningEn": "sweet"
+},
+{
+"number": 100,
+"glyph": "生",
+"strokes": 5,
+"nameJa": "うまれる",
+"meaningJa": "生",
+"meaningKo": "나다·살다",
+"meaningZh": "生",
+"meaningEn": "life"
+},
+{
+"number": 101,
+"glyph": "用",
+"strokes": 5,
+"nameJa": "もちいる",
+"meaningJa": "用",
+"meaningKo": "쓰다",
+"meaningZh": "用",
+"meaningEn": "use"
+},
+{
+"number": 102,
+"glyph": "田",
+"strokes": 5,
+"nameJa": "た",
+"meaningJa": "田",
+"meaningKo": "밭",
+"meaningZh": "田",
+"meaningEn": "field"
+},
+{
+"number": 103,
+"glyph": "疋",
+"strokes": 5,
+"nameJa": "ひき",
+"meaningJa": "疋・足",
+"meaningKo": "짝필",
+"meaningZh": "疋",
+"meaningEn": "bolt of cloth"
+},
+{
+"number": 104,
+"glyph": "疒",
+"strokes": 5,
+"nameJa": "やまいだれ",
+"meaningJa": "病・疒",
+"meaningKo": "병질엄",
+"meaningZh": "疒",
+"meaningEn": "sickness"
+},
+{
+"number": 105,
+"glyph": "癶",
+"strokes": 5,
+"nameJa": "はつがしら",
+"meaningJa": "癶",
+"meaningKo": "필발머리",
+"meaningZh": "癶",
+"meaningEn": "footsteps"
+},
+{
+"number": 106,
+"glyph": "白",
+"strokes": 5,
+"nameJa": "しろ",
+"meaningJa": "白",
+"meaningKo": "희다",
+"meaningZh": "白",
+"meaningEn": "white"
+},
+{
+"number": 107,
+"glyph": "皮",
+"strokes": 5,
+"nameJa": "けがわ",
+"meaningJa": "皮",
+"meaningKo": "가죽",
+"meaningZh": "皮",
+"meaningEn": "skin"
+},
+{
+"number": 108,
+"glyph": "皿",
+"strokes": 5,
+"nameJa": "さら",
+"meaningJa": "皿",
+"meaningKo": "그릇",
+"meaningZh": "皿",
+"meaningEn": "dish"
+},
+{
+"number": 109,
+"glyph": "目",
+"strokes": 5,
+"nameJa": "め",
+"meaningJa": "目",
+"meaningKo": "눈",
+"meaningZh": "目",
+"meaningEn": "eye"
+},
+{
+"number": 110,
+"glyph": "矛",
+"strokes": 5,
+"nameJa": "ほこ",
+"meaningJa": "矛",
+"meaningKo": "창",
+"meaningZh": "矛",
+"meaningEn": "spear"
+},
+{
+"number": 111,
+"glyph": "矢",
+"strokes": 5,
+"nameJa": "や",
+"meaningJa": "矢",
+"meaningKo": "화살",
+"meaningZh": "矢",
+"meaningEn": "arrow"
+},
+{
+"number": 112,
+"glyph": "石",
+"strokes": 5,
+"nameJa": "いし",
+"meaningJa": "石",
+"meaningKo": "돌",
+"meaningZh": "石",
+"meaningEn": "stone"
+},
+{
+"number": 113,
+"glyph": "示",
+"strokes": 5,
+"nameJa": "しめす",
+"meaningJa": "示",
+"meaningKo": "보이다·제사",
+"meaningZh": "示",
+"meaningEn": "spirit"
+},
+{
+"number": 114,
+"glyph": "禸",
+"strokes": 5,
+"nameJa": "ぐうのあし",
+"meaningJa": "獣の足・禸",
+"meaningKo": "짐승발자국유",
+"meaningZh": "禸",
+"meaningEn": "track"
+},
+{
+"number": 115,
+"glyph": "禾",
+"strokes": 5,
+"nameJa": "のぎ",
+"meaningJa": "禾",
+"meaningKo": "벼",
+"meaningZh": "禾",
+"meaningEn": "grain"
+},
+{
+"number": 116,
+"glyph": "穴",
+"strokes": 5,
+"nameJa": "あな",
+"meaningJa": "穴",
+"meaningKo": "구멍",
+"meaningZh": "穴",
+"meaningEn": "cave"
+},
+{
+"number": 117,
+"glyph": "立",
+"strokes": 5,
+"nameJa": "たつ",
+"meaningJa": "立",
+"meaningKo": "서다",
+"meaningZh": "立",
+"meaningEn": "stand"
+},
+{
+"number": 118,
+"glyph": "竹",
+"strokes": 6,
+"nameJa": "たけ",
+"meaningJa": "竹",
+"meaningKo": "대나무",
+"meaningZh": "竹",
+"meaningEn": "bamboo"
+},
+{
+"number": 119,
+"glyph": "米",
+"strokes": 6,
+"nameJa": "こめ",
+"meaningJa": "米",
+"meaningKo": "쌀",
+"meaningZh": "米",
+"meaningEn": "rice"
+},
+{
+"number": 120,
+"glyph": "糸",
+"strokes": 6,
+"nameJa": "いと",
+"meaningJa": "糸",
+"meaningKo": "실",
+"meaningZh": "糸",
+"meaningEn": "silk"
+},
+{
+"number": 121,
+"glyph": "缶",
+"strokes": 6,
+"nameJa": "ほとぎ",
+"meaningJa": "缶",
+"meaningKo": "장군·질그릇",
+"meaningZh": "缶",
+"meaningEn": "jar"
+},
+{
+"number": 122,
+"glyph": "网",
+"strokes": 6,
+"nameJa": "あみがしら",
+"meaningJa": "網・网",
+"meaningKo": "그물망머리",
+"meaningZh": "网",
+"meaningEn": "net"
+},
+{
+"number": 123,
+"glyph": "羊",
+"strokes": 6,
+"nameJa": "ひつじ",
+"meaningJa": "羊",
+"meaningKo": "양",
+"meaningZh": "羊",
+"meaningEn": "sheep"
+},
+{
+"number": 124,
+"glyph": "羽",
+"strokes": 6,
+"nameJa": "はね",
+"meaningJa": "羽",
+"meaningKo": "깃",
+"meaningZh": "羽",
+"meaningEn": "feather"
+},
+{
+"number": 125,
+"glyph": "老",
+"strokes": 6,
+"nameJa": "おい",
+"meaningJa": "老",
+"meaningKo": "늙다",
+"meaningZh": "老",
+"meaningEn": "old"
+},
+{
+"number": 126,
+"glyph": "而",
+"strokes": 6,
+"nameJa": "しかして",
+"meaningJa": "而",
+"meaningKo": "말이을이·수염",
+"meaningZh": "而",
+"meaningEn": "and"
+},
+{
+"number": 127,
+"glyph": "耒",
+"strokes": 6,
+"nameJa": "らいすき",
+"meaningJa": "耒",
+"meaningKo": "쟁기뢰",
+"meaningZh": "耒",
+"meaningEn": "plough"
+},
+{
+"number": 128,
+"glyph": "耳",
+"strokes": 6,
+"nameJa": "みみ",
+"meaningJa": "耳",
+"meaningKo": "귀",
+"meaningZh": "耳",
+"meaningEn": "ear"
+},
+{
+"number": 129,
+"glyph": "聿",
+"strokes": 6,
+"nameJa": "ふでづくり",
+"meaningJa": "筆・聿",
+"meaningKo": "오직율·붓",
+"meaningZh": "聿",
+"meaningEn": "brush"
+},
+{
+"number": 130,
+"glyph": "肉",
+"strokes": 6,
+"nameJa": "にく",
+"meaningJa": "肉",
+"meaningKo": "고기·살",
+"meaningZh": "肉",
+"meaningEn": "meat"
+},
+{
+"number": 131,
+"glyph": "臣",
+"strokes": 6,
+"nameJa": "しん",
+"meaningJa": "臣",
+"meaningKo": "신하",
+"meaningZh": "臣",
+"meaningEn": "minister"
+},
+{
+"number": 132,
+"glyph": "自",
+"strokes": 6,
+"nameJa": "みずから",
+"meaningJa": "自",
+"meaningKo": "스스로·코",
+"meaningZh": "自",
+"meaningEn": "self"
+},
+{
+"number": 133,
+"glyph": "至",
+"strokes": 6,
+"nameJa": "いたる",
+"meaningJa": "至",
+"meaningKo": "이르다",
+"meaningZh": "至",
+"meaningEn": "arrive"
+},
+{
+"number": 134,
+"glyph": "臼",
+"strokes": 6,
+"nameJa": "うす",
+"meaningJa": "臼",
+"meaningKo": "절구",
+"meaningZh": "臼",
+"meaningEn": "mortar"
+},
+{
+"number": 135,
+"glyph": "舌",
+"strokes": 6,
+"nameJa": "した",
+"meaningJa": "舌",
+"meaningKo": "혀",
+"meaningZh": "舌",
+"meaningEn": "tongue"
+},
+{
+"number": 136,
+"glyph": "舛",
+"strokes": 6,
+"nameJa": "まいあし",
+"meaningJa": "舛",
+"meaningKo": "어그러질천",
+"meaningZh": "舛",
+"meaningEn": "oppose"
+},
+{
+"number": 137,
+"glyph": "舟",
+"strokes": 6,
+"nameJa": "ふね",
+"meaningJa": "舟",
+"meaningKo": "배",
+"meaningZh": "舟",
+"meaningEn": "boat"
+},
+{
+"number": 138,
+"glyph": "艮",
+"strokes": 6,
+"nameJa": "こん",
+"meaningJa": "艮",
+"meaningKo": "그치다·어긋날간",
+"meaningZh": "艮",
+"meaningEn": "stopping"
+},
+{
+"number": 139,
+"glyph": "色",
+"strokes": 6,
+"nameJa": "いろ",
+"meaningJa": "色",
+"meaningKo": "빛·색",
+"meaningZh": "色",
+"meaningEn": "color"
+},
+{
+"number": 140,
+"glyph": "艸",
+"strokes": 6,
+"nameJa": "くさかんむり",
+"meaningJa": "草",
+"meaningKo": "초두머리(풀)",
+"meaningZh": "草字头",
+"meaningEn": "grass"
+},
+{
+"number": 141,
+"glyph": "虍",
+"strokes": 6,
+"nameJa": "とらがしら",
+"meaningJa": "虎・虍",
+"meaningKo": "범호엄",
+"meaningZh": "虍",
+"meaningEn": "tiger"
+},
+{
+"number": 142,
+"glyph": "虫",
+"strokes": 6,
+"nameJa": "むし",
+"meaningJa": "虫",
+"meaningKo": "벌레",
+"meaningZh": "虫",
+"meaningEn": "insect"
+},
+{
+"number": 143,
+"glyph": "血",
+"strokes": 7,
+"nameJa": "ち",
+"meaningJa": "血",
+"meaningKo": "피",
+"meaningZh": "血",
+"meaningEn": "blood"
+},
+{
+"number": 144,
+"glyph": "行",
+"strokes": 7,
+"nameJa": "ぎょうがまえ",
+"meaningJa": "行く・道",
+"meaningKo": "다닐행",
+"meaningZh": "行",
+"meaningEn": "walk"
+},
+{
+"number": 145,
+"glyph": "衣",
+"strokes": 7,
+"nameJa": "ころも",
+"meaningJa": "衣",
+"meaningKo": "옷",
+"meaningZh": "衣",
+"meaningEn": "clothes"
+},
+{
+"number": 146,
+"glyph": "襾",
+"strokes": 7,
+"nameJa": "にし",
+"meaningJa": "おおい・襾",
+"meaningKo": "덮을아",
+"meaningZh": "襾",
+"meaningEn": "cover"
+},
+{
+"number": 147,
+"glyph": "見",
+"strokes": 7,
+"nameJa": "みる",
+"meaningJa": "見",
+"meaningKo": "보다",
+"meaningZh": "見",
+"meaningEn": "see"
+},
+{
+"number": 148,
+"glyph": "角",
+"strokes": 7,
+"nameJa": "つの",
+"meaningJa": "角",
+"meaningKo": "뿔",
+"meaningZh": "角",
+"meaningEn": "horn"
+},
+{
+"number": 149,
+"glyph": "言",
+"strokes": 7,
+"nameJa": "げん",
+"meaningJa": "言",
+"meaningKo": "말씀",
+"meaningZh": "言",
+"meaningEn": "speech"
+},
+{
+"number": 150,
+"glyph": "谷",
+"strokes": 7,
+"nameJa": "たに",
+"meaningJa": "谷",
+"meaningKo": "골짜기",
+"meaningZh": "谷",
+"meaningEn": "valley"
+},
+{
+"number": 151,
+"glyph": "豆",
+"strokes": 7,
+"nameJa": "まめ",
+"meaningJa": "豆",
+"meaningKo": "콩",
+"meaningZh": "豆",
+"meaningEn": "bean"
+},
+{
+"number": 152,
+"glyph": "豕",
+"strokes": 7,
+"nameJa": "いのこ",
+"meaningJa": "豕",
+"meaningKo": "돼지",
+"meaningZh": "豕",
+"meaningEn": "pig"
+},
+{
+"number": 153,
+"glyph": "豸",
+"strokes": 7,
+"nameJa": "むじなへん",
+"meaningJa": "豸",
+"meaningKo": "발없는벌레치",
+"meaningZh": "豸",
+"meaningEn": "badger"
+},
+{
+"number": 154,
+"glyph": "貝",
+"strokes": 7,
+"nameJa": "かい",
+"meaningJa": "貝",
+"meaningKo": "조개·재물",
+"meaningZh": "貝",
+"meaningEn": "shell"
+},
+{
+"number": 155,
+"glyph": "赤",
+"strokes": 7,
+"nameJa": "あか",
+"meaningJa": "赤",
+"meaningKo": "붉다",
+"meaningZh": "赤",
+"meaningEn": "red"
+},
+{
+"number": 156,
+"glyph": "走",
+"strokes": 7,
+"nameJa": "はしる",
+"meaningJa": "走",
+"meaningKo": "달리다",
+"meaningZh": "走",
+"meaningEn": "run"
+},
+{
+"number": 157,
+"glyph": "足",
+"strokes": 7,
+"nameJa": "あし",
+"meaningJa": "足",
+"meaningKo": "발",
+"meaningZh": "足",
+"meaningEn": "foot"
+},
+{
+"number": 158,
+"glyph": "身",
+"strokes": 7,
+"nameJa": "み",
+"meaningJa": "身",
+"meaningKo": "몸",
+"meaningZh": "身",
+"meaningEn": "body"
+},
+{
+"number": 159,
+"glyph": "車",
+"strokes": 7,
+"nameJa": "くるま",
+"meaningJa": "車",
+"meaningKo": "수레",
+"meaningZh": "車",
+"meaningEn": "cart"
+},
+{
+"number": 160,
+"glyph": "辛",
+"strokes": 7,
+"nameJa": "からい",
+"meaningJa": "辛",
+"meaningKo": "맵다·괴롭다",
+"meaningZh": "辛",
+"meaningEn": "bitter"
+},
+{
+"number": 161,
+"glyph": "辰",
+"strokes": 7,
+"nameJa": "しんのたつ",
+"meaningJa": "辰",
+"meaningKo": "별·때신",
+"meaningZh": "辰",
+"meaningEn": "morning"
+},
+{
+"number": 162,
+"glyph": "辵",
+"strokes": 7,
+"nameJa": "しんにょう",
+"meaningJa": "進む・道",
+"meaningKo": "책받침",
+"meaningZh": "辶(辵)",
+"meaningEn": "walk"
+},
+{
+"number": 163,
+"glyph": "邑",
+"strokes": 7,
+"nameJa": "むら",
+"meaningJa": "邑・おおざと",
+"meaningKo": "고을읍",
+"meaningZh": "邑(阝右)",
+"meaningEn": "city"
+},
+{
+"number": 164,
+"glyph": "酉",
+"strokes": 7,
+"nameJa": "とりへん",
+"meaningJa": "酉・酒",
+"meaningKo": "닭·술유",
+"meaningZh": "酉",
+"meaningEn": "wine"
+},
+{
+"number": 165,
+"glyph": "釆",
+"strokes": 7,
+"nameJa": "のごめ",
+"meaningJa": "釆",
+"meaningKo": "분별할변",
+"meaningZh": "釆",
+"meaningEn": "distinguish"
+},
+{
+"number": 166,
+"glyph": "里",
+"strokes": 7,
+"nameJa": "さと",
+"meaningJa": "里",
+"meaningKo": "마을",
+"meaningZh": "里",
+"meaningEn": "village"
+},
+{
+"number": 167,
+"glyph": "金",
+"strokes": 8,
+"nameJa": "かね",
+"meaningJa": "金",
+"meaningKo": "쇠·금",
+"meaningZh": "金",
+"meaningEn": "metal"
+},
+{
+"number": 168,
+"glyph": "長",
+"strokes": 8,
+"nameJa": "ながい",
+"meaningJa": "長",
+"meaningKo": "길다",
+"meaningZh": "長",
+"meaningEn": "long"
+},
+{
+"number": 169,
+"glyph": "門",
+"strokes": 8,
+"nameJa": "もん",
+"meaningJa": "門",
+"meaningKo": "문",
+"meaningZh": "門",
+"meaningEn": "gate"
+},
+{
+"number": 170,
+"glyph": "阜",
+"strokes": 8,
+"nameJa": "こざとへん",
+"meaningJa": "阜・おか",
+"meaningKo": "언덕부",
+"meaningZh": "阜(阝左)",
+"meaningEn": "mound"
+},
+{
+"number": 171,
+"glyph": "隶",
+"strokes": 8,
+"nameJa": "れいづくり",
+"meaningJa": "隶",
+"meaningKo": "미칠이·잡다",
+"meaningZh": "隶",
+"meaningEn": "slave"
+},
+{
+"number": 172,
+"glyph": "隹",
+"strokes": 8,
+"nameJa": "ふるとり",
+"meaningJa": "隹",
+"meaningKo": "새추(꽁지짧은새)",
+"meaningZh": "隹",
+"meaningEn": "short-tailed bird"
+},
+{
+"number": 173,
+"glyph": "雨",
+"strokes": 8,
+"nameJa": "あめ",
+"meaningJa": "雨",
+"meaningKo": "비",
+"meaningZh": "雨",
+"meaningEn": "rain"
+},
+{
+"number": 174,
+"glyph": "靑",
+"strokes": 8,
+"nameJa": "あお",
+"meaningJa": "青",
+"meaningKo": "푸르다",
+"meaningZh": "青",
+"meaningEn": "blue"
+},
+{
+"number": 175,
+"glyph": "非",
+"strokes": 8,
+"nameJa": "あらず",
+"meaningJa": "非",
+"meaningKo": "아니다",
+"meaningZh": "非",
+"meaningEn": "wrong"
+},
+{
+"number": 176,
+"glyph": "面",
+"strokes": 9,
+"nameJa": "めん",
+"meaningJa": "面",
+"meaningKo": "낯·얼굴",
+"meaningZh": "面",
+"meaningEn": "face"
+},
+{
+"number": 177,
+"glyph": "革",
+"strokes": 9,
+"nameJa": "かわへん",
+"meaningJa": "革",
+"meaningKo": "가죽",
+"meaningZh": "革",
+"meaningEn": "leather"
+},
+{
+"number": 178,
+"glyph": "韋",
+"strokes": 9,
+"nameJa": "なめしがわ",
+"meaningJa": "韋",
+"meaningKo": "다룸가죽위",
+"meaningZh": "韋",
+"meaningEn": "tanned leather"
+},
+{
+"number": 179,
+"glyph": "韭",
+"strokes": 9,
+"nameJa": "にら",
+"meaningJa": "韭",
+"meaningKo": "부추",
+"meaningZh": "韭",
+"meaningEn": "leek"
+},
+{
+"number": 180,
+"glyph": "音",
+"strokes": 9,
+"nameJa": "おと",
+"meaningJa": "音",
+"meaningKo": "소리",
+"meaningZh": "音",
+"meaningEn": "sound"
+},
+{
+"number": 181,
+"glyph": "頁",
+"strokes": 9,
+"nameJa": "おおがい",
+"meaningJa": "頁・頭",
+"meaningKo": "머리혈",
+"meaningZh": "頁",
+"meaningEn": "head"
+},
+{
+"number": 182,
+"glyph": "風",
+"strokes": 9,
+"nameJa": "かぜ",
+"meaningJa": "風",
+"meaningKo": "바람",
+"meaningZh": "風",
+"meaningEn": "wind"
+},
+{
+"number": 183,
+"glyph": "飛",
+"strokes": 9,
+"nameJa": "とぶ",
+"meaningJa": "飛",
+"meaningKo": "날다",
+"meaningZh": "飛",
+"meaningEn": "fly"
+},
+{
+"number": 184,
+"glyph": "食",
+"strokes": 9,
+"nameJa": "しょく",
+"meaningJa": "食",
+"meaningKo": "먹다·밥",
+"meaningZh": "食",
+"meaningEn": "eat"
+},
+{
+"number": 185,
+"glyph": "首",
+"strokes": 9,
+"nameJa": "くび",
+"meaningJa": "首",
+"meaningKo": "머리·목",
+"meaningZh": "首",
+"meaningEn": "head"
+},
+{
+"number": 186,
+"glyph": "香",
+"strokes": 9,
+"nameJa": "かおり",
+"meaningJa": "香",
+"meaningKo": "향기",
+"meaningZh": "香",
+"meaningEn": "fragrance"
+},
+{
+"number": 187,
+"glyph": "馬",
+"strokes": 10,
+"nameJa": "うま",
+"meaningJa": "馬",
+"meaningKo": "말",
+"meaningZh": "馬",
+"meaningEn": "horse"
+},
+{
+"number": 188,
+"glyph": "骨",
+"strokes": 10,
+"nameJa": "ほね",
+"meaningJa": "骨",
+"meaningKo": "뼈",
+"meaningZh": "骨",
+"meaningEn": "bone"
+},
+{
+"number": 189,
+"glyph": "高",
+"strokes": 10,
+"nameJa": "たかい",
+"meaningJa": "高",
+"meaningKo": "높다",
+"meaningZh": "高",
+"meaningEn": "tall"
+},
+{
+"number": 190,
+"glyph": "髟",
+"strokes": 10,
+"nameJa": "かみがしら",
+"meaningJa": "髟",
+"meaningKo": "터럭발·긴머리",
+"meaningZh": "髟",
+"meaningEn": "long hair"
+},
+{
+"number": 191,
+"glyph": "鬥",
+"strokes": 10,
+"nameJa": "とうがまえ",
+"meaningJa": "鬥",
+"meaningKo": "싸울투",
+"meaningZh": "鬥",
+"meaningEn": "fight"
+},
+{
+"number": 192,
+"glyph": "鬯",
+"strokes": 10,
+"nameJa": "ちょう",
+"meaningJa": "鬯",
+"meaningKo": "울창주창",
+"meaningZh": "鬯",
+"meaningEn": "sacrificial wine"
+},
+{
+"number": 193,
+"glyph": "鬲",
+"strokes": 10,
+"nameJa": "かなえ",
+"meaningJa": "鬲",
+"meaningKo": "솥력",
+"meaningZh": "鬲",
+"meaningEn": "cauldron"
+},
+{
+"number": 194,
+"glyph": "鬼",
+"strokes": 10,
+"nameJa": "おに",
+"meaningJa": "鬼",
+"meaningKo": "귀신",
+"meaningZh": "鬼",
+"meaningEn": "ghost"
+},
+{
+"number": 195,
+"glyph": "魚",
+"strokes": 11,
+"nameJa": "うお",
+"meaningJa": "魚",
+"meaningKo": "물고기",
+"meaningZh": "魚",
+"meaningEn": "fish"
+},
+{
+"number": 196,
+"glyph": "鳥",
+"strokes": 11,
+"nameJa": "とり",
+"meaningJa": "鳥",
+"meaningKo": "새",
+"meaningZh": "鳥",
+"meaningEn": "bird"
+},
+{
+"number": 197,
+"glyph": "鹵",
+"strokes": 11,
+"nameJa": "しお",
+"meaningJa": "鹵",
+"meaningKo": "소금밭·간수",
+"meaningZh": "鹵",
+"meaningEn": "salt"
+},
+{
+"number": 198,
+"glyph": "鹿",
+"strokes": 11,
+"nameJa": "しか",
+"meaningJa": "鹿",
+"meaningKo": "사슴",
+"meaningZh": "鹿",
+"meaningEn": "deer"
+},
+{
+"number": 199,
+"glyph": "麥",
+"strokes": 11,
+"nameJa": "むぎ",
+"meaningJa": "麦",
+"meaningKo": "보리",
+"meaningZh": "麥",
+"meaningEn": "wheat"
+},
+{
+"number": 200,
+"glyph": "麻",
+"strokes": 11,
+"nameJa": "あさ",
+"meaningJa": "麻",
+"meaningKo": "삼",
+"meaningZh": "麻",
+"meaningEn": "hemp"
+},
+{
+"number": 201,
+"glyph": "黃",
+"strokes": 12,
+"nameJa": "きいろ",
+"meaningJa": "黄",
+"meaningKo": "누렇다",
+"meaningZh": "黃",
+"meaningEn": "yellow"
+},
+{
+"number": 202,
+"glyph": "黍",
+"strokes": 12,
+"nameJa": "きび",
+"meaningJa": "黍",
+"meaningKo": "기장",
+"meaningZh": "黍",
+"meaningEn": "millet"
+},
+{
+"number": 203,
+"glyph": "黑",
+"strokes": 12,
+"nameJa": "くろ",
+"meaningJa": "黒",
+"meaningKo": "검다",
+"meaningZh": "黑",
+"meaningEn": "black"
+},
+{
+"number": 204,
+"glyph": "黹",
+"strokes": 12,
+"nameJa": "ぬいとり",
+"meaningJa": "黹",
+"meaningKo": "바느질치",
+"meaningZh": "黹",
+"meaningEn": "embroidery"
+},
+{
+"number": 205,
+"glyph": "黽",
+"strokes": 13,
+"nameJa": "かえる",
+"meaningJa": "黽",
+"meaningKo": "맹꽁이맹",
+"meaningZh": "黽",
+"meaningEn": "frog"
+},
+{
+"number": 206,
+"glyph": "鼎",
+"strokes": 13,
+"nameJa": "かなえ",
+"meaningJa": "鼎",
+"meaningKo": "솥정",
+"meaningZh": "鼎",
+"meaningEn": "tripod"
+},
+{
+"number": 207,
+"glyph": "鼓",
+"strokes": 13,
+"nameJa": "つづみ",
+"meaningJa": "鼓",
+"meaningKo": "북",
+"meaningZh": "鼓",
+"meaningEn": "drum"
+},
+{
+"number": 208,
+"glyph": "鼠",
+"strokes": 13,
+"nameJa": "ねずみ",
+"meaningJa": "鼠",
+"meaningKo": "쥐",
+"meaningZh": "鼠",
+"meaningEn": "rat"
+},
+{
+"number": 209,
+"glyph": "鼻",
+"strokes": 14,
+"nameJa": "はな",
+"meaningJa": "鼻",
+"meaningKo": "코",
+"meaningZh": "鼻",
+"meaningEn": "nose"
+},
+{
+"number": 210,
+"glyph": "齊",
+"strokes": 14,
+"nameJa": "せい",
+"meaningJa": "齊",
+"meaningKo": "가지런하다",
+"meaningZh": "齊",
+"meaningEn": "even"
+},
+{
+"number": 211,
+"glyph": "齒",
+"strokes": 15,
+"nameJa": "は",
+"meaningJa": "歯",
+"meaningKo": "이·이빨",
+"meaningZh": "齒",
+"meaningEn": "tooth"
+},
+{
+"number": 212,
+"glyph": "龍",
+"strokes": 16,
+"nameJa": "りゅう",
+"meaningJa": "竜",
+"meaningKo": "용",
+"meaningZh": "龍",
+"meaningEn": "dragon"
+},
+{
+"number": 213,
+"glyph": "龜",
+"strokes": 16,
+"nameJa": "かめ",
+"meaningJa": "亀",
+"meaningKo": "거북",
+"meaningZh": "龜",
+"meaningEn": "turtle"
+},
+{
+"number": 214,
+"glyph": "龠",
+"strokes": 17,
+"nameJa": "ふえ",
+"meaningJa": "龠",
+"meaningKo": "피리약",
+"meaningZh": "龠",
+"meaningEn": "flute"
+}
+]
