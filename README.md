@@ -90,6 +90,7 @@ its support page.
 | [Unihan](https://www.unicode.org/charts/unihan.html) | character metadata | [Unicode](https://www.unicode.org/license.txt) |
 | [GlyphWiki](https://glyphwiki.org/) | 旧字 outlines | CC BY-SA 3.0 |
 | [open-anki-jlpt-decks](https://github.com/jamsinclair/open-anki-jlpt-decks) | JLPT vocabulary levels | MIT |
+| [Japanese WordNet](https://bond-lab.github.io/wnja/) (NICT) | 類義語 (synonym) pairs | [NICT WordNet licence](https://github.com/omwn/omw-data/blob/main/wns/jpn/LICENSE) (permissive, BSD-style) |
 
 ## Licence
 
