@@ -1,3098 +1,5922 @@
 [
- {
-  "word": "進級",
-  "wordReading": "しんきゅう",
-  "answer": "留年",
-  "answerReading": "りゅうねん",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "安全",
-  "wordReading": "あんぜん",
-  "answer": "危険",
-  "answerReading": "きけん",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "散在",
-  "wordReading": "さんざい",
-  "answer": "密集",
-  "answerReading": "みっしゅう",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "拡大",
-  "wordReading": "かくだい",
-  "answer": "縮小",
-  "answerReading": "しゅくしょう",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "洋服",
-  "wordReading": "ようふく",
-  "answer": "和服",
-  "answerReading": "わふく",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "老年",
-  "wordReading": "ろうねん",
-  "answer": "幼年",
-  "answerReading": "ようねん",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "生前",
-  "wordReading": "せいぜん",
-  "answer": "死後",
-  "answerReading": "しご",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "油断",
-  "wordReading": "ゆだん",
-  "answer": "注意",
-  "answerReading": "ちゅうい",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "水平",
-  "wordReading": "すいへい",
-  "answer": "垂直",
-  "answerReading": "すいちょく",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "引退",
-  "wordReading": "いんたい",
-  "answer": "現役",
-  "answerReading": "げんえき",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "着席",
-  "wordReading": "ちゃくせき",
-  "answer": "起立",
-  "answerReading": "きりつ",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "任意",
-  "wordReading": "にんい",
-  "answer": "強制",
-  "answerReading": "きょうせい",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "手動",
-  "wordReading": "しゅどう",
-  "answer": "自動",
-  "answerReading": "じどう",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "苦手",
-  "wordReading": "にがて",
-  "answer": "得意",
-  "answerReading": "とくい",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "通常",
-  "wordReading": "つうじょう",
-  "answer": "臨時",
-  "answerReading": "りんじ",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "退化",
-  "wordReading": "たいか",
-  "answer": "進化",
-  "answerReading": "しんか",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "未定",
-  "wordReading": "みてい",
-  "answer": "決定",
-  "answerReading": "けってい",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "寒冷",
-  "wordReading": "かんれい",
-  "answer": "温暖",
-  "answerReading": "おんだん",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "制服",
-  "wordReading": "せいふく",
-  "answer": "私服",
-  "answerReading": "しふく",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "満潮",
-  "wordReading": "まんちょう",
-  "answer": "干潮",
-  "answerReading": "かんちょう",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "往復",
-  "wordReading": "おうふく",
-  "answer": "片道",
-  "answerReading": "かたみち",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "退職",
-  "wordReading": "たいしょく",
-  "answer": "就職",
-  "answerReading": "しゅうしょく",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "順境",
-  "wordReading": "じゅんきょう",
-  "answer": "逆境",
-  "answerReading": "ぎゃっきょう",
-  "relation": "対義",
-  "level": "5級"
- },
- {
-  "word": "障害",
-  "wordReading": "しょうがい",
-  "answer": "支障",
-  "answerReading": "ししょう",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "値段",
-  "wordReading": "ねだん",
-  "answer": "価格",
-  "answerReading": "かかく",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "解決",
-  "wordReading": "かいけつ",
-  "answer": "対処",
-  "answerReading": "たいしょ",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "厳格",
-  "wordReading": "げんかく",
-  "answer": "厳正",
-  "answerReading": "げんせい",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "想像",
-  "wordReading": "そうぞう",
-  "answer": "空想",
-  "answerReading": "くうそう",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "忠実",
-  "wordReading": "ちゅうじつ",
-  "answer": "実直",
-  "answerReading": "じっちょく",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "最高",
-  "wordReading": "さいこう",
-  "answer": "頂点",
-  "answerReading": "ちょうてん",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "担任",
-  "wordReading": "たんにん",
-  "answer": "担当",
-  "answerReading": "たんとう",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "感心",
-  "wordReading": "かんしん",
-  "answer": "敬服",
-  "answerReading": "けいふく",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "警告",
-  "wordReading": "けいこく",
-  "answer": "忠告",
-  "answerReading": "ちゅうこく",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "討議",
-  "wordReading": "とうぎ",
-  "answer": "討論",
-  "answerReading": "とうろん",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "用意",
-  "wordReading": "ようい",
-  "answer": "準備",
-  "answerReading": "じゅんび",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "進歩",
-  "wordReading": "しんぽ",
-  "answer": "発展",
-  "answerReading": "はってん",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "快活",
-  "wordReading": "かいかつ",
-  "answer": "明朗",
-  "answerReading": "めいろう",
-  "relation": "類義",
-  "level": "5級"
- },
- {
-  "word": "加熱",
-  "wordReading": "かねつ",
-  "answer": "冷却",
-  "answerReading": "れいきゃく",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "多弁",
-  "wordReading": "たべん",
-  "answer": "無口",
-  "answerReading": "むくち",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "直面",
-  "wordReading": "ちょくめん",
-  "answer": "回避",
-  "answerReading": "かいひ",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "許可",
-  "wordReading": "きょか",
-  "answer": "禁止",
-  "answerReading": "きんし",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "冷静",
-  "wordReading": "れいせい",
-  "answer": "興奮",
-  "answerReading": "こうふん",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "猛暑",
-  "wordReading": "もうしょ",
-  "answer": "厳寒",
-  "answerReading": "げんかん",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "借用",
-  "wordReading": "しゃくよう",
-  "answer": "返却",
-  "answerReading": "へんきゃく",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "却下",
-  "wordReading": "きゃっか",
-  "answer": "受理",
-  "answerReading": "じゅり",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "沈殿",
-  "wordReading": "ちんでん",
-  "answer": "浮遊",
-  "answerReading": "ふゆう",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "従属",
-  "wordReading": "じゅうぞく",
-  "answer": "支配",
-  "answerReading": "しはい",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "包含",
-  "wordReading": "ほうがん",
-  "answer": "除外",
-  "answerReading": "じょがい",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "反抗",
-  "wordReading": "はんこう",
-  "answer": "服従",
-  "answerReading": "ふくじゅう",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "憶測",
-  "wordReading": "おくそく",
-  "answer": "確信",
-  "answerReading": "かくしん",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "難解",
-  "wordReading": "なんかい",
-  "answer": "平易",
-  "answerReading": "へいい",
-  "relation": "対義",
-  "level": "4級"
- },
- {
-  "word": "本気",
-  "wordReading": "ほんき",
-  "answer": "真剣",
-  "answerReading": "しんけん",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "努力",
-  "wordReading": "どりょく",
-  "answer": "精進",
-  "answerReading": "しょうじん",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "追加",
-  "wordReading": "ついか",
-  "answer": "補足",
-  "answerReading": "ほそく",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "相当",
-  "wordReading": "そうとう",
-  "answer": "匹敵",
-  "answerReading": "ひってき",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "黙殺",
-  "wordReading": "もくさつ",
-  "answer": "無視",
-  "answerReading": "むし",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "名誉",
-  "wordReading": "めいよ",
-  "answer": "栄光",
-  "answerReading": "えいこう",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "時流",
-  "wordReading": "じりゅう",
-  "answer": "世相",
-  "answerReading": "せそう",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "地味",
-  "wordReading": "じみ",
-  "answer": "簡素",
-  "answerReading": "かんそ",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "赤字",
-  "wordReading": "あかじ",
-  "answer": "欠損",
-  "answerReading": "けっそん",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "変更",
-  "wordReading": "へんこう",
-  "answer": "修正",
-  "answerReading": "しゅうせい",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "横領",
-  "wordReading": "おうりょう",
-  "answer": "流用",
-  "answerReading": "りゅうよう",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "友好",
-  "wordReading": "ゆうこう",
-  "answer": "親善",
-  "answerReading": "しんぜん",
-  "relation": "類義",
-  "level": "4級"
- },
- {
-  "word": "協力",
-  "wordReading": "きょうりょく",
-  "answer": "妨害",
-  "answerReading": "ぼうがい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "逮捕",
-  "wordReading": "たいほ",
-  "answer": "釈放",
-  "answerReading": "しゃくほう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "開始",
-  "wordReading": "かいし",
-  "answer": "終了",
-  "answerReading": "しゅうりょう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "膨張",
-  "wordReading": "ぼうちょう",
-  "answer": "収縮",
-  "answerReading": "しゅうしゅく",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "平凡",
-  "wordReading": "へいぼん",
-  "answer": "非凡",
-  "answerReading": "ひぼん",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "誕生",
-  "wordReading": "たんじょう",
-  "answer": "死亡",
-  "answerReading": "しぼう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "長寿",
-  "wordReading": "ちょうじゅ",
-  "answer": "短命",
-  "answerReading": "たんめい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "恥辱",
-  "wordReading": "ちじょく",
-  "answer": "栄誉",
-  "answerReading": "えいよ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "促進",
-  "wordReading": "そくしん",
-  "answer": "抑制",
-  "answerReading": "よくせい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "自由",
-  "wordReading": "じゆう",
-  "answer": "束縛",
-  "answerReading": "そくばく",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "深慮",
-  "wordReading": "しんりょ",
-  "answer": "浅慮",
-  "answerReading": "せんりょ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "上昇",
-  "wordReading": "じょうしょう",
-  "answer": "降下",
-  "answerReading": "こうか",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "添加",
-  "wordReading": "てんか",
-  "answer": "削除",
-  "answerReading": "さくじょ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "自白",
-  "wordReading": "じはく",
-  "answer": "黙秘",
-  "answerReading": "もくひ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "貧弱",
-  "wordReading": "ひんじゃく",
-  "answer": "豪華",
-  "answerReading": "ごうか",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "増強",
-  "wordReading": "ぞうきょう",
-  "answer": "拡大",
-  "answerReading": "かくだい",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "提携",
-  "wordReading": "ていけい",
-  "answer": "協力",
-  "answerReading": "きょうりょく",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "自負",
-  "wordReading": "じふ",
-  "answer": "自慢",
-  "answerReading": "じまん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "細心",
-  "wordReading": "さいしん",
-  "answer": "丹念",
-  "answerReading": "たんねん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "幻想",
-  "wordReading": "げんそう",
-  "answer": "錯覚",
-  "answerReading": "さっかく",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "承認",
-  "wordReading": "しょうにん",
-  "answer": "許可",
-  "answerReading": "きょか",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "激情",
-  "wordReading": "げきじょう",
-  "answer": "衝動",
-  "answerReading": "しょうどう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "重宝",
-  "wordReading": "ちょうほう",
-  "answer": "便利",
-  "answerReading": "べんり",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "屈指",
-  "wordReading": "くっし",
-  "answer": "有数",
-  "answerReading": "ゆうすう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "書簡",
-  "wordReading": "しょかん",
-  "answer": "手紙",
-  "answerReading": "てがみ",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "落胆",
-  "wordReading": "らくたん",
-  "answer": "失望",
-  "answerReading": "しつぼう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "恒例",
-  "wordReading": "こうれい",
-  "answer": "風習",
-  "answerReading": "ふうしゅう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "開設",
-  "wordReading": "かいせつ",
-  "answer": "閉鎖",
-  "answerReading": "へいさ",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "干渉",
-  "wordReading": "かんしょう",
-  "answer": "放任",
-  "answerReading": "ほうにん",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "希釈",
-  "wordReading": "きしゃく",
-  "answer": "濃縮",
-  "answerReading": "のうしゅく",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "購入",
-  "wordReading": "こうにゅう",
-  "answer": "売却",
-  "answerReading": "ばいきゃく",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "撤去",
-  "wordReading": "てっきょ",
-  "answer": "設置",
-  "answerReading": "せっち",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "肯定",
-  "wordReading": "こうてい",
-  "answer": "否定",
-  "answerReading": "ひてい",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "謙虚",
-  "wordReading": "けんきょ",
-  "answer": "尊大",
-  "answerReading": "そんだい",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "冒頭",
-  "wordReading": "ぼうとう",
-  "answer": "末尾",
-  "answerReading": "まつび",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "充実",
-  "wordReading": "じゅうじつ",
-  "answer": "空虚",
-  "answerReading": "くうきょ",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "防御",
-  "wordReading": "ぼうぎょ",
-  "answer": "攻撃",
-  "answerReading": "こうげき",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "末端",
-  "wordReading": "まったん",
-  "answer": "中枢",
-  "answerReading": "ちゅうすう",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "快勝",
-  "wordReading": "かいしょう",
-  "answer": "惨敗",
-  "answerReading": "ざんぱい",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "私事",
-  "wordReading": "しじ",
-  "answer": "公務",
-  "answerReading": "こうむ",
-  "relation": "対義",
-  "level": "準2級"
- },
- {
-  "word": "大胆",
-  "wordReading": "だいたん",
-  "answer": "豪放",
-  "answerReading": "ごうほう",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "落日",
-  "wordReading": "らくじつ",
-  "answer": "残照",
-  "answerReading": "ざんしょう",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "抵当",
-  "wordReading": "ていとう",
-  "answer": "担保",
-  "answerReading": "たんぽ",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "用心",
-  "wordReading": "ようじん",
-  "answer": "警戒",
-  "answerReading": "けいかい",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "批准",
-  "wordReading": "ひじゅん",
-  "answer": "追認",
-  "answerReading": "ついにん",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "大衆",
-  "wordReading": "たいしゅう",
-  "answer": "庶民",
-  "answerReading": "しょみん",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "没頭",
-  "wordReading": "ぼっとう",
-  "answer": "専念",
-  "answerReading": "せんねん",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "貢献",
-  "wordReading": "こうけん",
-  "answer": "寄与",
-  "answerReading": "きよ",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "圧迫",
-  "wordReading": "あっぱく",
-  "answer": "抑圧",
-  "answerReading": "よくあつ",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "負担",
-  "wordReading": "ふたん",
-  "answer": "重荷",
-  "answerReading": "おもに",
-  "relation": "類義",
-  "level": "準2級"
- },
- {
-  "word": "絶賛",
-  "wordReading": "ぜっさん",
-  "answer": "酷評",
-  "answerReading": "こくひょう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "尊敬",
-  "wordReading": "そんけい",
-  "answer": "侮辱",
-  "answerReading": "ぶじょく",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "記名",
-  "wordReading": "きめい",
-  "answer": "匿名",
-  "answerReading": "とくめい",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "貧乏",
-  "wordReading": "びんぼう",
-  "answer": "裕福",
-  "answerReading": "ゆうふく",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "進出",
-  "wordReading": "しんしゅつ",
-  "answer": "撤退",
-  "answerReading": "てったい",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "献上",
-  "wordReading": "けんじょう",
-  "answer": "下賜",
-  "answerReading": "かし",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "事実",
-  "wordReading": "じじつ",
-  "answer": "虚偽",
-  "answerReading": "きょぎ",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "承諾",
-  "wordReading": "しょうだく",
-  "answer": "拒絶",
-  "answerReading": "きょぜつ",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "沈降",
-  "wordReading": "ちんこう",
-  "answer": "浮上",
-  "answerReading": "ふじょう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "削除",
-  "wordReading": "さくじょ",
-  "answer": "追加",
-  "answerReading": "ついか",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "虚構",
-  "wordReading": "きょこう",
-  "answer": "事実",
-  "answerReading": "じじつ",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "祝賀",
-  "wordReading": "しゅくが",
-  "answer": "哀悼",
-  "answerReading": "あいとう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "検挙",
-  "wordReading": "けんきょ",
-  "answer": "釈放",
-  "answerReading": "しゃくほう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "飢餓",
-  "wordReading": "きが",
-  "answer": "飢渇",
-  "answerReading": "きかつ",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "辛抱",
-  "wordReading": "しんぼう",
-  "answer": "忍耐",
-  "answerReading": "にんたい",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "検討",
-  "wordReading": "けんとう",
-  "answer": "吟味",
-  "answerReading": "ぎんみ",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "積載",
-  "wordReading": "せきさい",
-  "answer": "搭載",
-  "answerReading": "とうさい",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "背徳",
-  "wordReading": "はいとく",
-  "answer": "堕落",
-  "answerReading": "だらく",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "陣地",
-  "wordReading": "じんち",
-  "answer": "拠点",
-  "answerReading": "きょてん",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "頑丈",
-  "wordReading": "がんじょう",
-  "answer": "強壮",
-  "answerReading": "きょうそう",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "頑迷",
-  "wordReading": "がんめい",
-  "answer": "偏屈",
-  "answerReading": "へんくつ",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "交渉",
-  "wordReading": "こうしょう",
-  "answer": "折衝",
-  "answerReading": "せっしょう",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "熟知",
-  "wordReading": "じゅくち",
-  "answer": "通暁",
-  "answerReading": "つうぎょう",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "屋敷",
-  "wordReading": "やしき",
-  "answer": "邸宅",
-  "answerReading": "ていたく",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "荘重",
-  "wordReading": "そうちょう",
-  "answer": "厳粛",
-  "answerReading": "げんしゅく",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "富貴",
-  "wordReading": "ふうき",
-  "answer": "貧賤",
-  "answerReading": "ひんせん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "険阻",
-  "wordReading": "けんそ",
-  "answer": "平坦",
-  "answerReading": "へいたん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "剛毅",
-  "wordReading": "ごうき",
-  "answer": "怯懦",
-  "answerReading": "きょうだ",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "中枢",
-  "wordReading": "ちゅうすう",
-  "answer": "末梢",
-  "answerReading": "まっしょう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "混沌",
-  "wordReading": "こんとん",
-  "answer": "秩序",
-  "answerReading": "ちつじょ",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "進取",
-  "wordReading": "しんしゅ",
-  "answer": "退嬰",
-  "answerReading": "たいえい",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "緊張",
-  "wordReading": "きんちょう",
-  "answer": "弛緩",
-  "answerReading": "しかん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "起工",
-  "wordReading": "きこう",
-  "answer": "竣工",
-  "answerReading": "しゅんこう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "遅鈍",
-  "wordReading": "ちどん",
-  "answer": "敏捷",
-  "answerReading": "びんしょう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "碩学",
-  "wordReading": "せきがく",
-  "answer": "浅学",
-  "answerReading": "せんがく",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "能弁",
-  "wordReading": "のうべん",
-  "answer": "訥弁",
-  "answerReading": "とつべん",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "寡黙",
-  "wordReading": "かもく",
-  "answer": "饒舌",
-  "answerReading": "じょうぜつ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "帰納",
-  "wordReading": "きのう",
-  "answer": "演繹",
-  "answerReading": "えんえき",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "疎遠",
-  "wordReading": "そえん",
-  "answer": "昵懇",
-  "answerReading": "じっこん",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "勤勉",
-  "wordReading": "きんべん",
-  "answer": "懶惰",
-  "answerReading": "らんだ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "倹約",
-  "wordReading": "けんやく",
-  "answer": "奢侈",
-  "answerReading": "しゃし",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "露骨",
-  "wordReading": "ろこつ",
-  "answer": "婉曲",
-  "answerReading": "えんきょく",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "黎明",
-  "wordReading": "れいめい",
-  "answer": "薄暮",
-  "answerReading": "はくぼ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "突然",
-  "wordReading": "とつぜん",
-  "answer": "俄然",
-  "answerReading": "がぜん",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "周章",
-  "wordReading": "しゅうしょう",
-  "answer": "狼狽",
-  "answerReading": "ろうばい",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "頑丈",
-  "wordReading": "がんじょう",
-  "answer": "堅牢",
-  "answerReading": "けんろう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "切迫",
-  "wordReading": "せっぱく",
-  "answer": "逼迫",
-  "answerReading": "ひっぱく",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "風説",
-  "wordReading": "ふうせつ",
-  "answer": "巷説",
-  "answerReading": "こうせつ",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "素朴",
-  "wordReading": "そぼく",
-  "answer": "淳朴",
-  "answerReading": "じゅんぼく",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "幸運",
-  "wordReading": "こううん",
-  "answer": "僥倖",
-  "answerReading": "ぎょうこう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "起源",
-  "wordReading": "きげん",
-  "answer": "淵源",
-  "answerReading": "えんげん",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "賢明",
-  "wordReading": "けんめい",
-  "answer": "聡明",
-  "answerReading": "そうめい",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "動向",
-  "wordReading": "どうこう",
-  "answer": "趨勢",
-  "answerReading": "すうせい",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "邂逅",
-  "wordReading": "かいこう",
-  "answer": "遭遇",
-  "answerReading": "そうぐう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "遠慮",
-  "wordReading": "えんりょ",
-  "answer": "忌憚",
-  "answerReading": "きたん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "泥酔",
-  "wordReading": "でいすい",
-  "answer": "酩酊",
-  "answerReading": "めいてい",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "挫折",
-  "wordReading": "ざせつ",
-  "answer": "蹉跌",
-  "answerReading": "さてつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "嘲弄",
-  "wordReading": "ちょうろう",
-  "answer": "揶揄",
-  "answerReading": "やゆ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "発端",
-  "wordReading": "ほったん",
-  "answer": "嚆矢",
-  "answerReading": "こうし",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "詰責",
-  "wordReading": "きっせき",
-  "answer": "譴責",
-  "answerReading": "けんせき",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "平穏",
-  "wordReading": "へいおん",
-  "answer": "静謐",
-  "answerReading": "せいひつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "沈着",
-  "wordReading": "ちんちゃく",
-  "answer": "狼狽",
-  "answerReading": "ろうばい",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "精緻",
-  "wordReading": "せいち",
-  "answer": "雑駁",
-  "answerReading": "ざっぱく",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "秩序",
-  "wordReading": "ちつじょ",
-  "answer": "混沌",
-  "answerReading": "こんとん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "余裕",
-  "wordReading": "よゆう",
-  "answer": "逼迫",
-  "answerReading": "ひっぱく",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "収縮",
-  "wordReading": "しゅうしゅく",
-  "answer": "膨脹",
-  "answerReading": "ぼうちょう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "寛大",
-  "wordReading": "かんだい",
-  "answer": "峻厳",
-  "answerReading": "しゅんげん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "静寂",
-  "wordReading": "せいじゃく",
-  "answer": "喧騒",
-  "answerReading": "けんそう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "慎重",
-  "wordReading": "しんちょう",
-  "answer": "粗忽",
-  "answerReading": "そこつ",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "莫大",
-  "wordReading": "ばくだい",
-  "answer": "些少",
-  "answerReading": "さしょう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "稚拙",
-  "wordReading": "ちせつ",
-  "answer": "老獪",
-  "answerReading": "ろうかい",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "登用",
-  "wordReading": "とうよう",
-  "answer": "抜擢",
-  "answerReading": "ばってき",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "熟知",
-  "wordReading": "じゅくち",
-  "answer": "知悉",
-  "answerReading": "ちしつ",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "蒼天",
-  "wordReading": "そうてん",
-  "answer": "碧空",
-  "answerReading": "へきくう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "華美",
-  "wordReading": "かび",
-  "answer": "絢爛",
-  "answerReading": "けんらん",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "永久",
-  "wordReading": "えいきゅう",
-  "answer": "永劫",
-  "answerReading": "えいごう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "忠告",
-  "wordReading": "ちゅうこく",
-  "answer": "諫言",
-  "answerReading": "かんげん",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "束縛",
-  "wordReading": "そくばく",
-  "answer": "桎梏",
-  "answerReading": "しっこく",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "遭遇",
-  "wordReading": "そうぐう",
-  "answer": "邂逅",
-  "answerReading": "かいこう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "心配",
-  "wordReading": "しんぱい",
-  "answer": "杞憂",
-  "answerReading": "きゆう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "躊躇",
-  "wordReading": "ちゅうちょ",
-  "answer": "逡巡",
-  "answerReading": "しゅんじゅん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "零落",
-  "wordReading": "れいらく",
-  "answer": "落魄",
-  "answerReading": "らくはく",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "干渉",
-  "wordReading": "かんしょう",
-  "answer": "掣肘",
-  "answerReading": "せいちゅう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "中傷",
-  "wordReading": "ちゅうしょう",
-  "answer": "誹謗",
-  "answerReading": "ひぼう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "欠点",
-  "wordReading": "けってん",
-  "answer": "瑕疵",
-  "answerReading": "かし",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "激励",
-  "wordReading": "げきれい",
-  "answer": "鞭撻",
-  "answerReading": "べんたつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "豊穣",
-  "wordReading": "ほうじょう",
-  "answer": "不毛",
-  "answerReading": "ふもう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "蒙昧",
-  "wordReading": "もうまい",
-  "answer": "聡明",
-  "answerReading": "そうめい",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "杜撰",
-  "wordReading": "ずさん",
-  "answer": "綿密",
-  "answerReading": "めんみつ",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "安泰",
-  "wordReading": "あんたい",
-  "answer": "危殆",
-  "answerReading": "きたい",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "逼迫",
-  "wordReading": "ひっぱく",
-  "answer": "潤沢",
-  "answerReading": "じゅんたく",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "狼藉",
-  "wordReading": "ろうぜき",
-  "answer": "整頓",
-  "answerReading": "せいとん",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "淳朴",
-  "wordReading": "じゅんぼく",
-  "answer": "狡猾",
-  "answerReading": "こうかつ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "恬淡",
-  "wordReading": "てんたん",
-  "answer": "貪欲",
-  "answerReading": "どんよく",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "静謐",
-  "wordReading": "せいひつ",
-  "answer": "喧騒",
-  "answerReading": "けんそう",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "婉曲",
-  "wordReading": "えんきょく",
-  "answer": "露骨",
-  "answerReading": "ろこつ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "冒頭",
-  "wordReading": "ぼうとう",
-  "answer": "掉尾",
-  "answerReading": "とうび",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "黎明",
-  "wordReading": "れいめい",
-  "answer": "黄昏",
-  "answerReading": "たそがれ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "斡旋",
-  "wordReading": "あっせん",
-  "answer": "周旋",
-  "answerReading": "しゅうせん",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "忽然",
-  "wordReading": "こつぜん",
-  "answer": "突如",
-  "answerReading": "とつじょ",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "狼狽",
-  "wordReading": "ろうばい",
-  "answer": "周章",
-  "answerReading": "しゅうしょう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "遁走",
-  "wordReading": "とんそう",
-  "answer": "逃走",
-  "answerReading": "とうそう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "碩学",
-  "wordReading": "せきがく",
-  "answer": "泰斗",
-  "answerReading": "たいと",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "朋友",
-  "wordReading": "ほうゆう",
-  "answer": "知己",
-  "answerReading": "ちき",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "隠棲",
-  "wordReading": "いんせい",
-  "answer": "幽居",
-  "answerReading": "ゆうきょ",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "蹉跌",
-  "wordReading": "さてつ",
-  "answer": "挫折",
-  "answerReading": "ざせつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "昵懇",
-  "wordReading": "じっこん",
-  "answer": "親密",
-  "answerReading": "しんみつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "天賦",
-  "wordReading": "てんぷ",
-  "answer": "天稟",
-  "answerReading": "てんぴん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "桎梏",
-  "wordReading": "しっこく",
-  "answer": "束縛",
-  "answerReading": "そくばく",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "瞑想",
-  "wordReading": "めいそう",
-  "answer": "黙想",
-  "answerReading": "もくそう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "恐懼",
-  "wordReading": "きょうく",
-  "answer": "畏怖",
-  "answerReading": "いふ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "疲弊",
-  "wordReading": "ひへい",
-  "answer": "困憊",
-  "answerReading": "こんぱい",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "剽窃",
-  "wordReading": "ひょうせつ",
-  "answer": "盗用",
-  "answerReading": "とうよう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "僥倖",
-  "wordReading": "ぎょうこう",
-  "answer": "幸運",
-  "answerReading": "こううん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "熾烈",
-  "wordReading": "しれつ",
-  "answer": "激烈",
-  "answerReading": "げきれつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "嚆矢",
-  "wordReading": "こうし",
-  "answer": "掉尾",
-  "answerReading": "とうび",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "吝嗇",
-  "wordReading": "りんしょく",
-  "answer": "豪奢",
-  "answerReading": "ごうしゃ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "慇懃",
-  "wordReading": "いんぎん",
-  "answer": "横柄",
-  "answerReading": "おうへい",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "訥弁",
-  "wordReading": "とつべん",
-  "answer": "雄弁",
-  "answerReading": "ゆうべん",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "猜疑",
-  "wordReading": "さいぎ",
-  "answer": "信頼",
-  "answerReading": "しんらい",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "稠密",
-  "wordReading": "ちゅうみつ",
-  "answer": "過疎",
-  "answerReading": "かそ",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "懶惰",
-  "wordReading": "らんだ",
-  "answer": "勤勉",
-  "answerReading": "きんべん",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "饒舌",
-  "wordReading": "じょうぜつ",
-  "answer": "寡黙",
-  "answerReading": "かもく",
-  "relation": "対義",
-  "level": "1級"
- },
- {
-  "word": "弛緩",
-  "wordReading": "しかん",
-  "answer": "緊張",
-  "answerReading": "きんちょう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "寵愛",
-  "wordReading": "ちょうあい",
-  "answer": "冷遇",
-  "answerReading": "れいぐう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "蒼白",
-  "wordReading": "そうはく",
-  "answer": "紅潮",
-  "answerReading": "こうちょう",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "尖鋭",
-  "wordReading": "せんえい",
-  "answer": "穏健",
-  "answerReading": "おんけん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "険峻",
-  "wordReading": "けんしゅん",
-  "answer": "平坦",
-  "answerReading": "へいたん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "敏捷",
-  "wordReading": "びんしょう",
-  "answer": "遅鈍",
-  "answerReading": "ちどん",
-  "relation": "対義",
-  "level": "準1級"
- },
- {
-  "word": "濫觴",
-  "wordReading": "らんしょう",
-  "answer": "起源",
-  "answerReading": "きげん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "齟齬",
-  "wordReading": "そご",
-  "answer": "撞着",
-  "answerReading": "どうちゃく",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "逡巡",
-  "wordReading": "しゅんじゅん",
-  "answer": "躊躇",
-  "answerReading": "ちゅうちょ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "揶揄",
-  "wordReading": "やゆ",
-  "answer": "嘲弄",
-  "answerReading": "ちょうろう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "瑕疵",
-  "wordReading": "かし",
-  "answer": "欠陥",
-  "answerReading": "けっかん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "寂寥",
-  "wordReading": "せきりょう",
-  "answer": "寂寞",
-  "answerReading": "せきばく",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "懊悩",
-  "wordReading": "おうのう",
-  "answer": "煩悶",
-  "answerReading": "はんもん",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "老獪",
-  "wordReading": "ろうかい",
-  "answer": "狡猾",
-  "answerReading": "こうかつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "忖度",
-  "wordReading": "そんたく",
-  "answer": "推察",
-  "answerReading": "すいさつ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "磊落",
-  "wordReading": "らいらく",
-  "answer": "豪放",
-  "answerReading": "ごうほう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "曩時",
-  "wordReading": "のうじ",
-  "answer": "往時",
-  "answerReading": "おうじ",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "誹謗",
-  "wordReading": "ひぼう",
-  "answer": "中傷",
-  "answerReading": "ちゅうしょう",
-  "relation": "類義",
-  "level": "1級"
- },
- {
-  "word": "趨勢",
-  "wordReading": "すうせい",
-  "answer": "傾向",
-  "answerReading": "けいこう",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "逗留",
-  "wordReading": "とうりゅう",
-  "answer": "滞在",
-  "answerReading": "たいざい",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "蕩尽",
-  "wordReading": "とうじん",
-  "answer": "浪費",
-  "answerReading": "ろうひ",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "碩学",
-  "wordReading": "せきがく",
-  "answer": "博識",
-  "answerReading": "はくしき",
-  "relation": "類義",
-  "level": "準1級"
- },
- {
-  "word": "増加",
-  "wordReading": "ぞうか",
-  "answer": "減少",
-  "answerReading": "げんしょう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "往路",
-  "wordReading": "おうろ",
-  "answer": "復路",
-  "answerReading": "ふくろ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "永久",
-  "wordReading": "えいきゅう",
-  "answer": "一時",
-  "answerReading": "いちじ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "好評",
-  "wordReading": "こうひょう",
-  "answer": "不評",
-  "answerReading": "ふひょう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "直接",
-  "wordReading": "ちょくせつ",
-  "answer": "間接",
-  "answerReading": "かんせつ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "有能",
-  "wordReading": "ゆうのう",
-  "answer": "無能",
-  "answerReading": "むのう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "移動",
-  "wordReading": "いどう",
-  "answer": "停止",
-  "answerReading": "ていし",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "再生",
-  "wordReading": "さいせい",
-  "answer": "停止",
-  "answerReading": "ていし",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "和解",
-  "wordReading": "わかい",
-  "answer": "断絶",
-  "answerReading": "だんぜつ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "永遠",
-  "wordReading": "えいえん",
-  "answer": "永久",
-  "answerReading": "えいきゅう",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "職業",
-  "wordReading": "しょくぎょう",
-  "answer": "職務",
-  "answerReading": "しょくむ",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "報告",
-  "wordReading": "ほうこく",
-  "answer": "通知",
-  "answerReading": "つうち",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "経過",
-  "wordReading": "けいか",
-  "answer": "進行",
-  "answerReading": "しんこう",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "保護",
-  "wordReading": "ほご",
-  "answer": "守護",
-  "answerReading": "しゅご",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "原因",
-  "wordReading": "げんいん",
-  "answer": "理由",
-  "answerReading": "りゆう",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "興行",
-  "wordReading": "こうぎょう",
-  "answer": "公演",
-  "answerReading": "こうえん",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "貿易",
-  "wordReading": "ぼうえき",
-  "answer": "交易",
-  "answerReading": "こうえき",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "独得",
-  "wordReading": "どくとく",
-  "answer": "独自",
-  "answerReading": "どくじ",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "肥大",
-  "wordReading": "ひだい",
-  "answer": "増大",
-  "answerReading": "ぞうだい",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "能動",
-  "wordReading": "のうどう",
-  "answer": "受動",
-  "answerReading": "じゅどう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "有益",
-  "wordReading": "ゆうえき",
-  "answer": "無益",
-  "answerReading": "むえき",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "可能",
-  "wordReading": "かのう",
-  "answer": "不能",
-  "answerReading": "ふのう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "栄転",
-  "wordReading": "えいてん",
-  "answer": "左遷",
-  "answerReading": "させん",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "需要",
-  "wordReading": "じゅよう",
-  "answer": "供給",
-  "answerReading": "きょうきゅう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "創造",
-  "wordReading": "そうぞう",
-  "answer": "模倣",
-  "answerReading": "もほう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "一般",
-  "wordReading": "いっぱん",
-  "answer": "特殊",
-  "answerReading": "とくしゅ",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "具体",
-  "wordReading": "ぐたい",
-  "answer": "抽象",
-  "answerReading": "ちゅうしょう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "原則",
-  "wordReading": "げんそく",
-  "answer": "例外",
-  "answerReading": "れいがい",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "保守",
-  "wordReading": "ほしゅ",
-  "answer": "革新",
-  "answerReading": "かくしん",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "楽観",
-  "wordReading": "らっかん",
-  "answer": "悲観",
-  "answerReading": "ひかん",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "現実",
-  "wordReading": "げんじつ",
-  "answer": "理想",
-  "answerReading": "りそう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "延長",
-  "wordReading": "えんちょう",
-  "answer": "短縮",
-  "answerReading": "たんしゅく",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "質素",
-  "wordReading": "しっそ",
-  "answer": "華美",
-  "answerReading": "かび",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "隆起",
-  "wordReading": "りゅうき",
-  "answer": "陥没",
-  "answerReading": "かんぼつ",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "繁栄",
-  "wordReading": "はんえい",
-  "answer": "衰退",
-  "answerReading": "すいたい",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "悠長",
-  "wordReading": "ゆうちょう",
-  "answer": "性急",
-  "answerReading": "せいきゅう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "軽率",
-  "wordReading": "けいそつ",
-  "answer": "慎重",
-  "answerReading": "しんちょう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "違反",
-  "wordReading": "いはん",
-  "answer": "遵守",
-  "answerReading": "じゅんしゅ",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "分析",
-  "wordReading": "ぶんせき",
-  "answer": "総合",
-  "answerReading": "そうごう",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "緩慢",
-  "wordReading": "かんまん",
-  "answer": "敏速",
-  "answerReading": "びんそく",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "祖先",
-  "wordReading": "そせん",
-  "answer": "子孫",
-  "answerReading": "しそん",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "拒否",
-  "wordReading": "きょひ",
-  "answer": "承諾",
-  "answerReading": "しょうだく",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "豊富",
-  "wordReading": "ほうふ",
-  "answer": "欠乏",
-  "answerReading": "けつぼう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "原告",
-  "wordReading": "げんこく",
-  "answer": "被告",
-  "answerReading": "ひこく",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "加入",
-  "wordReading": "かにゅう",
-  "answer": "脱退",
-  "answerReading": "だったい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "空腹",
-  "wordReading": "くうふく",
-  "answer": "満腹",
-  "answerReading": "まんぷく",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "消費",
-  "wordReading": "しょうひ",
-  "answer": "生産",
-  "answerReading": "せいさん",
-  "relation": "対義",
-  "level": "2級"
- },
- {
-  "word": "偶然",
-  "wordReading": "ぐうぜん",
-  "answer": "必然",
-  "answerReading": "ひつぜん",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "著名",
-  "wordReading": "ちょめい",
-  "answer": "有名",
-  "answerReading": "ゆうめい",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "介入",
-  "wordReading": "かいにゅう",
-  "answer": "干渉",
-  "answerReading": "かんしょう",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "我慢",
-  "wordReading": "がまん",
-  "answer": "忍耐",
-  "answerReading": "にんたい",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "使命",
-  "wordReading": "しめい",
-  "answer": "任務",
-  "answerReading": "にんむ",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "対等",
-  "wordReading": "たいとう",
-  "answer": "互角",
-  "answerReading": "ごかく",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "永眠",
-  "wordReading": "えいみん",
-  "answer": "逝去",
-  "answerReading": "せいきょ",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "傑作",
-  "wordReading": "けっさく",
-  "answer": "名作",
-  "answerReading": "めいさく",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "根拠",
-  "wordReading": "こんきょ",
-  "answer": "理由",
-  "answerReading": "りゆう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "手段",
-  "wordReading": "しゅだん",
-  "answer": "方法",
-  "answerReading": "ほうほう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "欠点",
-  "wordReading": "けってん",
-  "answer": "短所",
-  "answerReading": "たんしょ",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "技量",
-  "wordReading": "ぎりょう",
-  "answer": "手腕",
-  "answerReading": "しゅわん",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "賛成",
-  "wordReading": "さんせい",
-  "answer": "同意",
-  "answerReading": "どうい",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "抜群",
-  "wordReading": "ばつぐん",
-  "answer": "卓越",
-  "answerReading": "たくえつ",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "面倒",
-  "wordReading": "めんどう",
-  "answer": "厄介",
-  "answerReading": "やっかい",
-  "relation": "類義",
-  "level": "2級"
- },
- {
-  "word": "歓喜",
-  "wordReading": "かんき",
-  "answer": "悲哀",
-  "answerReading": "ひあい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "希薄",
-  "wordReading": "きはく",
-  "answer": "濃厚",
-  "answerReading": "のうこう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "建設",
-  "wordReading": "けんせつ",
-  "answer": "破壊",
-  "answerReading": "はかい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "困難",
-  "wordReading": "こんなん",
-  "answer": "容易",
-  "answerReading": "ようい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "支出",
-  "wordReading": "ししゅつ",
-  "answer": "収入",
-  "answerReading": "しゅうにゅう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "慎重",
-  "wordReading": "しんちょう",
-  "answer": "軽率",
-  "answerReading": "けいそつ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "善良",
-  "wordReading": "ぜんりょう",
-  "answer": "邪悪",
-  "answerReading": "じゃあく",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "単純",
-  "wordReading": "たんじゅん",
-  "answer": "複雑",
-  "answerReading": "ふくざつ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "抽象",
-  "wordReading": "ちゅうしょう",
-  "answer": "具体",
-  "answerReading": "ぐたい",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "統一",
-  "wordReading": "とういつ",
-  "answer": "分裂",
-  "answerReading": "ぶんれつ",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "独立",
-  "wordReading": "どくりつ",
-  "answer": "従属",
-  "answerReading": "じゅうぞく",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "悲観",
-  "wordReading": "ひかん",
-  "answer": "楽観",
-  "answerReading": "らっかん",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "分散",
-  "wordReading": "ぶんさん",
-  "answer": "集中",
-  "answerReading": "しゅうちゅう",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "優良",
-  "wordReading": "ゆうりょう",
-  "answer": "劣悪",
-  "answerReading": "れつあく",
-  "relation": "対義",
-  "level": "3級"
- },
- {
-  "word": "架空",
-  "wordReading": "かくう",
-  "answer": "虚構",
-  "answerReading": "きょこう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "改良",
-  "wordReading": "かいりょう",
-  "answer": "改善",
-  "answerReading": "かいぜん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "感激",
-  "wordReading": "かんげき",
-  "answer": "感動",
-  "answerReading": "かんどう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "休養",
-  "wordReading": "きゅうよう",
-  "answer": "休息",
-  "answerReading": "きゅうそく",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "近所",
-  "wordReading": "きんじょ",
-  "answer": "近隣",
-  "answerReading": "きんりん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "傾向",
-  "wordReading": "けいこう",
-  "answer": "風潮",
-  "answerReading": "ふうちょう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "互角",
-  "wordReading": "ごかく",
-  "answer": "対等",
-  "answerReading": "たいとう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "始末",
-  "wordReading": "しまつ",
-  "answer": "処理",
-  "answerReading": "しょり",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "心配",
-  "wordReading": "しんぱい",
-  "answer": "不安",
-  "answerReading": "ふあん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "推測",
-  "wordReading": "すいそく",
-  "answer": "推量",
-  "answerReading": "すいりょう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "同感",
-  "wordReading": "どうかん",
-  "answer": "共感",
-  "answerReading": "きょうかん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "熱中",
-  "wordReading": "ねっちゅう",
-  "answer": "夢中",
-  "answerReading": "むちゅう",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "模範",
-  "wordReading": "もはん",
-  "answer": "手本",
-  "answerReading": "てほん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "由来",
-  "wordReading": "ゆらい",
-  "answer": "起源",
-  "answerReading": "きげん",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "了解",
-  "wordReading": "りょうかい",
-  "answer": "承知",
-  "answerReading": "しょうち",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "冷静",
-  "wordReading": "れいせい",
-  "answer": "沈着",
-  "answerReading": "ちんちゃく",
-  "relation": "類義",
-  "level": "3級"
- },
- {
-  "word": "成功",
-  "wordReading": "せいこう",
-  "answer": "失敗",
-  "answerReading": "しっぱい",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "理想",
-  "wordReading": "りそう",
-  "answer": "現実",
-  "answerReading": "げんじつ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "平和",
-  "wordReading": "へいわ",
-  "answer": "戦争",
-  "answerReading": "せんそう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "積極",
-  "wordReading": "せっきょく",
-  "answer": "消極",
-  "answerReading": "しょうきょく",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "生産",
-  "wordReading": "せいさん",
-  "answer": "消費",
-  "answerReading": "しょうひ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "入学",
-  "wordReading": "にゅうがく",
-  "answer": "卒業",
-  "answerReading": "そつぎょう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "出席",
-  "wordReading": "しゅっせき",
-  "answer": "欠席",
-  "answerReading": "けっせき",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "便利",
-  "wordReading": "べんり",
-  "answer": "不便",
-  "answerReading": "ふべん",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "勝利",
-  "wordReading": "しょうり",
-  "answer": "敗北",
-  "answerReading": "はいぼく",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "多数",
-  "wordReading": "たすう",
-  "answer": "少数",
-  "answerReading": "しょうすう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "自然",
-  "wordReading": "しぜん",
-  "answer": "人工",
-  "answerReading": "じんこう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "主観",
-  "wordReading": "しゅかん",
-  "answer": "客観",
-  "answerReading": "きゃっかん",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "有利",
-  "wordReading": "ゆうり",
-  "answer": "不利",
-  "answerReading": "ふり",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "輸入",
-  "wordReading": "ゆにゅう",
-  "answer": "輸出",
-  "answerReading": "ゆしゅつ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "集合",
-  "wordReading": "しゅうごう",
-  "answer": "解散",
-  "answerReading": "かいさん",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "清潔",
-  "wordReading": "せいけつ",
-  "answer": "不潔",
-  "answerReading": "ふけつ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "上品",
-  "wordReading": "じょうひん",
-  "answer": "下品",
-  "answerReading": "げひん",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "最大",
-  "wordReading": "さいだい",
-  "answer": "最小",
-  "answerReading": "さいしょう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "内部",
-  "wordReading": "ないぶ",
-  "answer": "外部",
-  "answerReading": "がいぶ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "国内",
-  "wordReading": "こくない",
-  "answer": "国外",
-  "answerReading": "こくがい",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "黒字",
-  "wordReading": "くろじ",
-  "answer": "赤字",
-  "answerReading": "あかじ",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "幸福",
-  "wordReading": "こうふく",
-  "answer": "不幸",
-  "answerReading": "ふこう",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "有害",
-  "wordReading": "ゆうがい",
-  "answer": "無害",
-  "answerReading": "むがい",
-  "relation": "対義",
-  "level": "6級"
- },
- {
-  "word": "長所",
-  "wordReading": "ちょうしょ",
-  "answer": "美点",
-  "answerReading": "びてん",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "意見",
-  "wordReading": "いけん",
-  "answer": "見解",
-  "answerReading": "けんかい",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "性質",
-  "wordReading": "せいしつ",
-  "answer": "性格",
-  "answerReading": "せいかく",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "方法",
-  "wordReading": "ほうほう",
-  "answer": "方式",
-  "answerReading": "ほうしき",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "習慣",
-  "wordReading": "しゅうかん",
-  "answer": "風習",
-  "answerReading": "ふうしゅう",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "全部",
-  "wordReading": "ぜんぶ",
-  "answer": "全体",
-  "answerReading": "ぜんたい",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "希望",
-  "wordReading": "きぼう",
-  "answer": "願望",
-  "answerReading": "がんぼう",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "友人",
-  "wordReading": "ゆうじん",
-  "answer": "友達",
-  "answerReading": "ともだち",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "向上",
-  "wordReading": "こうじょう",
-  "answer": "進歩",
-  "answerReading": "しんぽ",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "注意",
-  "wordReading": "ちゅうい",
-  "answer": "用心",
-  "answerReading": "ようじん",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "真実",
-  "wordReading": "しんじつ",
-  "answer": "事実",
-  "answerReading": "じじつ",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "原因",
-  "wordReading": "げんいん",
-  "answer": "動機",
-  "answerReading": "どうき",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "製造",
-  "wordReading": "せいぞう",
-  "answer": "製作",
-  "answerReading": "せいさく",
-  "relation": "類義",
-  "level": "6級"
- },
- {
-  "word": "周囲",
-  "wordReading": "しゅうい",
-  "answer": "周辺",
-  "answerReading": "しゅうへん",
-  "relation": "類義",
-  "level": "6級"
- }
+{
+"word": "進級",
+"wordReading": "しんきゅう",
+"answer": "留年",
+"answerReading": "りゅうねん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "安全",
+"wordReading": "あんぜん",
+"answer": "危険",
+"answerReading": "きけん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "散在",
+"wordReading": "さんざい",
+"answer": "密集",
+"answerReading": "みっしゅう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "拡大",
+"wordReading": "かくだい",
+"answer": "縮小",
+"answerReading": "しゅくしょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "洋服",
+"wordReading": "ようふく",
+"answer": "和服",
+"answerReading": "わふく",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "老年",
+"wordReading": "ろうねん",
+"answer": "幼年",
+"answerReading": "ようねん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "生前",
+"wordReading": "せいぜん",
+"answer": "死後",
+"answerReading": "しご",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "油断",
+"wordReading": "ゆだん",
+"answer": "注意",
+"answerReading": "ちゅうい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "水平",
+"wordReading": "すいへい",
+"answer": "垂直",
+"answerReading": "すいちょく",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "引退",
+"wordReading": "いんたい",
+"answer": "現役",
+"answerReading": "げんえき",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "着席",
+"wordReading": "ちゃくせき",
+"answer": "起立",
+"answerReading": "きりつ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "任意",
+"wordReading": "にんい",
+"answer": "強制",
+"answerReading": "きょうせい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "手動",
+"wordReading": "しゅどう",
+"answer": "自動",
+"answerReading": "じどう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "苦手",
+"wordReading": "にがて",
+"answer": "得意",
+"answerReading": "とくい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "通常",
+"wordReading": "つうじょう",
+"answer": "臨時",
+"answerReading": "りんじ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "退化",
+"wordReading": "たいか",
+"answer": "進化",
+"answerReading": "しんか",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "未定",
+"wordReading": "みてい",
+"answer": "決定",
+"answerReading": "けってい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "寒冷",
+"wordReading": "かんれい",
+"answer": "温暖",
+"answerReading": "おんだん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "制服",
+"wordReading": "せいふく",
+"answer": "私服",
+"answerReading": "しふく",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "満潮",
+"wordReading": "まんちょう",
+"answer": "干潮",
+"answerReading": "かんちょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "往復",
+"wordReading": "おうふく",
+"answer": "片道",
+"answerReading": "かたみち",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "退職",
+"wordReading": "たいしょく",
+"answer": "就職",
+"answerReading": "しゅうしょく",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "順境",
+"wordReading": "じゅんきょう",
+"answer": "逆境",
+"answerReading": "ぎゃっきょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "障害",
+"wordReading": "しょうがい",
+"answer": "支障",
+"answerReading": "ししょう",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "値段",
+"wordReading": "ねだん",
+"answer": "価格",
+"answerReading": "かかく",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "解決",
+"wordReading": "かいけつ",
+"answer": "対処",
+"answerReading": "たいしょ",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "厳格",
+"wordReading": "げんかく",
+"answer": "厳正",
+"answerReading": "げんせい",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "想像",
+"wordReading": "そうぞう",
+"answer": "空想",
+"answerReading": "くうそう",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "忠実",
+"wordReading": "ちゅうじつ",
+"answer": "実直",
+"answerReading": "じっちょく",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "最高",
+"wordReading": "さいこう",
+"answer": "頂点",
+"answerReading": "ちょうてん",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "担任",
+"wordReading": "たんにん",
+"answer": "担当",
+"answerReading": "たんとう",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "感心",
+"wordReading": "かんしん",
+"answer": "敬服",
+"answerReading": "けいふく",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "警告",
+"wordReading": "けいこく",
+"answer": "忠告",
+"answerReading": "ちゅうこく",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "討議",
+"wordReading": "とうぎ",
+"answer": "討論",
+"answerReading": "とうろん",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "用意",
+"wordReading": "ようい",
+"answer": "準備",
+"answerReading": "じゅんび",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "進歩",
+"wordReading": "しんぽ",
+"answer": "発展",
+"answerReading": "はってん",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "快活",
+"wordReading": "かいかつ",
+"answer": "明朗",
+"answerReading": "めいろう",
+"relation": "類義",
+"level": "5級"
+},
+{
+"word": "加熱",
+"wordReading": "かねつ",
+"answer": "冷却",
+"answerReading": "れいきゃく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "多弁",
+"wordReading": "たべん",
+"answer": "無口",
+"answerReading": "むくち",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "直面",
+"wordReading": "ちょくめん",
+"answer": "回避",
+"answerReading": "かいひ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "許可",
+"wordReading": "きょか",
+"answer": "禁止",
+"answerReading": "きんし",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "冷静",
+"wordReading": "れいせい",
+"answer": "興奮",
+"answerReading": "こうふん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "猛暑",
+"wordReading": "もうしょ",
+"answer": "厳寒",
+"answerReading": "げんかん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "借用",
+"wordReading": "しゃくよう",
+"answer": "返却",
+"answerReading": "へんきゃく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "却下",
+"wordReading": "きゃっか",
+"answer": "受理",
+"answerReading": "じゅり",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "沈殿",
+"wordReading": "ちんでん",
+"answer": "浮遊",
+"answerReading": "ふゆう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "従属",
+"wordReading": "じゅうぞく",
+"answer": "支配",
+"answerReading": "しはい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "包含",
+"wordReading": "ほうがん",
+"answer": "除外",
+"answerReading": "じょがい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "反抗",
+"wordReading": "はんこう",
+"answer": "服従",
+"answerReading": "ふくじゅう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "憶測",
+"wordReading": "おくそく",
+"answer": "確信",
+"answerReading": "かくしん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "難解",
+"wordReading": "なんかい",
+"answer": "平易",
+"answerReading": "へいい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "本気",
+"wordReading": "ほんき",
+"answer": "真剣",
+"answerReading": "しんけん",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "努力",
+"wordReading": "どりょく",
+"answer": "精進",
+"answerReading": "しょうじん",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "追加",
+"wordReading": "ついか",
+"answer": "補足",
+"answerReading": "ほそく",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "相当",
+"wordReading": "そうとう",
+"answer": "匹敵",
+"answerReading": "ひってき",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "黙殺",
+"wordReading": "もくさつ",
+"answer": "無視",
+"answerReading": "むし",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "名誉",
+"wordReading": "めいよ",
+"answer": "栄光",
+"answerReading": "えいこう",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "時流",
+"wordReading": "じりゅう",
+"answer": "世相",
+"answerReading": "せそう",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "地味",
+"wordReading": "じみ",
+"answer": "簡素",
+"answerReading": "かんそ",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "赤字",
+"wordReading": "あかじ",
+"answer": "欠損",
+"answerReading": "けっそん",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "変更",
+"wordReading": "へんこう",
+"answer": "修正",
+"answerReading": "しゅうせい",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "横領",
+"wordReading": "おうりょう",
+"answer": "流用",
+"answerReading": "りゅうよう",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "友好",
+"wordReading": "ゆうこう",
+"answer": "親善",
+"answerReading": "しんぜん",
+"relation": "類義",
+"level": "4級"
+},
+{
+"word": "協力",
+"wordReading": "きょうりょく",
+"answer": "妨害",
+"answerReading": "ぼうがい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "逮捕",
+"wordReading": "たいほ",
+"answer": "釈放",
+"answerReading": "しゃくほう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "開始",
+"wordReading": "かいし",
+"answer": "終了",
+"answerReading": "しゅうりょう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "膨張",
+"wordReading": "ぼうちょう",
+"answer": "収縮",
+"answerReading": "しゅうしゅく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "平凡",
+"wordReading": "へいぼん",
+"answer": "非凡",
+"answerReading": "ひぼん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "誕生",
+"wordReading": "たんじょう",
+"answer": "死亡",
+"answerReading": "しぼう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "長寿",
+"wordReading": "ちょうじゅ",
+"answer": "短命",
+"answerReading": "たんめい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "恥辱",
+"wordReading": "ちじょく",
+"answer": "栄誉",
+"answerReading": "えいよ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "促進",
+"wordReading": "そくしん",
+"answer": "抑制",
+"answerReading": "よくせい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "自由",
+"wordReading": "じゆう",
+"answer": "束縛",
+"answerReading": "そくばく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "深慮",
+"wordReading": "しんりょ",
+"answer": "浅慮",
+"answerReading": "せんりょ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "上昇",
+"wordReading": "じょうしょう",
+"answer": "降下",
+"answerReading": "こうか",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "添加",
+"wordReading": "てんか",
+"answer": "削除",
+"answerReading": "さくじょ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "自白",
+"wordReading": "じはく",
+"answer": "黙秘",
+"answerReading": "もくひ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "貧弱",
+"wordReading": "ひんじゃく",
+"answer": "豪華",
+"answerReading": "ごうか",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "増強",
+"wordReading": "ぞうきょう",
+"answer": "拡大",
+"answerReading": "かくだい",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "提携",
+"wordReading": "ていけい",
+"answer": "協力",
+"answerReading": "きょうりょく",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "自負",
+"wordReading": "じふ",
+"answer": "自慢",
+"answerReading": "じまん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "細心",
+"wordReading": "さいしん",
+"answer": "丹念",
+"answerReading": "たんねん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "幻想",
+"wordReading": "げんそう",
+"answer": "錯覚",
+"answerReading": "さっかく",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "承認",
+"wordReading": "しょうにん",
+"answer": "許可",
+"answerReading": "きょか",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "激情",
+"wordReading": "げきじょう",
+"answer": "衝動",
+"answerReading": "しょうどう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "重宝",
+"wordReading": "ちょうほう",
+"answer": "便利",
+"answerReading": "べんり",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "屈指",
+"wordReading": "くっし",
+"answer": "有数",
+"answerReading": "ゆうすう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "書簡",
+"wordReading": "しょかん",
+"answer": "手紙",
+"answerReading": "てがみ",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "落胆",
+"wordReading": "らくたん",
+"answer": "失望",
+"answerReading": "しつぼう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "恒例",
+"wordReading": "こうれい",
+"answer": "風習",
+"answerReading": "ふうしゅう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "開設",
+"wordReading": "かいせつ",
+"answer": "閉鎖",
+"answerReading": "へいさ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "干渉",
+"wordReading": "かんしょう",
+"answer": "放任",
+"answerReading": "ほうにん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "希釈",
+"wordReading": "きしゃく",
+"answer": "濃縮",
+"answerReading": "のうしゅく",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "購入",
+"wordReading": "こうにゅう",
+"answer": "売却",
+"answerReading": "ばいきゃく",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "撤去",
+"wordReading": "てっきょ",
+"answer": "設置",
+"answerReading": "せっち",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "肯定",
+"wordReading": "こうてい",
+"answer": "否定",
+"answerReading": "ひてい",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "謙虚",
+"wordReading": "けんきょ",
+"answer": "尊大",
+"answerReading": "そんだい",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "冒頭",
+"wordReading": "ぼうとう",
+"answer": "末尾",
+"answerReading": "まつび",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "充実",
+"wordReading": "じゅうじつ",
+"answer": "空虚",
+"answerReading": "くうきょ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "防御",
+"wordReading": "ぼうぎょ",
+"answer": "攻撃",
+"answerReading": "こうげき",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "末端",
+"wordReading": "まったん",
+"answer": "中枢",
+"answerReading": "ちゅうすう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "快勝",
+"wordReading": "かいしょう",
+"answer": "惨敗",
+"answerReading": "ざんぱい",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "私事",
+"wordReading": "しじ",
+"answer": "公務",
+"answerReading": "こうむ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "大胆",
+"wordReading": "だいたん",
+"answer": "豪放",
+"answerReading": "ごうほう",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "落日",
+"wordReading": "らくじつ",
+"answer": "残照",
+"answerReading": "ざんしょう",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "抵当",
+"wordReading": "ていとう",
+"answer": "担保",
+"answerReading": "たんぽ",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "用心",
+"wordReading": "ようじん",
+"answer": "警戒",
+"answerReading": "けいかい",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "批准",
+"wordReading": "ひじゅん",
+"answer": "追認",
+"answerReading": "ついにん",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "大衆",
+"wordReading": "たいしゅう",
+"answer": "庶民",
+"answerReading": "しょみん",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "没頭",
+"wordReading": "ぼっとう",
+"answer": "専念",
+"answerReading": "せんねん",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "貢献",
+"wordReading": "こうけん",
+"answer": "寄与",
+"answerReading": "きよ",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "圧迫",
+"wordReading": "あっぱく",
+"answer": "抑圧",
+"answerReading": "よくあつ",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "負担",
+"wordReading": "ふたん",
+"answer": "重荷",
+"answerReading": "おもに",
+"relation": "類義",
+"level": "準2級"
+},
+{
+"word": "絶賛",
+"wordReading": "ぜっさん",
+"answer": "酷評",
+"answerReading": "こくひょう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "尊敬",
+"wordReading": "そんけい",
+"answer": "侮辱",
+"answerReading": "ぶじょく",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "記名",
+"wordReading": "きめい",
+"answer": "匿名",
+"answerReading": "とくめい",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "貧乏",
+"wordReading": "びんぼう",
+"answer": "裕福",
+"answerReading": "ゆうふく",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "進出",
+"wordReading": "しんしゅつ",
+"answer": "撤退",
+"answerReading": "てったい",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "献上",
+"wordReading": "けんじょう",
+"answer": "下賜",
+"answerReading": "かし",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "事実",
+"wordReading": "じじつ",
+"answer": "虚偽",
+"answerReading": "きょぎ",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "承諾",
+"wordReading": "しょうだく",
+"answer": "拒絶",
+"answerReading": "きょぜつ",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "沈降",
+"wordReading": "ちんこう",
+"answer": "浮上",
+"answerReading": "ふじょう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "削除",
+"wordReading": "さくじょ",
+"answer": "追加",
+"answerReading": "ついか",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "虚構",
+"wordReading": "きょこう",
+"answer": "事実",
+"answerReading": "じじつ",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "祝賀",
+"wordReading": "しゅくが",
+"answer": "哀悼",
+"answerReading": "あいとう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "検挙",
+"wordReading": "けんきょ",
+"answer": "釈放",
+"answerReading": "しゃくほう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "飢餓",
+"wordReading": "きが",
+"answer": "飢渇",
+"answerReading": "きかつ",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "辛抱",
+"wordReading": "しんぼう",
+"answer": "忍耐",
+"answerReading": "にんたい",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "検討",
+"wordReading": "けんとう",
+"answer": "吟味",
+"answerReading": "ぎんみ",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "積載",
+"wordReading": "せきさい",
+"answer": "搭載",
+"answerReading": "とうさい",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "背徳",
+"wordReading": "はいとく",
+"answer": "堕落",
+"answerReading": "だらく",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "陣地",
+"wordReading": "じんち",
+"answer": "拠点",
+"answerReading": "きょてん",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "頑丈",
+"wordReading": "がんじょう",
+"answer": "強壮",
+"answerReading": "きょうそう",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "頑迷",
+"wordReading": "がんめい",
+"answer": "偏屈",
+"answerReading": "へんくつ",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "交渉",
+"wordReading": "こうしょう",
+"answer": "折衝",
+"answerReading": "せっしょう",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "熟知",
+"wordReading": "じゅくち",
+"answer": "通暁",
+"answerReading": "つうぎょう",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "屋敷",
+"wordReading": "やしき",
+"answer": "邸宅",
+"answerReading": "ていたく",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "荘重",
+"wordReading": "そうちょう",
+"answer": "厳粛",
+"answerReading": "げんしゅく",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "富貴",
+"wordReading": "ふうき",
+"answer": "貧賤",
+"answerReading": "ひんせん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "険阻",
+"wordReading": "けんそ",
+"answer": "平坦",
+"answerReading": "へいたん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "剛毅",
+"wordReading": "ごうき",
+"answer": "怯懦",
+"answerReading": "きょうだ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "中枢",
+"wordReading": "ちゅうすう",
+"answer": "末梢",
+"answerReading": "まっしょう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "混沌",
+"wordReading": "こんとん",
+"answer": "秩序",
+"answerReading": "ちつじょ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "進取",
+"wordReading": "しんしゅ",
+"answer": "退嬰",
+"answerReading": "たいえい",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "緊張",
+"wordReading": "きんちょう",
+"answer": "弛緩",
+"answerReading": "しかん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "起工",
+"wordReading": "きこう",
+"answer": "竣工",
+"answerReading": "しゅんこう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "遅鈍",
+"wordReading": "ちどん",
+"answer": "敏捷",
+"answerReading": "びんしょう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "碩学",
+"wordReading": "せきがく",
+"answer": "浅学",
+"answerReading": "せんがく",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "能弁",
+"wordReading": "のうべん",
+"answer": "訥弁",
+"answerReading": "とつべん",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "寡黙",
+"wordReading": "かもく",
+"answer": "饒舌",
+"answerReading": "じょうぜつ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "帰納",
+"wordReading": "きのう",
+"answer": "演繹",
+"answerReading": "えんえき",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "疎遠",
+"wordReading": "そえん",
+"answer": "昵懇",
+"answerReading": "じっこん",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "勤勉",
+"wordReading": "きんべん",
+"answer": "懶惰",
+"answerReading": "らんだ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "倹約",
+"wordReading": "けんやく",
+"answer": "奢侈",
+"answerReading": "しゃし",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "露骨",
+"wordReading": "ろこつ",
+"answer": "婉曲",
+"answerReading": "えんきょく",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "黎明",
+"wordReading": "れいめい",
+"answer": "薄暮",
+"answerReading": "はくぼ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "突然",
+"wordReading": "とつぜん",
+"answer": "俄然",
+"answerReading": "がぜん",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "周章",
+"wordReading": "しゅうしょう",
+"answer": "狼狽",
+"answerReading": "ろうばい",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "頑丈",
+"wordReading": "がんじょう",
+"answer": "堅牢",
+"answerReading": "けんろう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "切迫",
+"wordReading": "せっぱく",
+"answer": "逼迫",
+"answerReading": "ひっぱく",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "風説",
+"wordReading": "ふうせつ",
+"answer": "巷説",
+"answerReading": "こうせつ",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "素朴",
+"wordReading": "そぼく",
+"answer": "淳朴",
+"answerReading": "じゅんぼく",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "幸運",
+"wordReading": "こううん",
+"answer": "僥倖",
+"answerReading": "ぎょうこう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "起源",
+"wordReading": "きげん",
+"answer": "淵源",
+"answerReading": "えんげん",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "賢明",
+"wordReading": "けんめい",
+"answer": "聡明",
+"answerReading": "そうめい",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "動向",
+"wordReading": "どうこう",
+"answer": "趨勢",
+"answerReading": "すうせい",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "邂逅",
+"wordReading": "かいこう",
+"answer": "遭遇",
+"answerReading": "そうぐう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "遠慮",
+"wordReading": "えんりょ",
+"answer": "忌憚",
+"answerReading": "きたん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "泥酔",
+"wordReading": "でいすい",
+"answer": "酩酊",
+"answerReading": "めいてい",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "挫折",
+"wordReading": "ざせつ",
+"answer": "蹉跌",
+"answerReading": "さてつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "嘲弄",
+"wordReading": "ちょうろう",
+"answer": "揶揄",
+"answerReading": "やゆ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "発端",
+"wordReading": "ほったん",
+"answer": "嚆矢",
+"answerReading": "こうし",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "詰責",
+"wordReading": "きっせき",
+"answer": "譴責",
+"answerReading": "けんせき",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "平穏",
+"wordReading": "へいおん",
+"answer": "静謐",
+"answerReading": "せいひつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "沈着",
+"wordReading": "ちんちゃく",
+"answer": "狼狽",
+"answerReading": "ろうばい",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "精緻",
+"wordReading": "せいち",
+"answer": "雑駁",
+"answerReading": "ざっぱく",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "秩序",
+"wordReading": "ちつじょ",
+"answer": "混沌",
+"answerReading": "こんとん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "余裕",
+"wordReading": "よゆう",
+"answer": "逼迫",
+"answerReading": "ひっぱく",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "収縮",
+"wordReading": "しゅうしゅく",
+"answer": "膨脹",
+"answerReading": "ぼうちょう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "寛大",
+"wordReading": "かんだい",
+"answer": "峻厳",
+"answerReading": "しゅんげん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "静寂",
+"wordReading": "せいじゃく",
+"answer": "喧騒",
+"answerReading": "けんそう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "慎重",
+"wordReading": "しんちょう",
+"answer": "粗忽",
+"answerReading": "そこつ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "莫大",
+"wordReading": "ばくだい",
+"answer": "些少",
+"answerReading": "さしょう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "稚拙",
+"wordReading": "ちせつ",
+"answer": "老獪",
+"answerReading": "ろうかい",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "登用",
+"wordReading": "とうよう",
+"answer": "抜擢",
+"answerReading": "ばってき",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "熟知",
+"wordReading": "じゅくち",
+"answer": "知悉",
+"answerReading": "ちしつ",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "蒼天",
+"wordReading": "そうてん",
+"answer": "碧空",
+"answerReading": "へきくう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "華美",
+"wordReading": "かび",
+"answer": "絢爛",
+"answerReading": "けんらん",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "永久",
+"wordReading": "えいきゅう",
+"answer": "永劫",
+"answerReading": "えいごう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "忠告",
+"wordReading": "ちゅうこく",
+"answer": "諫言",
+"answerReading": "かんげん",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "束縛",
+"wordReading": "そくばく",
+"answer": "桎梏",
+"answerReading": "しっこく",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "遭遇",
+"wordReading": "そうぐう",
+"answer": "邂逅",
+"answerReading": "かいこう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "心配",
+"wordReading": "しんぱい",
+"answer": "杞憂",
+"answerReading": "きゆう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "躊躇",
+"wordReading": "ちゅうちょ",
+"answer": "逡巡",
+"answerReading": "しゅんじゅん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "零落",
+"wordReading": "れいらく",
+"answer": "落魄",
+"answerReading": "らくはく",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "干渉",
+"wordReading": "かんしょう",
+"answer": "掣肘",
+"answerReading": "せいちゅう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "中傷",
+"wordReading": "ちゅうしょう",
+"answer": "誹謗",
+"answerReading": "ひぼう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "欠点",
+"wordReading": "けってん",
+"answer": "瑕疵",
+"answerReading": "かし",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "激励",
+"wordReading": "げきれい",
+"answer": "鞭撻",
+"answerReading": "べんたつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "豊穣",
+"wordReading": "ほうじょう",
+"answer": "不毛",
+"answerReading": "ふもう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "蒙昧",
+"wordReading": "もうまい",
+"answer": "聡明",
+"answerReading": "そうめい",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "杜撰",
+"wordReading": "ずさん",
+"answer": "綿密",
+"answerReading": "めんみつ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "安泰",
+"wordReading": "あんたい",
+"answer": "危殆",
+"answerReading": "きたい",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "逼迫",
+"wordReading": "ひっぱく",
+"answer": "潤沢",
+"answerReading": "じゅんたく",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "狼藉",
+"wordReading": "ろうぜき",
+"answer": "整頓",
+"answerReading": "せいとん",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "淳朴",
+"wordReading": "じゅんぼく",
+"answer": "狡猾",
+"answerReading": "こうかつ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "恬淡",
+"wordReading": "てんたん",
+"answer": "貪欲",
+"answerReading": "どんよく",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "静謐",
+"wordReading": "せいひつ",
+"answer": "喧騒",
+"answerReading": "けんそう",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "婉曲",
+"wordReading": "えんきょく",
+"answer": "露骨",
+"answerReading": "ろこつ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "冒頭",
+"wordReading": "ぼうとう",
+"answer": "掉尾",
+"answerReading": "とうび",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "黎明",
+"wordReading": "れいめい",
+"answer": "黄昏",
+"answerReading": "たそがれ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "斡旋",
+"wordReading": "あっせん",
+"answer": "周旋",
+"answerReading": "しゅうせん",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "忽然",
+"wordReading": "こつぜん",
+"answer": "突如",
+"answerReading": "とつじょ",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "狼狽",
+"wordReading": "ろうばい",
+"answer": "周章",
+"answerReading": "しゅうしょう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "遁走",
+"wordReading": "とんそう",
+"answer": "逃走",
+"answerReading": "とうそう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "碩学",
+"wordReading": "せきがく",
+"answer": "泰斗",
+"answerReading": "たいと",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "朋友",
+"wordReading": "ほうゆう",
+"answer": "知己",
+"answerReading": "ちき",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "隠棲",
+"wordReading": "いんせい",
+"answer": "幽居",
+"answerReading": "ゆうきょ",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "蹉跌",
+"wordReading": "さてつ",
+"answer": "挫折",
+"answerReading": "ざせつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "昵懇",
+"wordReading": "じっこん",
+"answer": "親密",
+"answerReading": "しんみつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "天賦",
+"wordReading": "てんぷ",
+"answer": "天稟",
+"answerReading": "てんぴん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "桎梏",
+"wordReading": "しっこく",
+"answer": "束縛",
+"answerReading": "そくばく",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "瞑想",
+"wordReading": "めいそう",
+"answer": "黙想",
+"answerReading": "もくそう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "恐懼",
+"wordReading": "きょうく",
+"answer": "畏怖",
+"answerReading": "いふ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "疲弊",
+"wordReading": "ひへい",
+"answer": "困憊",
+"answerReading": "こんぱい",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "剽窃",
+"wordReading": "ひょうせつ",
+"answer": "盗用",
+"answerReading": "とうよう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "僥倖",
+"wordReading": "ぎょうこう",
+"answer": "幸運",
+"answerReading": "こううん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "熾烈",
+"wordReading": "しれつ",
+"answer": "激烈",
+"answerReading": "げきれつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "嚆矢",
+"wordReading": "こうし",
+"answer": "掉尾",
+"answerReading": "とうび",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "吝嗇",
+"wordReading": "りんしょく",
+"answer": "豪奢",
+"answerReading": "ごうしゃ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "慇懃",
+"wordReading": "いんぎん",
+"answer": "横柄",
+"answerReading": "おうへい",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "訥弁",
+"wordReading": "とつべん",
+"answer": "雄弁",
+"answerReading": "ゆうべん",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "猜疑",
+"wordReading": "さいぎ",
+"answer": "信頼",
+"answerReading": "しんらい",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "稠密",
+"wordReading": "ちゅうみつ",
+"answer": "過疎",
+"answerReading": "かそ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "懶惰",
+"wordReading": "らんだ",
+"answer": "勤勉",
+"answerReading": "きんべん",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "饒舌",
+"wordReading": "じょうぜつ",
+"answer": "寡黙",
+"answerReading": "かもく",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "弛緩",
+"wordReading": "しかん",
+"answer": "緊張",
+"answerReading": "きんちょう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "寵愛",
+"wordReading": "ちょうあい",
+"answer": "冷遇",
+"answerReading": "れいぐう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "蒼白",
+"wordReading": "そうはく",
+"answer": "紅潮",
+"answerReading": "こうちょう",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "尖鋭",
+"wordReading": "せんえい",
+"answer": "穏健",
+"answerReading": "おんけん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "険峻",
+"wordReading": "けんしゅん",
+"answer": "平坦",
+"answerReading": "へいたん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "敏捷",
+"wordReading": "びんしょう",
+"answer": "遅鈍",
+"answerReading": "ちどん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "濫觴",
+"wordReading": "らんしょう",
+"answer": "起源",
+"answerReading": "きげん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "齟齬",
+"wordReading": "そご",
+"answer": "撞着",
+"answerReading": "どうちゃく",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "逡巡",
+"wordReading": "しゅんじゅん",
+"answer": "躊躇",
+"answerReading": "ちゅうちょ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "揶揄",
+"wordReading": "やゆ",
+"answer": "嘲弄",
+"answerReading": "ちょうろう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "瑕疵",
+"wordReading": "かし",
+"answer": "欠陥",
+"answerReading": "けっかん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "寂寥",
+"wordReading": "せきりょう",
+"answer": "寂寞",
+"answerReading": "せきばく",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "懊悩",
+"wordReading": "おうのう",
+"answer": "煩悶",
+"answerReading": "はんもん",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "老獪",
+"wordReading": "ろうかい",
+"answer": "狡猾",
+"answerReading": "こうかつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "忖度",
+"wordReading": "そんたく",
+"answer": "推察",
+"answerReading": "すいさつ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "磊落",
+"wordReading": "らいらく",
+"answer": "豪放",
+"answerReading": "ごうほう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "曩時",
+"wordReading": "のうじ",
+"answer": "往時",
+"answerReading": "おうじ",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "誹謗",
+"wordReading": "ひぼう",
+"answer": "中傷",
+"answerReading": "ちゅうしょう",
+"relation": "類義",
+"level": "1級"
+},
+{
+"word": "趨勢",
+"wordReading": "すうせい",
+"answer": "傾向",
+"answerReading": "けいこう",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "逗留",
+"wordReading": "とうりゅう",
+"answer": "滞在",
+"answerReading": "たいざい",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "蕩尽",
+"wordReading": "とうじん",
+"answer": "浪費",
+"answerReading": "ろうひ",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "碩学",
+"wordReading": "せきがく",
+"answer": "博識",
+"answerReading": "はくしき",
+"relation": "類義",
+"level": "準1級"
+},
+{
+"word": "増加",
+"wordReading": "ぞうか",
+"answer": "減少",
+"answerReading": "げんしょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "往路",
+"wordReading": "おうろ",
+"answer": "復路",
+"answerReading": "ふくろ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "永久",
+"wordReading": "えいきゅう",
+"answer": "一時",
+"answerReading": "いちじ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "好評",
+"wordReading": "こうひょう",
+"answer": "不評",
+"answerReading": "ふひょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "直接",
+"wordReading": "ちょくせつ",
+"answer": "間接",
+"answerReading": "かんせつ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "有能",
+"wordReading": "ゆうのう",
+"answer": "無能",
+"answerReading": "むのう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "移動",
+"wordReading": "いどう",
+"answer": "停止",
+"answerReading": "ていし",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "再生",
+"wordReading": "さいせい",
+"answer": "停止",
+"answerReading": "ていし",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "和解",
+"wordReading": "わかい",
+"answer": "断絶",
+"answerReading": "だんぜつ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "永遠",
+"wordReading": "えいえん",
+"answer": "永久",
+"answerReading": "えいきゅう",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "職業",
+"wordReading": "しょくぎょう",
+"answer": "職務",
+"answerReading": "しょくむ",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "報告",
+"wordReading": "ほうこく",
+"answer": "通知",
+"answerReading": "つうち",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "経過",
+"wordReading": "けいか",
+"answer": "進行",
+"answerReading": "しんこう",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "保護",
+"wordReading": "ほご",
+"answer": "守護",
+"answerReading": "しゅご",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "原因",
+"wordReading": "げんいん",
+"answer": "理由",
+"answerReading": "りゆう",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "興行",
+"wordReading": "こうぎょう",
+"answer": "公演",
+"answerReading": "こうえん",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "貿易",
+"wordReading": "ぼうえき",
+"answer": "交易",
+"answerReading": "こうえき",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "独得",
+"wordReading": "どくとく",
+"answer": "独自",
+"answerReading": "どくじ",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "肥大",
+"wordReading": "ひだい",
+"answer": "増大",
+"answerReading": "ぞうだい",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "能動",
+"wordReading": "のうどう",
+"answer": "受動",
+"answerReading": "じゅどう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "有益",
+"wordReading": "ゆうえき",
+"answer": "無益",
+"answerReading": "むえき",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "可能",
+"wordReading": "かのう",
+"answer": "不能",
+"answerReading": "ふのう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "栄転",
+"wordReading": "えいてん",
+"answer": "左遷",
+"answerReading": "させん",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "需要",
+"wordReading": "じゅよう",
+"answer": "供給",
+"answerReading": "きょうきゅう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "創造",
+"wordReading": "そうぞう",
+"answer": "模倣",
+"answerReading": "もほう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "一般",
+"wordReading": "いっぱん",
+"answer": "特殊",
+"answerReading": "とくしゅ",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "具体",
+"wordReading": "ぐたい",
+"answer": "抽象",
+"answerReading": "ちゅうしょう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "原則",
+"wordReading": "げんそく",
+"answer": "例外",
+"answerReading": "れいがい",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "保守",
+"wordReading": "ほしゅ",
+"answer": "革新",
+"answerReading": "かくしん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "楽観",
+"wordReading": "らっかん",
+"answer": "悲観",
+"answerReading": "ひかん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "現実",
+"wordReading": "げんじつ",
+"answer": "理想",
+"answerReading": "りそう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "延長",
+"wordReading": "えんちょう",
+"answer": "短縮",
+"answerReading": "たんしゅく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "質素",
+"wordReading": "しっそ",
+"answer": "華美",
+"answerReading": "かび",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "隆起",
+"wordReading": "りゅうき",
+"answer": "陥没",
+"answerReading": "かんぼつ",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "繁栄",
+"wordReading": "はんえい",
+"answer": "衰退",
+"answerReading": "すいたい",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "悠長",
+"wordReading": "ゆうちょう",
+"answer": "性急",
+"answerReading": "せいきゅう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "軽率",
+"wordReading": "けいそつ",
+"answer": "慎重",
+"answerReading": "しんちょう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "違反",
+"wordReading": "いはん",
+"answer": "遵守",
+"answerReading": "じゅんしゅ",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "分析",
+"wordReading": "ぶんせき",
+"answer": "総合",
+"answerReading": "そうごう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "緩慢",
+"wordReading": "かんまん",
+"answer": "敏速",
+"answerReading": "びんそく",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "祖先",
+"wordReading": "そせん",
+"answer": "子孫",
+"answerReading": "しそん",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "拒否",
+"wordReading": "きょひ",
+"answer": "承諾",
+"answerReading": "しょうだく",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "豊富",
+"wordReading": "ほうふ",
+"answer": "欠乏",
+"answerReading": "けつぼう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "原告",
+"wordReading": "げんこく",
+"answer": "被告",
+"answerReading": "ひこく",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "加入",
+"wordReading": "かにゅう",
+"answer": "脱退",
+"answerReading": "だったい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "空腹",
+"wordReading": "くうふく",
+"answer": "満腹",
+"answerReading": "まんぷく",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "消費",
+"wordReading": "しょうひ",
+"answer": "生産",
+"answerReading": "せいさん",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "偶然",
+"wordReading": "ぐうぜん",
+"answer": "必然",
+"answerReading": "ひつぜん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "著名",
+"wordReading": "ちょめい",
+"answer": "有名",
+"answerReading": "ゆうめい",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "介入",
+"wordReading": "かいにゅう",
+"answer": "干渉",
+"answerReading": "かんしょう",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "我慢",
+"wordReading": "がまん",
+"answer": "忍耐",
+"answerReading": "にんたい",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "使命",
+"wordReading": "しめい",
+"answer": "任務",
+"answerReading": "にんむ",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "対等",
+"wordReading": "たいとう",
+"answer": "互角",
+"answerReading": "ごかく",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "永眠",
+"wordReading": "えいみん",
+"answer": "逝去",
+"answerReading": "せいきょ",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "傑作",
+"wordReading": "けっさく",
+"answer": "名作",
+"answerReading": "めいさく",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "根拠",
+"wordReading": "こんきょ",
+"answer": "理由",
+"answerReading": "りゆう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "手段",
+"wordReading": "しゅだん",
+"answer": "方法",
+"answerReading": "ほうほう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "欠点",
+"wordReading": "けってん",
+"answer": "短所",
+"answerReading": "たんしょ",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "技量",
+"wordReading": "ぎりょう",
+"answer": "手腕",
+"answerReading": "しゅわん",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "賛成",
+"wordReading": "さんせい",
+"answer": "同意",
+"answerReading": "どうい",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "抜群",
+"wordReading": "ばつぐん",
+"answer": "卓越",
+"answerReading": "たくえつ",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "面倒",
+"wordReading": "めんどう",
+"answer": "厄介",
+"answerReading": "やっかい",
+"relation": "類義",
+"level": "2級"
+},
+{
+"word": "歓喜",
+"wordReading": "かんき",
+"answer": "悲哀",
+"answerReading": "ひあい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "希薄",
+"wordReading": "きはく",
+"answer": "濃厚",
+"answerReading": "のうこう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "建設",
+"wordReading": "けんせつ",
+"answer": "破壊",
+"answerReading": "はかい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "困難",
+"wordReading": "こんなん",
+"answer": "容易",
+"answerReading": "ようい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "支出",
+"wordReading": "ししゅつ",
+"answer": "収入",
+"answerReading": "しゅうにゅう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "慎重",
+"wordReading": "しんちょう",
+"answer": "軽率",
+"answerReading": "けいそつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "善良",
+"wordReading": "ぜんりょう",
+"answer": "邪悪",
+"answerReading": "じゃあく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "単純",
+"wordReading": "たんじゅん",
+"answer": "複雑",
+"answerReading": "ふくざつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "抽象",
+"wordReading": "ちゅうしょう",
+"answer": "具体",
+"answerReading": "ぐたい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "統一",
+"wordReading": "とういつ",
+"answer": "分裂",
+"answerReading": "ぶんれつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "独立",
+"wordReading": "どくりつ",
+"answer": "従属",
+"answerReading": "じゅうぞく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "悲観",
+"wordReading": "ひかん",
+"answer": "楽観",
+"answerReading": "らっかん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "分散",
+"wordReading": "ぶんさん",
+"answer": "集中",
+"answerReading": "しゅうちゅう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "優良",
+"wordReading": "ゆうりょう",
+"answer": "劣悪",
+"answerReading": "れつあく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "架空",
+"wordReading": "かくう",
+"answer": "虚構",
+"answerReading": "きょこう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "改良",
+"wordReading": "かいりょう",
+"answer": "改善",
+"answerReading": "かいぜん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "感激",
+"wordReading": "かんげき",
+"answer": "感動",
+"answerReading": "かんどう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "休養",
+"wordReading": "きゅうよう",
+"answer": "休息",
+"answerReading": "きゅうそく",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "近所",
+"wordReading": "きんじょ",
+"answer": "近隣",
+"answerReading": "きんりん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "傾向",
+"wordReading": "けいこう",
+"answer": "風潮",
+"answerReading": "ふうちょう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "互角",
+"wordReading": "ごかく",
+"answer": "対等",
+"answerReading": "たいとう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "始末",
+"wordReading": "しまつ",
+"answer": "処理",
+"answerReading": "しょり",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "心配",
+"wordReading": "しんぱい",
+"answer": "不安",
+"answerReading": "ふあん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "推測",
+"wordReading": "すいそく",
+"answer": "推量",
+"answerReading": "すいりょう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "同感",
+"wordReading": "どうかん",
+"answer": "共感",
+"answerReading": "きょうかん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "熱中",
+"wordReading": "ねっちゅう",
+"answer": "夢中",
+"answerReading": "むちゅう",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "模範",
+"wordReading": "もはん",
+"answer": "手本",
+"answerReading": "てほん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "由来",
+"wordReading": "ゆらい",
+"answer": "起源",
+"answerReading": "きげん",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "了解",
+"wordReading": "りょうかい",
+"answer": "承知",
+"answerReading": "しょうち",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "冷静",
+"wordReading": "れいせい",
+"answer": "沈着",
+"answerReading": "ちんちゃく",
+"relation": "類義",
+"level": "3級"
+},
+{
+"word": "成功",
+"wordReading": "せいこう",
+"answer": "失敗",
+"answerReading": "しっぱい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "理想",
+"wordReading": "りそう",
+"answer": "現実",
+"answerReading": "げんじつ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "平和",
+"wordReading": "へいわ",
+"answer": "戦争",
+"answerReading": "せんそう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "積極",
+"wordReading": "せっきょく",
+"answer": "消極",
+"answerReading": "しょうきょく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "生産",
+"wordReading": "せいさん",
+"answer": "消費",
+"answerReading": "しょうひ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "入学",
+"wordReading": "にゅうがく",
+"answer": "卒業",
+"answerReading": "そつぎょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "出席",
+"wordReading": "しゅっせき",
+"answer": "欠席",
+"answerReading": "けっせき",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "便利",
+"wordReading": "べんり",
+"answer": "不便",
+"answerReading": "ふべん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "勝利",
+"wordReading": "しょうり",
+"answer": "敗北",
+"answerReading": "はいぼく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "多数",
+"wordReading": "たすう",
+"answer": "少数",
+"answerReading": "しょうすう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "自然",
+"wordReading": "しぜん",
+"answer": "人工",
+"answerReading": "じんこう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "主観",
+"wordReading": "しゅかん",
+"answer": "客観",
+"answerReading": "きゃっかん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "有利",
+"wordReading": "ゆうり",
+"answer": "不利",
+"answerReading": "ふり",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "輸入",
+"wordReading": "ゆにゅう",
+"answer": "輸出",
+"answerReading": "ゆしゅつ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "集合",
+"wordReading": "しゅうごう",
+"answer": "解散",
+"answerReading": "かいさん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "清潔",
+"wordReading": "せいけつ",
+"answer": "不潔",
+"answerReading": "ふけつ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "上品",
+"wordReading": "じょうひん",
+"answer": "下品",
+"answerReading": "げひん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "最大",
+"wordReading": "さいだい",
+"answer": "最小",
+"answerReading": "さいしょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "内部",
+"wordReading": "ないぶ",
+"answer": "外部",
+"answerReading": "がいぶ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "国内",
+"wordReading": "こくない",
+"answer": "国外",
+"answerReading": "こくがい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "黒字",
+"wordReading": "くろじ",
+"answer": "赤字",
+"answerReading": "あかじ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "幸福",
+"wordReading": "こうふく",
+"answer": "不幸",
+"answerReading": "ふこう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "有害",
+"wordReading": "ゆうがい",
+"answer": "無害",
+"answerReading": "むがい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "長所",
+"wordReading": "ちょうしょ",
+"answer": "美点",
+"answerReading": "びてん",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "意見",
+"wordReading": "いけん",
+"answer": "見解",
+"answerReading": "けんかい",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "性質",
+"wordReading": "せいしつ",
+"answer": "性格",
+"answerReading": "せいかく",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "方法",
+"wordReading": "ほうほう",
+"answer": "方式",
+"answerReading": "ほうしき",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "習慣",
+"wordReading": "しゅうかん",
+"answer": "風習",
+"answerReading": "ふうしゅう",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "全部",
+"wordReading": "ぜんぶ",
+"answer": "全体",
+"answerReading": "ぜんたい",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "希望",
+"wordReading": "きぼう",
+"answer": "願望",
+"answerReading": "がんぼう",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "友人",
+"wordReading": "ゆうじん",
+"answer": "友達",
+"answerReading": "ともだち",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "向上",
+"wordReading": "こうじょう",
+"answer": "進歩",
+"answerReading": "しんぽ",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "注意",
+"wordReading": "ちゅうい",
+"answer": "用心",
+"answerReading": "ようじん",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "真実",
+"wordReading": "しんじつ",
+"answer": "事実",
+"answerReading": "じじつ",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "原因",
+"wordReading": "げんいん",
+"answer": "動機",
+"answerReading": "どうき",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "製造",
+"wordReading": "せいぞう",
+"answer": "製作",
+"answerReading": "せいさく",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "周囲",
+"wordReading": "しゅうい",
+"answer": "周辺",
+"answerReading": "しゅうへん",
+"relation": "類義",
+"level": "6級"
+},
+{
+"word": "悪循環",
+"wordReading": "あくじゅんかん",
+"answer": "好循環",
+"answerReading": "こうじゅんかん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "圧縮",
+"wordReading": "あっしゅく",
+"answer": "解凍",
+"answerReading": "かいとう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "安価",
+"wordReading": "あんか",
+"answer": "高価",
+"answerReading": "こうか",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "安産",
+"wordReading": "あんざん",
+"answer": "難産",
+"answerReading": "なんざん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "以下",
+"wordReading": "いか",
+"answer": "以上",
+"answerReading": "いじょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "異化",
+"wordReading": "いか",
+"answer": "同化",
+"answerReading": "どうか",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "異常",
+"wordReading": "いじょう",
+"answer": "正常",
+"answerReading": "せいじょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "異姓",
+"wordReading": "いせい",
+"answer": "同姓",
+"answerReading": "どうせい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "移出",
+"wordReading": "いしゅつ",
+"answer": "移入",
+"answerReading": "いにゅう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "一枚下",
+"wordReading": "いちまいした",
+"answer": "一枚上",
+"answerReading": "いちまいうえ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "一様",
+"wordReading": "いちよう",
+"answer": "多様",
+"answerReading": "たよう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "陰気",
+"wordReading": "いんき",
+"answer": "陽気",
+"answerReading": "ようき",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "陰性",
+"wordReading": "いんせい",
+"answer": "陽性",
+"answerReading": "ようせい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "隠然",
+"wordReading": "いんぜん",
+"answer": "顕然",
+"answerReading": "けんぜん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "右舷",
+"wordReading": "うげん",
+"answer": "左舷",
+"answerReading": "さげん",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "右派",
+"wordReading": "うは",
+"answer": "左派",
+"answerReading": "さは",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "右翼",
+"wordReading": "うよく",
+"answer": "左翼",
+"answerReading": "さよく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "運動",
+"wordReading": "うんどう",
+"answer": "静止",
+"answerReading": "せいし",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "厭世観",
+"wordReading": "えんせいかん",
+"answer": "楽天観",
+"answerReading": "らくてんかん",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "円安",
+"wordReading": "えんやす",
+"answer": "円高",
+"answerReading": "えんだか",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "凹形",
+"wordReading": "おうけい",
+"answer": "凸形",
+"answerReading": "とつけい",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "穏健",
+"wordReading": "おんけん",
+"answer": "過激",
+"answerReading": "かげき",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "下記",
+"wordReading": "かき",
+"answer": "上記",
+"answerReading": "じょうき",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "下山",
+"wordReading": "げざん",
+"answer": "登山",
+"answerReading": "とざん",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "下車",
+"wordReading": "げしゃ",
+"answer": "乗車",
+"answerReading": "じょうしゃ",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "下手",
+"wordReading": "へた",
+"answer": "上手",
+"answerReading": "じょうず",
+"relation": "対義",
+"level": "10級"
+},
+{
+"word": "下達",
+"wordReading": "かたつ",
+"answer": "上達",
+"answerReading": "じょうたつ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "下流",
+"wordReading": "かりゅう",
+"answer": "上流",
+"answerReading": "じょうりゅう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "加害者",
+"wordReading": "かがいしゃ",
+"answer": "被害者",
+"answerReading": "ひがいしゃ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "加速",
+"wordReading": "かそく",
+"answer": "減速",
+"answerReading": "げんそく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "可逆",
+"wordReading": "かぎゃく",
+"answer": "不可逆",
+"answerReading": "ふかぎゃく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "可変",
+"wordReading": "かへん",
+"answer": "不変",
+"answerReading": "ふへん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "寡作",
+"wordReading": "かさく",
+"answer": "多作",
+"answerReading": "たさく",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "過小",
+"wordReading": "かしょう",
+"answer": "過大",
+"answerReading": "かだい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "過少",
+"wordReading": "かしょう",
+"answer": "過多",
+"answerReading": "かた",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "過疎",
+"wordReading": "かそ",
+"answer": "過密",
+"answerReading": "かみつ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "開園",
+"wordReading": "かいえん",
+"answer": "閉園",
+"answerReading": "へいえん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "開場",
+"wordReading": "かいじょう",
+"answer": "閉場",
+"answerReading": "へいじょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "開幕",
+"wordReading": "かいまく",
+"answer": "閉幕",
+"answerReading": "へいまく",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "階下",
+"wordReading": "かいか",
+"answer": "階上",
+"answerReading": "かいじょう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "緩行",
+"wordReading": "かんこう",
+"answer": "急行",
+"answerReading": "きゅうこう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "既婚",
+"wordReading": "きこん",
+"answer": "未婚",
+"answerReading": "みこん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "既設",
+"wordReading": "きせつ",
+"answer": "未設",
+"answerReading": "みせつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "既知",
+"wordReading": "きち",
+"answer": "未知",
+"answerReading": "みち",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "既定",
+"wordReading": "きてい",
+"answer": "未定",
+"answerReading": "みてい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "客観的",
+"wordReading": "きゃっかんてき",
+"answer": "主観的",
+"answerReading": "しゅかんてき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "逆行",
+"wordReading": "ぎゃっこう",
+"answer": "順行",
+"answerReading": "じゅんこう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "及第",
+"wordReading": "きゅうだい",
+"answer": "落第",
+"answerReading": "らくだい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "吸気",
+"wordReading": "きゅうき",
+"answer": "呼気",
+"answerReading": "こき",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "吸気",
+"wordReading": "きゅうき",
+"answer": "排気",
+"answerReading": "はいき",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "吸着",
+"wordReading": "きゅうちゃく",
+"answer": "脱着",
+"answerReading": "だっちゃく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "急性",
+"wordReading": "きゅうせい",
+"answer": "慢性",
+"answerReading": "まんせい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "急増",
+"wordReading": "きゅうぞう",
+"answer": "急減",
+"answerReading": "きゅうげん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "旧株",
+"wordReading": "きゅうかぶ",
+"answer": "新株",
+"answerReading": "しんかぶ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "旧道",
+"wordReading": "きゅうどう",
+"answer": "新道",
+"answerReading": "しんどう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "巨視的",
+"wordReading": "きょしてき",
+"answer": "微視的",
+"answerReading": "びしてき",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "巨乳",
+"wordReading": "きょにゅう",
+"answer": "貧乳",
+"answerReading": "ひんにゅう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "共学",
+"wordReading": "きょうがく",
+"answer": "別学",
+"answerReading": "べつがく",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "凶報",
+"wordReading": "きょうほう",
+"answer": "吉報",
+"answerReading": "きっぽう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "強気",
+"wordReading": "つよき",
+"answer": "弱気",
+"answerReading": "よわき",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "強大",
+"wordReading": "きょうだい",
+"answer": "弱小",
+"answerReading": "じゃくしょう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "仰臥",
+"wordReading": "ぎょうが",
+"answer": "伏臥",
+"answerReading": "ふくが",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "極寒",
+"wordReading": "ごっかん",
+"answer": "極暑",
+"answerReading": "ごくしょ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "勤勉",
+"wordReading": "きんべん",
+"answer": "怠惰",
+"answerReading": "たいだ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "具象",
+"wordReading": "ぐしょう",
+"answer": "抽象",
+"answerReading": "ちゅうしょう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "具象的",
+"wordReading": "ぐしょうてき",
+"answer": "抽象的",
+"answerReading": "ちゅうしょうてき",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "具体的",
+"wordReading": "ぐたいてき",
+"answer": "抽象的",
+"answerReading": "ちゅうしょうてき",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "空車",
+"wordReading": "くうしゃ",
+"answer": "実車",
+"answerReading": "じっしゃ",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "空車",
+"wordReading": "くうしゃ",
+"answer": "満車",
+"answerReading": "まんしゃ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "慶事",
+"wordReading": "けいじ",
+"answer": "弔事",
+"answerReading": "ちょうじ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "軽度",
+"wordReading": "けいど",
+"answer": "重度",
+"answerReading": "じゅうど",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "軽度",
+"wordReading": "けいど",
+"answer": "強度",
+"answerReading": "きょうど",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "欠点",
+"wordReading": "けってん",
+"answer": "美点",
+"answerReading": "びてん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "堅調",
+"wordReading": "けんちょう",
+"answer": "軟調",
+"answerReading": "なんちょう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "顕在",
+"wordReading": "けんざい",
+"answer": "潜在",
+"answerReading": "せんざい",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "減産",
+"wordReading": "げんさん",
+"answer": "増産",
+"answerReading": "ぞうさん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "減点",
+"wordReading": "げんてん",
+"answer": "加点",
+"answerReading": "かてん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "玄人",
+"wordReading": "くろうと",
+"answer": "素人",
+"answerReading": "しろうと",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "後期",
+"wordReading": "こうき",
+"answer": "前期",
+"answerReading": "ぜんき",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "後退",
+"wordReading": "こうたい",
+"answer": "前進",
+"answerReading": "ぜんしん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "後天的",
+"wordReading": "こうてんてき",
+"answer": "先天的",
+"answerReading": "せんてんてき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "後方",
+"wordReading": "こうほう",
+"answer": "前方",
+"answerReading": "ぜんぽう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "後列",
+"wordReading": "こうれつ",
+"answer": "前列",
+"answerReading": "ぜんれつ",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "公用",
+"wordReading": "こうよう",
+"answer": "私用",
+"answerReading": "しよう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "厚化粧",
+"wordReading": "あつげしょう",
+"answer": "薄化粧",
+"answerReading": "うすげしょう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "厚手",
+"wordReading": "あつで",
+"answer": "薄手",
+"answerReading": "うすで",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "広域",
+"wordReading": "こういき",
+"answer": "詳細",
+"answerReading": "しょうさい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "攻撃",
+"wordReading": "こうげき",
+"answer": "守備",
+"answerReading": "しゅび",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "硬化",
+"wordReading": "こうか",
+"answer": "軟化",
+"answerReading": "なんか",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "硬球",
+"wordReading": "こうきゅう",
+"answer": "軟球",
+"answerReading": "なんきゅう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "降給",
+"wordReading": "こうきゅう",
+"answer": "昇給",
+"answerReading": "しょうきゅう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "降順",
+"wordReading": "こうじゅん",
+"answer": "昇順",
+"answerReading": "しょうじゅん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "高額",
+"wordReading": "こうがく",
+"answer": "低額",
+"answerReading": "ていがく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "高額",
+"wordReading": "こうがく",
+"answer": "小額",
+"answerReading": "しょうがく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "高級",
+"wordReading": "こうきゅう",
+"answer": "低級",
+"answerReading": "ていきゅう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "高尚",
+"wordReading": "こうしょう",
+"answer": "低俗",
+"answerReading": "ていぞく",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "高層",
+"wordReading": "こうそう",
+"answer": "低層",
+"answerReading": "ていそう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "高品質",
+"wordReading": "こうひんしつ",
+"answer": "低品質",
+"answerReading": "ていひんしつ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "酷寒",
+"wordReading": "こっかん",
+"answer": "酷暑",
+"answerReading": "こくしょ",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "根暗",
+"wordReading": "ねくら",
+"answer": "根明",
+"answerReading": "ねあか",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "債権",
+"wordReading": "さいけん",
+"answer": "債務",
+"answerReading": "さいむ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "最悪",
+"wordReading": "さいあく",
+"answer": "最良",
+"answerReading": "さいりょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "最高",
+"wordReading": "さいこう",
+"answer": "最低",
+"answerReading": "さいてい",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "最小限",
+"wordReading": "さいしょうげん",
+"answer": "最大限",
+"answerReading": "さいだいげん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "最少",
+"wordReading": "さいしょう",
+"answer": "最多",
+"answerReading": "さいた",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "最少",
+"wordReading": "さいしょう",
+"answer": "最長",
+"answerReading": "さいちょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "最短",
+"wordReading": "さいたん",
+"answer": "最長",
+"answerReading": "さいちょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "作為",
+"wordReading": "さくい",
+"answer": "不作為",
+"answerReading": "ふさくい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "賛成",
+"wordReading": "さんせい",
+"answer": "反対",
+"answerReading": "はんたい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "酸性",
+"wordReading": "さんせい",
+"answer": "塩基性",
+"answerReading": "えんきせい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "市外",
+"wordReading": "しがい",
+"answer": "市内",
+"answerReading": "しない",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "死語",
+"wordReading": "しご",
+"answer": "活語",
+"answerReading": "かつご",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "私製",
+"wordReading": "しせい",
+"answer": "官製",
+"answerReading": "かんせい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "自然災害",
+"wordReading": "しぜんさいがい",
+"answer": "人為災害",
+"answerReading": "じんいさいがい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "自立語",
+"wordReading": "じりつご",
+"answer": "付属語",
+"answerReading": "ふぞくご",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "失点",
+"wordReading": "しってん",
+"answer": "得点",
+"answerReading": "とくてん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "実質的",
+"wordReading": "じっしつてき",
+"answer": "名目的",
+"answerReading": "めいもくてき",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "弱者",
+"wordReading": "じゃくしゃ",
+"answer": "強者",
+"answerReading": "きょうしゃ",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "受動的",
+"wordReading": "じゅどうてき",
+"answer": "能動的",
+"answerReading": "のうどうてき",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "収束",
+"wordReading": "しゅうそく",
+"answer": "発散",
+"answerReading": "はっさん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "出御",
+"wordReading": "しゅつぎょ",
+"answer": "入御",
+"answerReading": "にゅうぎょ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "出社",
+"wordReading": "しゅっしゃ",
+"answer": "退社",
+"answerReading": "たいしゃ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "出場",
+"wordReading": "しゅつじょう",
+"answer": "入場",
+"answerReading": "にゅうじょう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "叙事",
+"wordReading": "じょじ",
+"answer": "叙情",
+"answerReading": "じょじょう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "勝者",
+"wordReading": "しょうしゃ",
+"answer": "敗者",
+"answerReading": "はいしゃ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "勝訴",
+"wordReading": "しょうそ",
+"answer": "敗訴",
+"answerReading": "はいそ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "勝利者",
+"wordReading": "しょうりしゃ",
+"answer": "敗北者",
+"answerReading": "はいぼくしゃ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "小柄",
+"wordReading": "こがら",
+"answer": "大柄",
+"answerReading": "おおがら",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "少額",
+"wordReading": "しょうがく",
+"answer": "多額",
+"answerReading": "たがく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "少額",
+"wordReading": "しょうがく",
+"answer": "高額",
+"answerReading": "こうがく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "昇格",
+"wordReading": "しょうかく",
+"answer": "降格",
+"answerReading": "こうかく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "昇級",
+"wordReading": "しょうきゅう",
+"answer": "降級",
+"answerReading": "こうきゅう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "昇任",
+"wordReading": "しょうにん",
+"answer": "降任",
+"answerReading": "こうにん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "消極性",
+"wordReading": "しょうきょくせい",
+"answer": "積極性",
+"answerReading": "せっきょくせい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "消極的",
+"wordReading": "しょうきょくてき",
+"answer": "積極的",
+"answerReading": "せっきょくてき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "上首尾",
+"wordReading": "じょうしゅび",
+"answer": "不首尾",
+"answerReading": "ふしゅび",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "上智",
+"wordReading": "じょうち",
+"answer": "下愚",
+"answerReading": "かぐ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "乗車",
+"wordReading": "じょうしゃ",
+"answer": "降車",
+"answerReading": "こうしゃ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "場内",
+"wordReading": "じょうない",
+"answer": "場外",
+"answerReading": "じょうがい",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "深層",
+"wordReading": "しんそう",
+"answer": "表層",
+"answerReading": "ひょうそう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "親孝行",
+"wordReading": "おやこうこう",
+"answer": "親不孝",
+"answerReading": "おやふこう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "親日",
+"wordReading": "しんにち",
+"answer": "反日",
+"answerReading": "はんにち",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "進歩",
+"wordReading": "しんぽ",
+"answer": "退歩",
+"answerReading": "たいほ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "人工",
+"wordReading": "じんこう",
+"answer": "天然",
+"answerReading": "てんねん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "性悪説",
+"wordReading": "せいあくせつ",
+"answer": "性善説",
+"answerReading": "せいぜんせつ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "正兵",
+"wordReading": "せいへい",
+"answer": "奇兵",
+"answerReading": "きへい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "静的",
+"wordReading": "せいてき",
+"answer": "動的",
+"answerReading": "どうてき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "拙速",
+"wordReading": "せっそく",
+"answer": "巧遅",
+"answerReading": "こうち",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "摂生",
+"wordReading": "せっせい",
+"answer": "不摂生",
+"answerReading": "ふせっせい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "絶対",
+"wordReading": "ぜったい",
+"answer": "相対",
+"answerReading": "あいたい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "先進",
+"wordReading": "せんしん",
+"answer": "後進",
+"answerReading": "こうしん",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "先方",
+"wordReading": "せんぽう",
+"answer": "当方",
+"answerReading": "とうほう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "前進",
+"wordReading": "ぜんしん",
+"answer": "後進",
+"answerReading": "こうしん",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "善業",
+"wordReading": "ぜんごう",
+"answer": "悪業",
+"answerReading": "あくごう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "善行",
+"wordReading": "ぜんこう",
+"answer": "悪行",
+"answerReading": "あくぎょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "俗楽",
+"wordReading": "ぞくがく",
+"answer": "雅楽",
+"answerReading": "ががく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "多量",
+"wordReading": "たりょう",
+"answer": "少量",
+"answerReading": "しょうりょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "大漁",
+"wordReading": "たいりょう",
+"answer": "不漁",
+"answerReading": "ふりょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "大差",
+"wordReading": "たいさ",
+"answer": "小差",
+"answerReading": "しょうさ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "大声",
+"wordReading": "おおごえ",
+"answer": "小声",
+"answerReading": "こごえ",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "大部",
+"wordReading": "たいぶ",
+"answer": "小部",
+"answerReading": "しょうぶ",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "大部分",
+"wordReading": "だいぶぶん",
+"answer": "小部分",
+"answerReading": "しょうぶぶん",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "大幅",
+"wordReading": "おおはば",
+"answer": "小幅",
+"answerReading": "こはば",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "短期",
+"wordReading": "たんき",
+"answer": "長期",
+"answerReading": "ちょうき",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "短所",
+"wordReading": "たんしょ",
+"answer": "長所",
+"answerReading": "ちょうしょ",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "団体行動",
+"wordReading": "だんたいこうどう",
+"answer": "別行動",
+"answerReading": "べつこうどう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "暖房",
+"wordReading": "だんぼう",
+"answer": "冷房",
+"answerReading": "れいぼう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "地下",
+"wordReading": "ちか",
+"answer": "地上",
+"answerReading": "ちじょう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "地味",
+"wordReading": "じみ",
+"answer": "派手",
+"answerReading": "はで",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "着衣",
+"wordReading": "ちゃくい",
+"answer": "脱衣",
+"answerReading": "だつい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "超人",
+"wordReading": "ちょうじん",
+"answer": "末人",
+"answerReading": "まつじん",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "長期的",
+"wordReading": "ちょうきてき",
+"answer": "短期的",
+"answerReading": "たんきてき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "低利",
+"wordReading": "ていり",
+"answer": "高利",
+"answerReading": "こうり",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "停車",
+"wordReading": "ていしゃ",
+"answer": "発車",
+"answerReading": "はっしゃ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "適格",
+"wordReading": "てきかく",
+"answer": "欠格",
+"answerReading": "けっかく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "天才",
+"wordReading": "てんさい",
+"answer": "凡才",
+"answerReading": "ぼんさい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "転出",
+"wordReading": "てんしゅつ",
+"answer": "転入",
+"answerReading": "てんにゅう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "登場",
+"wordReading": "とうじょう",
+"answer": "退場",
+"answerReading": "たいじょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "当選",
+"wordReading": "とうせん",
+"answer": "落選",
+"answerReading": "らくせん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "同居",
+"wordReading": "どうきょ",
+"answer": "別居",
+"answerReading": "べっきょ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "特殊",
+"wordReading": "とくしゅ",
+"answer": "普遍",
+"answerReading": "ふへん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "内観",
+"wordReading": "ないかん",
+"answer": "外観",
+"answerReading": "がいかん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "内在",
+"wordReading": "ないざい",
+"answer": "外在",
+"answerReading": "がいざい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "内在",
+"wordReading": "ないざい",
+"answer": "超越",
+"answerReading": "ちょうえつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "内側",
+"wordReading": "うちがわ",
+"answer": "外側",
+"answerReading": "そとがわ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "軟弱",
+"wordReading": "なんじゃく",
+"answer": "強硬",
+"answerReading": "きょうこう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "入会",
+"wordReading": "にゅうかい",
+"answer": "退会",
+"answerReading": "たいかい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "入国",
+"wordReading": "にゅうこく",
+"answer": "出国",
+"answerReading": "しゅっこく",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "入場",
+"wordReading": "にゅうじょう",
+"answer": "退場",
+"answerReading": "たいじょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "入選",
+"wordReading": "にゅうせん",
+"answer": "落選",
+"answerReading": "らくせん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "入団",
+"wordReading": "にゅうだん",
+"answer": "退団",
+"answerReading": "たいだん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "入定",
+"wordReading": "にゅうじょう",
+"answer": "出定",
+"answerReading": "しゅつじょう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "濃厚",
+"wordReading": "のうこう",
+"answer": "淡泊",
+"answerReading": "たんぱく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "白衣",
+"wordReading": "はくい",
+"answer": "緇衣",
+"answerReading": "しえ",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "発散",
+"wordReading": "はっさん",
+"answer": "集束",
+"answerReading": "しゅうそく",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "反共",
+"wordReading": "はんきょう",
+"answer": "容共",
+"answerReading": "ようきょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "反米",
+"wordReading": "はんべい",
+"answer": "親米",
+"answerReading": "しんべい",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "搬出",
+"wordReading": "はんしゅつ",
+"answer": "搬入",
+"answerReading": "はんにゅう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "奥手",
+"wordReading": "おくて",
+"answer": "早稲",
+"answerReading": "わせ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "晩婚",
+"wordReading": "ばんこん",
+"answer": "早婚",
+"answerReading": "そうこん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "否定文",
+"wordReading": "ひていぶん",
+"answer": "肯定文",
+"answerReading": "こうていぶん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "非情",
+"wordReading": "ひじょう",
+"answer": "有情",
+"answerReading": "うじょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "不運",
+"wordReading": "ふうん",
+"answer": "幸運",
+"answerReading": "こううん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "風下",
+"wordReading": "かざしも",
+"answer": "風上",
+"answerReading": "かざかみ",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "未決",
+"wordReading": "みけつ",
+"answer": "既決",
+"answerReading": "きけつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "未済",
+"wordReading": "みさい",
+"answer": "既済",
+"answerReading": "きさい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "未読",
+"wordReading": "みどく",
+"answer": "既読",
+"answerReading": "きどく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "密教",
+"wordReading": "みっきょう",
+"answer": "顕教",
+"answerReading": "けんぎょう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "無縁",
+"wordReading": "むえん",
+"answer": "有縁",
+"answerReading": "うえん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "無給",
+"wordReading": "むきゅう",
+"answer": "有給",
+"answerReading": "ゆうきゅう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "無効",
+"wordReading": "むこう",
+"answer": "有効",
+"answerReading": "ゆうこう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "無罪",
+"wordReading": "むざい",
+"answer": "有罪",
+"answerReading": "ゆうざい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "無常",
+"wordReading": "むじょう",
+"answer": "常住",
+"answerReading": "じょうじゅう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "無情",
+"wordReading": "むじょう",
+"answer": "有情",
+"answerReading": "うじょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "無職",
+"wordReading": "むしょく",
+"answer": "有職",
+"answerReading": "ゆうしょく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "無人",
+"wordReading": "むじん",
+"answer": "有人",
+"answerReading": "ゆうじん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "無線",
+"wordReading": "むせん",
+"answer": "有線",
+"answerReading": "ゆうせん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "無毒",
+"wordReading": "むどく",
+"answer": "有毒",
+"answerReading": "ゆうどく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "無料",
+"wordReading": "むりょう",
+"answer": "有料",
+"answerReading": "ゆうりょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "優位",
+"wordReading": "ゆうい",
+"answer": "劣位",
+"answerReading": "れつい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "優越感",
+"wordReading": "ゆうえつかん",
+"answer": "劣等感",
+"answerReading": "れっとうかん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "優勢",
+"wordReading": "ゆうせい",
+"answer": "劣勢",
+"answerReading": "れっせい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "優等",
+"wordReading": "ゆうとう",
+"answer": "劣等",
+"answerReading": "れっとう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "余慶",
+"wordReading": "よけい",
+"answer": "余殃",
+"answerReading": "よおう",
+"relation": "対義",
+"level": "1級"
+},
+{
+"word": "利己",
+"wordReading": "りこ",
+"answer": "利他",
+"answerReading": "りた",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "霊的",
+"wordReading": "れいてき",
+"answer": "肉的",
+"answerReading": "にくてき",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "下葉",
+"wordReading": "したば",
+"answer": "上葉",
+"answerReading": "うわば",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "乙姫",
+"wordReading": "おとひめ",
+"answer": "兄姫",
+"answerReading": "えひめ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "差出人",
+"wordReading": "さしだしにん",
+"answer": "受取人",
+"answerReading": "うけとりにん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "税込",
+"wordReading": "ぜいこみ",
+"answer": "税別",
+"answerReading": "ぜいべつ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "淡白",
+"wordReading": "たんぱく",
+"answer": "濃厚",
+"answerReading": "のうこう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "長大",
+"wordReading": "ちょうだい",
+"answer": "短小",
+"answerReading": "たんしょう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "上意下達",
+"wordReading": "じょういかたつ",
+"answer": "下意上達",
+"answerReading": "かいじょうたつ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "術後",
+"wordReading": "じゅつご",
+"answer": "術前",
+"answerReading": "じゅつぜん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "小口",
+"wordReading": "こぐち",
+"answer": "大口",
+"answerReading": "おおぐち",
+"relation": "対義",
+"level": "10級"
+},
+{
+"word": "軟調",
+"wordReading": "なんちょう",
+"answer": "硬調",
+"answerReading": "こうちょう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "高所",
+"wordReading": "こうしょ",
+"answer": "低所",
+"answerReading": "ていしょ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "疎水",
+"wordReading": "そすい",
+"answer": "親水",
+"answerReading": "しんすい",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "早産",
+"wordReading": "そうざん",
+"answer": "過期産",
+"answerReading": "かきさん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "弱火",
+"wordReading": "よわび",
+"answer": "強火",
+"answerReading": "つよび",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "骨太",
+"wordReading": "ほねぶと",
+"answer": "骨細",
+"answerReading": "ほねぼそ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "無期",
+"wordReading": "むき",
+"answer": "有期",
+"answerReading": "ゆうき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "減作",
+"wordReading": "げんさく",
+"answer": "増作",
+"answerReading": "ぞうさく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "通学生",
+"wordReading": "つうがくせい",
+"answer": "下宿生",
+"answerReading": "げしゅくせい",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "終映",
+"wordReading": "しゅうえい",
+"answer": "開映",
+"answerReading": "かいえい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "遅発",
+"wordReading": "ちはつ",
+"answer": "早発",
+"answerReading": "そうはつ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "取舵",
+"wordReading": "とりかじ",
+"answer": "面舵",
+"answerReading": "おもかじ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "鈍根",
+"wordReading": "どんこん",
+"answer": "利根",
+"answerReading": "りこん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "親株",
+"wordReading": "おやかぶ",
+"answer": "子株",
+"answerReading": "こかぶ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "雌雄異体",
+"wordReading": "しゆういたい",
+"answer": "雌雄同体",
+"answerReading": "しゆうどうたい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "開放経済",
+"wordReading": "かいほうけいざい",
+"answer": "封鎖経済",
+"answerReading": "ふうさけいざい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "開脚",
+"wordReading": "かいきゃく",
+"answer": "閉脚",
+"answerReading": "へいきゃく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "類似点",
+"wordReading": "るいじてん",
+"answer": "相違点",
+"answerReading": "そういてん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "小知",
+"wordReading": "しょうち",
+"answer": "大智",
+"answerReading": "たいち",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "利器",
+"wordReading": "りき",
+"answer": "鈍器",
+"answerReading": "どんき",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "悪因",
+"wordReading": "あくいん",
+"answer": "善因",
+"answerReading": "ぜんいん",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "大猟",
+"wordReading": "たいりょう",
+"answer": "不猟",
+"answerReading": "ふりょう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "多発性",
+"wordReading": "たはつせい",
+"answer": "単発性",
+"answerReading": "たんぱつせい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "軽薄短小",
+"wordReading": "けいはくたんしょう",
+"answer": "重厚長大",
+"answerReading": "じゅうこうちょうだい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "早出",
+"wordReading": "はやで",
+"answer": "遅出",
+"answerReading": "おそで",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "成功者",
+"wordReading": "せいこうしゃ",
+"answer": "失敗者",
+"answerReading": "しっぱいしゃ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "健常者",
+"wordReading": "けんじょうしゃ",
+"answer": "障害者",
+"answerReading": "しょうがいしゃ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "特別損失",
+"wordReading": "とくべつそんしつ",
+"answer": "特別利益",
+"answerReading": "とくべつりえき",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "微増",
+"wordReading": "びぞう",
+"answer": "微減",
+"answerReading": "びげん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "益者三友",
+"wordReading": "えきしゃさんゆう",
+"answer": "損者三友",
+"answerReading": "そんしゃさんゆう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "可算",
+"wordReading": "かさん",
+"answer": "不可算",
+"answerReading": "ふかさん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "道内",
+"wordReading": "どうない",
+"answer": "道外",
+"answerReading": "どうけ",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "夜型",
+"wordReading": "よるがた",
+"answer": "朝型",
+"answerReading": "あさがた",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "閉鎖的",
+"wordReading": "へいさてき",
+"answer": "開放的",
+"answerReading": "かいほうてき",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "大事件",
+"wordReading": "だいじけん",
+"answer": "小事件",
+"answerReading": "しょうじけん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "未成熟",
+"wordReading": "みせいじゅく",
+"answer": "成熟",
+"answerReading": "せいじゅく",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "閉栓",
+"wordReading": "へいせん",
+"answer": "開栓",
+"answerReading": "かいせん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "過去最高",
+"wordReading": "かこさいこう",
+"answer": "過去最低",
+"answerReading": "かこさいてい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "毒菌",
+"wordReading": "どくきん",
+"answer": "食菌",
+"answerReading": "しょくきん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "在朝",
+"wordReading": "ざいちょう",
+"answer": "在野",
+"answerReading": "ざいや",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "黒魔法",
+"wordReading": "くろまほう",
+"answer": "白魔法",
+"answerReading": "しろまほう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "軟木",
+"wordReading": "なんぼく",
+"answer": "硬木",
+"answerReading": "こうぼく",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "状態動詞",
+"wordReading": "じょうたいどうし",
+"answer": "動態動詞",
+"answerReading": "どうたいどうし",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "所相",
+"wordReading": "しょそう",
+"answer": "能相",
+"answerReading": "のうそう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "外発的",
+"wordReading": "がいはつてき",
+"answer": "内発的",
+"answerReading": "ないはつてき",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "規範文法",
+"wordReading": "きはんぶんぽう",
+"answer": "記述文法",
+"answerReading": "きじゅつぶんぽう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "内道",
+"wordReading": "ないどう",
+"answer": "外道",
+"answerReading": "げどう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "三益友",
+"wordReading": "さんえきゆう",
+"answer": "三損友",
+"answerReading": "さんそんゆう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "加虐性欲",
+"wordReading": "かぎゃくせいよく",
+"answer": "被虐性欲",
+"answerReading": "ひぎゃくせいよく",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "不正解",
+"wordReading": "ふせいかい",
+"answer": "正解",
+"answerReading": "せいかい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "門内",
+"wordReading": "もんない",
+"answer": "門外",
+"answerReading": "もんがい",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "最安値",
+"wordReading": "さいやすね",
+"answer": "最高値",
+"answerReading": "さいたかね",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "柄鏡",
+"wordReading": "えかがみ",
+"answer": "紐鏡",
+"answerReading": "ひもかがみ",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "散瞳",
+"wordReading": "さんどう",
+"answer": "縮瞳",
+"answerReading": "しゅくどう",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "外教",
+"wordReading": "がいきょう",
+"answer": "内教",
+"answerReading": "ないきょう",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "精神界",
+"wordReading": "せいしんかい",
+"answer": "物質界",
+"answerReading": "ぶっしつかい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "裸男",
+"wordReading": "はだかおとこ",
+"answer": "裸女",
+"answerReading": "らじょ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "高評価",
+"wordReading": "こうひょうか",
+"answer": "低評価",
+"answerReading": "ていひょうか",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "着御",
+"wordReading": "ちゃくぎょ",
+"answer": "発御",
+"answerReading": "はつぎょ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "里犬",
+"wordReading": "さといぬ",
+"answer": "山犬",
+"answerReading": "やまいぬ",
+"relation": "対義",
+"level": "9級"
+},
+{
+"word": "無点本",
+"wordReading": "むてんぼん",
+"answer": "点本",
+"answerReading": "てんぽん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "異歯性",
+"wordReading": "いしせい",
+"answer": "同歯性",
+"answerReading": "どうしせい",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "最弱",
+"wordReading": "さいじゃく",
+"answer": "最強",
+"answerReading": "さいきょう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "雑楽",
+"wordReading": "ざつがく",
+"answer": "正楽",
+"answerReading": "せいがく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "天然染料",
+"wordReading": "てんねんせんりょう",
+"answer": "合成染料",
+"answerReading": "ごうせいせんりょう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "人生最良",
+"wordReading": "じんせいさいりょう",
+"answer": "人生最悪",
+"answerReading": "じんせいさいあく",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "特異的",
+"wordReading": "とくいてき",
+"answer": "非特異的",
+"answerReading": "ひとくいてき",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "弱気筋",
+"wordReading": "よわきすじ",
+"answer": "強気筋",
+"answerReading": "つよきすじ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "抑制性",
+"wordReading": "よくせいせい",
+"answer": "興奮性",
+"answerReading": "こうふんせい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "男子生徒",
+"wordReading": "だんしせいと",
+"answer": "女子生徒",
+"answerReading": "じょしせいと",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "反中",
+"wordReading": "はんちゅう",
+"answer": "親中",
+"answerReading": "しんちゅう",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "大知",
+"wordReading": "たいち",
+"answer": "小智",
+"answerReading": "しょうち",
+"relation": "対義",
+"level": "準1級"
+},
+{
+"word": "硬音",
+"wordReading": "こうおん",
+"answer": "軟音",
+"answerReading": "なんおん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "有塩",
+"wordReading": "ゆうえん",
+"answer": "無塩",
+"answerReading": "むえん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "殺人剣",
+"wordReading": "さつじんけん",
+"answer": "活人剣",
+"answerReading": "かつじんけん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "陽的",
+"wordReading": "ようてき",
+"answer": "陰的",
+"answerReading": "いんてき",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "益獣",
+"wordReading": "えきじゅう",
+"answer": "害獣",
+"answerReading": "がいじゅう",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "無文",
+"wordReading": "むもん",
+"answer": "有文",
+"answerReading": "うもん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "激高",
+"wordReading": "げきだか",
+"answer": "激安",
+"answerReading": "げきやす",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "優決定系",
+"wordReading": "ゆうけっていけい",
+"answer": "劣決定系",
+"answerReading": "れつけっていけい",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "外生変数",
+"wordReading": "がいせいへんすう",
+"answer": "内生変数",
+"answerReading": "ないせいへんすう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "多能工",
+"wordReading": "たのうこう",
+"answer": "単能工",
+"answerReading": "たんのうこう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "入寮",
+"wordReading": "にゅうりょう",
+"answer": "退寮",
+"answerReading": "たいりょう",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "凝華",
+"wordReading": "ぎょうか",
+"answer": "昇華",
+"answerReading": "しょうか",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "自分事",
+"wordReading": "じぶんごと",
+"answer": "他人事",
+"answerReading": "ひとごと",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "範囲外",
+"wordReading": "はんいがい",
+"answer": "範囲内",
+"answerReading": "はんいない",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "反韓",
+"wordReading": "はんかん",
+"answer": "親韓",
+"answerReading": "しんかん",
+"relation": "対義",
+"level": "2級"
+},
+{
+"word": "地下階",
+"wordReading": "ちかかい",
+"answer": "地上階",
+"answerReading": "ちじょうかい",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "裏年",
+"wordReading": "うらどし",
+"answer": "表年",
+"answerReading": "おもてどし",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "有妻",
+"wordReading": "ゆうさい",
+"answer": "無妻",
+"answerReading": "むさい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "下級国民",
+"wordReading": "かきゅうこくみん",
+"answer": "上級国民",
+"answerReading": "じょうきゅうこくみん",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "投企",
+"wordReading": "とうき",
+"answer": "被投性",
+"answerReading": "ひとうせい",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "吸熱",
+"wordReading": "きゅうねつ",
+"answer": "発熱",
+"answerReading": "はつねつ",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "発熱反応",
+"wordReading": "はつねつはんのう",
+"answer": "吸熱反応",
+"answerReading": "きゅうねつはんのう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "正用",
+"wordReading": "せいよう",
+"answer": "誤用",
+"answerReading": "ごよう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "有効票",
+"wordReading": "ゆうこうひょう",
+"answer": "無効票",
+"answerReading": "むこうひょう",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "非地位財",
+"wordReading": "ひちいざい",
+"answer": "地位財",
+"answerReading": "ちいざい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "下物",
+"wordReading": "げもの",
+"answer": "上物",
+"answerReading": "じょうもの",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "有料版",
+"wordReading": "ゆうりょうばん",
+"answer": "無料版",
+"answerReading": "むりょうばん",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "有償版",
+"wordReading": "ゆうしょうばん",
+"answer": "無償版",
+"answerReading": "むしょうばん",
+"relation": "対義",
+"level": "準2級"
+},
+{
+"word": "下方婚",
+"wordReading": "かほうこん",
+"answer": "上方婚",
+"answerReading": "じょうほうこん",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "片秀",
+"wordReading": "かたほ",
+"answer": "真秀",
+"answerReading": "まほ",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "入車",
+"wordReading": "にゅうしゃ",
+"answer": "出車",
+"answerReading": "しゅっしゃ",
+"relation": "対義",
+"level": "10級"
+},
+{
+"word": "後続車",
+"wordReading": "こうぞくしゃ",
+"answer": "先行車",
+"answerReading": "せんこうしゃ",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "情強",
+"wordReading": "じょうきょう",
+"answer": "情弱",
+"answerReading": "じょうじゃく",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "駅遠",
+"wordReading": "えきとお",
+"answer": "駅近",
+"answerReading": "えきちか",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "撮了",
+"wordReading": "さつりょう",
+"answer": "撮入",
+"answerReading": "さつにゅう",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "未出",
+"wordReading": "みしゅつ",
+"answer": "既出",
+"answerReading": "きしゅつ",
+"relation": "対義",
+"level": "3級"
+},
+{
+"word": "非活性",
+"wordReading": "ひかっせい",
+"answer": "活性",
+"answerReading": "かっせい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "減泊",
+"wordReading": "げんぱく",
+"answer": "延泊",
+"answerReading": "えんぱく",
+"relation": "対義",
+"level": "4級"
+},
+{
+"word": "後任者",
+"wordReading": "こうにんしゃ",
+"answer": "前任者",
+"answerReading": "ぜんにんしゃ",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "内部結合",
+"wordReading": "ないぶけつごう",
+"answer": "外部結合",
+"answerReading": "がいぶけつごう",
+"relation": "対義",
+"level": "7級"
+},
+{
+"word": "後工程",
+"wordReading": "あとこうてい",
+"answer": "前工程",
+"answerReading": "まえこうてい",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "外製化",
+"wordReading": "がいせいか",
+"answer": "内製化",
+"answerReading": "ないせいか",
+"relation": "対義",
+"level": "6級"
+},
+{
+"word": "物界",
+"wordReading": "ぶっかい",
+"answer": "心界",
+"answerReading": "しんかい",
+"relation": "対義",
+"level": "8級"
+},
+{
+"word": "低収入",
+"wordReading": "ていしゅうにゅう",
+"answer": "高収入",
+"answerReading": "こうしゅうにゅう",
+"relation": "対義",
+"level": "5級"
+},
+{
+"word": "上火",
+"wordReading": "うわび",
+"answer": "下火",
+"answerReading": "したび",
+"relation": "対義",
+"level": "10級"
+},
+{
+"word": "最遅",
+"wordReading": "さいち",
+"answer": "最速",
+"answerReading": "さいそく",
+"relation": "対義",
+"level": "4級"
+}
 ]
