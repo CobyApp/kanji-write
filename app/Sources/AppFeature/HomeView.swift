@@ -412,12 +412,14 @@ struct HomeView: View {
     /// A titled group of launchers — one header plus its tiles, stacked on iPhone
     /// and two-up on iPad. Grouping by purpose (학습 / 사전 / 보관함) keeps the eight
     /// entries scannable instead of one long undifferentiated list.
-    @ViewBuilder
+    // Returns AnyView for the same reason as `launcher`: it keeps launchersGrid a
+    // flat stack of four erased sections rather than one deeply nested generic
+    // type that overflows the device stack during metadata instantiation.
     private func launcherSection<C: View>(
         _ title: String, _ accent: Color, grid: Bool = false,
         @ViewBuilder content: () -> C
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+    ) -> AnyView {
+        AnyView(VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title, accent: accent)
             if grid {
                 LazyVGrid(
@@ -427,7 +429,7 @@ struct HomeView: View {
             } else {
                 VStack(spacing: 12) { content() }
             }
-        }
+        })
     }
 
     // MARK: Plan
@@ -732,11 +734,17 @@ struct HomeView: View {
         }
     }
 
+    // Returns AnyView so the launcher tiles don't deepen the enclosing grid's
+    // concrete view type. Without the erasure, the iPad layout (launchersGrid →
+    // launcherSection → LazyVGrid → these tiles) nests generics deeply enough
+    // that the Swift runtime overflows the stack instantiating the type metadata
+    // on device (it survives the simulator's larger stack). See the 2026-10-17
+    // iPad launch-crash fix.
     private func launcher(
         icon: String, title: String, subtitle: String, count: Int?,
         soft: Color, accent: Color, dimmed: Bool = false, action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
+    ) -> AnyView {
+        AnyView(Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.system(size: 24, weight: .semibold)).foregroundStyle(accent)
@@ -769,7 +777,7 @@ struct HomeView: View {
                 .stroke(accent.opacity(0.35), lineWidth: 1.5))
             .opacity(dimmed ? 0.55 : 1)
         }
-        .buttonStyle(.bouncy)
+        .buttonStyle(.bouncy))
     }
 
     // MARK: 단어장 (bulk manage saved kanji + words)
