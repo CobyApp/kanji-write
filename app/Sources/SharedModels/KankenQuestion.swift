@@ -85,10 +85,13 @@ public struct Yojijukugo: Equatable, Identifiable, Sendable {
     /// the default: a zh or en reader used to get the Japanese gloss even though
     /// nothing was missing on their side.
     public func meaning(_ language: AppLanguage) -> String? {
+        // English is the last-resort fallback: the JMdict-sourced idioms ship with
+        // an English gloss only until they are localized, so show that rather than
+        // nothing for a ko/ja/zh reader.
         switch language {
-        case .ko: meaningKo ?? meaningJa
-        case .ja: meaningJa ?? meaningKo
-        case .zh: meaningZh ?? meaningJa ?? meaningKo
+        case .ko: meaningKo ?? meaningJa ?? meaningEn
+        case .ja: meaningJa ?? meaningKo ?? meaningEn
+        case .zh: meaningZh ?? meaningJa ?? meaningKo ?? meaningEn
         case .en: meaningEn ?? meaningJa ?? meaningKo
         }
     }
