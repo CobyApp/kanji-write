@@ -21,6 +21,10 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          # kanji.sqlite is stored in Git LFS; without this the checkout leaves
+          # a pointer file and every DB-backed test (and the shipped app) breaks.
+          lfs: true
 
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1

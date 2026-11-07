@@ -19,6 +19,10 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          # kanji.sqlite is stored in Git LFS; without this the archive ships a
+          # pointer file instead of the database and the app has no data.
+          lfs: true
 
       - name: Check tag matches MARKETING_VERSION
         run: |
