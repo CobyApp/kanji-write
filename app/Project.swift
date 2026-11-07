@@ -34,8 +34,8 @@ let project = Project(
         // extension always ship the same numbers (a mismatch fails App Store
         // validation). Bump MARKETING_VERSION for a user-facing release and
         // CURRENT_PROJECT_VERSION for every upload of that version.
-        "MARKETING_VERSION": "1.1.0",
-        "CURRENT_PROJECT_VERSION": "2",
+        "MARKETING_VERSION": "1.2.0",
+        "CURRENT_PROJECT_VERSION": "3",
     ]),
     targets: [
         .target(
