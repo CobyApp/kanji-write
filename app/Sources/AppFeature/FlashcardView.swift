@@ -19,7 +19,7 @@ struct FlashcardItem: Identifiable, Equatable {
 struct FlashcardView: View {
     let items: [FlashcardItem]
     let onClose: () -> Void
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var index = 0
     @State private var flipped = false

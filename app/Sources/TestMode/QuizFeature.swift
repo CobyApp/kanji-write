@@ -100,7 +100,7 @@ public struct QuizFeature {
         /// when a missed question comes straight back.
         public var attempt = 0
 
-        public init(level: String, plannedIDs: [Int] = [], language: AppLanguage = .ko) {
+        public init(level: String, plannedIDs: [Int] = [], language: AppLanguage = .en) {
             self.level = level
             self.plannedIDs = plannedIDs
             self.language = language

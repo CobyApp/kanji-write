@@ -17,7 +17,7 @@ import WritingCanvas
 /// No tab bar or sidebar.
 public struct RootView: View {
     @Bindable public var store: StoreOf<RootFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     /// First-run setup shown once. Installs from before onboarding existed
     /// already chose a plan, so they skip it (see `needsOnboarding`).
     @AppStorage("onboardingDone") private var onboardingDone = false
@@ -120,7 +120,7 @@ public struct RootView: View {
 private struct SessionCover: View {
     @Bindable var store: StoreOf<RootFeature>
     let sessionStore: StoreOf<RootFeature.Session>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
@@ -239,7 +239,7 @@ func wordMeaningText(_ word: WordEntry, _ language: AppLanguage) -> String? {
 /// level or a searched kanji delegates up to `RootFeature`, which pushes next.
 private struct DictionaryPathView: View {
     @Bindable var store: StoreOf<DictionaryFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -301,7 +301,7 @@ private struct DictionaryPathView: View {
 /// or a full-word search. Selecting a word delegates up to push its detail.
 private struct WordDictionaryView: View {
     @Bindable var store: StoreOf<WordDictionaryFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @AppStorage("dictGridMode") private var gridMode = false
     @AppStorage("examType") private var examType: ExamType = .kanken
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -444,7 +444,7 @@ private struct WordDictionaryView: View {
 /// idiom with its reading and meaning. Read-only (no drill-in).
 private struct YojiDictionaryView: View {
     @Bindable var store: StoreOf<YojiDictionaryFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -558,7 +558,7 @@ private struct YojiDictionaryView: View {
 /// that drill into the full kanji detail.
 private struct YojiDetailView: View {
     @Bindable var store: StoreOf<YojiDetailFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
@@ -655,7 +655,7 @@ struct KanjiCardList: View {
     let items: [Kanji]
     var glosses: [Int: [String: String]] = [:]
     let onSelect: (Kanji) -> Void
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     // Shared with the dictionary header's grid/list toggle.
     @AppStorage("dictGridMode") private var gridMode = false
     @Environment(\.horizontalSizeClass) private var sizeClass

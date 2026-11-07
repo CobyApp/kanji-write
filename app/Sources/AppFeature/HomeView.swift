@@ -11,7 +11,7 @@ import WidgetKit
 /// preview. Details push; sessions cover; settings is a sheet (toolbar gear).
 struct HomeView: View {
     @Bindable var store: StoreOf<RootFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @AppStorage("examType") private var examType: ExamType = .kanken
     @AppStorage("targetLevel") private var targetLevel = "10級"
     @AppStorage("newPerDay") private var newPerDay = 7

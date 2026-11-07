@@ -8,7 +8,7 @@ import SwiftUI
 /// mode, and misses filed into the 오답노트.
 public struct QuizView: View {
     @Bindable public var store: StoreOf<QuizFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @AppStorage("examWriteMode") private var writeMode = false
     // Stamped when a quiz finishes so Home knows today's quiz is done.
     @AppStorage("lastQuizDay") private var lastQuizDay = -1

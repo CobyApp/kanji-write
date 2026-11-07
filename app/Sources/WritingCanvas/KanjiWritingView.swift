@@ -26,7 +26,7 @@ private struct GuideStrokesView: View {
 public struct KanjiWritingView: View {
     @Bindable public var store: StoreOf<KanjiWritingFeature>
     @State private var drawing = PKDrawing()
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.dismiss) private var dismiss
 
     public init(store: StoreOf<KanjiWritingFeature>) {

@@ -41,7 +41,7 @@ public struct StrokeOrderPlayer: View {
     private let isActive: Bool
     @State private var progress: Double
     @State private var bounce = false
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
 
     /// Candy palette cycled across strokes.
     private static let strokeColors: [Color] = [

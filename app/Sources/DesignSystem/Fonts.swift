@@ -54,7 +54,7 @@ private func textStyle(for size: CGFloat) -> Font.TextStyle {
 
 /// The current UI language, read from the same store as `@AppStorage("appLanguage")`.
 private func uiLanguage() -> AppLanguage {
-    AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .ko
+    AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .en
 }
 
 extension Font {

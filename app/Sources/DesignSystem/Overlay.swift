@@ -35,7 +35,7 @@ public struct CircleButton: View {
     /// their own `.accessibilityLabel`.
     private var defaultLabel: String {
         let language = AppLanguage(
-            rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .ko
+            rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "") ?? .en
         switch systemName {
         case "xmark": return L.close[language]
         case "chevron.left": return L.back[language]
@@ -48,7 +48,7 @@ public struct CircleButton: View {
 /// The shared top bar for a pushed screen (dictionaries): a centered title with
 /// a back button on the left, capped to the content width.
 public struct NavHeader<Trailing: View>: View {
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     private let title: String
     private let onBack: () -> Void
@@ -80,7 +80,7 @@ public struct NavHeader<Trailing: View>: View {
 /// A rounded search field — used in the dictionaries so search sits within the
 /// capped content width (not the full-width system search bar).
 public struct SearchField: View {
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Binding private var text: String
     private let placeholder: String
 
@@ -117,7 +117,7 @@ public struct SearchField: View {
 /// The shared top bar for every full-screen popup (study plan, settings): a
 /// centered title with the close ✕ on the left — one consistent layout.
 public struct OverlayHeader: View {
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     private let title: String
     private let onClose: () -> Void

@@ -6,7 +6,7 @@ import SwiftUI
 public struct SpeakButton: View {
     let text: String
     let language: String
-    @AppStorage("appLanguage") private var uiLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var uiLanguage: AppLanguage = .en
 
     public init(_ text: String, language: String = "ja-JP") {
         self.text = text

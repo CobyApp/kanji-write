@@ -18,7 +18,7 @@ private func localizedGloss(_ glosses: [String: String], _ language: AppLanguage
 /// side-by-side (review) — self-checked, not auto-graded.
 public struct PracticeView: View {
     @Bindable public var store: StoreOf<PracticeFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @AppStorage("examType") private var examType: ExamType = .kanken
     /// Hard mode: hide the reading/radical clues and write from the meaning alone.
     @AppStorage("practiceHideReading") private var hideReading = false

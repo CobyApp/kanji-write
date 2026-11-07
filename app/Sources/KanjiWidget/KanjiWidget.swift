@@ -28,7 +28,7 @@ private struct KanjiWidgetView: View {
     @Environment(\.widgetFamily) private var family
     let entry: SnapshotEntry
 
-    private var lang: AppLanguage { AppLanguage(rawValue: entry.snapshot.language) ?? .ko }
+    private var lang: AppLanguage { AppLanguage(rawValue: entry.snapshot.language) ?? .en }
 
     var body: some View {
         switch family {

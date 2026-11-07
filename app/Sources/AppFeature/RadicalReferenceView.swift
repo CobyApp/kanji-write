@@ -7,7 +7,7 @@ import SwiftUI
 /// each tappable to see the kanji that use it.
 struct RadicalReferenceView: View {
     @Bindable var store: StoreOf<RadicalReferenceFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 

@@ -183,7 +183,7 @@ public struct RootFeature {
                 let level = defaults.string(forKey: "targetLevel")
                     .flatMap(ExamLevel.init(rawValue:))
                     .flatMap { exam.levels.contains($0) ? $0 : nil } ?? exam.defaultLevel
-                let language = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .ko
+                let language = AppLanguage(rawValue: defaults.string(forKey: "appLanguage") ?? "") ?? .en
                 state.path.removeAll()
                 state.showSettings = false
                 switch url.host() {

@@ -5,7 +5,7 @@ import UserNotifications
 /// The learner's selected UI language, read from the same `@AppStorage` key the
 /// views use, so the reminder is localized without threading state through TCA.
 private var currentLanguage: AppLanguage {
-    AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "ko") ?? .ko
+    AppLanguage(rawValue: UserDefaults.standard.string(forKey: "appLanguage") ?? "en") ?? .en
 }
 
 /// Schedules a single repeating daily study reminder.

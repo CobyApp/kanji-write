@@ -9,7 +9,7 @@ import SwiftUI
 /// list (every saved word, tappable to its detail).
 public struct WordReviewHubView: View {
     @Bindable var wordStore: StoreOf<WordReviewFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
 
     public init(wordStore: StoreOf<WordReviewFeature>) {
         self.wordStore = wordStore

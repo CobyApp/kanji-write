@@ -7,7 +7,7 @@ import SwiftUI
 struct WatchHomeView: View {
     let snapshot: StudySnapshot
 
-    private var lang: AppLanguage { AppLanguage(rawValue: snapshot.language) ?? .ko }
+    private var lang: AppLanguage { AppLanguage(rawValue: snapshot.language) ?? .en }
     private let pink = Color(red: 1.0, green: 0.5, blue: 0.71)
     private let mint = Color(red: 0.52, green: 0.88, blue: 0.75)
     private let butter = Color(red: 1.0, green: 0.83, blue: 0.43)

@@ -6,7 +6,7 @@ import SwiftUI
 /// Before this, a new install silently started in Korean on JLPT N5 at 7 a day,
 /// and a 漢検 learner had to find the gear button to discover the other exam.
 struct OnboardingView: View {
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @AppStorage("examType") private var examType: ExamType = .kanken
     @AppStorage("targetLevel") private var targetLevel = "10級"
     @AppStorage("newPerDay") private var newPerDay = 7

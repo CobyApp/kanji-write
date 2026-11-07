@@ -6,7 +6,7 @@ import WritingCanvas
 
 public struct WordDetailView: View {
     @Bindable public var store: StoreOf<WordDetailFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 

@@ -8,7 +8,7 @@ import TestMode
 /// 학습 기록 — pushed from Home.
 struct StatsView: View {
     @Bindable var store: StoreOf<StatsFeature>
-    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .ko
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .en
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 

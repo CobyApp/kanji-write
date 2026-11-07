@@ -77,7 +77,7 @@ public struct KankenExamFeature {
         /// straight back (same id) — the view resets its answer input on it.
         public var attempt = 0
 
-        public init(level: ExamLevel, language: AppLanguage = .ko) {
+        public init(level: ExamLevel, language: AppLanguage = .en) {
             self.level = level
             self.language = language
         }
