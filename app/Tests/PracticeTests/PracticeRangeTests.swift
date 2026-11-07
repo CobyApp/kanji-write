@@ -13,6 +13,11 @@ final class PracticeRangeTests: XCTestCase {
     func testStartTestClampsBothEndsToWhatTheLevelHolds() async {
         let store = TestStore(initialState: PracticeFeature.State()) {
             PracticeFeature()
+        } withDependencies: {
+            // Starting a run now loads an example sentence per item; the review
+            // screen shows it. These reads aren't what the range logic is about.
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
         await store.send(.loaded(Self.threeKanji, [:]))
@@ -27,6 +32,9 @@ final class PracticeRangeTests: XCTestCase {
     func testStartTestHonoursARangeInsideTheLevel() async {
         let store = TestStore(initialState: PracticeFeature.State()) {
             PracticeFeature()
+        } withDependencies: {
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
         await store.send(.loaded(Self.threeKanji, [:]))
@@ -44,6 +52,9 @@ final class PracticeRangeTests: XCTestCase {
     func testClosingARunReturnsToSetup() async {
         let store = TestStore(initialState: PracticeFeature.State()) {
             PracticeFeature()
+        } withDependencies: {
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
         await store.send(.loaded(Self.threeKanji, [:]))
@@ -115,6 +126,8 @@ final class PracticeFavoriteTests: XCTestCase {
             PracticeFeature()
         } withDependencies: {
             $0.practiceFavoriteStore.save = { _ in }
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
         let item = PracticeItem(id: 3, answer: "川", glosses: [:])
@@ -133,6 +146,8 @@ final class PracticeFavoriteTests: XCTestCase {
             PracticeFeature()
         } withDependencies: {
             $0.practiceFavoriteStore.save = { _ in }
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
         await store.send(.setUseFavorites(true))
@@ -154,6 +169,8 @@ final class PracticeFavoriteTests: XCTestCase {
             PracticeFeature()
         } withDependencies: {
             $0.practiceFavoriteStore.save = { _ in }
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
         await store.send(.setUseFavorites(true))
@@ -249,6 +266,8 @@ final class PracticeFavoriteRaceTests: XCTestCase {
             PracticeFeature()
         } withDependencies: {
             $0.practiceFavoriteStore.save = { _ in }
+            $0.dictionaryClient.sentences = { _, _ in [] }
+            $0.dictionaryClient.sentencesForWord = { _, _ in [] }
         }
         store.exhaustivity = .off
 
